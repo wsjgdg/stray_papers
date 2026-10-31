@@ -95,6 +95,7 @@ export class SurfApp {
     const num = (k, d) => (q.has(k) && Number.isFinite(parseFloat(q.get(k))) ? parseFloat(q.get(k)) : d);
     const dWanted = Math.round(num('d', 3));
     const measWanted = ['noisy', 'circuit'].includes(q.get('meas')) ? q.get('meas') : 'ideal';
+    const prepareWanted = ['Z','X'].includes(q.get('prep')) ? q.get('prep') : 'encoded';
     this.state = {
       d: measWanted === 'circuit' && dWanted === 7 ? 5 : SC_DISTANCES.includes(dWanted) ? dWanted : 3,
       noise: measWanted === 'circuit' ? 'depol' : SC_NOISES.some(n => n.k === q.get('noise')) ? q.get('noise') : 'x',
@@ -106,6 +107,7 @@ export class SurfApp {
          q=0 时解码退化成逐层独立、d3×d5 两条曲线在 0.05 以内不交叉（未分辨），
          给旋钮反而误导，所以不上面板（README 里写明这条取舍）。 */
       meas: measWanted,
+      prepareBasis: prepareWanted,
       qR: [0, 0.5, 1].includes(parseFloat(q.get('qr'))) ? parseFloat(q.get('qr')) : 1,
       live: q.get('live') === '1',
     };
@@ -150,6 +152,10 @@ export class SurfApp {
 
         <div class="grp">噪声口径</div>
         <div class="btns" id="sfMeas"></div>
+        <div id="sfPrepWrap" style="display:none">
+          <div class="grp">输入边界 / 逻辑态制备</div>
+          <div class="btns g3" id="sfPrep"></div>
+        </div>
 
         <div class="grp">错误谱（每比特）</div>
         <div class="btns" id="sfNoises"></div>
@@ -219,7 +225,7 @@ export class SurfApp {
     this.ciFeedback.mount();
     this.live = new LiveDriver({
       make: () => this.circuit
-        ? scCircuitStream(this.code, { p: this.state.p, rounds: this.state.d, trials: this.state.trials, seed: this.state.seed })
+        ? scCircuitStream(this.code, { p: this.state.p, rounds: this.state.d, trials: this.state.trials, seed: this.state.seed, prepareBasis: this.state.prepareBasis })
         : this.phen
           ? scSpaceStream(this.code, { ...this.phenCfg(), trials: this.state.trials, seed: this.state.seed })
           : scStream(this.code, { p: this.state.p, noise: this.state.noise, trials: this.state.trials, seed: this.state.seed }),
@@ -250,13 +256,18 @@ export class SurfApp {
     mk(this.q('#sfMeas'), [
       { v: 'ideal', label: '单帧（码容量）', title: '综合征测量理想：二维匹配图' },
       { v: 'noisy', label: '带噪测量', title: 'phenomenological：每轮读出以 q 出错，时间维进匹配图' },
-      { v: 'circuit', label: '电路级（首阶段）', title: 'd=3/5：含初始数据边界噪声、四层并行 CNOT、逐层 idle 与 X/Z 两种独立终端破坏性数据读出；不是带噪编码器或阈值模型' },
+      { v: 'circuit', label: '电路级（首阶段）', title: 'd=3/5：理想码态 memory 或 |0⟩ⁿ/|+⟩ⁿ 产品态逻辑本征态制备；含四层并行 CNOT、逐层 idle 和带噪破坏性数据读出，不是任意态 unitary encoder 或阈值模型' },
     ], v => {
       this.state.meas = v;
       if ((v === 'noisy' || v === 'circuit') && this.state.d === 7) this.state.d = 5;
       if (v === 'circuit') { this.state.noise = 'depol'; if (this.state.p > 0.02 || this.state.p < 0.0005) this.state.p = 0.005; this.state.trials = Math.min(this.state.trials, 400); }
-      this.code = scBuild(this.state.d); this.syncPanel(); this.runMc(); this.startSweep();
+      this.code = scBuild(this.state.d); this.syncPanel(); this.renderHint(); this.runMc(); this.startSweep();
     });
+    mk(this.q('#sfPrep'), [
+      { v: 'encoded', label: '理想码态', title: '直接从理想编码子空间开始；不含编码制备电路' },
+      { v: 'Z', label: '|0_L⟩ 制备', title: '从 |0⟩^n 起步；Z checks 初始已知，X checks 首次读数随机，随后重复提取 d 轮' },
+      { v: 'X', label: '|+_L⟩ 制备', title: '从 |+⟩^n 起步；X checks 初始已知，Z checks 首次读数随机，随后重复提取 d 轮' },
+    ], v => { this.state.prepareBasis = v; this.renderHint(); this.runMc(); });
 
     this.on(this.q('#sfP'), 'input', e => {
       this.state.p = parseFloat(e.target.value);
@@ -305,7 +316,8 @@ export class SurfApp {
       b.title = `n=${d * d} 比特，距离 ${d}`;
     }
     mark('#sfDs', s.d); mark('#sfNoises', s.noise);
-    mark('#sfMeas', s.meas);
+    mark('#sfMeas', s.meas); mark('#sfPrep', s.prepareBasis);
+    const prepWrap = this.q('#sfPrepWrap'); if (prepWrap) prepWrap.style.display = this.circuit ? '' : 'none';
     for (const b of this.modeRoot.querySelectorAll('#sfNoises button')){
       b.disabled = this.circuit && b.dataset.v !== 'depol';
       if (this.circuit && b.dataset.v !== 'depol') b.title = '当前 circuit-level 首阶段固定为双比特退极化';
@@ -336,12 +348,18 @@ export class SurfApp {
     const snap = this.q('#sfSnap'); if (snap){ snap.disabled = this.circuit; snap.title = this.circuit ? '回放须复用已计入统计的 circuit shot，不额外抽样' : ''; }
     const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '诊断原型不用于阈值结论：高阶相关故障未联合解码，idle 仅按空闲并行层注错、未按设备门时长或 T₁/T₂ 校准' : ''; }
     const note = this.q('#sfModelNote');
-    if (note && this.circuit) note.innerHTML = '<b>诊断性 circuit-level 原型</b>：含输入数据帧边界噪声；每轮按 4 个无碰撞并行 CNOT 层提取，逐层对空闲数据/ancilla 注入 idle；包含 CNOT 退极化与 ancilla prep/readout。末端用逐数据位带噪破坏性读出，并分别审计 Z、X 两种逻辑基底（不是同一 shot 同时测两基）。先查无歧义 X/Z 联合单故障签名；歧义时用无歧义单帧查表，未解决帧再由边缘权重时空 MWPM 兜底。输入边界噪声不等于容错编码器；idle 未按设备门时长/T₁/T₂ 校准，未含泄漏、相干、串扰或高阶相关联合解码，因此不报告阈值。';
+    const prepNote = s.prepareBasis === 'encoded'
+      ? '从理想码态边界开始并注入输入帧噪声（没有编码电路）。'
+      : `从产品态 ${s.prepareBasis === 'Z' ? '|0⟩^n' : '|+⟩^n'} 起步，经 d 轮稳定子测量制备对应逻辑本征态；未使用任意态 unitary encoder。`;
+    if (note && this.circuit) note.innerHTML = `<b>诊断性 circuit-level 原型</b>：${prepNote} 每轮按 4 个无碰撞并行 CNOT 层提取，逐层对空闲数据/ancilla 注入 idle；包含 CNOT 退极化与 ancilla prep/readout。末端用逐数据位带噪破坏性读出，按选择的逻辑基底解码。先查无歧义 X/Z 联合单故障签名；歧义时用无歧义单帧查表，未解决帧再由边缘权重时空 MWPM 兜底。idle 未按设备门时长/T₁/T₂ 校准，未含泄漏、相干、串扰或高阶相关联合解码，因此不报告阈值。`;
     else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量固定 q=p、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
   }
 
   renderHint(){
     const b = this.q('#sfHint b'), sp = this.q('#sfHint span');
+    const prepHint = this.state.prepareBasis === 'encoded'
+      ? '理想编码子空间边界（不含 encoder）'
+      : `${this.state.prepareBasis === 'Z' ? '|0⟩^n' : '|+⟩^n'} 产品态经 d 轮稳定子提取，制备一个逻辑本征态（不是任意态 encoder）`;
     if (b) b.textContent = '旋转表面码 [[d²,1,d]]';
     if (sp) sp.innerHTML = sfMdLite(
       '码族页的重复码/Steane 级联是**一维**结构（多数表决 / 查表）；表面码是**二维拓扑码**：' +
@@ -352,7 +370,7 @@ export class SurfApp {
         '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。') +
       (this.circuit ? '' : '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
         '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。') +
-      (this.circuit ? '**诊断性 circuit-level 原型** 含输入数据帧边界噪声、四层无碰撞并行 CNOT、逐层空闲 qubit idle、CNOT 退极化与 ancilla SPAM；终端用带噪破坏性数据读出，并分开检查 Z/X 两种逻辑基底。先查无歧义联合单故障签名，歧义时安全退回无歧义单帧查表，再由边缘权重时空 MWPM 兜底。输入通道不等于容错编码器；未校准门时长/T₁/T₂，且不处理泄漏、相干、串扰或高阶相关性，不用于阈值结论。' : ''));
+      (this.circuit ? `**诊断性 circuit-level 原型**：${prepHint}；含四层无碰撞并行 CNOT、逐层空闲 qubit idle、CNOT 退极化与 ancilla SPAM；终端用带噪破坏性数据读出，按选定逻辑基底检查。先查无歧义联合单故障签名，歧义时安全退回无歧义单帧查表，再由边缘权重时空 MWPM 兜底。未校准门时长/T₁/T₂，且不处理泄漏、相干、串扰或高阶相关性，不用于阈值结论。` : ''));
   }
 
   ensureFaultAudit(){
@@ -362,15 +380,16 @@ export class SurfApp {
       this.faultAudit = null;
       return;
     }
-    const d = this.state.d;
-    if (this._auditKey === d) return;
+    const d = this.state.d, prepareBasis = this.state.prepareBasis;
+    const key = `${d}:${prepareBasis}`;
+    if (this._auditKey === key) return;
     const token = ++this._auditToken;
-    this._auditKey = d;
-    this.faultAudit = { loading: true, d };
+    this._auditKey = key;
+    this.faultAudit = { loading: true, d, prepareBasis };
     setTimeout(() => {
       try {
-        const result = scCircuitFaultAudit(scBuild(d), d);
-        if (token !== this._auditToken || !this.circuit || this.state.d !== d) return;
+        const result = scCircuitFaultAudit(scBuild(d), d, prepareBasis);
+        if (token !== this._auditToken || !this.circuit || this.state.d !== d || this.state.prepareBasis !== prepareBasis) return;
         this.faultAudit = result;
       } catch (error){
         if (token !== this._auditToken) return;
@@ -408,7 +427,7 @@ export class SurfApp {
     }
     const t0 = performance.now();
     if (this.circuit){
-      this.mc = scCircuitEnsemble(code, { p: s.p, rounds: s.d, trials: s.trials, seed: s.seed });
+      this.mc = scCircuitEnsemble(code, { p: s.p, rounds: s.d, trials: s.trials, seed: s.seed, prepareBasis: s.prepareBasis });
       this.mc.ms = performance.now() - t0;
       this.space = scSpaceVerify(s.d, s.d);
       this.trial = this.mc.lastTrial;
@@ -531,8 +550,9 @@ export class SurfApp {
     this.shotReplay?.sync(this.trial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, v = this.verify, mc = this.mc;
     const set = (id, txt, cls) => { const el = this.q('#' + id); if (el){ el.textContent = txt; el.className = cls || ''; } };
-    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level 首阶段（${s.d} 轮，双基读出审计）` : ' · code-capacity';
-    set('hCfg', `${this.circuit ? '初始边界 + 双比特退极化 + 分层 idle + 终端读出' : sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(4)} · N=${s.trials}${phenTxt}`);
+    const prepName = s.prepareBasis === 'encoded' ? '理想码态输入' : `${s.prepareBasis === 'Z' ? '|0_L⟩ 制备' : '|+_L⟩ 制备'}`;
+    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level 首阶段 · ${prepName}（${s.d} 轮）` : ' · code-capacity';
+    set('hCfg', `${this.circuit ? '并行 CNOT + prep/readout + 分层 idle' : sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(4)} · N=${s.trials}${phenTxt}`);
     const auditRow = this.q('#hFaultAuditRow');
     if (auditRow) auditRow.style.display = this.circuit ? '' : 'none';
     if (this.circuit){
@@ -540,8 +560,13 @@ export class SurfApp {
       else if (this.faultAudit.error) set('hFaultAudit', `失败：${this.faultAudit.error}`, 'warn');
       else {
         const a = this.faultAudit;
-        set('hFaultAudit', `${a.locations.toLocaleString()} 位点 · 联合可查 ${a.jointCovered}/${a.locations} · 歧义签名 ${a.jointAmbiguous} · 安全回退 ${a.jointFallbackMechanisms} · 最终逻辑失败 X/Z ${a.jointLookupLogicalFailX + a.jointFallbackLogicalFailX}/${a.locations}、${a.jointLookupLogicalFailZ + a.jointFallbackLogicalFailZ}/${a.locations}`,
-          a.jointLookupLogicalFailX || a.jointLookupLogicalFailZ || a.jointFallbackLogicalFailX || a.jointFallbackLogicalFailZ || a.jointLookupSyndromeFailX || a.jointLookupSyndromeFailZ || a.jointFallbackSyndromeFailX || a.jointFallbackSyndromeFailZ ? 'warn' : 'ok');
+        const failX = a.jointLookupLogicalFailX + a.jointFallbackLogicalFailX;
+        const failZ = a.jointLookupLogicalFailZ + a.jointFallbackLogicalFailZ;
+        const readoutFail = a.prepareBasis === 'Z' ? `|0_L⟩ 读出失败 ${failX}/${a.locations}`
+          : a.prepareBasis === 'X' ? `|+_L⟩ 读出失败 ${failZ}/${a.locations}`
+          : `X/Z 读出失败 ${failX}/${a.locations}、${failZ}/${a.locations}`;
+        set('hFaultAudit', `${a.prepareBasis || 'encoded'} 边界 · ${a.locations.toLocaleString()} 位点 · 联合可查 ${a.jointCovered}/${a.locations} · 歧义 ${a.jointAmbiguous} · 安全回退 ${a.jointFallbackMechanisms} · ${readoutFail}`,
+          failX || failZ || a.jointLookupSyndromeFailX || a.jointLookupSyndromeFailZ || a.jointFallbackSyndromeFailX || a.jointFallbackSyndromeFailZ ? 'warn' : 'ok');
       }
     }
     if (v){
@@ -956,7 +981,7 @@ export class SurfApp {
         Object.assign(self.state, patch || {});
         if (self.state.meas === 'noisy' && self.state.d === 7) self.state.d = 5;
         self.code = scBuild(self.state.d);
-        self.syncPanel(); self.runMc();
+        self.syncPanel(); self.renderHint(); self.runMc();
         return { ...self.state };
       },
       snapshot(){

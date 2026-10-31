@@ -4,8 +4,9 @@
  * depolarization, ancilla prep/readout faults, per-layer idle depolarization, and
  * destructive final data-readout bit flips (audited in separate X/Z basis views).
  * A paired X/Z single-fault table handles unambiguous histories; unresolved frames
- * use safe per-frame lookup then marginal-weight MWPM. This is not a fault-tolerant
- * encoder, calibrated threshold model, or complete device-level memory cycle.
+ * use safe per-frame lookup then marginal-weight MWPM. Product-state |0_L>/|+_L>
+ * preparation is supported; this is not an arbitrary-state unitary encoder,
+ * calibrated threshold model, or complete device-level memory cycle.
  */
 import { mulberry32 } from './qcircuit.js';
 import { scBuild, scDecode, scSpaceGraph, scSpaceDecode, SC_PHEN } from './surfacecode.js';
@@ -36,7 +37,7 @@ export const SC_CIRCUIT = {
   distances: [3, 5],
   rounds: d => d,
   dpMax: SC_PHEN.dpMax,
-  noise: 'input data-frame channel + post-CNOT depolarization + ancilla SPAM + per-layer idles + destructive final data-readout bit flips (separate X/Z basis audit)',
+  noise: 'ideal encoded or noisy product-state prep boundary + post-CNOT depolarization + ancilla SPAM + per-layer idles + destructive final data-readout bit flips',
 };
 
 function scCircuitWeights(code, p){
@@ -102,7 +103,7 @@ export function scCircuitScheduleAudit(code){
   };
 }
 
-function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = []){
+function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = [], baselineX = 0, baselineZ = 0){
   const checks = scCircuitChecks(code);
   const startX = frame.x, startZ = frame.z;
   const outcomeX = new Array(code.X.length).fill(0), outcomeZ = new Array(code.Z.length).fill(0);
@@ -185,7 +186,8 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = []){
     const readoutFault = forcedAt('readout', check);
     const readoutFlip = !!readoutFault || rng() < p;
     if (readoutFlip) record({ location: 'readout', check, q: 'ancilla', t: 'bit flip' });
-    const measured = (type === 'Z' ? ax[ci] : az[ci]) ^ (readoutFlip ? 1 : 0);
+    const baseline = type === 'Z' ? ((baselineZ >> checkIndex) & 1) : ((baselineX >> checkIndex) & 1);
+    const measured = (type === 'Z' ? ax[ci] : az[ci]) ^ baseline ^ (readoutFlip ? 1 : 0);
     if (type === 'Z') outcomeZ[checkIndex] = measured;
     else outcomeX[checkIndex] = measured;
   }
@@ -193,8 +195,8 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = []){
   const sx = outcomeX.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
   const sz = outcomeZ.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
   /* η maps measured checks onto the post-round frame used by Δ layers. */
-  const trueX = scCircuitSyndrome(code.zg, frame.z);
-  const trueZ = scCircuitSyndrome(code.xg, frame.x);
+  const trueX = baselineX ^ scCircuitSyndrome(code.zg, frame.z);
+  const trueZ = baselineZ ^ scCircuitSyndrome(code.xg, frame.x);
   return {
     deltaX: startX ^ frame.x, deltaZ: startZ ^ frame.z,
     synX: sx, synZ: sz, etaX: sx ^ trueX, etaZ: sz ^ trueZ,
@@ -202,7 +204,7 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = []){
   };
 }
 
-function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, weights, dpMax, skipDecode = false, terminalMeasurementErrors = 0){
+function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, weights, dpMax, skipDecode = false, terminalMeasurementErrors = 0, initialBoundaryKnown = true){
   /* code.xg is the Z-check graph for X-frame errors; code.zg is the X-check graph for Z-frame errors. */
   const graphType = type;
   const g = graphType === 'X' ? code.xg : code.zg;
@@ -211,7 +213,7 @@ function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, wei
   const nS = g.nS, nn = nS + 2, defects = [], perLayer = [];
   for (let l = 0; l <= R; l++){
     const e = l < R ? errorLayers[l] : 0n;
-    let d = scCircuitSyndrome(g, e);
+    let d = l === 0 && !initialBoundaryKnown ? 0 : scCircuitSyndrome(g, e);
     if (l + 1 <= R) d ^= measurementErrors[l + 1];
     if (l >= 1) d ^= measurementErrors[l];
     if (l === R) d ^= terminalMeasurementErrors;
@@ -231,7 +233,7 @@ function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, wei
 
 const SC_CIRCUIT_FAULT_CACHE = new Map();
 const scCircuitSignature = layers => layers.map(x => Number(x).toString(16)).join('.');
-function scCircuitFaultCatalog(code, R){
+function scCircuitFaultCatalog(code, R, prepareBasis = 'encoded'){
   const faults = [], checks = scCircuitChecks(code);
   for (let q = 0; q < code.n; q++) for (const pauli of ['X','Y','Z'])
     faults.push({ round: 0, location: 'input', q, pauli });
@@ -258,7 +260,8 @@ function scCircuitFaultCatalog(code, R){
     }
   }
   for (let q = 0; q < code.n; q++) for (const basis of ['Z','X'])
-    faults.push({ round: R + 1, location: 'final-readout', basis, q, pauli: 'flip' });
+    if (prepareBasis === 'encoded' || basis === prepareBasis)
+      faults.push({ round: R + 1, location: 'final-readout', basis, q, pauli: 'flip' });
   return faults;
 }
 function scCircuitIndexFault(map, signature, mask, logical){
@@ -277,33 +280,33 @@ function scCircuitIndexJoint(map, signature, shot, logicalX, logicalZ, fault){
   entry.mechanisms++;
   if (entry.logicalX !== logicalX || entry.logicalZ !== logicalZ) entry.ambiguous = true;
 }
-function scCircuitFaultTable(code, R){
-  const key = `${code.d}:${R}`;
+function scCircuitFaultTable(code, R, prepareBasis = 'encoded'){
+  const key = `${code.d}:${R}:${prepareBasis}`;
   if (SC_CIRCUIT_FAULT_CACHE.has(key)) return SC_CIRCUIT_FAULT_CACHE.get(key);
   const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  const X = new Map(), Z = new Map(), J = new Map(), catalog = scCircuitFaultCatalog(code, R);
+  const X = new Map(), Z = new Map(), J = new Map(), catalog = scCircuitFaultCatalog(code, R, prepareBasis);
   let silentLogicalX = 0, silentLogicalZ = 0;
   let lookupLogicalFailX = 0, lookupLogicalFailZ = 0;
   let lookupSyndromeFailX = 0, lookupSyndromeFailZ = 0;
   const faultSignatures = [];
   for (const fault of catalog){
-    const shot = scCircuitTrial(code, { p: 0, rounds: R, forceFaults: [fault], skipLookup: true }, mulberry32(1));
+    const shot = scCircuitTrial(code, { p: 0, rounds: R, prepareBasis, forceFaults: [fault], skipLookup: true }, mulberry32(1));
     const sx = scCircuitSignature(shot.defX), sz = scCircuitSignature(shot.defZ);
     const lx = scCircuitParity(shot.mx & code.zl), lz = scCircuitParity(shot.mz & code.xl);
     faultSignatures.push({ fault, sx, sz, lx, lz });
-    if (shot.defX.every(v => v === 0) && lx) silentLogicalX++;
-    if (shot.defZ.every(v => v === 0) && lz) silentLogicalZ++;
+    if (prepareBasis !== 'X' && shot.defX.every(v => v === 0) && lx) silentLogicalX++;
+    if (prepareBasis !== 'Z' && shot.defZ.every(v => v === 0) && lz) silentLogicalZ++;
     scCircuitIndexFault(X, sx, shot.mx, lx);
     scCircuitIndexFault(Z, sz, shot.mz, lz);
     scCircuitIndexJoint(J, `${sx}||${sz}`, shot, lx, lz, fault);
     const ex = X.get(sx), ez = Z.get(sz);
-    if (ex && !ex.ambiguous){
+    if (prepareBasis !== 'X' && ex && !ex.ambiguous){
       const residual = shot.mx ^ ex.correction;
       const decoded = scCircuitFinalDecode(code, residual, shot.finalReadoutZ, 'X');
       if (decoded.logical) lookupLogicalFailX++;
       if (decoded.syndrome) lookupSyndromeFailX++;
     }
-    if (ez && !ez.ambiguous){
+    if (prepareBasis !== 'Z' && ez && !ez.ambiguous){
       const residual = shot.mz ^ ez.correction;
       const decoded = scCircuitFinalDecode(code, residual, shot.finalReadoutX, 'Z');
       if (decoded.logical) lookupLogicalFailZ++;
@@ -322,14 +325,14 @@ function scCircuitFaultTable(code, R){
   for (const item of faultSignatures){
     const entry = J.get(`${item.sx}||${item.sz}`);
     if (!entry || entry.ambiguous) continue;
-    const shot = scCircuitTrial(code, { p: 0, rounds: R, forceFaults: [item.fault], skipLookup: true }, mulberry32(1));
+    const shot = scCircuitTrial(code, { p: 0, rounds: R, prepareBasis, forceFaults: [item.fault], skipLookup: true }, mulberry32(1));
     const residualX = shot.mx ^ entry.correctionX, residualZ = shot.mz ^ entry.correctionZ;
     const decodedX = scCircuitFinalDecode(code, residualX, shot.finalReadoutZ, 'X');
     const decodedZ = scCircuitFinalDecode(code, residualZ, shot.finalReadoutX, 'Z');
-    if (decodedX.logical) jointLookupLogicalFailX++;
-    if (decodedZ.logical) jointLookupLogicalFailZ++;
-    if (decodedX.syndrome) jointLookupSyndromeFailX++;
-    if (decodedZ.syndrome) jointLookupSyndromeFailZ++;
+    if (prepareBasis !== 'X' && decodedX.logical) jointLookupLogicalFailX++;
+    if (prepareBasis !== 'Z' && decodedZ.logical) jointLookupLogicalFailZ++;
+    if (prepareBasis !== 'X' && decodedX.syndrome) jointLookupSyndromeFailX++;
+    if (prepareBasis !== 'Z' && decodedZ.syndrome) jointLookupSyndromeFailZ++;
   }
   const jointFallbackFaults = faultSignatures
     .filter(item => J.get(`${item.sx}||${item.sz}`)?.ambiguous)
@@ -357,12 +360,12 @@ function scCircuitFaultTable(code, R){
   return result;
 }
 
-function scCircuitJointFallbackAudit(code, R, table){
+function scCircuitJointFallbackAudit(code, R, table, prepareBasis = 'encoded'){
   let mechanisms = 0, xLookup = 0, zLookup = 0;
   let logicalFailX = 0, logicalFailZ = 0, syndromeFailX = 0, syndromeFailZ = 0;
   for (const fault of table.jointFallbackFaults){
     mechanisms++;
-    const shot = scCircuitTrial(code, { p: 0.001, rounds: R, forceFaults: [fault] }, () => 0.999);
+    const shot = scCircuitTrial(code, { p: 0.001, rounds: R, prepareBasis, forceFaults: [fault] }, () => 0.999);
     if (shot.lookupX) xLookup++;
     if (shot.lookupZ) zLookup++;
     if (shot.xfail) logicalFailX++;
@@ -373,11 +376,11 @@ function scCircuitJointFallbackAudit(code, R, table){
   return { mechanisms, xLookup, zLookup, logicalFailX, logicalFailZ, syndromeFailX, syndromeFailZ };
 }
 
-export function scCircuitFaultAudit(code, rounds = code.d){
-  const t = scCircuitFaultTable(code, rounds);
-  if (!t.jointFallbackAudit) t.jointFallbackAudit = scCircuitJointFallbackAudit(code, rounds, t);
+export function scCircuitFaultAudit(code, rounds = code.d, prepareBasis = 'encoded'){
+  const t = scCircuitFaultTable(code, rounds, prepareBasis);
+  if (!t.jointFallbackAudit) t.jointFallbackAudit = scCircuitJointFallbackAudit(code, rounds, t, prepareBasis);
   const jf = t.jointFallbackAudit;
-  return { d: code.d, rounds, locations: t.locations, xSignatures: t.xSignatures, zSignatures: t.zSignatures,
+  return { d: code.d, rounds, prepareBasis, locations: t.locations, xSignatures: t.xSignatures, zSignatures: t.zSignatures,
     jointSignatures: t.jointSignatures, jointAmbiguous: t.jointAmbiguous, jointCovered: t.jointCovered,
     jointLookupLogicalFailX: t.jointLookupLogicalFailX, jointLookupLogicalFailZ: t.jointLookupLogicalFailZ,
     jointLookupSyndromeFailX: t.jointLookupSyndromeFailX, jointLookupSyndromeFailZ: t.jointLookupSyndromeFailZ,
@@ -391,12 +394,16 @@ export function scCircuitFaultAudit(code, rounds = code.d){
     silentLogicalX: t.silentLogicalX, silentLogicalZ: t.silentLogicalZ, ms: t.ms };
 }
 
-/** One Pauli-frame memory shot: noisy input boundary + scheduled extraction + separate X/Z destructive data-readout branches. */
+/** Pauli-frame memory/preparation shot: encoded boundary or noisy product-state prep, extraction, then destructive data readout. */
 export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   const p = Math.max(0, Math.min(0.49, Number(cfg.p ?? 0.01)));
   const R = cfg.rounds === undefined ? code.d : Math.max(1, Math.floor(cfg.rounds));
+  const prepareBasis = ['Z','X'].includes(cfg.prepareBasis) ? cfg.prepareBasis : 'encoded';
   const frame = { x: 0n, z: 0n }, rounds = [], faultList = [], forceFaults = cfg.forceFaults || [];
   let faultCount = 0, cnotCount = 0, inputX = 0n, inputZ = 0n;
+  let baselineX = 0, baselineZ = 0;
+  if (prepareBasis === 'Z') for (let ci = 0; ci < code.X.length; ci++) if (rng() < 0.5) baselineX |= 1 << ci;
+  if (prepareBasis === 'X') for (let ci = 0; ci < code.Z.length; ci++) if (rng() < 0.5) baselineZ |= 1 << ci;
   for (let q = 0; q < code.n; q++){
     const force = forceFaults.find(f => f.location === 'input' && f.q === q);
     let name = force ? force.pauli : null;
@@ -410,7 +417,7 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
     }
   }
   for (let r = 0; r < R; r++){
-    const out = scCircuitRound(code, p, rng, r, frame, forceFaults);
+    const out = scCircuitRound(code, p, rng, r, frame, forceFaults, baselineX, baselineZ);
     rounds.push(out);
     faultCount += out.faultCount; cnotCount += out.gates;
     for (const f of out.faults){ if (faultList.length < 64) faultList.push(f); }
@@ -418,6 +425,7 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   let finalReadoutX = 0n, finalReadoutZ = 0n;
   for (let q = 0; q < code.n; q++){
     for (const basis of ['Z','X']){
+      if (prepareBasis !== 'encoded' && basis !== prepareBasis) continue;
       const force = forceFaults.find(f => f.location === 'final-readout' && f.basis === basis && f.q === q);
       if (force || rng() < p){
         if (basis === 'Z') finalReadoutZ |= scCircuitBit(q);
@@ -433,11 +441,13 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   const dpMax = cfg.dpMax === undefined ? SC_CIRCUIT.dpMax : cfg.dpMax;
   const errorLayersX = rounds.map(r => r.deltaX), errorLayersZ = rounds.map(r => r.deltaZ);
   errorLayersX[0] ^= inputX; errorLayersZ[0] ^= inputZ;
-  const x = scCircuitDecodeFrame(code, 'X', errorLayersX, [0, ...rounds.map(r => r.etaZ)], R, weights, dpMax, !!cfg.skipLookup, terminalMeasurementX);
-  const z = scCircuitDecodeFrame(code, 'Z', errorLayersZ, [0, ...rounds.map(r => r.etaX)], R, weights, dpMax, !!cfg.skipLookup, terminalMeasurementZ);
+  const initialBoundaryKnownX = prepareBasis !== 'X';
+  const initialBoundaryKnownZ = prepareBasis !== 'Z';
+  const x = scCircuitDecodeFrame(code, 'X', errorLayersX, [0, ...rounds.map(r => r.etaZ)], R, weights, dpMax, !!cfg.skipLookup, terminalMeasurementX, initialBoundaryKnownX);
+  const z = scCircuitDecodeFrame(code, 'Z', errorLayersZ, [0, ...rounds.map(r => r.etaX)], R, weights, dpMax, !!cfg.skipLookup, terminalMeasurementZ, initialBoundaryKnownZ);
   let corrX = x.corr, corrZ = z.corr, decoderX = 'mwpm', decoderZ = 'mwpm';
   if (!cfg.skipLookup && cfg.decoder !== 'mwpm'){
-    const table = scCircuitFaultTable(code, R);
+    const table = scCircuitFaultTable(code, R, prepareBasis);
     const sx = scCircuitSignature(x.perLayer), sz = scCircuitSignature(z.perLayer);
     const ej = table.J.get(`${sx}||${sz}`);
     if (ej && !ej.ambiguous){
@@ -454,14 +464,16 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   const resX = frame.x ^ corrX, resZ = frame.z ^ corrZ;
   const measuredZ = scCircuitFinalDecode(code, resX, finalReadoutZ, 'X');
   const measuredX = scCircuitFinalDecode(code, resZ, finalReadoutX, 'Z');
-  const xfail = measuredZ.logical, zfail = measuredX.logical;
+  const xfail = prepareBasis === 'X' ? false : measuredZ.logical;
+  const zfail = prepareBasis === 'Z' ? false : measuredX.logical;
   const synAfterX = scCircuitSyndrome(code.xg, resX), synAfterZ = scCircuitSyndrome(code.zg, resZ);
-  const readoutSynZ = measuredZ.syndrome, readoutSynX = measuredX.syndrome;
+  const readoutSynZ = prepareBasis === 'X' ? 0 : measuredZ.syndrome;
+  const readoutSynX = prepareBasis === 'Z' ? 0 : measuredX.syndrome;
   const fallback = Number(decoderX === 'mwpm' && x.mode === 'greedy') + Number(decoderZ === 'mwpm' && z.mode === 'greedy');
   const finalSynX = scCircuitSyndrome(code.zg, frame.z ^ finalReadoutX), finalSynZ = scCircuitSyndrome(code.xg, frame.x ^ finalReadoutZ);
   const synRounds = rounds.map((r, i) => `R${i + 1}:X${scCircuitMaskText(r.synX, code.X.length)}/Z${scCircuitMaskText(r.synZ, code.Z.length)}`);
   return {
-    fail: !!(xfail || zfail), xfail: !!xfail, zfail: !!zfail,
+    fail: !!(xfail || zfail), xfail: !!xfail, zfail: !!zfail, prepareBasis,
     mx: frame.x, mz: frame.z, corrX, corrZ, resX, resZ,
     finalReadoutX, finalReadoutZ, measCorrX: measuredX.corr, measCorrZ: measuredZ.corr,
     kx: x.k, kz: z.k, modeX: decoderX, modeZ: decoderZ,
@@ -501,7 +513,7 @@ export function scCircuitStream(code, cfg = {}){
     step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
     result(){
       const N = Math.max(1, n), PL = fail / N;
-      return { d: code.d, p: c.p, noise: 'circuit', rounds: c.rounds, trials: n,
+      return { d: code.d, p: c.p, noise: 'circuit', prepareBasis: c.prepareBasis || 'encoded', rounds: c.rounds, trials: n,
         PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, fallback: fallback / (2 * N),
         lookupRate: lookupSum / (2 * N), meanDefects: defectSum / (2 * N), meanCnot: gateSum / N, meanFaults: faultSum / N,
         lastTrial, sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N) };

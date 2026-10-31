@@ -92,6 +92,43 @@ for (const d of [3, 5]){
   console.log(`single-fault d=${d}: joint=${audit.jointCovered}/${audit.locations}, fallback=${audit.jointFallbackMechanisms}, ambiguous signatures=${audit.jointAmbiguous}/${audit.jointSignatures}; logical/readout-syndrome failures=0`);
 }
 
+for (const d of [3, 5]){
+  const code = scBuild(d);
+  for (const basis of ['Z','X']){
+    const audit = scCircuitFaultAudit(code, d, basis);
+    assert.equal(audit.prepareBasis, basis);
+    assert.equal(audit.locations, d === 3 ? 1344 : 6880, `d=${d}, ${basis}-prep: catalog covers prep faults and one terminal readout basis`);
+    assert.equal(audit.jointCovered + audit.jointFallbackMechanisms, audit.locations);
+    assert.ok(audit.jointAmbiguous > 0 && audit.jointFallbackMechanisms > 0, `d=${d}, ${basis}-prep: ambiguity must use safe fallback`);
+    assert.equal(audit.jointLookupLogicalFailX + audit.jointLookupLogicalFailZ, 0);
+    assert.equal(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ, 0,
+      `d=${d}, ${basis}-prep: every catalog fault must preserve the prepared logical eigenvalue`);
+    assert.equal(audit.jointLookupSyndromeFailX + audit.jointLookupSyndromeFailZ +
+      audit.jointFallbackSyndromeFailX + audit.jointFallbackSyndromeFailZ, 0);
+    assert.equal(audit.silentLogicalX + audit.silentLogicalZ, 0);
+
+    const clean = scCircuitTrial(code, { p: 0, rounds: d, prepareBasis: basis }, mulberry32(19));
+    assert.equal(clean.fail, false, `d=${d}, ${basis}-prep: clean product-state preparation must decode`);
+    assert.equal(clean.badSyn, false, `d=${d}, ${basis}-prep: clean final readout syndrome closes`);
+    assert.ok(clean.defX.every(v => v === 0) && clean.defZ.every(v => v === 0),
+      `d=${d}, ${basis}-prep: random first syndrome baseline must not be mistaken for a fault`);
+    const prepFault = scCircuitTrial(code, {
+      p: 0.001, rounds: d, prepareBasis: basis,
+      forceFaults: [{ round: 0, location: 'input', q: 0, pauli: basis === 'Z' ? 'X' : 'Z' }],
+    }, () => 0.999);
+    assert.equal(prepFault.faultCount, 1);
+    assert.equal(prepFault.fail, false, `d=${d}, ${basis}-prep: representative product-state preparation fault is corrected`);
+    const readout = scCircuitTrial(code, {
+      p: 0.001, rounds: d, prepareBasis: basis,
+      forceFaults: [{ round: d + 1, location: 'final-readout', basis, q: 0 }],
+    }, () => 0.999);
+    assert.equal(readout.faultCount, 1);
+    assert.equal(readout.fail, false, `d=${d}, ${basis}-prep: terminal destructive readout fault is corrected`);
+    assert.equal(readout.badSyn, false);
+    console.log(`preparation d=${d}, |${basis === 'Z' ? '0' : '+'}_L>: ${audit.locations} mechanisms, fallback=${audit.jointFallbackMechanisms}, logical/readout-syndrome failures=0`);
+  }
+}
+
 const zero = wilsonInterval(0, 100);
 const four = wilsonInterval(4, 1000);
 assert.ok(Math.abs(zero.high - 0.03699) < 0.0001, 'Wilson 0/100 upper bound');
