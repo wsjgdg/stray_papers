@@ -1644,6 +1644,7 @@ README 噪声页用法补充矩阵与曲线探针操作。
 - [x] `scCircuitFaultAudit` 公开按 `input`、`prep`、`cx`、`readout`、`idle`、`final-readout` 分类的目录计数；HUD 审计行 hover 展示类别分解。
 - [x] 回归按 `schedule.gates × rounds × 15`、每轮稳定子 prep/readout、逐层 data/ancilla idle 三 Pauli、输入每数据位三 Pauli、终端选定基底读出位点逐类断言。memory 模式计数 d3：27/24/1080/24/180/18（总 1,353）；d5：75/120/6000/120/540/50（总 6,905）。|0_L⟩/|+_L⟩ prep 模式分别只包含一个终端读出分支，故总数各减少 n 个。
 - [x] `node scripts/verify-qec-stage.mjs` PASS；`npm run build:standalone` PASS，`dist/qec.html` 923.8 KB；抽取 inline module 后 `node --check`、相关源码语法检查与 `git diff --check` PASS。
+- [x] **验收结论**：理想码态 memory 与 |0_L⟩/|+_L⟩ 产品态制备两种协议的当前全部列举单故障位点目录均通过；覆盖范围包括四层 extraction、逐层 idle、两端数据边界和终端数据读出。这个结论限定在 Pauli-frame/Clifford 模型，不扩张为任意态 encoder、器件标定或阈值证明。
 
 ---
 
