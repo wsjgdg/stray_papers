@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="built-mass-26">
+  <meta name="aetheris-build" content="town-plans-27">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'built-mass-26';
+    const BUILD_ID = 'town-plans-27';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4195,6 +4195,28 @@
         parts[2] = partTint(parts[2], '#ffffff', .05);
         return join(parts);
       }
+      // Details that make one house differ from the next: a chimney, a flight of steps, a
+      // colonnade pier, a shop awning.
+      function chimneyPart() {
+        return join([partBox(.34, .84, .34, '#dcd6c6', 0), partBox(.42, .08, .42, '#ffffff', .84)]);
+      }
+      function stepsPart() {
+        const parts = [];
+        for (let i = 0; i < 3; i++) parts.push(partBox(1 - i * .16, .036, .30 - i * .08, i === 2 ? '#ffffff' : '#e2ddd0', i * .036, 0, -.10 + i * .10));
+        return join(parts);
+      }
+      function columnPart() {
+        const shaft = new THREE.CylinderGeometry(.26, .36, .84, 10, 1);
+        shaft.translate(0, .50, 0);
+        return join([partBox(.84, .07, .84, '#c8c1b0', 0), partTint(shaft, '#ffffff', .07), partBox(.76, .09, .76, '#ece5d4', .91)]);
+      }
+      function awningPart() {
+        return join([
+          partBox(1, .036, .62, '#ffffff', .10),
+          partBox(.05, .11, .05, '#c8c1b0', 0, -.42, .24, .05),
+          partBox(.05, .11, .05, '#c8c1b0', 0, .42, .24, .05)
+        ]);
+      }
       const provinceGeo = {
         wall: wallPart(),
         roof: gablePart(),
@@ -4207,6 +4229,10 @@
         ledge: ledgePart(),
         beam: beamPart(),
         mast: mastPart(),
+        chimney: chimneyPart(),
+        steps: stepsPart(),
+        column: columnPart(),
+        awning: awningPart(),
         ring: partTint(new THREE.TorusGeometry(1, .07, 5, 20).rotateX(Math.PI / 2), '#ffffff', .06),
         shard: partTint(new THREE.OctahedronGeometry(1, 0), '#ffffff', .10),
         disc: partTint(new THREE.CylinderGeometry(1, 1, .08, 14, 1), '#ffffff', .06),
@@ -4260,24 +4286,54 @@
         };
         const mesh = new THREE.Matrix4(), axis = new THREE.Vector3();
         // ---- Towns ---------------------------------------------------------------------------
-        // One settlement per site: a platform, a landmark, a lane of dwellings (body + roof + lit
-        // windows + doorstep) and the small pieces — walkways, parapets, masts, rings — that make a
-        // place read as inhabited. Each province builds the same grammar with its own roof, wall
-        // material and silhouette.
+        // One settlement per site — but not one shape per province. Each site draws a **plan**
+        // (lane / terrace row / hollow ring / cross), a **landmark** (three per province) and its
+        // own mix of **house archetypes** (cottage, longhouse, two-storey, round hall, flat-roofed,
+        // stilt house, barn, lean-to). Two Vaelmar towns share a palette and nothing else.
         const yawQuat = new THREE.Quaternion();
         // The layout below is written in "house units" and scaled once here: the player's eye is
         // .10 units above the ground, so a dwelling has to be roughly two eye-heights tall to read
         // as something you could walk into rather than a model on a table.
         const TOWN_SCALE = 1.8;
-        const styleOf = {
-          vaelmar: { wall: 'timber', roof: 'roof', roofMat: 'timber', spread: 1.22, rise: .74 },
-          sennar: { wall: 'basalt', roof: 'hip', roofMat: 'basalt', spread: 1.12, rise: .34 },
-          caelth: { wall: 'pale', roof: 'dome', roofMat: 'pale', spread: 1.02, rise: .52 },
-          mirella: { wall: 'timber', roof: 'spire', roofMat: 'timber', spread: 1.12, rise: .70 }
+        const STYLE = {
+          vaelmar: { wall: 'timber', roofMat: 'timber', roof: 'roof', spread: 1.22, rise: .74 },
+          sennar: { wall: 'basalt', roofMat: 'basalt', roof: 'hip', spread: 1.12, rise: .34 },
+          caelth: { wall: 'pale', roofMat: 'pale', roof: 'dome', spread: 1.02, rise: .52 },
+          mirella: { wall: 'timber', roofMat: 'timber', roof: 'spire', spread: 1.10, rise: .70 },
+          vessper: { wall: 'basalt', roofMat: 'basalt', roof: 'hip', spread: 1.05, rise: .26 }
+        };
+        // Same province, different street: these pools are what stops every town looking alike.
+        const HOUSES = {
+          vaelmar: [['cottage', 3], ['longhouse', 3], ['tower', 1.4], ['barn', 1.4], ['shed', 1]],
+          sennar: [['flat', 3], ['cottage', 2.4], ['tower', 2], ['shed', 1.4], ['round', 1]],
+          caelth: [['round', 3], ['cottage', 2.4], ['tower', 1.4], ['longhouse', 1], ['shed', 1]],
+          mirella: [['stilt', 4], ['round', 2], ['cottage', 1.6], ['shed', 1]],
+          vessper: []
+        };
+        const PLANS = {
+          vaelmar: [['lane', 3], ['row', 2], ['hollow', 2], ['cross', 1]],
+          sennar: [['lane', 2], ['row', 3], ['hollow', 2], ['cross', 2]],
+          caelth: [['hollow', 3], ['lane', 2], ['cross', 2]],
+          mirella: [['hollow', 4], ['lane', 2], ['row', 1]],
+          vessper: [['basin', 2], ['lattice', 2], ['colonnade', 2]]
+        };
+        const LANDMARKS = {
+          vaelmar: [['archive', 3], ['hall', 2], ['gate', 2]],
+          sennar: [['wind', 3], ['well', 2], ['caravan', 2]],
+          caelth: [['observatory', 3], ['bell', 2], ['vault', 2]],
+          mirella: [['song', 3], ['dock', 2], ['bell', 2]],
+          vessper: [['basin', 3], ['lattice', 2], ['colonnade', 2]]
+        };
+        const pick = pool => {
+          let total = 0;
+          for (const [, weight] of pool) total += weight;
+          let t = rng() * total;
+          for (const [value, weight] of pool) { t -= weight; if (t <= 0) return value; }
+          return pool[pool.length - 1][0];
         };
         for (const id of Object.keys(sites)) {
           for (const site of sites[id]) {
-            const k = site.bulk, yaw0 = rng() * TAU;
+            const k = site.bulk, yaw0 = rng() * TAU, s = STYLE[id];
             const origin = site.dir.clone().multiplyScalar(R + site.h);
             const qBase = new THREE.Quaternion().setFromUnitVectors(UP, site.dir);
             const ax = new THREE.Vector3(1, 0, 0).applyQuaternion(qBase);
@@ -4288,114 +4344,318 @@
               new THREE.Vector3(sx * TOWN_SCALE, sy * TOWN_SCALE, sz * TOWN_SCALE));
             // Local offset inside a rotated piece, expressed in the site's own frame.
             const local = (yaw, px, pz) => {
-              const c = Math.cos(yaw), s = Math.sin(yaw);
-              return [px * c + pz * s, -px * s + pz * c];
+              const c = Math.cos(yaw), s2 = Math.sin(yaw);
+              return [px * c + pz * s2, -px * s2 + pz * c];
             };
-            const dwelling = (lx, lz, yaw, w, d, h, style) => {
-              put('wall', style.wall, lx, lz, .004, yaw, w, h, d);
-              put(style.roof, style.roofMat, lx, lz, .004 + h * .955, yaw, w * style.spread, h * style.rise, d * style.spread);
+            // A row of lit windows on both long faces of a block.
+            const lit = (lx, lz, yaw, width, halfDepth, base, pane, count) => {
               for (const face of [-1, 1]) {
-                const [wx, wz] = local(yaw, 0, face * (d * .5 + .004));
-                put('window', 'lamp', lx + wx, lz + wz, h * .34, yaw, w * .26, h * .24, .004);
+                for (let i = 0; i < count; i++) {
+                  const off = count === 1 ? 0 : (i / (count - 1) - .5) * width * .60;
+                  const [wx, wz] = local(yaw, off, face * (halfDepth + .004));
+                  put('window', 'lamp', lx + wx, lz + wz, base, yaw, width * (count === 1 ? .26 : .17), pane, .004);
+                }
               }
-              const [dx, dz] = local(yaw, 0, -(d * .5 + .006));
-              put('ledge', style.roofMat, lx + dx, lz + dz, .004, yaw, w * .42, .012, .030);
             };
-            put('platform', id === 'vessper' ? 'basalt' : (id === 'sennar' ? 'basalt' : (id === 'caelth' ? 'pale' : 'timber')),
-              0, 0, 0, yaw0, .19 * k, .34, .19 * k);
+            const doorSteps = (lx, lz, yaw, width, halfDepth, mat) => {
+              const [dx, dz] = local(yaw, 0, -(halfDepth + .012));
+              put('steps', mat, lx + dx, lz + dz, .004, yaw, width * .34, .20, .05);
+            };
+            // ---- house archetypes --------------------------------------------------------------
+            const house = (lx, lz, yaw, w, d, h, kind) => {
+              if (kind === 'cottage') {
+                put('wall', s.wall, lx, lz, .004, yaw, w, h, d);
+                put(s.roof, s.roofMat, lx, lz, .004 + h * .955, yaw, w * s.spread, h * s.rise, d * s.spread);
+                lit(lx, lz, yaw, w, d * .5, h * .34, h * .24, 1);
+                doorSteps(lx, lz, yaw, w, d * .5, s.roofMat);
+              } else if (kind === 'longhouse') {
+                const lw = w * 1.55, ld = d * .92, lh = h * .88;
+                put('wall', s.wall, lx, lz, .004, yaw, lw, lh, ld);
+                put(s.roof, s.roofMat, lx, lz, .004 + lh * .955, yaw + Math.PI / 2,
+                  ld * s.spread, lh * s.rise * .85, lw * s.spread);
+                lit(lx, lz, yaw, lw, ld * .5, lh * .34, lh * .22, 3);
+                doorSteps(lx, lz, yaw, lw, ld * .5, s.roofMat);
+                if (rng() < .45) {
+                  const [cx, cz] = local(yaw, lw * .30, ld * .20);
+                  put('chimney', s.roofMat, lx + cx, lz + cz, .004 + lh * .955, yaw, w * .10, lh * .55, w * .10);
+                }
+              } else if (kind === 'tower') {
+                const h1 = h * .62, h2 = h * .46, w2 = w * .78, d2 = d * .78;
+                put('wall', s.wall, lx, lz, .004, yaw, w, h1, d);
+                put('ledge', s.roofMat, lx, lz, .004 + h1 * .95, yaw, w * 1.06, .10, d * 1.06);
+                put('wall', s.wall, lx, lz, .004 + h1 * .99, yaw, w2, h2, d2);
+                put(s.roof, s.roofMat, lx, lz, .004 + h1 * .99 + h2 * .955, yaw,
+                  w2 * s.spread, h2 * s.rise, d2 * s.spread);
+                lit(lx, lz, yaw, w, d * .5, h1 * .34, h1 * .26, 1);
+                lit(lx, lz, yaw, w2, d2 * .5, h1 * .99 + h2 * .34, h2 * .26, 1);
+              } else if (kind === 'round') {
+                const rh = h * .95;
+                put('drum', s.wall, lx, lz, .004, yaw, w, rh, w);
+                put(rng() < .5 ? 'dome' : (s.roof === 'dome' ? 'dome' : 'spire'), s.roofMat,
+                  lx, lz, .004 + rh * .96, yaw, w * 1.04, w * .62, w * 1.04);
+                lit(lx, lz, yaw, w * .92, w * .5, rh * .40, rh * .22, 1);
+              } else if (kind === 'flat') {
+                put('wall', s.wall, lx, lz, .004, yaw, w, h, d);
+                put('block', s.roofMat, lx, lz, .004 + h * .95, yaw, w * 1.10, .016, d * 1.10);
+                put('ledge', s.roofMat, lx, lz, .004 + h * .955, yaw, w * 1.06, .11, d * 1.06);
+                put('ledge', s.roofMat, lx, lz, .004 + h * .955, yaw + Math.PI / 2, d * 1.06, .11, w * 1.06);
+                lit(lx, lz, yaw, w, d * .5, h * .34, h * .24, 2);
+              } else if (kind === 'barn') {
+                const bh = h * 1.25, bw = w * 1.30;
+                put('wall', s.wall, lx, lz, .004, yaw, bw, bh, d);
+                put(s.roof, s.roofMat, lx, lz, .004 + bh * .955, yaw + Math.PI / 2,
+                  d * s.spread, bh * s.rise * .8, bw * s.spread);
+                lit(lx, lz, yaw, bw, d * .5, bh * .55, bh * .20, 1);
+                if (rng() < .6) {
+                  const [cx, cz] = local(yaw, bw * .28, 0);
+                  put('chimney', s.roofMat, lx + cx, lz + cz, .004 + bh * .955, yaw, w * .11, bh * .50, w * .11);
+                }
+              } else if (kind === 'stilt') {
+                const lift = h * .34, bodyH = h * .70;
+                for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+                  const [px, pz] = local(yaw, sx * w * .34, sz * d * .34);
+                  put('beam', s.wall, lx + px, lz + pz, 0, yaw, .009, lift, .009);
+                }
+                put('block', s.roofMat, lx, lz, lift - .006, yaw, w * 1.08, .014, d * 1.08);
+                put('wall', s.wall, lx, lz, lift, yaw, w, bodyH, d);
+                put(s.roof, s.roofMat, lx, lz, lift + bodyH * .955, yaw, w * s.spread, bodyH * s.rise, d * s.spread);
+                lit(lx, lz, yaw, w, d * .5, lift + bodyH * .30, bodyH * .26, 1);
+                const [bx, bz] = local(yaw, 0, -(d * .5 + .030));
+                put('beam', s.wall, lx + bx, lz + bz, lift - .010, yaw, w * .22, .12, .012);
+              } else {
+                const sh = h * .52;
+                put('wall', s.wall, lx, lz, .004, yaw, w * .82, sh, d * .9);
+                put(s.roof === 'dome' ? 'dome' : s.roof, s.roofMat, lx, lz, .004 + sh * .955, yaw, w * .95, sh * .55, d * 1.02);
+              }
+            };
+            const houseAt = (lx, lz, yaw, kind, scale = 1) => {
+              const w = (.044 + rng() * .014) * k * scale;
+              const d = (.036 + rng() * .010) * k * scale;
+              const h = (.044 + rng() * .020) * k * scale;
+              house(lx, lz, yaw, kind === 'tower' ? w * .86 : w, d, h, kind);
+            };
+            // ---- ground ------------------------------------------------------------------------
+            const platMat = id === 'caelth' ? 'pale' : (id === 'vaelmar' || id === 'mirella') ? 'timber' : 'basalt';
+            const groundKind = rng();
+            // platMat geometry radii differ (platform/disc are r=1, block is 1 wide), hence the numbers.
+            if (groundKind < .46) put('platform', platMat, 0, 0, 0, yaw0, .19 * k, .34, .19 * k);
+            else if (groundKind < .74) put('block', platMat, 0, 0, 0, yaw0, .26 * k, .012, .22 * k);
+            else put('disc', platMat, 0, 0, 0, yaw0, .095 * k, .16, .095 * k);
+            // ---- landmark ----------------------------------------------------------------------
+            const landmark = pick(LANDMARKS[id]);
+            site.landmark = landmark;
             if (id === 'vaelmar') {
-              // Archive tower with a flared spire, then gabled longhouses down a moss lane.
-              const t = (.105 + rng() * .035) * k;
-              put('tower', 'timber', .058 * k, 0, .010, yaw0, .052 * k, t, .052 * k);
-              put('spire', 'timber', .058 * k, 0, .010 + t * .97, yaw0, .058 * k, t * .52, .058 * k);
-              put('lamp', 'lamp', .058 * k, 0, .010 + t * .97 + t * .50, yaw0, .007, .009, .007);
-              const houses = 4 + Math.floor(rng() * 3);
-              for (let i = 0; i < houses; i++) {
-                const lane = (i - (houses - 1) / 2) * .046 * k, side = i % 2 ? 1 : -1;
-                const [lx, lz] = local(yaw0, lane, side * (.046 + rng() * .010) * k);
-                const w = (.050 + rng() * .012) * k, d = (.038 + rng() * .008) * k, h = (.048 + rng() * .020) * k;
-                dwelling(lx, lz, yaw0 + (rng() - .5) * .16, w, d, h, styleOf.vaelmar);
+              if (landmark === 'archive') {
+                const t = (.105 + rng() * .035) * k;
+                put('tower', 'timber', .058 * k, 0, .010, yaw0, .052 * k, t, .052 * k);
+                put('spire', 'timber', .058 * k, 0, .010 + t * .97, yaw0, .058 * k, t * .52, .058 * k);
+                put('lamp', 'lamp', .058 * k, 0, .010 + t * .97 + t * .50, yaw0, .007, .009, .007);
+              } else if (landmark === 'hall') {
+                const hw = .135 * k, hh = .075 * k;
+                put('wall', 'timber', 0, 0, .010, yaw0, hw, hh, .085 * k);
+                put('roof', 'timber', 0, 0, .010 + hh * .955, yaw0 + Math.PI / 2, .085 * k * 1.22, hh * .88, hw * 1.16);
+                lit(0, 0, yaw0, hw, .042 * k, .010 + hh * .30, hh * .26, 3);
+                doorSteps(0, 0, yaw0, hw, .042 * k, 'timber');
+                for (const sx of [-1, 1]) {
+                  const [px, pz] = local(yaw0, sx * hw * .38, -.042 * k - .020);
+                  put('lamp', 'lamp', px, pz, .030 * k, yaw0, .006, .008, .006);
+                }
+              } else {
+                const t = (.085 + rng() * .025) * k, half = .075 * k;
+                for (const sx of [-1, 1]) {
+                  const [px, pz] = local(yaw0, sx * half, 0);
+                  put('tower', 'timber', px, pz, .008, yaw0, .038 * k, t, .038 * k);
+                  put('spire', 'timber', px, pz, .008 + t * .97, yaw0, .046 * k, t * .40, .046 * k);
+                }
+                const [bx, bz] = local(yaw0, 0, 0);
+                put('beam', 'timber', bx, bz, .008 + t * .62, yaw0 + Math.PI / 2, half * 2.1, .16, .018);
+                put('lamp', 'lamp', 0, 0, .008 + t * .62 + .030, yaw0, .006, .008, .006);
               }
-              for (let i = 0; i < 2; i++) {
-                const [bx, bz] = local(yaw0, (rng() - .5) * .08, (rng() - .5) * .08);
-                put('beam', 'timber', bx, bz, (.018 + rng() * .024) * k, yaw0 + rng() * TAU, (.05 + rng() * .04) * k, .010, .010);
-              }
-              put('lamp', 'lamp', -.075 * k, .05 * k, .022 * k, 0, .005, .007, .005);
             } else if (id === 'sennar') {
-              // Fat wind tower with a cap and ring ledges, a tilted mirror, and flat-roofed houses.
-              const t = (.10 + rng() * .05) * k;
-              put('tower', 'basalt', -.045 * k, .010 * k, .010, yaw0, .048 * k, t, .048 * k);
-              put('hip', 'basalt', -.045 * k, .010 * k, .010 + t * .96, yaw0, .054 * k, .024 * k, .054 * k);
-              for (const f of [.42, .74]) put('ledge', 'basalt', -.045 * k, .010 * k, .010 + t * f, yaw0, .052 * k, .007, .052 * k);
-              const mirrorYaw = rng() * TAU;
-              put('disc', 'glass', .050 * k, .048 * k, .014, mirrorYaw, .052 * k, .16, .052 * k);
-              put('disc', 'glass', .050 * k, .048 * k, .022, mirrorYaw + .4, .042 * k, .14, .042 * k);
-              const houses = 3 + Math.floor(rng() * 3);
-              for (let i = 0; i < houses; i++) {
-                const lane = (i - (houses - 1) / 2) * .044 * k, side = i % 2 ? 1 : -1;
-                const [lx, lz] = local(yaw0, lane, side * (.044 + rng() * .010) * k);
-                const w = (.050 + rng() * .014) * k, d = (.042 + rng() * .010) * k, h = (.034 + rng() * .014) * k;
-                dwelling(lx, lz, yaw0 + (rng() - .5) * .12, w, d, h, styleOf.sennar);
-                put('ledge', 'basalt', lx, lz, .004 + h * .955 + h * .18, yaw0, w * .92, .010, d * .92);
+              if (landmark === 'wind') {
+                const t = (.10 + rng() * .05) * k;
+                put('tower', 'basalt', -.045 * k, .010 * k, .010, yaw0, .048 * k, t, .048 * k);
+                put('hip', 'basalt', -.045 * k, .010 * k, .010 + t * .96, yaw0, .054 * k, .024 * k, .054 * k);
+                for (const f of [.42, .74]) put('ledge', 'basalt', -.045 * k, .010 * k, .010 + t * f, yaw0, .052 * k, .007, .052 * k);
+                const mirrorYaw = rng() * TAU;
+                put('disc', 'glass', .050 * k, .048 * k, .014, mirrorYaw, .052 * k, .16, .052 * k);
+                put('disc', 'glass', .050 * k, .048 * k, .022, mirrorYaw + .4, .042 * k, .14, .042 * k);
+              } else if (landmark === 'well') {
+                const r = .046 * k;
+                put('ring', 'basalt', 0, 0, .006, yaw0, r, r, r);
+                put('disc', 'glass', 0, 0, .010, rng() * TAU, r * 1.02, .14, r * 1.02);
+                for (const a of [0, Math.PI]) {
+                  const [px, pz] = local(yaw0 + a, r * 1.15, 0);
+                  put('ledge', 'basalt', px, pz, .006, yaw0 + a + Math.PI / 2, r * .85, .12, .013);
+                }
+                const mastH = (.085 + rng() * .030) * k;
+                put('mast', 'basalt', 0, 0, .010, yaw0, .026 * k, mastH, .026 * k);
+                put('disc', 'glass', 0, 0, .010 + mastH * .82, yaw0, .032 * k, .16, .032 * k);
+              } else {
+                const cw = .15 * k, ch = .030 * k;
+                for (const [px, pz, yaw] of [[0, -cw * .5, yaw0], [0, cw * .5, yaw0], [-cw * .5, 0, yaw0 + Math.PI / 2], [cw * .5, 0, yaw0 + Math.PI / 2]]) {
+                  put('wall', 'basalt', px, pz, .004, yaw, cw, ch, .022 * k);
+                }
+                put('awning', 'basalt', -.02 * k, .02 * k, .034 * k, yaw0, .07 * k, .50, .05 * k);
+                put('mast', 'basalt', .05 * k, -.05 * k, .004, yaw0, .022 * k, (.08 + rng() * .04) * k, .022 * k);
+                put('lamp', 'lamp', .05 * k, -.05 * k, .004 + (.08 + rng() * .04) * k * .95, yaw0, .005, .007, .005);
               }
+            } else if (id === 'caelth') {
+              if (landmark === 'observatory') {
+                const drumR = (.038 + rng() * .012) * k, drumH = (.048 + rng() * .016) * k;
+                put('drum', 'pale', 0, 0, .010, yaw0, drumR * 2, drumH, drumR * 2);
+                put('dome', 'pale', 0, 0, .010 + drumH, yaw0, drumR * 2.02, drumR * 1.30, drumR * 2.02);
+                put('lamp', 'lamp', 0, 0, .010 + drumH + drumR * 1.28, yaw0, .006, .008, .006);
+                const spire = (.10 + rng() * .05) * k;
+                put('tower', 'pale', -drumR * 2.4, drumR * 1.1, .008, yaw0, .026 * k, spire, .026 * k);
+                put('spire', 'pale', -drumR * 2.4, drumR * 1.1, .008 + spire * .97, yaw0, .042 * k, spire * .32, .042 * k);
+              } else if (landmark === 'bell') {
+                const t = (.10 + rng() * .04) * k;
+                put('tower', 'pale', 0, 0, .008, yaw0, .048 * k, t, .048 * k);
+                put('spire', 'pale', 0, 0, .008 + t * .97, yaw0, .051 * k, t * .46, .051 * k);
+                put('lamp', 'lamp', 0, 0, .008 + t * .97 + t * .44, yaw0, .006, .008, .006);
+                for (const a of [0, Math.PI / 2]) {
+                  const [px, pz] = local(yaw0 + a, .075 * k, 0);
+                  put('column', 'pale', px, pz, .004, yaw0 + a, .018 * k, .045 * k, .018 * k);
+                }
+              } else {
+                const r = .085 * k;
+                put('ring', 'pale', 0, 0, .004, yaw0, r, r, r);
+                put('drum', 'pale', 0, 0, .004, yaw0, r * 1.30, .030 * k, r * 1.30);
+                put('dome', 'pale', 0, 0, .004 + .030 * k, yaw0, r * 1.34, r * .70, r * 1.34);
+                put('lamp', 'lamp', 0, 0, .004 + .030 * k + r * .68, yaw0, .006, .008, .006);
+                doorSteps(0, 0, yaw0, r, r * .65, 'pale');
+              }
+            } else if (id === 'mirella') {
+              if (landmark === 'song') {
+                const towerH = (.085 + rng() * .028) * k;
+                put('tower', 'timber', 0, 0, .010, yaw0, .040 * k, towerH, .040 * k);
+                put('spire', 'timber', 0, 0, .010 + towerH * .97, yaw0, .049 * k, towerH * .44, .049 * k);
+                put('ring', 'glass', 0, 0, .010 + towerH * .30, yaw0, .046 * k, .046 * k, .046 * k);
+              } else if (landmark === 'dock') {
+                const dw = .125 * k, dd = .048 * k, lift = .026 * k;
+                for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+                  const [px, pz] = local(yaw0, sx * dw * .38, sz * dd * .34);
+                  put('beam', 'timber', px, pz, 0, yaw0, .012, lift, .012);
+                }
+                put('block', 'timber', 0, 0, lift - .008, yaw0, dw * 1.06, .016, dd * 1.10);
+                put('wall', 'timber', 0, 0, lift, yaw0, dw * .92, .046 * k, dd * .92);
+                put('roof', 'timber', 0, 0, lift + .044 * k, yaw0 + Math.PI / 2, dd * 1.26, .030 * k, dw * 1.28);
+                lit(0, 0, yaw0, dw * .92, dd * .46, lift + .016 * k, .012 * k, 2);
+                put('beam', 'timber', 0, -.062 * k, lift - .012, yaw0, .05 * k, .06, dd * 2.2);
+              } else {
+                const towerH = (.10 + rng() * .03) * k, lift = .030 * k;
+                for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+                  const [px, pz] = local(yaw0, sx * .030 * k, sz * .030 * k);
+                  put('beam', 'timber', px, pz, 0, yaw0, .012, lift, .012);
+                }
+                put('block', 'timber', 0, 0, lift - .008, yaw0, .080 * k, .016, .080 * k);
+                put('tower', 'timber', 0, 0, lift, yaw0, .040 * k, towerH, .040 * k);
+                put('spire', 'timber', 0, 0, lift + towerH * .97, yaw0, .055 * k, towerH * .40, .055 * k);
+                put('ring', 'glass', 0, 0, lift + towerH * .55, yaw0, .045 * k, .045 * k, .045 * k);
+                put('ring', 'glass', 0, 0, lift + towerH * .20, yaw0, .050 * k, .050 * k, .050 * k);
+              }
+            } else {
+              if (landmark === 'basin') {
+                put('ring', 'crystal', 0, 0, .006, yaw0, .11 * k, .11 * k, .05);
+                const big = (.12 + rng() * .06) * k, leanA = rng() * TAU;
+                yawQuat.setFromAxisAngle(axis.set(Math.cos(leanA), 0, Math.sin(leanA)).normalize(), .06 + rng() * .12);
+                push('shard', 'crystal', origin.clone().addScaledVector(site.dir, big * .45),
+                  qBase.clone().multiply(yawQuat), new THREE.Vector3(.026 * k, big * .55, .026 * k));
+                for (let i = 0; i < 2; i++) {
+                  const a = rng() * TAU, dist = (.07 + rng() * .04) * k;
+                  put('mast', 'crystal', Math.cos(a) * dist, Math.sin(a) * dist, .004, a, .030 * k, (.14 + rng() * .08) * k, .030 * k);
+                }
+                put('lamp', 'lamp', 0, 0, big * .55, 0, .006, .008, .006);
+              } else if (landmark === 'lattice') {
+                for (let i = 0; i < 3; i++) {
+                  const a = i * TAU / 3 + rng() * .4, dist = (.05 + rng() * .05) * k;
+                  const tilt = .12 + rng() * .22;
+                  yawQuat.setFromAxisAngle(axis.set(Math.cos(a + 1.2), 0, Math.sin(a + 1.2)).normalize(), tilt);
+                  push('mast', 'crystal', origin.clone()
+                    .addScaledVector(ax, Math.cos(a) * dist * TOWN_SCALE)
+                    .addScaledVector(az, Math.sin(a) * dist * TOWN_SCALE)
+                    .addScaledVector(site.dir, .004 * TOWN_SCALE),
+                  qBase.clone().multiply(yawQuat), new THREE.Vector3(.026 * k * TOWN_SCALE, (.13 + rng() * .06) * k * TOWN_SCALE, .026 * k * TOWN_SCALE));
+                }
+                put('beam', 'crystal', 0, 0, .010, yaw0 + rng() * TAU, .16 * k, .022, .014);
+                for (let i = 0, n = 4 + Math.floor(rng() * 3); i < n; i++) {
+                  const a = rng() * TAU, d = (.04 + rng() * .09) * k;
+                  const hgt = (.05 + rng() * .08) * k;
+                  put('shard', 'crystal', Math.cos(a) * d, Math.sin(a) * d, hgt * .5, a, .014 * k, hgt, .014 * k);
+                }
+                put('lamp', 'lamp', 0, 0, .03 * k, 0, .006, .008, .006);
+              } else {
+                const piers = 4, span = .20 * k, pierH = (.105 + rng() * .030) * k;
+                for (let i = 0; i < piers; i++) {
+                  const x = (i / (piers - 1) - .5) * span;
+                  for (const side of [-1, 1]) {
+                    const [px, pz] = local(yaw0, x, side * .042 * k);
+                    put('column', 'basalt', px, pz, .004, yaw0, .016 * k, pierH, .016 * k);
+                  }
+                }
+                for (const side of [-1, 1]) {
+                  const [px, pz] = local(yaw0, 0, side * .042 * k);
+                  put('beam', 'basalt', px, pz, pierH * .96, yaw0, span * 1.04, .10, .020);
+                }
+                put('shard', 'crystal', 0, 0, .004, rng() * TAU, .018 * k, .09 * k, .018 * k);
+                put('lamp', 'lamp', 0, 0, .004 + .09 * k * 1.0, 0, .006, .008, .006);
+              }
+            }
+            // ---- dwellings ---------------------------------------------------------------------
+            if (id === 'vessper') { site.plan = landmark; continue; }
+            const plan = pick(PLANS[id]);
+            site.plan = plan;
+            const kinds = HOUSES[id];
+            if (plan === 'lane' || plan === 'row') {
+              const count = 3 + Math.floor(rng() * 3);
+              for (let i = 0; i < count; i++) {
+                const lane = (i - (count - 1) / 2) * .048 * k;
+                const side = plan === 'row' ? 1 : (i % 2 ? 1 : -1);
+                const back = (.050 + rng() * .012) * k;
+                const [lx, lz] = local(yaw0, lane, side * back);
+                houseAt(lx, lz, yaw0 + (plan === 'row' ? 0 : Math.PI * side) + (rng() - .5) * .12, pick(kinds), .9 + rng() * .30);
+              }
+              if (plan === 'lane' && rng() < .6) {
+                const [bx, bz] = local(yaw0, (rng() - .5) * .06, 0);
+                put('beam', s.wall, bx, bz, .020 + rng() * .020, yaw0 + Math.PI / 2, .07 * k, .10, .014);
+              }
+            } else if (plan === 'hollow') {
+              const count = 4 + Math.floor(rng() * 3), rx = (.092 + rng() * .016) * k, rz = rx * (.78 + rng() * .22);
+              for (let i = 0; i < count; i++) {
+                const a = i * TAU / count + rng() * .22;
+                const lx = Math.cos(a) * rx, lz = Math.sin(a) * rz;
+                houseAt(lx, lz, -a + Math.PI / 2, pick(kinds), .85 + rng() * .3);
+              }
+            } else {
+              const count = 2 + Math.floor(rng() * 2);
+              for (const laneYaw of [yaw0, yaw0 + Math.PI / 2]) {
+                for (let i = 0; i < count; i++) {
+                  const along = (.055 + (i + rng() * .5) * .050) * k, side = i % 2 ? 1 : -1;
+                  const [lx, lz] = local(laneYaw, along, side * (.048 + rng() * .012) * k);
+                  houseAt(lx, lz, laneYaw + side * Math.PI + (rng() - .5) * .14, pick(kinds), .85 + rng() * .30);
+                }
+              }
+            }
+            // Small street furniture that differs by province.
+            if (id === 'vaelmar' || id === 'mirella') {
+              for (let i = 0; i < 2; i++) {
+                const [bx, bz] = local(yaw0, (rng() - .5) * .10, (rng() - .5) * .10);
+                put('beam', 'timber', bx, bz, (.016 + rng() * .020) * k, yaw0 + rng() * TAU, (.05 + rng() * .04) * k, .10, .012);
+              }
+              if (rng() < .7) put('lamp', 'lamp', -.07 * k, .05 * k, .022 * k, 0, .005, .007, .005);
+            } else if (id === 'sennar') {
               for (let i = 0; i < 2; i++) {
                 const a = rng() * TAU, len = (.055 + rng() * .035) * k;
                 put('ledge', 'basalt', Math.cos(a) * len, Math.sin(a) * len, .006, a + Math.PI / 2, .04 * k, .012, .010);
               }
+              if (rng() < .6) put('awning', 'basalt', .04 * k, .05 * k, .014, rng() * TAU, .05 * k, .45, .04 * k);
             } else if (id === 'caelth') {
-              // A ringed observatory drum under a dome, a watch spire, and domed stone houses.
-              const drumR = (.038 + rng() * .012) * k, drumH = (.048 + rng() * .016) * k;
-              put('drum', 'pale', 0, 0, .010, yaw0, drumR * 2, drumH, drumR * 2);
-              const domeY = .010 + drumH;
-              put('dome', 'pale', 0, 0, domeY, yaw0, drumR * 2.02, drumR * 1.30, drumR * 2.02);
-              put('lamp', 'lamp', 0, 0, domeY + drumR * 1.28, yaw0, .006, .008, .006);
-              const spire = (.10 + rng() * .05) * k;
-              put('tower', 'pale', -drumR * 2.4, drumR * 1.1, .008, yaw0, .026 * k, spire, .026 * k);
-              put('spire', 'pale', -drumR * 2.4, drumR * 1.1, .008 + spire * .97, yaw0, .042 * k, spire * .32, .042 * k);
-              for (let i = 0, n = 4 + Math.floor(rng() * 2); i < n; i++) {
-                const a = i * TAU / n + rng() * .4, dist = (.068 + rng() * .020) * k;
-                const lx = Math.cos(a) * dist, lz = Math.sin(a) * dist;
-                const w = (.044 + rng() * .012) * k, h = (.034 + rng() * .014) * k;
-                dwelling(lx, lz, a, w, w * .92, h, styleOf.caelth);
-              }
-            } else if (id === 'mirella') {
-              // Stilt houses in a ring around a singing tower, each under a flared thatch cone.
-              const towerH = (.085 + rng() * .028) * k;
-              put('tower', 'timber', 0, 0, .010, yaw0, .040 * k, towerH, .040 * k);
-              put('spire', 'timber', 0, 0, .010 + towerH * .97, yaw0, .049 * k, towerH * .44, .049 * k);
-              put('ring', 'glass', 0, 0, .010 + towerH * .30, yaw0, .046 * k, .046 * k, .046 * k);
-              const houses = 4 + Math.floor(rng() * 2);
-              for (let i = 0; i < houses; i++) {
-                const a = i * TAU / houses + rng() * .3, dist = (.070 + rng() * .018) * k;
-                const lx = Math.cos(a) * dist, lz = Math.sin(a) * dist;
-                const w = (.048 + rng() * .012) * k, d = (.038 + rng() * .010) * k, h = (.052 + rng() * .018) * k;
-                // Stilts first, then the house standing on them.
-                for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-                  const [px, pz] = local(a + Math.PI / 2, sx * w * .34, sz * d * .34);
-                  put('beam', 'timber', lx + px, lz + pz, 0, a, .009, h * .34, .009);
-                }
-                dwelling(lx, lz, a + Math.PI / 2, w, d, h * .78, styleOf.mirella);
-                put('ring', 'glass', lx, lz, h * .66 - h * .014, a, .036 * k, .036 * k, .036 * k);
-                const [bx, bz] = local(a, 0, -dist * 1.02);
-                put('beam', 'timber', bx, bz, h * .42, a + Math.PI / 2, dist * .9, .010, .010);
-              }
-            } else {
-              // Launch basin: a wide ring, one tall crystal, a field of shards and two masts.
-              put('ring', 'crystal', 0, 0, .006, yaw0, .11 * k, .11 * k, .05);
-              const big = (.12 + rng() * .06) * k;
-              const leanA = rng() * TAU;
-              yawQuat.setFromAxisAngle(axis.set(Math.cos(leanA), 0, Math.sin(leanA)).normalize(), .06 + rng() * .12);
-              push('shard', 'crystal', origin.clone().addScaledVector(site.dir, big * .45),
-                qBase.clone().multiply(yawQuat), new THREE.Vector3(.026 * k, big * .55, .026 * k));
               for (let i = 0; i < 2; i++) {
-                const a = rng() * TAU, dist = (.07 + rng() * .04) * k;
-                put('mast', 'crystal', Math.cos(a) * dist, Math.sin(a) * dist, .004, a, .030 * k, (.14 + rng() * .08) * k, .030 * k);
+                const a = rng() * TAU, len = (.06 + rng() * .03) * k;
+                put('column', 'pale', Math.cos(a) * len, Math.sin(a) * len, .004, a, .016 * k, (.038 + rng() * .016) * k, .016 * k);
               }
-              for (let i = 0, n = 5 + Math.floor(rng() * 4); i < n; i++) {
-                const a = rng() * TAU, d = (.05 + rng() * .10) * k, height = (.05 + rng() * .09) * k;
-                put('shard', 'crystal', Math.cos(a) * d, Math.sin(a) * d, height * .3, a, .012 * k, height * .5, .012 * k);
-              }
-              put('lamp', 'lamp', 0, 0, big * .55, 0, .006, .008, .006);
+              if (rng() < .5) put('ring', 'pale', 0, 0, .004, rng() * TAU, .15 * k, .15 * k, .15 * k);
             }
           }
         }
