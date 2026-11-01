@@ -9,7 +9,8 @@
 C:\Users\sibop\WorkBuddy\2026-10-23-15-42-22\spot-visual （git 仓库，远端 origin，分支 main）
 
 ## 0. 一句话目标
-**「4A 景区描述」已全部完成（15 批 4320 条）**；**「景点档案」已交付 3820 条（5A 100% 覆盖）**，剩下主任务是**档案续写 933 条（10 批）** + 低等级描述补写（453 条）+ 剩余 28 张配图。
+**「4A 景区描述」4320 条 + 「景点档案」4753 条均已收官（覆盖率 100%）**；剩下主任务只有两项：
+**低等级描述补写（3A/2A/无等级共 453 条无描述）** + **剩余 28 张配图**。
 每批都要过机器验收 + 重复度门禁，最后交指挥侧人工抽检。
 
 ## 1. 当前进度（已核实，别重复劳动）
@@ -21,8 +22,10 @@ C:\Users\sibop\WorkBuddy\2026-10-23-15-42-22\spot-visual （git 仓库，远端 
 - ✅ 描述批 4–15（12 批 3600 条）：**已交付合入**（署名 MiMo；批 4 为 json 交付、批 5–15 为 txt 交付）。
 - ✅ **描述线收官**：15 批共 **4320 条**全部合入 `src/lib/scenic-desc-outsource.generated.ts`，4A 描述覆盖率 100%
   （全库 5931 条中 5447 条有实质描述）。
-- ✅ **景点档案 3820 条已交付合入**（5A 336/336 = 100%；4A 3484/4417 = 78.9%），0 硬违规、人工抽检未发现编造，见 `REVIEW-PROFILE.md`。
-- ⬜ **景点档案续写 933 条（10 批）：现在是你的主任务** —— 清单已按剩余池重切为 `profile-batch1..10.json`（9×100 + 33），全为 4A；缺口集中在上海 61/北京 59/湖州 35/天津 33/鄂尔多斯 28/哈尔滨 27/石家庄 25/杭州 20/呼和浩特 20 等 90 市。详见下面「档案线」一节。
+- ✅ **景点档案已收官：4753/4753 全部合入**（5A 336/336 + 4A 4417/4417 = 100%），
+  上轮 3820 + 本轮增量 933（批 1–10，全 4A）；0 硬违规、抽检未发现编造。
+  回执：`REVIEW-PROFILE.md`（3820 那轮）+ `REVIEW-PROFILE-4753.md`（收官）。**不要再写档案。**
+  待补池现在是 **0 条**，清单生成器按池重写 0 批（`profile-batch*.json` 已清理）。
 - ⬜ **低等级描述补写**：3A/2A/无等级 1178 条里 453 条无描述。
 - ⬜ 剩余 28 条配图：换渠道（高德图片 POI / 官方文旅厅图库）或整理人工上传清单。
 
@@ -88,72 +91,24 @@ node scripts/merge-out-profile.mjs docs/outsource/out-profile-batch1.json
 
 > 太行深处的高山型景区，山体连绵、林木浓密，沟谷与山脊形态多变；天气清朗时山峦层次分明，秋冬草木色彩变化明显，是燕山南段典型的山岳游览地。
 
-## 4.5 档案线（现在的主任务）
+## 4.5 档案线（已收官，仅作参考，不要再写）
 
-### 4.5.1 规模与排期
+**4753/4753 已合入**：`src/lib/spot-profiles.generated.ts` 4753 键，5A 与 4A 覆盖率 100%。
+守护测试 `tests/spot-profiles.test.ts` 会守住「id 全命中库 / 非 low 必填与区间 / 5A+4A 覆盖 100%」。
 
-| 阶段     | 范围                   | 条数 | 状态                                     |
-| -------- | ---------------------- | ---- | ---------------------------------------- |
-| 已交付   | 5A 全量 + 4A 中部/东部 | 3820 | ✅ 已合入（5A 100%；4A 3484/4417）       |
-| **续写** | 剩余 4A，10 批         | 933  | ⬜ 你的任务（`profile-batch1..10.json`） |
-
-续写的 933 条构成：scenic 848 + poi 85；自然风光 525｜城市地标 209｜历史人文 78｜宗教寺庙 51｜
-主题乐园 39｜古镇村落 23｜轻运动 7｜海滨度假 1。**没有 5A**（5A 已全部完成，别再去写 5A）。
-
-> 注：交付方上一轮用的批次编号来自它们自己那版清单（旧批1 + 批1–38），与仓库清单 id 交集为 0，
-> 官方合并器会整批拒收。**契约是 id，不是批号**——按仓库当前清单文件名交付，指挥侧才能直接用合并器验收。
-
-### 4.5.2 清单与字段口径（**已升级，与旧版不同**）
-
-清单：`docs/outsource/profile-batch1.json` … `profile-batch10.json`（每条 100 条，批 10 为 33 条）。
-字段：`id / name / province / city / district / level / address / category`。
-
-**行政区字段是权威口径**（六十四轮修过：旧版 `city` 是从脏地址正则截出来的半截县名，
-如「安徽安庆市桐」，照它推算交通字段会系统性填错）：
-
-| 字段       | 含义                                           | 例                         |
-| ---------- | ---------------------------------------------- | -------------------------- |
-| `city`     | **地级市**（权威）                             | 安庆 / 池州 / 北京         |
-| `district` | 区县，可能为空串                               | 桐城市 / 延庆区            |
-| `province` | 省                                             | 安徽 / 北京                |
-| `address`  | 地址参考（个别带重复的行政区前缀，忽略重复段） | 安徽安庆市桐城市天柱山景区 |
-
-- `nearestRail` / `driveFromCityMin` **只按 city + district 推算**，不许凭景区名字猜城市。
-- `city` 为空串的极少数条目（名录本身没登记城市）按 address 判断，并在 notices 注明依据。
-
-### 4.5.3 硬性字段要求
-
-- **必填三项**：`ticketPeak`（成人全价；免费填 0，不是 null）、`openHours`（**必须含停止入园时间与闭馆日**）、`suggestedHours`（0.5–12 小时）。
-- `needReservation`：boolean；2026 年大量景区实名预约限流，不确定填 false 并在 notices 写「出行前请核实最新预约政策」。
-- `accessibility`：**只能用 TASK 第 3 节的 12 词闭集**，不超 6 个，不自造。
-- 票价**不含**索道/观光车/园中园（另写 ticketNote）；查不到填 null + 该条 `confidence: "low"`，**不要编**。
-- 输出格式：`{ "task": "景点档案结构化字段-批N", "batch": N, "count": 100, "items": [ { "id", "name", "profile": {...}, "confidence": "high|low" } ] }`，
-  `id`/`name` 逐字符照抄输入，顶层写 `authorship`。
-
-### 4.5.4 落盘与验收
+若后续要**修订**既有条目（不是新增）：
 
 ```bash
-# 1) 写 JSON（顶层 task/batch/count/items 齐全，items 恰好 100 条）
-# 2) 落盘到仓库路径（不要写到 Downloads 之类仓库外的地方）
-node scripts/merge-out-profile.mjs docs/outsource/out-profile-batch1.json
+# 1) 只改 out-profile-batchN.json 里对应条目（id 不变）
+# 2) 用归档导入器（按 id 池校验，幂等覆盖）
+node scripts/import-profile-archive.mjs <归档目录>
 # 3) 门禁
 npx tsc --noEmit && npx vitest run && NEXT_DIST=.next-gate npx next build
-# 4) 回传指挥侧抽检：qc-profile-batch1.json 路径、批号、条数、low 数、必填缺失数
-# 5) 抽检通过后精确 add + push
 ```
 
-合并器为整批验收：条数不符 / id 回填错 / name 逐字符不一致 / 票价或时长越界 / 闭集越界 → **整批拒绝**。
-
-**已交付的 3820 条不要再重写**；`src/lib/spot-profiles.generated.ts` 现在有 3820 键，
-守护测试 `tests/spot-profiles.test.ts` 会守住「id 全部命中库 / 非 low 必填齐全 / 5A 覆盖 100%」。
-若外部一次性交来整个归档目录（不是逐批），用：
-
-```bash
-node scripts/import-profile-archive.mjs <归档目录>
-```
-
-它按「池」校验（规则与合并器同源：id ∈ 待补池、name 逐字符、区间、闭集、null 必须 low），
-并打印剩余未交付条数——**批号对不上时走这条，不要手改 generated.ts**。
+口径要点（历史留档）：`city` 是地级市、`district` 是区县、交通字段只按 city+district 推算；
+必填 `ticketPeak`（免费填 0）/ `openHours`（含停止入园与闭馆日）/ `suggestedHours`（0.5–12）；
+`accessibility` 12 词闭集 ≤6 个；**任一必填为 null 必须 `confidence: "low"`**。
 
 ### 4.5.5 与描述线并行的两项
 
@@ -184,17 +139,17 @@ node scripts/import-profile-archive.mjs <归档目录>
   （那里已改成按 glob 备份 `docs/outsource/qc-*-batchN.json`，**新产物也要能被 glob 覆盖到**）。
 - 跑 `node scripts/verify-outsource-pipelines.mjs` 必须 17/17 通过且**不留残留文件**。
 
-## 7. 建议节奏（按这个顺序做，价值从高到低）
+## 7. 建议节奏（剩下的活儿，价值从高到低）
 
-1. **档案批 1**（100 条 5A，先跑通档案链路：字段多、坑最多，先摸清闭集与必填口径）
-2. 档案批 2–4（补完 5A 336 条）
-3. 低等级描述补写（453 条，走描述线工具）
-4. 档案批 5–48（4A 4417 条，按批推进）
-5. 剩余 28 条配图
+1. **低等级描述补写（453 条）**：3A/2A/无等级里没描述的条目，走描述线全部工具（写文本 → `--check` → 事实/重复度门禁 → 合并）。
+2. **剩余 28 张配图**：换高德图片 POI 或官方文旅厅图库；拿不到就整理成人工上传清单。
+3. 想继续加价值就做**存量数据修缮**（不是新写）：档案里 low 条目的 `ticketPeak` 逐条去官方渠道核实后回填（G10 的根因），走 `import-profile-archive.mjs` 幂等更新。
 
-描述线已收官（15 批 4320 条全部合入），不必重做。
+已收官、不必重做的：描述 4320 条、档案 4753 条、5A 全覆盖。
 
 ## 8. 交付前自查清单（每批过一遍）
+
+描述批：
 
 - [ ] 条数与清单一致，id/name 由工具回填、没有手抄
 - [ ] 每条 60–110 字符
@@ -204,25 +159,10 @@ node scripts/import-profile-archive.mjs <归档目录>
 - [ ] 数字与强断言逐条自问「我能给出处吗」，答不上就删
 - [ ] 顶层有 `authorship`
 
-```
+档案修订（若有）：
 
----
-
-## 附：文件路径速查
-
-| 用途 | 路径 |
-|---|---|
-| 仓库根 | `C:\Users\sibop\WorkBuddy\2026-10-23-15-42-22\spot-visual` |
-| 描述清单（批 2–15） | `docs/outsource/desc-4a-batch2.json` … `desc-4a-batch15.json` |
-| 档案清单（批 1–48） | `docs/outsource/profile-batch1.json` … `profile-batch48.json` |
-| 描述规约 / 档案规约 | `docs/outsource/TASK-4A-DESC.md` / `TASK-SPOT-PROFILE.md` |
-| 对外提示词 | `docs/outsource/PROMPT-4A-DESC.md` / `PROMPT-SPOT-PROFILE.md` |
-| 样例（150 条已上线） | `docs/outsource/drafts/desc-batch1-draft.txt` |
-| 抽检结论与降级范例 | `docs/outsource/REVIEW-BATCH1.md` |
-| 撰写工具 | `scripts/author-desc-batch.mjs` |
-| 机器验收 | `scripts/check-desc-facts.mjs` |
-| **重复度门禁** | `scripts/check-desc-repetition.mjs` |
-| 合并器 | `scripts/merge-out-desc.mjs` / `scripts/merge-out-profile.mjs` |
-| 回收器 | `scripts/ingest-outsource.mjs` |
-| 端到端验收器 | `scripts/verify-outsource-pipelines.mjs` |
-```
+- [ ] `id`/`name` 与库逐字符一致
+- [ ] 必填 `ticketPeak`/`openHours`/`suggestedHours` 齐全；任一 null 必须 `confidence: "low"`
+- [ ] `accessibility` 只在 12 词闭集内且 ≤6 个
+- [ ] `driveFromCityMin` ∈ [1,600]，交通字段按 city+district 推算
+- [ ] 跑过 `node scripts/import-profile-archive.mjs <目录>` 且退出码 0
