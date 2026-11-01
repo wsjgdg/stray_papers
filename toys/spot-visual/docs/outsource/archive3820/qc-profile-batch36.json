@@ -1,0 +1,28 @@
+{
+  "batch": 36,
+  "count": 100,
+  "low": 77,
+  "missingRequired": 66,
+  "sample": [
+    "scenic-丹东-4342",
+    "scenic-朝阳-4384",
+    "scenic-葫芦岛-4403",
+    "scenic-辽阳-4377",
+    "scenic-锦州-4359",
+    "scenic-丹东-4344",
+    "scenic-盘锦-4396",
+    "scenic-葫芦岛-4404",
+    "scenic-锦州-4349",
+    "scenic-辽阳-4372",
+    "scenic-阜新-4368",
+    "scenic-葫芦岛-4400",
+    "scenic-锦州-4353",
+    "scenic-葫芦岛-4405",
+    "scenic-湘潭-4428",
+    "scenic-张家界-4416",
+    "scenic-衡阳-4410",
+    "scenic-辽阳-4375",
+    "scenic-张家界-4423",
+    "scenic-衡阳-4411"
+  ]
+}

@@ -11,14 +11,13 @@
 // 现在 city = id 里的地级市（与页面城市筛选同口径），province/district
 // 由地址逐级剥离解析，address 给出折叠重复段后的参考值。
 import { describe, expect, it } from "vitest";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { LIBRARY_SPOTS } from "@/lib/spot-data";
 import { SPOT_PROFILES } from "@/lib/spot-profiles.generated";
 import { CITY_CENTERS } from "@/lib/city-centers.generated";
 
 const BATCH_DIR = "docs/outsource";
 const PER = 100;
-const TOTAL_BATCHES = 48;
 
 const MUNICIPALITIES = new Set(["北京", "上海", "天津", "重庆"]);
 
@@ -156,7 +155,8 @@ function loadBatches(): { ids: string[]; dups: string[]; files: number } {
   const ids: string[] = [];
   const dups: string[] = [];
   let files = 0;
-  for (let n = 1; n <= TOTAL_BATCHES; n++) {
+  // 扫描上界放宽到 80：档案在推进，剩余池会缩小到个位数批次（3820 条已交付后只剩 933 条 → 10 批）
+  for (let n = 1; n <= 80; n++) {
     const p = `${BATCH_DIR}/profile-batch${n}.json`;
     if (!existsSync(p)) continue;
     files++;
@@ -170,9 +170,13 @@ function loadBatches(): { ids: string[]; dups: string[]; files: number } {
 }
 
 describe("profile batches", () => {
-  it("守护：48 批 id 并集 == 当前待补全集且无重复", () => {
+  it("守护：清单 id 并集 == 当前待补全集且无重复", () => {
     const { ids, dups, files } = loadBatches();
-    expect(files, "交接清单应有 48 个批次文件").toBe(TOTAL_BATCHES);
+    const pool0 = pendingPool();
+    expect(
+      files,
+      `交接清单批数应等于 ceil(待补池/100) = ${Math.ceil(pool0.length / PER)}（池 ${pool0.length} 条，重跑生成器）`,
+    ).toBe(Math.ceil(pool0.length / PER));
     expect(dups, `清单内 id 重复: ${dups.slice(0, 5)}`).toEqual([]);
 
     const pool = pendingPool();
@@ -197,7 +201,7 @@ describe("profile batches", () => {
     // 逐字段比对清单里的 province/city/district——清单与算法漂移即失败。
     const byId = new Map(LIBRARY_SPOTS.map((s) => [s.id, s]));
     const bad: string[] = [];
-    for (let n = 1; n <= TOTAL_BATCHES; n++) {
+    for (let n = 1; n <= 80; n++) {
       const p = `${BATCH_DIR}/profile-batch${n}.json`;
       if (!existsSync(p)) continue;
       const b = JSON.parse(readFileSync(p, "utf8"));
@@ -226,7 +230,7 @@ describe("profile batches", () => {
     ).toEqual([]);
   });
 
-  it("生成器：GEN_PROFILE_BATCHES=1 时重写 48 批清单", () => {
+  it("生成器：GEN_PROFILE_BATCHES=1 时按待补池重写清单并清理多余旧批", () => {
     if (!process.env.GEN_PROFILE_BATCHES) {
       console.log("GEN_PROFILE_BATCHES 未设置，跳过生成");
       return;
@@ -261,7 +265,13 @@ describe("profile batches", () => {
         "utf8",
       );
     }
+    // 档案已交付一部分后，待补池变小 → 批数变少；删掉超出新批数的旧清单文件，
+    // 否则守护会因「批数 ≠ ceil(池/100)」失败，且旧文件会把已交付 id 又外包一遍。
+    for (let stale = n + 1; stale <= 80; stale++) {
+      const p = `${BATCH_DIR}/profile-batch${stale}.json`;
+      if (existsSync(p)) rmSync(p);
+    }
     console.log(`重写 ${n} 批（池 ${pool.length} 条）`);
-    expect(n).toBe(TOTAL_BATCHES);
+    expect(n).toBe(Math.ceil(pool.length / PER));
   });
 });

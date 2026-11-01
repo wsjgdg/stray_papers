@@ -1,0 +1,28 @@
+{
+  "batch": 24,
+  "count": 100,
+  "low": 87,
+  "missingRequired": 80,
+  "sample": [
+    "scenic-自贡-3119",
+    "scenic-甘孜藏族自治州-3058",
+    "scenic-宜宾-3141",
+    "scenic-宜宾-3127",
+    "scenic-自贡-3115",
+    "scenic-巴中-3100",
+    "scenic-甘孜藏族自治州-3060",
+    "scenic-甘孜藏族自治州-3061",
+    "scenic-甘孜藏族自治州-3049",
+    "scenic-宜宾-3136",
+    "scenic-雅安-3069",
+    "scenic-自贡-3116",
+    "scenic-甘孜藏族自治州-3047",
+    "scenic-自贡-3114",
+    "scenic-雅安-3068",
+    "scenic-雅安-3075",
+    "scenic-巴中-3090",
+    "scenic-自贡-3118",
+    "scenic-雅安-3063",
+    "scenic-宜宾-3132"
+  ]
+}

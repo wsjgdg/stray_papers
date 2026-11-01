@@ -1,0 +1,28 @@
+{
+  "batch": 14,
+  "count": 100,
+  "low": 98,
+  "missingRequired": 98,
+  "sample": [
+    "scenic-三门峡-2050",
+    "scenic-鹤壁-2032",
+    "scenic-驻马店-2019",
+    "scenic-商丘-2025",
+    "scenic-信阳-2071",
+    "scenic-南阳-2003",
+    "scenic-南阳-2001",
+    "scenic-安阳-1990",
+    "scenic-三门峡-2053",
+    "scenic-三门峡-2040",
+    "scenic-许昌-2057",
+    "scenic-许昌-2055",
+    "scenic-南阳-2002",
+    "scenic-漯河-2069",
+    "scenic-南阳-2009",
+    "scenic-焦作-1982",
+    "scenic-焦作-1984",
+    "scenic-焦作-1980",
+    "scenic-安阳-1993",
+    "scenic-新乡-1974"
+  ]
+}

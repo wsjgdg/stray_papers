@@ -1,0 +1,28 @@
+{
+  "batch": 35,
+  "count": 100,
+  "low": 83,
+  "missingRequired": 46,
+  "sample": [
+    "scenic-鞍山-4311",
+    "scenic-抚顺-4321",
+    "scenic-苏州-4231",
+    "scenic-连云港-4247",
+    "scenic-苏州-4232",
+    "scenic-苏州-4236",
+    "scenic-沈阳-4273",
+    "scenic-连云港-4243",
+    "scenic-沈阳-4279",
+    "scenic-鞍山-4308",
+    "scenic-大连-4301",
+    "scenic-大连-4284",
+    "scenic-大连-4293",
+    "scenic-沈阳-4271",
+    "scenic-沈阳-4272",
+    "scenic-鞍山-4314",
+    "scenic-大连-4294",
+    "scenic-沈阳-4267",
+    "scenic-苏州-4238",
+    "scenic-大连-4285"
+  ]
+}

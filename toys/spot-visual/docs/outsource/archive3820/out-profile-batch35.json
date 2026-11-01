@@ -1,0 +1,2510 @@
+{
+  "task": "景点档案结构化字段-批35",
+  "batch": 35,
+  "count": 100,
+  "authorship": "批35：会话B",
+  "items": [
+    {
+      "id": "scenic-苏州-4224",
+      "name": "苏州张家港市香山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "张家港近郊休闲型山丘景区，适合登高健身与亲子踏青；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4225",
+      "name": "苏州市中国刺绣艺术馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "未成年人、老年人、现役军人、残疾人等凭有效证件按公示减免（以景区公告为准）",
+        "openHours": "约09:00-17:00（16:30停止入馆）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于苏州高新区镇湖，周边绣品街可顺访，苏绣主题展陈适合文化爱好者与研学"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4226",
+      "name": "苏州市上方山国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约07:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3月-5月（百花节）、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "紧邻石湖，春季百花节客流较大，可登楞伽塔俯瞰石湖；出行前请核实最新门票与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4227",
+      "name": "苏州市太仓现代农业园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "园区内各主题场馆可能分别收费，以现场公示为准",
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-6月、9月-10月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "集农业科普与休闲观光于一体，适合亲子；园内项目收费情况出行前请核实"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4228",
+      "name": "苏州常熟市蒋巷乡村旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "对儿童、老人、军人、残疾人等有相应优待，具体以景区公示为准",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以新农村风貌与田园体验为特色的乡村景区，村内参观与体验项目收费情况以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4229",
+      "name": "苏州市太湖国家湿地公园",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": "游船等园内项目另收费（以景区公告为准）",
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约09:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "镇湖太湖大堤旁的大型湿地公园，游船与湿地科普体验为主，秋季芦苇季观感佳"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4230",
+      "name": "苏州市张家港市凤凰山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "凤凰镇境内山丘景区，附近河阳山歌馆等文化场馆开放情况以公告为准；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4231",
+      "name": "苏州昆山市千灯古镇游览区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费进入；小景点联票约60元（含顾炎武故居、顾坚纪念馆、秦峰塔等），以景区公告为准",
+        "freePolicy": "免费进入街区；收费小景点对儿童、老人、军人、残疾人等按公示减免",
+        "openHours": "古镇街区全天开放；收费小景点约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 55,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "千灯为顾炎武故里、昆曲发源地，石板街与秦峰塔保存完好；节假日镇内停车紧张建议早到"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-苏州-4232",
+      "name": "苏州常熟市方塔古迹名胜区",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以宋代方塔（崇教兴福寺塔）为核心的古城园林，常熟地标之一；古塔登临情况以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4233",
+      "name": "苏州市白马涧生态园",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": "园内游乐与体验项目可能另收费（以景区公告为准）",
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "天平山北侧山谷生态园，有龙池水域与亲子游乐设施，苏州近郊春秋郊游热门地"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4234",
+      "name": "苏州昆山市锦溪古镇",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费进入；小景点联票约65元（含古砖瓦博物馆等馆园），以景区公告为准",
+        "freePolicy": "免费进入街区；收费场馆对儿童、老人、军人、残疾人等按公示减免",
+        "openHours": "古镇街区全天开放；收费场馆约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 55,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "素有'中国民间博物馆之乡'之称，五保湖畔与长廊古窑为特色；节假日停车紧张建议早到"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-苏州-4235",
+      "name": "苏州昆山市亭林园",
+      "profile": {
+        "ticketPeak": 20,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约07:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "玉峰山下古典园林，以昆石、琼花、并蒂莲'三宝'闻名，昆山城区内交通便利"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4236",
+      "name": "苏州吴江市静思园",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "当代新建江南园林，以奇石与移建古建为特色，距同里古镇不远可安排联游"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4237",
+      "name": "苏州市西山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "进岛免费；石公山约50元、林屋洞约50元、缥缈峰约60元等小景点分别售票，以各景点公告为准",
+        "freePolicy": "太湖西山岛免费进入；各收费小景点按各自公示减免",
+        "openHours": "岛屿全天可进入；各小景点约08:00-17:00（16:30停止入园）；以各景点公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5月-6月（枇杷杨梅季）、9月-10月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 65,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "太湖第一大岛（金庭镇），经太湖大桥自驾进岛；枇杷、杨梅成熟季环岛道路易堵，建议错峰"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-苏州-4238",
+      "name": "苏州市盘门景区",
+      "profile": {
+        "ticketPeak": 40,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约07:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国内罕见的水陆并联古城门，含瑞光塔与瓮城水关，城墙漫步视野佳"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-苏州-4239",
+      "name": "苏州市甪直古镇游览区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费进入；小景点联票约78元（含保圣寺、叶圣陶纪念馆、万盛米行等），以景区公告为准",
+        "freePolicy": "免费进入街区；收费小景点对儿童、老人、军人、残疾人等按公示减免",
+        "openHours": "古镇街区全天开放；收费小景点约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "苏南硕放国际机场",
+        "nearestRail": "苏州站",
+        "driveFromCityMin": 45,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "水乡桥都，保圣寺唐代塑壁罗汉为镇寺之宝，与叶圣陶执教往事渊源深厚；游船另收费"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-连云港-4241",
+      "name": "连云港市东海水晶文化旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "水晶交易市场免费进入；园内博物馆等场馆开放与收费情况以现场公告为准",
+        "freePolicy": "免费进入市场区域",
+        "openHours": "市场区域全天开放；展馆约09:00-17:00（16:30停止入馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "东海为世界知名水晶集散地，可观水晶交易与雕刻工艺；选购水晶请索取鉴定证书"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4242",
+      "name": "连云港市东海西双湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "百合花展等花事活动期间部分区域可能单独收费，以现场公告为准",
+        "freePolicy": "免费开放",
+        "openHours": "约07:00-18:00（17:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "东海县城湖沼型公园，初夏百合花展期间客流大；环湖步道适合散步与骑行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4243",
+      "name": "连云港市桃花涧景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3月-5月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "锦屏山麓景区，将军崖岩画等史前遗存为主要看点，春季桃花盛开期景色最佳"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4244",
+      "name": "二郎神文化遗迹公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于灌南县，以二郎神信仰文化为主题；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4245",
+      "name": "连云港市海上云台山景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": "景区观光车约20元另收（以景区公告为准）",
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宿城境内山海相连，云顶可俯瞰港口与黄海，可与连岛、枫树湾组合游览；雨后云海最佳"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4246",
+      "name": "连云港市革命纪念馆景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆；特殊临展可能收费）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "红色教育场馆，团体参观多需提前联系；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-连云港-4247",
+      "name": "连云港市大伊山景区",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约07:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "灌云县城旁山岳景区，新石器时代石棺墓遗存与石佛寺为特色"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4248",
+      "name": "连云港市渔湾风景区",
+      "profile": {
+        "ticketPeak": 40,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约07:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以涧谷瀑布著称，雨后水量充沛时观感最佳，夏季为避暑旺季；石阶湿滑注意防滑"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4249",
+      "name": "连云港市孔望山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "孔望山摩崖造像为汉代石刻遗存、全国重点文物保护单位，龙洞等题刻散布山间"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4250",
+      "name": "连云港市连岛旅游度假区",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": "海滨浴场与游乐项目分开计价（以景区公告为准）",
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-18:00（17:00停止入园）；泳季可能延长；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "江苏最大海岛，经拦海大堤与陆地相连，大沙湾、苏马湾浴场夏季人流集中；下海注意安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-连云港-4251",
+      "name": "连云港市灌云县伊甸园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-6月、9月-10月",
+        "nearestAirport": "连云港花果山国际机场",
+        "nearestRail": "连云港站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "灌云县花海主题园区，花期为最佳观赏期，适合亲子与摄影；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-镇江-4254",
+      "name": "镇江市江苏茶博园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-5月（采茶季）、9月-11月",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "镇江站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "集茶文化科普、茶园观光与品茗体验于一体，春季采茶制茶体验更佳"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-镇江-4255",
+      "name": "镇江市中国米芾书法公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "镇江站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "丹徒区内以米芾书法碑刻为主题的文化公园，书法爱好者可细品碑廊"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-镇江-4256",
+      "name": "镇江市中国镇江醋文化博物馆",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:30-17:00（16:30停止入馆）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "镇江站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "依托恒顺醋业建设的醋文化主题馆，可了解镇江香醋固态发酵工艺并品鉴购醋"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-镇江-4257",
+      "name": "镇江市西津渡历史文化街区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "街区免费进入；昭关石塔、观音洞、救生会等小景点可能单独售票，以现场公示为准",
+        "freePolicy": "免费进入街区",
+        "openHours": "街区全天开放；内部收费场馆约09:00-17:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "镇江站",
+        "driveFromCityMin": 10,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "千年古渡口街区，元代昭关石塔为过街石塔，晚间灯光与餐饮氛围佳；石板坡路行走注意安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-镇江-4258",
+      "name": "镇江市南山风景名胜区",
+      "profile": {
+        "ticketPeak": 40,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "镇江站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城市近郊山林，招隐寺、文苑等景点散布其间，'城市山林'之说即源于此"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-镇江-4259",
+      "name": "镇江市博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆；特殊临展可能收费）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "镇江站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆舍由原英国领事馆旧址改建，青铜器与历代陶瓷藏品有特色；团体参观建议提前联系"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-镇江-4260",
+      "name": "镇江市宝华山国家森林公园",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": "园内千华古村、隆昌寺等按公告执行；庙会期间票务或有调整",
+        "freePolicy": "儿童、老年人、军人、残疾人等按景区公示享受减免（以现场公告为准）",
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "镇江站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "句容境内，律宗名刹隆昌寺与千华古村为两大看点，庙会节庆期间客流大"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4261",
+      "name": "沈阳“九·一八”历史博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆）",
+        "openHours": "09:00-16:30（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以残历碑为标志的抗战主题馆，国家重要纪念地，团体讲解需提前预约；参观请保持肃穆"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沈阳-4262",
+      "name": "沈飞航空博览园",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:30-16:30（16:00停止入馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "展示歼击机整机与航空科普的园区，多架真机陈列室外，亲子科普去处；涉及军工主题请遵守拍摄规定"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4263",
+      "name": "沈阳三农博览园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于新民市，展馆群涵盖民俗、农业文化等，园区较大建议留足时间；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4264",
+      "name": "老北市景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费进入街区",
+        "openHours": "全天开放（内部场馆与商铺营业时间以现场公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 15,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "老沈阳民俗风情街区，夜市灯光与皇寺庙会为亮点，晚间氛围最佳；节假日人流密集注意安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沈阳-4265",
+      "name": "中华寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "按寺院现行规定执行（以现场公告为准）",
+        "openHours": "约08:00-16:30；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "佛教寺院景区，农历初一十五与庙会期间香客较多，请遵守宗教场所礼仪"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4267",
+      "name": "沈阳棋盘山风景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费进入景区；关东影视城、冰雪大世界等园中园项目另收费（以景区公告为准）",
+        "freePolicy": "免费进入景区",
+        "openHours": "全天开放（园中园项目营业时间以现场公告为准）",
+        "suggestedHours": 3.5,
+        "bestMonths": "4月-10月；冬季有冰雪活动",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沈阳北郊大型山水景区，环秀湖休闲与登山并重；冬季冰雪大世界与关东影视城为收费项目，冰雪路面注意行车安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沈阳-4268",
+      "name": "沈阳市北陵公园(清昭陵）",
+      "profile": {
+        "ticketPeak": 6,
+        "ticketOff": null,
+        "ticketNote": "公园门票6元；清昭陵陵寝约30元另收（以景区公告为准）",
+        "freePolicy": "早锻炼时段或有优惠安排，各类减免以现场公示为准",
+        "openHours": "公园约06:00-21:00（20:00停止入园）；清昭陵陵寝约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月；冬季雪景亦有特色",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "清昭陵为世界文化遗产（明清皇家陵寝），松林与湖面适合晨练休闲；陵寝开放时间与公园不同步"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4269",
+      "name": "沈阳市东陵公园（清福陵）",
+      "profile": {
+        "ticketPeak": 10,
+        "ticketOff": null,
+        "ticketNote": "公园门票约10元；清福陵陵寝另购票（约40元，以景区公告为准）",
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "公园约06:00-20:00（19:00停止入园）；清福陵陵寝约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月；秋季彩林为佳",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "清福陵亦为世界文化遗产，'一百零八蹬'台阶与红墙金瓦为标志；园内登山强度适中"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4270",
+      "name": "沈阳科学宫",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "常设展区免费开放；球幕影院、特效影院等可能单独收费（以馆方公告为准）",
+        "freePolicy": "免费开放（可能需实名预约，以馆方公告为准）",
+        "openHours": "约09:00-16:30（16:00停止入馆）；通常周一闭馆；以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "青少年科普场馆，互动展项多，寒暑假客流大；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4271",
+      "name": "沈阳爱新觉罗皇家博物院",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约09:00-16:30（16:00停止入馆）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以清代皇家文化与满族民俗为主题的博物院；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4272",
+      "name": "华晨宝马铁西工厂",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "参观项目政策以官方发布为准",
+        "openHours": "仅预约参观时段开放；以官方预约信息为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳站",
+        "driveFromCityMin": 20,
+        "accessibility": null,
+        "needReservation": true,
+        "reservationNote": "工厂参观须通过官方渠道提前预约，凭预约信息入场",
+        "officialSite": null,
+        "tel": null,
+        "notices": "工业旅游项目，生产线参观与品牌体验为主；厂区严禁随意拍照，行程受生产安排影响可能临时调整"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4273",
+      "name": "沈阳工业博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆）",
+        "openHours": "09:00-16:30（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "铁西区老厂房改建的大型工业主题馆，机床与铸造车间实景震撼，工业迷必访；团体参观建议提前联系"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沈阳-4274",
+      "name": "稻梦空间",
+      "profile": {
+        "ticketPeak": 78,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人等按公示减免（以现场公告为准）",
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沈北稻田画主题园，8月-9月为稻田画最佳观赏期；运营期集中在6月至10月，非观赏期可能闭园，出行前请核实"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4275",
+      "name": "沈阳方特欢乐世界",
+      "profile": {
+        "ticketPeak": 260,
+        "ticketOff": null,
+        "ticketNote": "儿童票、老人票及一票制范围以景区公示为准；夜场另计（如开放）",
+        "freePolicy": "按身高/年龄执行优待，具体以景区公示为准",
+        "openHours": "约09:30-17:30（节假日及暑期或延时、开放夜场）；以景区当日公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "儿童游乐区",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "大型主题乐园，热门项目排队时间长，建议非节假日早入园；冬季部分项目缩减或闭园，出行前请核实运营安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4276",
+      "name": "张学良旧居陈列馆",
+      "profile": {
+        "ticketPeak": 46,
+        "ticketOff": null,
+        "ticketNote": "通票含大青楼、小青楼及赵一荻故居等（以馆方公告为准）",
+        "freePolicy": "未成年人、老年人、军人、残疾人等凭有效证件按公示减免",
+        "openHours": "约08:30-17:30（17:00停止入馆）；淡季时间或有调整；以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "即张氏帅府，大青楼、小青楼与四合院群为看点，民国史爱好者首选；市区停车紧张建议公共交通"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沈阳-4277",
+      "name": "沈阳怪坡风景区",
+      "profile": {
+        "ticketPeak": 40,
+        "ticketOff": null,
+        "ticketNote": "东北虎园等园中园项目另收费（以景区公告为准）",
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月；冬季有滑雪场",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "'上坡省力、下坡费力'的视觉错觉奇观，可骑行体验；冬季怪坡滑雪场开放；与棋盘山为不同景区请勿混淆"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4278",
+      "name": "沈阳故宫",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "未成年人、老年人、军人、残疾人等凭有效证件按公示减免",
+        "openHours": "旺季约08:30-17:30（16:45停止入园）；淡季约09:00-16:45；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年；冬季雪景有特色",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "实行实名制预约购票，建议提前通过官方线上渠道购票",
+        "officialSite": null,
+        "tel": null,
+        "notices": "世界文化遗产、清代早期皇宫建筑群，大政殿与八旗亭布局独特；节假日客流大建议早到，周边中街可顺游"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沈阳-4279",
+      "name": "沈阳森林动物园",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "园内观光车、动物投喂互动等另收费（以景区公告为准）",
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:30-16:30（15:30停止入园）；旺季可能延长；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳北站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "棋盘山地区大型动物园，步行区与散养区结合，大熊猫馆为热门；园区坡道较多请穿舒适鞋"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沈阳-4280",
+      "name": "沈抚示范区皇家海洋乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "海洋馆、水乐园、温泉等分区售票，价格差异大，以现场公示为准",
+        "freePolicy": "按各场馆公示执行身高/年龄优待（以现场公告为准）",
+        "openHours": "约09:30-17:00（旺季各场馆时间不一）；以景区当日公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "全年；夏季水乐园为旺季",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "沈阳站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "儿童游乐区",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于沈抚改革创新示范区，海洋馆四季开放、水乐园暑期为旺季；分场馆购票请提前规划"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4281",
+      "name": "大连七彩南山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "旅顺口区乡村休闲景区，采摘与田园体验为主；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4282",
+      "name": "大连博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆；特殊临展可能收费）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "星海广场附近的城市综合博物馆，近代大连历史常设展为特色；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-大连-4283",
+      "name": "大连铭湖度假景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉、滑雪、牧场观光等分区售票，以现场公示为准",
+        "freePolicy": "按各项目公示执行优待（以现场公告为准）",
+        "openHours": "约09:00-17:00；滑雪季与温泉营业时间不同；以景区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年；冬季温泉滑雪为旺季",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金州区复合型度假区，冬季滑雪加温泉组合最受欢迎；雪季周末房源紧张建议提前预订"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4284",
+      "name": "大连棒棰岛宾馆景区",
+      "profile": {
+        "ticketPeak": 20,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国宾馆海滨景区，礁石海岸与砾石滩为主，安检严格请携带身份证；对岸棒棰岛礁为标志性景观"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4285",
+      "name": "平岛辽参小镇生态旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 140,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黄海北部海岛型景区，以辽参养殖体验与海岛休闲为特色；上岛交通受天气海况影响，出行前务必确认船期"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4287",
+      "name": "大连武术文化博物馆景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "开放与减免政策以现场公示为准",
+        "openHours": "约09:00-16:30（16:00停止入馆）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "中华武术历史文化主题展馆，兵器与流派展陈为特色；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4288",
+      "name": "世外俭汤旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉等项目按场馆收费，以现场公示为准",
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约09:00-21:00；以景区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年；冬季泡汤为佳",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "普兰店俭汤温泉度假区，以温泉酒店度假为核心，冬季为旺季；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4289",
+      "name": "东鸡冠山景区",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "日俄战争陆战遗址群，北堡垒工事保存较完整；部分区域为遗址保护区，请勿翻越护栏"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4290",
+      "name": "白玉山景区",
+      "profile": {
+        "ticketPeak": 40,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约07:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "旅顺制高点，山顶可俯瞰旅顺军港与老虎尾；军港为军事管理区，严禁对舰艇及军事设施拍照"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4291",
+      "name": "仙浴湾旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "全天开放（泳季浴场与设施营业时间以现场公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 120,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "瓦房店海滨浴场度假区，沙质平缓适合亲海度假；泳季住宿紧张建议提前预订"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4292",
+      "name": "大连市安波旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉多为酒店经营，价格各异，以各场所公示为准",
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "全天开放（温泉场馆营业时间以各酒店公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "11月-次年3月（泡汤季）",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "辽南著名温泉乡，冬季泡汤为旺季，节假日房源紧张；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4293",
+      "name": "将军石旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "全天开放（内部项目营业时间以现场公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 130,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "瓦房店海滨度假区，曾承办帆船帆板赛事，海蚀岩与渔港风光为特色"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4294",
+      "name": "大连旅顺潜艇博物馆景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约08:30-16:30（16:00停止入馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以退役潜艇为核心的国防主题馆，可入舱体验；涉及国防展项请遵守馆内拍摄规定"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4295",
+      "name": "海王九岛旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "上岛船票另计（以码头公告为准）",
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "全天开放（船班受海况限制，以码头公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 180,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "庄河海域群岛，海蚀地貌与渔家风情为特色；船期受大风海况影响，旺季船票紧张请提前确认"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4296",
+      "name": "关向应纪念馆景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆）",
+        "openHours": "09:00-16:30（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金州区红色教育场馆，含关向应故居与生平展；团体参观多需提前预约，出行前请核实"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-大连-4297",
+      "name": "大连冰峪省级旅游度假区",
+      "profile": {
+        "ticketPeak": 120,
+        "ticketOff": null,
+        "ticketNote": "游船、漂流等项目另收费（以景区公告为准）",
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 190,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "素有'辽南小桂林'之称的北方喀斯特山水，夏季可乘游船、秋季彩林佳；距大连市区远建议早出发"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4298",
+      "name": "大连英歌石植物园",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-6月（春季花海）、9月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "丘陵地形大型植物园，春季郁金香、芝樱与桃花花期为客流高峰，坡地赏花注意体力分配"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4299",
+      "name": "大连香洲田园城旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "水乐园、温泉、动物园等多项目分区售票，以现场公示为准",
+        "freePolicy": "按各场馆公示执行优待（以现场公告为准）",
+        "openHours": "约09:00-17:00；各场馆时间不一；以景区当日公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "全年；夏季水乐园为旺季",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "瓦房店大型度假综合体，水王国、温泉与田园项目组合，适合亲子两日游；项目较多请提前规划"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4300",
+      "name": "旅顺日俄监狱旧址博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆）",
+        "openHours": "09:00-16:30（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 65,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "全国重点文物保护单位，殖民监狱旧址是近代史实证地，参观氛围肃穆请保持安静；部分牢房空间狭窄注意安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-大连-4301",
+      "name": "西郊森林公园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "全天开放（内部经营项目以现场公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "大连西部城市山林，棠梨沟、西山湖一带适合徒步骑行，市民近郊休闲地"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4302",
+      "name": "紫云花汐薰衣草庄园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6月-8月（薰衣草花期）",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金州区薰衣草主题庄园，盛夏花期为最佳观赏期，适合摄影与亲子；非花期观感有限"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-大连-4303",
+      "name": "庄河天门山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 200,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "庄河北部峡谷山林，溪流瀑布与奇石景观，秋季彩林佳；距市区远且山路弯多，请预留时间谨慎驾驶"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4304",
+      "name": "鞍山市山水庄园度假旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉与餐饮住宿按消费计价，以现场公示为准",
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "全天开放（温泉场馆营业时间以现场公告为准）",
+        "suggestedHours": 3.5,
+        "bestMonths": "全年；冬季泡汤为佳",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "千山脚下温泉度假庄园，泡汤、餐饮与住宿为核心消费项目；节假日房源紧张建议提前预订"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4305",
+      "name": "玉佛苑景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以整块玉石雕成的大玉佛闻名（玉体重达260余吨），玉佛阁气势恢宏；可与千山安排同日游览"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4306",
+      "name": "鞍山佳宁欢乐谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "各游乐与水上项目分区售票，以现场公示为准",
+        "freePolicy": "按身高/年龄执行优待，具体以现场公示为准",
+        "openHours": "约09:00-17:00；水上项目夏季开放；以景区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5月-10月；暑期为旺季",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "游乐与水乐园结合的休闲园区，暑期为旺季；项目开放受季节影响，出行前请核实"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4307",
+      "name": "天源农业景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约08:30-17:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "农业观光与果蔬采摘为主题，成熟季体验最佳；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4308",
+      "name": "祥和度假庄园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉与餐饮住宿按消费计价，以现场公示为准",
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "全天开放（场馆营业时间以现场公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年；冬季泡汤为佳",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "乡村温泉度假庄园，适合家庭休闲与团队活动；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4309",
+      "name": "千山老院子景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费进入；餐饮、住宿与田园体验项目按消费计价",
+        "freePolicy": "免费进入",
+        "openHours": "全天开放（餐饮与体验项目营业时间以现场公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "千山脚下的田园餐饮休闲度假区，东北院落风情；注意其并非千山风景名胜区，勿将两者门票与行程混淆"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4310",
+      "name": "龙泉湖旅游度假风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖畔山水度假景区，垂钓、游船与休闲度假为主；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4311",
+      "name": "御汤泉旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉场馆按项目收费，以现场公示为准",
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约09:00-21:00；以景区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年；冬季泡汤为佳",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "温泉度假区，室内外汤池结合，冬季为旺季；节假日人多建议错峰"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4312",
+      "name": "龙潭湾风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "岫岩境内山谷水潭景观，夏季避暑戏水佳；距鞍山市区远建议自驾并预留时间"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4313",
+      "name": "清凉山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 140,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "岫岩山地森林景区，山高林密、秋季彩林佳；距市区远，请备足油料与时间，注意山区天气变化"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4314",
+      "name": "鞍钢博物馆景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "如遇特展或政策调整收取少量费用，以馆方公告为准",
+        "freePolicy": "免费开放（凭有效证件入馆，可能需预约）",
+        "openHours": "约09:00-16:30（16:00停止入馆）；通常周一闭馆；以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "新中国钢铁工业摇篮主题馆，老设备与历史影像震撼；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4316",
+      "name": "双龙山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城郊山林景区，适合登山休闲；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鞍山-4317",
+      "name": "汤岗子温泉旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉疗养多为疗养院与酒店经营，泡浴项目分别计价，以现场公示为准",
+        "freePolicy": "各类减免以现场公示为准",
+        "openHours": "全天开放（温泉场馆营业时间以各场所公告为准）",
+        "suggestedHours": 3.5,
+        "bestMonths": "全年；冬季泡汤为佳",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "鞍山站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "全国知名热矿泉疗养地，温泉泥疗等特色项目历史悠久；多为疗养机构经营，请提前确认开放对象与价格"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-抚顺-4318",
+      "name": "抚顺雷锋纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆）",
+        "openHours": "09:00-16:30（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "抚顺北站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "雷锋生前所在城市抚顺的纪念场馆，碑林与雷锋墓在园区内；团体参观多需提前预约，出行前请核实"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-抚顺-4319",
+      "name": "三块石森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5月-10月（秋季红叶为佳）",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "抚顺北站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "抚顺县境内山林，曾有抗联活动足迹；登顶三块石强度中等，10月上中旬红叶季客流集中建议早到"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-抚顺-4320",
+      "name": "辽宁天女山森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-9月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "抚顺北站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "抚顺县山地森林公园，以天女木兰花得名，初夏花期与夏季避暑为佳；花期随物候浮动以现场为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-抚顺-4321",
+      "name": "丰远热高乐园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "水世界、室内乐园、温泉等分区售票，以现场公示为准",
+        "freePolicy": "按身高/年龄执行优待，具体以现场公示为准",
+        "openHours": "约09:30-17:30；各场馆时间不一；以景区当日公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "全年；夏季水世界为旺季",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "抚顺北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "儿童游乐区",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沈抚新区大型休闲乐园，夏季水上项目与冬季室内温泉游乐互补；分场馆购票请提前规划"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-抚顺-4322",
+      "name": "和睦森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "抚顺北站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "新宾境内森林景区，夏季避暑秋季观叶；距抚顺市区较远建议自驾预留时间"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-抚顺-4323",
+      "name": "赫图阿拉城旅游景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "抚顺北站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "后金第一都城、清王朝发祥地，汗宫大衙门与满族风情展示为看点；清永陵在附近永陵镇可顺访"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-抚顺-4324",
+      "name": "枸乃甸乡筐子沟村筐子沟景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月下旬-6月（杜鹃花期）、9月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "抚顺北站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "清原筐子沟以春季杜鹃（映山红）花海闻名，花期约4月下旬至5月、随物候浮动；秋季彩林亦佳"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-抚顺-4325",
+      "name": "红河峡谷漂流景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "漂流为付费项目，价格以景区当年公告为准",
+        "freePolicy": "按身高/年龄与安全规定执行（以现场公告为准）",
+        "openHours": "漂流运营期约6月至9月，非运营期闭园；每日班次与截止时间以景区当日公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "抚顺北站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "东北知名峡谷漂流，全程较长、水流较急，仅在夏季运营；请备换洗衣物并遵守安全要求"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-本溪-4327",
+      "name": "小市一庄景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费进入；餐饮、住宿与休闲体验项目按消费计价",
+        "freePolicy": "免费进入",
+        "openHours": "全天开放（餐饮与体验项目营业时间以现场公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年；秋季观叶为佳",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "本溪站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "本溪县小市镇乡村旅游度假区，距本溪水洞不远可组合游览；节假日餐饮等位时间较长"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-本溪-4328",
+      "name": "铁刹山风景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "本溪站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "东北道教名山，八宝云光洞与摩崖石刻为看点；山势陡峭请穿防滑鞋"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-本溪-4329",
+      "name": "汤池沟绿石谷森林公园",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "本溪站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "汤沟地区以'绿石'溪流景观闻名，苔绿石上清泉夏季最出片；谷内湿滑注意安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-本溪-4330",
+      "name": "关门山森林公园",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketOff": null,
+        "ticketNote": "景区观光车等另收费（以景区公告为准）",
+        "freePolicy": "儿童、老年人、军人、残疾人等按公示减免（以现场公告为准）",
+        "openHours": "约07:30-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5月-10月（秋季红叶为佳）",
+        "nearestAirport": "沈阳桃仙国际机场",
+        "nearestRail": "本溪站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "辽宁最著名的红叶观赏地之一，最佳期为9月下旬至10月中旬，红叶季客流极大建议早到并提前购票"
+      },
+      "confidence": "low"
+    }
+  ]
+}

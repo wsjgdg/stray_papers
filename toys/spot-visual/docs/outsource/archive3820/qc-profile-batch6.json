@@ -1,0 +1,28 @@
+{
+  "batch": 6,
+  "count": 100,
+  "low": 68,
+  "missingRequired": 64,
+  "sample": [
+    "scenic-丽水-1156",
+    "scenic-亳州-1211",
+    "scenic-丽水-1177",
+    "scenic-金华-1124",
+    "scenic-亳州-1212",
+    "scenic-丽水-1178",
+    "scenic-丽水-1155",
+    "scenic-合肥-1188",
+    "scenic-合肥-1204",
+    "scenic-丽水-1158",
+    "scenic-丽水-1179",
+    "scenic-金华-1139",
+    "scenic-丽水-1149",
+    "scenic-丽水-1171",
+    "scenic-金华-1126",
+    "scenic-金华-1143",
+    "scenic-金华-1136",
+    "scenic-丽水-1167",
+    "scenic-合肥-1206",
+    "scenic-合肥-1203"
+  ]
+}

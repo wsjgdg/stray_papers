@@ -1,0 +1,28 @@
+{
+  "batch": 31,
+  "count": 100,
+  "low": 41,
+  "missingRequired": 41,
+  "sample": [
+    "scenic-海东-3858",
+    "scenic-甘南藏族自治州-3837",
+    "scenic-西宁-3851",
+    "scenic-武威-3810",
+    "scenic-海北藏族自治州-3867",
+    "scenic-定西-3827",
+    "scenic-白银-3798",
+    "scenic-西宁-3842",
+    "scenic-海东-3860",
+    "scenic-银川-3887",
+    "scenic-西宁-3855",
+    "scenic-西宁-3845",
+    "scenic-西宁-3844",
+    "scenic-海西蒙古族藏族自治州-3874",
+    "scenic-武威-3803",
+    "scenic-甘南藏族自治州-3831",
+    "scenic-甘南藏族自治州-3838",
+    "scenic-西宁-3854",
+    "scenic-兰州-3790",
+    "scenic-玉树藏族自治州-3880"
+  ]
+}

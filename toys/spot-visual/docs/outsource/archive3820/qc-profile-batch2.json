@@ -1,0 +1,28 @@
+{
+  "batch": 2,
+  "count": 100,
+  "low": 15,
+  "missingRequired": 15,
+  "sample": [
+    "scenic-邯郸-199",
+    "scenic-重庆-2757",
+    "scenic-河池-2711",
+    "scenic-泰安-1783",
+    "scenic-洛阳-1931",
+    "scenic-肇庆-2430",
+    "scenic-金华-1127",
+    "scenic-武汉-2091",
+    "scenic-西安-3553",
+    "scenic-洛阳-1930",
+    "scenic-重庆-2756",
+    "scenic-济南-1658",
+    "scenic-重庆-2753",
+    "scenic-烟台-1716",
+    "scenic-苏州-4211",
+    "scenic-迪庆藏族自治州-3416",
+    "scenic-梅州-2352",
+    "scenic-甘孜藏族自治州-3035",
+    "scenic-牡丹江-691",
+    "scenic-盘锦-4392"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "batch": 25,
+  "count": 100,
+  "low": 100,
+  "missingRequired": 52,
+  "sample": [
+    "scenic-贵阳-3236",
+    "scenic-贵阳-3231",
+    "scenic-凉山彝族自治州-3166",
+    "scenic-凉山彝族自治州-3154",
+    "scenic-贵阳-3233",
+    "scenic-凉山彝族自治州-3160",
+    "scenic-泸州-3184",
+    "scenic-遂宁-3145",
+    "scenic-内江-3220",
+    "scenic-贵阳-3235",
+    "scenic-眉山-3193",
+    "scenic-贵阳-3229",
+    "scenic-泸州-3177",
+    "scenic-凉山彝族自治州-3169",
+    "scenic-泸州-3182",
+    "scenic-贵阳-3227",
+    "scenic-贵阳-3241",
+    "scenic-凉山彝族自治州-3156",
+    "scenic-泸州-3175",
+    "scenic-内江-3222"
+  ]
+}

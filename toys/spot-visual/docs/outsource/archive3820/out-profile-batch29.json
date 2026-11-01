@@ -1,0 +1,2644 @@
+{
+  "task": "景点档案结构化字段-批29",
+  "batch": 29,
+  "count": 100,
+  "authorship": "批29：会话A",
+  "items": [
+    {
+      "id": "scenic-西安-3565",
+      "name": "金龙峡风景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": 40,
+        "ticketNote": "旺季（3-11月）60元/人、淡季（12-2月）40元/人，优待票及滑道等体验项目以景区公示为准",
+        "freePolicy": "1.2米以下儿童、65周岁以上老人、现役军人、残疾人等凭证免票或优惠，以景区公示为准",
+        "openHours": "08:30-18:00（17:30停止售票、停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月，夏季亲水避暑尤佳",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷步道临水路段较多，雨后湿滑切勿进入未开放水域；夏季多雷阵雨，出山前留意天气变化；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3566",
+      "name": "白鹿原影视城",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "园区免大门票开放；《二虎守长安》等演出票、观光车、观光扶梯、滑雪场及研学项目另收费",
+        "freePolicy": "免费入园，部分演出对1.2米以下儿童免票，以现场公示为准",
+        "openHours": "旺季09:00-22:00、淡季09:00-18:00，演出场次以当日公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月，暑期夜场演出丰富",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "白鹿村、滋水县城为影视拍摄区，布景道具请勿搬动；观看《二虎守长安》爆炸特效演出请按工作人员引导就座；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3567",
+      "name": "王顺山国家森林公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "景区免大门票开放，索道及登山配套服务另收费，如有变化以景区公示为准",
+        "freePolicy": "免大门票开放；老年人、儿童等乘坐索道依规享受优惠，以景区公示为准",
+        "openHours": "约08:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月，秋季红叶尤佳",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "登山步道台阶较多，蓝桥段雨后湿滑；冬季冰瀑及高处路段封闭时间以公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3568",
+      "name": "西安市黑河景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "黑河国家森林公园门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "08:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月，夏季林间最凉爽",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区沿108国道纵深数十公里、景点分散，务必自驾或乘园内交通并留足油量；黑河为西安城市水源地，全域严禁游泳、垂钓和野外用火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-西安-3569",
+      "name": "周至水街沙沙河",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "街区免大门票开放；游船、游乐设施及部分收费场馆另收费",
+        "freePolicy": null,
+        "openHours": "街区全天开放，商铺及游船约09:30-22:00，以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月，夏季亲水与夜景最佳",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "亲水平台湿滑，务必看护好儿童；节假日夜间人流密集，建议错峰并提前规划停车；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3570",
+      "name": "西安半坡博物馆",
+      "profile": {
+        "ticketPeak": 55,
+        "ticketOff": null,
+        "ticketNote": "成人票55元（平台参考价），学生等半价，以馆方公示为准",
+        "freePolicy": "未成年人、60或65周岁以上老人、军人、残疾人等依规免票或优惠，以馆方公示为准",
+        "openHours": "约08:00-17:30（17:00停止入馆），全年开放，以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜，四季皆可参观",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "遗址大厅内请勿触摸土层、柱洞与墓葬遗迹；出土陶器展厅光线较暗，注意台阶；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3571",
+      "name": "白鹿原白鹿仓",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "园区免大门票；摩天轮等游乐项目、热气球及部分场馆体验另收费",
+        "freePolicy": null,
+        "openHours": "约09:00-21:00，节假日适当延长，以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "节假日停车场紧张，建议经狄寨街道错峰上山；游乐项目对身高年龄有限制，购票前现场确认；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3572",
+      "name": "陕西自然博物馆",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketOff": null,
+        "ticketNote": "自然展馆门票30元，贝林展馆及穹幕影院等另购票，联票政策以馆方公示为准",
+        "freePolicy": "6周岁及1.3米以下儿童、65周岁以上老人、军人、残疾人等凭证免票，以馆方公示为准",
+        "openHours": "09:00-17:00（16:00停止入馆），周一闭馆（国家法定节假日除外）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，寒暑期亲子客流大建议错峰",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "恐龙与古生物展区拍摄请关闭闪光灯；自然展馆与贝林展馆分设两处，入场前规划好动线；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3573",
+      "name": "陕西历史博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "常设展免费不免票；大唐遗宝展、唐代壁画珍品馆等特展另行购票",
+        "freePolicy": "常设展览对全部观众免费，实行限量实名预约；老年人、军人、残疾人等设绿色通道",
+        "openHours": "旺季（3月15日-11月14日）08:30-18:00（16:30停止入馆）、淡季（11月15日-次年3月14日）09:00-17:30（16:00停止入馆），周一闭馆（国家法定节假日除外）",
+        "suggestedHours": 3,
+        "bestMonths": "全年适宜，节假日票源紧张建议错峰",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": true,
+        "reservationNote": "通过官方微信公众号或官网提前实名预约免费门票，旺季及节假日票源紧张，建议提前数日约票",
+        "officialSite": "www.sxhm.com",
+        "tel": null,
+        "notices": "馆内严禁使用自拍杆与三脚架，壁画珍品馆内禁止拍摄；每日限流，错过预约时段将无法入场；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3574",
+      "name": "西北农林科技大学博览园",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": "普通票60元/人，优惠票30元/人（60-65周岁老人、退伍军人等持有效证件），以园区票务公示为准",
+        "freePolicy": "65周岁以上老人、儿童、军人、残疾人等依规免票，以园区公示为准",
+        "openHours": "约08:30-17:30（17:00停止入园），以园区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，3-10月宜结合农科城研学参观",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "昆虫博物馆标本量大，拍摄请关闭闪光灯；园区位于杨凌示范区、距西安市区约85公里，请预留往返车程；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-西安-3575",
+      "name": "杨凌现代农业创新园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "农业观光园区门票及采摘体验收费未核实，以园区现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:30，以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，温室内四季可游",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "西安北站（高铁）、西安站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以智能温室、无土栽培展示为主，冬季棚内外温差大注意保暖；研学团队较多，散客宜上午前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3578",
+      "name": "岐山周文化景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区含周城、周公庙、凤凰山等片区，票务组合较多且价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "周公庙为古建群，殿内严禁违规用火焚香；周城有实景演出，场次以当日公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3579",
+      "name": "凤凰湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "开放式城市湖区免大门票；游船及凤凰楼登楼等体验项目如有收费以现场公示为准",
+        "freePolicy": null,
+        "openHours": "湖区全天开放，音乐喷泉及夜景灯光通常在晚间定时开放，以现场公示为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-10月，夏季夜景最佳",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "凤凰湖夜景为凤县招牌，喷泉表演时段周边易拥堵，请按提示停放车辆；山区昼夜温差大，夜间观景备外套；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宝鸡-3580",
+      "name": "通天河景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "通天河国家森林公园门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月，秋季彩林亦佳",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园内海拔较高，冬季路面易结冰，自驾请备防滑链并关注封山通知；林区内严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3581",
+      "name": "中华石鼓园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "园区免大门票；园内宝鸡青铜器博物院免费开放但需实名预约，石鼓阁登阁如有收费以现场公示为准",
+        "freePolicy": "宝鸡青铜器博物院免费开放，实行实名预约参观，以馆方公告为准",
+        "openHours": "园区全天开放；宝鸡青铜器博物院约09:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，春秋季最舒适",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "青铜器博物院为热门场馆，节假日需提前线上预约；石鼓园内台阶较多，夜间观渭河夜景注意照明；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宝鸡-3582",
+      "name": "红河谷景区",
+      "profile": {
+        "ticketPeak": 54,
+        "ticketOff": null,
+        "ticketNote": "全价54元/人、半价27元/人（红河谷森林公园管委会公示价）；观光车、索道等另收费",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或半价，凭有效证件办理",
+        "openHours": "约08:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月，夏季避暑戏水最宜",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "四嘴山步道陡峭，登山请量力而行；汛期河道涨水时严禁下河戏水，封谷通知以景区为准；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宝鸡-3583",
+      "name": "关山草原景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "门票近年执行价不一（历史价60元左右），未核实到现行全价，以景区公示为准；骑马、滑索等另收费",
+        "freePolicy": null,
+        "openHours": "景区大门约08:00-18:00，草原腹地全天可游览，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月，夏季绿草如茵",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海拔约2000米，昼夜温差大，夏季也需备外套，紫外线强注意防晒；旺季限流时请提前线上购票；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3584",
+      "name": "青峰峡景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "青峰峡国家森林公园门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "地处秦岭腹地太白县，夏季多阵雨，谷内步道湿滑；冬季可能封山闭园，出行前务必确认开放状态；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3585",
+      "name": "消灾寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "消灾寺景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "寺宇依豆积山崖壁而建、栈道临江，请勿翻越护栏；嘉陵江汛期水位上涨时部分步道关闭；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3586",
+      "name": "龙门洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "龙门洞景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "道观殿宇悬于景福山崖壁间，铁索栈道陡险，恐高及行动不便者慎行；山区手机信号弱，请结伴出行；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3587",
+      "name": "九成宫景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "九成宫遗址及碑亭景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-10月，夏季清凉",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "《九成宫醴泉铭》碑为镇馆之宝，碑亭内请勿使用闪光灯；麟游山区冬季路面易结冰，自驾注意；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3588",
+      "name": "大水川旅游景区",
+      "profile": {
+        "ticketPeak": 70,
+        "ticketOff": 35,
+        "ticketNote": "旺季70元/人、淡季35元/人（景区公示），实行淡旺季差异化票价；区间车票另购",
+        "freePolicy": "儿童、老年人、现役军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "08:00-18:00，淡旺季运营时段有调整，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月，夏季避暑最佳",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山顶草场面积大，区间车为主要接驳方式请保管车票；雷雨天气勿在开阔草场停留；骑马等体验请选择正规马队并系好护具；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宝鸡-3589",
+      "name": "金台太极源文化景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "金台观及园区免大门票开放；讲解等增值服务如有收费以现场公示为准",
+        "freePolicy": null,
+        "openHours": "金台观约08:30-17:30，园区全天开放，以现场公示为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金台观为张三丰第一道场，古建与碑刻区域请勿触摸涂划；观后可至胜利塬远眺宝鸡城区；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宝鸡-3590",
+      "name": "九龙山景区",
+      "profile": {
+        "ticketPeak": 40,
+        "ticketOff": null,
+        "ticketNote": "成人门票40元（平台标准价）；往返索道110元等套票另售，以景区公示为准",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "玻璃栈道及悬空步段请勿拥挤逆向通行，恐高者绕行；丹霞崖壁有风化落石风险，勿在崖下久留；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宝鸡-3591",
+      "name": "扶眉战役纪念馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "红色纪念场馆门票信息未核实，此类场馆通常免费开放，以纪念馆现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外），以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，清明前后祭扫人流集中",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆区为烈士纪念设施，请保持肃穆，勿在纪念碑区域喧哗嬉闹；团体祭扫需提前与馆方联系安排；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3592",
+      "name": "野河山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "野河山生态旅游景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月，夏季槐林与避暑为特色",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区道路弯多坡陡，自驾注意会车减速；森林防火期严禁野外用火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宝鸡-3593",
+      "name": "长乐塬抗战工业遗址",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "遗址公园门票及窑洞车间展馆收费政策未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:30（17:00停止入园），周一闭馆（法定节假日除外），以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜",
+        "nearestAirport": null,
+        "nearestRail": "宝鸡南站（高铁）、宝鸡站",
+        "driveFromCityMin": 12,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "窑洞车间内温度低且灯光较暗，参观注意脚下与保暖；工业遗存请勿攀爬触摸；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3595",
+      "name": "洽川景区",
+      "profile": {
+        "ticketPeak": 55,
+        "ticketOff": null,
+        "ticketNote": "处女泉景区55元/人、福山景区30元/人（合阳洽川风景区公示价）；游船、温泉等另收费",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:30-17:30（17:00停止入园），夏季可能延长，以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-10月，夏季观荷戏水最佳",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "处女泉温泉区水深不一，请按区域活动并看护儿童；黄河湿地为候鸟栖息地，勿惊扰鸟类、勿在黄河野泳；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3596",
+      "name": "林皋慢城旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "林皋慢城（林皋湖）门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖区水域开阔，乘船务必穿戴救生衣；白水地区昼夜温差大，滨水活动备防风衣物；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3597",
+      "name": "尧头窑文化旅游生态园区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "遗址园区免大门票开放；黑瓷烧制体验、窑洞民宿等另收费",
+        "freePolicy": null,
+        "openHours": "园区全天开放，展示场馆约09:00-17:30，以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，春秋最舒适",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "尧头窑为明清黑瓷窑址，老窑包与废瓷堆请勿攀爬捡拾；陶艺作坊烧制周期长，现场体验以捏塑拉坯为主；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3598",
+      "name": "潼关古城",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "古城街区免大门票；《上马潼关》《潼关吏》等实景演艺及部分场馆另收费",
+        "freePolicy": null,
+        "openHours": "街区全天开放，演艺及场馆场次以当日公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古城依塬临河，观景台风大注意安全；女娲山段台阶较多请穿防滑鞋；节假日演艺有加场，请提前确认时段；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3599",
+      "name": "蒲城桥陵景区",
+      "profile": {
+        "ticketPeak": 35,
+        "ticketOff": null,
+        "ticketNote": "门票35元/人；游客中心至南门神道距离较长，电瓶车另收费",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "桥陵神道石刻为唐陵精华，请勿攀爬石刻拍照；陵区空旷无遮挡，夏季防晒、冬季防风；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3600",
+      "name": "渭南桃花源景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "桃花源民俗文化园门票价格未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月，春季桃李花开",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区依南塬台地而建，坡道较多注意防滑；古建筑群内请勿动用明火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3601",
+      "name": "富平中华郡",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "文旅街区免大门票；欢乐世界游乐设施、温泉及演艺项目另收费",
+        "freePolicy": null,
+        "openHours": "街区全天开放，游乐项目约09:30-21:00，以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年适宜，暑期夜场最热闹",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "节假日夜场人流大，儿童游乐区请全程看护；温泉区请遵守安全提示与开放时段；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3602",
+      "name": "渭南葡萄产业园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "葡萄产业园参观及采摘收费未核实，以园区现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00，以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "7-9月葡萄采摘季",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "采摘季品种与价格每日更新，采摘前先问价过秤；田间地滑请穿平底鞋；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3603",
+      "name": "陶艺村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "富平陶艺村门票及陶艺体验收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:30，以园区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，冬夏均可在室内体验",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "拉坯体验请提前到馆登记，釉烧作品寄送需留好单据；国际陶艺博物馆群内展品请勿触摸；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3604",
+      "name": "少华山国家森林公园",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketOff": 60,
+        "ticketNote": "旺季（3月1日-11月30日）约90元/人、淡季60元/人（不同渠道另有60/40元等历史执行价，以现场公示为准）；索道100元往返、景交车25元往返另购",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "08:00-17:00（15:30停止入园），节假日07:30-17:30，以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-10月，夏季避暑、秋季红叶",
+        "nearestAirport": null,
+        "nearestRail": "华山北站（高铁）",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "潜龙寺玻璃栈道限流分时通行，恐高者靠内侧缓行；汛期石门峡等区域可能临时关闭，出行前关注景区通告；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3605",
+      "name": "丰图义仓",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "丰图义仓门票价格未核实，以景区现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "义仓仓墙为清光绪年间砖砌结构，登仓顶步道较窄请依次通行；展陈舱房内请勿触摸仓廒木构件；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3606",
+      "name": "渭华起义纪念馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "红色纪念场馆门票信息未核实，此类场馆通常免费开放，以纪念馆现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外），以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "渭华起义旧址为全国重点文物保护单位，砖铺标语请勿踩踏描摹；纪念区域保持肃穆；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3607",
+      "name": "渭南市博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "常设展览免费开放；特展及讲解服务如有收费以馆方公示为准",
+        "freePolicy": "免费开放，凭有效证件入馆；老年人、儿童、军人、残疾人等有优先通道",
+        "openHours": "09:00-17:00（16:30停止入馆），周一闭馆（国家法定节假日除外），以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜",
+        "nearestAirport": null,
+        "nearestRail": "渭南北站（高铁）",
+        "driveFromCityMin": 12,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆内请勿使用闪光灯与三脚架；语音讲解等增值服务可到服务台咨询；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3608",
+      "name": "韩城市梁带村芮国遗址博物馆",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": "成人票50元、学生及老人票25元（平台标准价），以馆方公示为准",
+        "freePolicy": "6周岁及以下儿童、65周岁以上老人、军人、残疾人等凭证免票，以馆方公示为准",
+        "openHours": "约09:00-17:00（16:30停止入馆），以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜",
+        "nearestAirport": null,
+        "nearestRail": "韩城站",
+        "driveFromCityMin": 170,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金器玉器展厅为保护文物光线较暗，注意脚下台阶；博物馆距韩城市区约10公里，可与党家村、司马迁祠串联游览；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3609",
+      "name": "龙门钢铁景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "钢铁工业旅游景区门票及讲解收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00，参观需按批次随讲解入厂，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜，避开高温时段",
+        "nearestAirport": null,
+        "nearestRail": "韩城站",
+        "driveFromCityMin": 175,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "工业厂区参观须全程佩戴安全帽并走指定通道，严禁进入生产作业区；散客参观需按批次成团，出行前先联系景区确认；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3610",
+      "name": "司马迁景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "门票80元/人；韩城市民凭证件免票（现行惠民政策），团队入园需提前一日预约",
+        "freePolicy": "韩城市民凭本人有效身份证免票；儿童、老年人、军人、残疾人等依规免票或优惠",
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": null,
+        "nearestRail": "韩城站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "祠院依司马坡而建，登祠台阶陡峭，老人可乘景区交通至半坡再步行；秋雨天气坡道湿滑；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-渭南-3611",
+      "name": "党家村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "门票价格近年多次调整（历史全价60元左右），未核实到现行全价，以售票处公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": null,
+        "nearestRail": "韩城站",
+        "driveFromCityMin": 170,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "村内四合院多为文保院落，上房、看家楼等未开放部位请勿登临；雨天巷道青石板湿滑；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-渭南-3612",
+      "name": "韩城市博物馆",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": "古城三庙（文庙、东营庙、城隍庙）联票成人50元，1.2米以下儿童免票，以馆方公示为准",
+        "freePolicy": "老年人、军人、残疾人及儿童依规免票或优惠，以馆方公示为准",
+        "openHours": "约08:30-17:30，以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜",
+        "nearestAirport": null,
+        "nearestRail": "韩城站",
+        "driveFromCityMin": 170,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "三庙贯通参观，请按文庙-东营庙-城隍庙动线行进；元代建筑群木构件请勿触摸，殿内严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-延安-3620",
+      "name": "延川黄河乾坤湾景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "门票80元/人；景区换乘车60元/人、5D球幕80元/人、沿黄观光索道等另购，以景区公示为准",
+        "freePolicy": "6周岁及1.2米以下儿童、65周岁以上老人、军人、残疾人等依规免票或优惠",
+        "openHours": "约08:00-18:00（17:00停止入园），旺季可能延长，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月，9-10月黄河秋色最佳",
+        "nearestAirport": "延安南泥湾机场",
+        "nearestRail": "延安站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "观景台临黄河崖壁，请勿翻越护栏拍照；会峰寨、清水湾片区步行强度大，请量力安排；沿黄公路弯多，注意会车；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-延安-3621",
+      "name": "黄陵国家森林公园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "门票存在110元等历史执行价与平台优惠价差异，未核实现行全价，以景区公示为准；观光车另收费",
+        "freePolicy": null,
+        "openHours": "4月1日-10月31日08:30-18:00、11月1日-次年3月31日09:00-17:00，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "延安南泥湾机场",
+        "nearestRail": "延安站",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "紫峨寺崖壁栈道段落差大，恐高者选择平缓线路；冬季森林防火期部分区域封闭，出行前确认开放状态；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延安-3622",
+      "name": "黄龙山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "黄龙山景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月，夏季清凉",
+        "nearestAirport": "延安南泥湾机场",
+        "nearestRail": "延安站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黄龙山林区为森林防火重点区域，全年禁烟禁明火；夏季多雷雨，进山前查看天气；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延安-3623",
+      "name": "吴起中央红军长征胜利纪念园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "纪念园门票信息未核实，红色主题园区通常免费开放，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，5-10月气候最舒适",
+        "nearestAirport": "延安南泥湾机场",
+        "nearestRail": "延安站",
+        "driveFromCityMin": 170,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "纪念园依胜利山而建，台阶较多；中央红军长征胜利纪念碑区域请保持肃穆；吴起冬季寒冷风大注意保暖；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延安-3624",
+      "name": "宜川县秋林抗战纪念地景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "秋林二战区司令部旧址门票信息未核实，以景区现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00，以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "延安南泥湾机场",
+        "nearestRail": "延安站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "旧址窑洞群部分建筑年代久远，参观请勿在窑内喧哗滞留过久；可与壶口瀑布串联游览，注意沿黄公路路况；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延安-3625",
+      "name": "甘泉大峡谷景区",
+      "profile": {
+        "ticketPeak": 98,
+        "ticketOff": null,
+        "ticketNote": "大门票98元/人，景交车70元/人须购买（平台常见98元+70元=168元套票），以景区公示为准",
+        "freePolicy": "6周岁及1.2米以下儿童、65周岁以上老人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:00-17:00（15:30停止入园），分时段进沟，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月，6-8月正午光影最佳",
+        "nearestAirport": "延安南泥湾机场",
+        "nearestRail": "延安站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷内以正午光线最佳，摄影游客需按批次进入桦树沟等沟段；雨季突发洪水风险高，收到预警请立即撤离；旺季建议提前线上购票并核实限流安排；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3627",
+      "name": "牛背梁景区",
+      "profile": {
+        "ticketPeak": 102,
+        "ticketOff": null,
+        "ticketNote": "成人门票102元（平台标准价）；上行索道80元、观光车等另收费",
+        "freePolicy": "6周岁及1.2米以下儿童、65周岁以上老人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "旺季（3月28日-11月15日）08:00-18:00（16:30停止售票、停止入园），淡季时段约08:30-17:30，以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-10月，夏季避暑、秋季观红叶",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "羚牛谷步道湿滑，海拔高处气温低请备外套；景区为羚牛等野生动物栖息地，勿投喂勿离道；冬季部分区域封闭；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3628",
+      "name": "天竺山景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": 60,
+        "ticketNote": "旺季80元/人次、淡季60元/人次（景区公示）；往返索道另收费",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:00-17:30（16:30停止入园），索道运行至16:30，以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "天柱峰绝壁栈道环崖而建，恐高者走玄天洞内线；山顶风力大，帽子衣物注意固定；冬季冰冻期索道可能停运；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3629",
+      "name": "柞水溶洞景区",
+      "profile": {
+        "ticketPeak": 82,
+        "ticketOff": null,
+        "ticketNote": "成人票82元起（平台价82-104元区间浮动，含地质环幕博物馆）；古道岭景区、观光电梯等另收费",
+        "freePolicy": "1.2米以下儿童、65周岁以上老人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:30-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年适宜，夏季洞内清凉",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "洞内恒温约18℃，夏季进洞备薄外套；钟乳石严禁触摸敲击，洞内台阶湿滑；佛爷洞段路窄人多，请按指示单向通行；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3630",
+      "name": "塔云山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "门票价格未核实（历史执行价80元上下），以售票处现场公示为准；观光车另收费",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月，秋季云海频现",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金顶观音殿三面悬于绝壁，观景请勿拥挤至外沿；农历二月、七月庙会期间人多，注意香火与脚下安全；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-商洛-3631",
+      "name": "丹江漂流景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "漂流为按班次售票的体验项目，船票价格未核实，以码头现场公示为准",
+        "freePolicy": null,
+        "openHours": "漂流季（约5-10月）09:00-16:00分班次发船，冬季停漂，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "漂流湿身概率高，请备换洗衣物并将贵重物品寄存；儿童须符合身高年龄安全要求方可上船；汛期水位超标时停漂；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-商洛-3632",
+      "name": "商於古道棣花文化旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "宋街及古镇区域免大门票；贾平凹文学艺术馆等部分场馆、演出及体验项目另收费",
+        "freePolicy": null,
+        "openHours": "街区全天开放，场馆约09:00-17:30，以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月，夏季千亩荷塘最佳",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宋金边城街巷保留宋金并立风貌，碑刻题字请勿描画；二郎庙区域为文保建筑严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3633",
+      "name": "漫川古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "古镇街区免大门票；骡帮会馆等场馆及部分体验如有收费以现场公示为准",
+        "freePolicy": null,
+        "openHours": "街区全天开放，会馆场馆约09:00-17:30，以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "鸳鸯戏楼、骡帮会馆为全国重点文保建筑，请勿攀爬戏楼；古镇临河，雨季注意涨水；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3634",
+      "name": "木王山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "木王国家森林公园门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园），冬季可能封山，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月，春季杜鹃花海尤佳",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "景区深居镇安木王镇，山路车程较长请备干粮饮水；四海坪、双头马片区手机信号弱，勿单独离线徒步；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-商洛-3635",
+      "name": "金台山文化旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "开放式山体文化园区免大门票；夜间灯光及部分场馆如有收费以现场公示为准",
+        "freePolicy": null,
+        "openHours": "园区全天开放，寺庙及场馆约08:00-17:30，以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金台山步道陡峭段落请走梯道缓行；山顶夜景佳，夜攀注意照明并结伴同行；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3636",
+      "name": "九天山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "九天山风景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "瀑布区岩壁湿滑，请勿翻越警戒线；冬季景区可能封园，出行前确认开放状态；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-商洛-3637",
+      "name": "洛南音乐小镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "小镇街区免大门票；演出、花海小火车等体验项目另收费",
+        "freePolicy": null,
+        "openHours": "街区全天开放，演出及场馆时段以当日公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "音乐厅演出场次集中于节假日，购票前先查排期；花海区请走步道勿踩踏花田；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3638",
+      "name": "江山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "江山风景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "玻璃观景段及悬空栈道请依次通行勿拥挤；主峰段手机信号弱，请结伴出行；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-商洛-3639",
+      "name": "天蓬山寨景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "天蓬山寨景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古山寨位于山阳县杨地镇深山，进山公路弯多路窄，新手慎驾；崖壁步道狭窄请勿并排行走；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-商洛-3640",
+      "name": "阳城驿景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "阳城驿（闯王寨）景区门票及实景演出收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，演出场次以当日公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "闯王寨马战实景演出有爆炸音效，婴幼儿需注意安抚；商南茶山片区日照强，注意防晒；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-商洛-3641",
+      "name": "蟒岭绿道景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "绿道及沿线驿站免大门票；自行车租赁、拓展项目另收费",
+        "freePolicy": null,
+        "openHours": "绿道全天开放，驿站服务约09:00-18:00，以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "骑行段起伏较大，借车前检查刹车并佩戴头盔；绿道穿村段注意行人及农用车辆；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-商洛-3642",
+      "name": "月亮洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "月亮洞景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "洞内台阶陡直、局部湿暗，务必携带照明并穿防滑鞋；洞外崖壁观景平台请勿越护栏；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-咸阳-3643",
+      "name": "乾陵博物馆",
+      "profile": {
+        "ticketPeak": 100,
+        "ticketOff": null,
+        "ticketNote": "乾陵景区旺季（3月-11月）通票普票100元/人（邮资门票102元），含乾陵大陵、永泰公主墓暨乾陵博物馆、懿德太子墓等；淡季及单点票价以景区公示为准",
+        "freePolicy": "6周岁及1.2米以下儿童、65周岁以上老人、军人、残疾人等依规免票或半价（旺季半价普票50元），以景区公示为准",
+        "openHours": "08:00-18:00（17:00停止售票），节假日正常开放，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "永泰公主墓墓道下行台阶陡且湿凉，请穿防滑鞋；陵园石像生请勿攀爬；博物馆与乾陵大陵分处两地，留意摆渡交通班次；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-咸阳-3644",
+      "name": "茂陵博物馆",
+      "profile": {
+        "ticketPeak": 75,
+        "ticketOff": 55,
+        "ticketNote": "旺季（3月-11月）75元/人、淡季（12月-次年2月底）55元/人（博物馆公示价），实名购票",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以馆方公示为准",
+        "openHours": "4月-10月08:30-18:00、11月-次年3月08:30-17:30，闭馆前约1小时停止入馆",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜，春秋最佳",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "鎏金铜马与霍去病墓石刻为镇馆看点，请勿触摸马踏匈奴等石刻；馆区门前国道车流大，过路注意安全；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-咸阳-3645",
+      "name": "马栏革命旧址",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "红色旧址门票信息未核实，此类场馆通常免费开放，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外），以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "旧址群依山分布，参观动线较长注意体力分配；马栏山区冬季冰雪封路概率高，出行前查路况；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-咸阳-3646",
+      "name": "袁家村关中印象体验地",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "村落街区免大门票；小吃作坊、酒吧街及游乐体验自费消费",
+        "freePolicy": null,
+        "openHours": "街区全天开放，作坊商铺约09:00-22:00，节假日延长，以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年适宜，节假日民俗活动最丰富",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "周末及节假日车流极大，建议上午10点前抵达并停外围停车场；小吃摊位多，按需小份尝鲜避免浪费；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-咸阳-3647",
+      "name": "马嵬驿民俗文化体验园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "民俗街区免大门票；小吃、作坊体验及游乐设施自费",
+        "freePolicy": null,
+        "openHours": "街区约09:00-21:00开放，节假日延长，以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "美食街区人流密集，注意随身财物并防儿童走失；园区依黄土沟壑而建，部分台阶陡峭注意扶稳；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-咸阳-3648",
+      "name": "郑国渠旅游景区",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketOff": null,
+        "ticketNote": "大门票约90元/人，景交车30元/人须购买；郑国湖至黑沟段小火车10元/人另付，以景区公示为准",
+        "freePolicy": "65周岁以上老人及免票证件人群入园政策以景区公示为准（景交车另行计费）",
+        "openHours": "约08:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月，秋季红叶佳",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "景区沿泾河峡谷布置，观景栈道临水，请勿越线拍照；黑沟段需步行或换乘小火车，留意末班车时间；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-咸阳-3649",
+      "name": "云集生态园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "生态园门票及住宿体验收费未核实，以园区现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以园区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区面积大且临沟壑，夜间不便活动，请规划好返程时间；永寿槐林5月花期游人集中，住宿请提前预订；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-咸阳-3650",
+      "name": "侍郎湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "侍郎湖景区门票及游船收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高原湖泊夏季水温低，严禁野泳；湖区周边多农地，请勿擅自采摘；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-咸阳-3651",
+      "name": "咀头休闲体验地",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "休闲体验园门票及项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00，以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "亲子体验项目多集中在周末开放，平日部分设施停开，出行前先确认；园区多土路步道，雨后湿滑；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-咸阳-3652",
+      "name": "咸阳湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "开放式渭河滨水景区免大门票；游船及夜间灯光等体验项目另收费",
+        "freePolicy": null,
+        "openHours": "滨水公园全天开放，喷泉及灯光时段以现场公示为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，春秋最舒适",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "渭河岸边亲水平台汛期涨水请勿靠近；骑行绿道人车混行，注意相互避让；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-咸阳-3653",
+      "name": "昭陵博物馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "博物馆门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:30（17:00停止入馆），以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "西安咸阳国际机场",
+        "nearestRail": "咸阳西站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "昭陵碑林集中陈列唐碑刻，展陈区严禁自行捶拓描摹；博物馆与九嵕山昭陵陵山相距数公里，需分别驱车前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜川-3654",
+      "name": "金锁关石林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "石林景区门票及玻璃观景等项目收费未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": "铜川东站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金锁关为关中北部门户古关隘，大风时段崖顶观景注意保暖防风；玻璃观景项目恐高者量力选择；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜川-3655",
+      "name": "陈炉古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "古镇街区免大门票；陶瓷体验、窑炉参观等另收费",
+        "freePolicy": null,
+        "openHours": "街区全天开放，陶瓷作坊及场馆约09:00-17:30，以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，春秋最佳",
+        "nearestAirport": null,
+        "nearestRail": "铜川东站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "罐罐垒墙、瓷片铺路是古镇特色，请勿取走瓷片；镇内坡巷狭窄车行不便，建议停山下步行游览；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-铜川-3656",
+      "name": "铜川药王山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "药王山景区实行门票制，门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园），农历二月二庙会期间延长，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": null,
+        "nearestRail": "铜川东站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "摩崖造像及北洞古建为全国重点文物保护单位，殿内严禁烟火；二月二古庙会人流极大，注意防挤防扒；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜川-3657",
+      "name": "动漫花溪谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "花溪谷门票及游乐项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-9月",
+        "nearestAirport": null,
+        "nearestRail": "铜川东站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "花季集中在5-9月，花期前后景观差异大，出行前先确认；宜君山区气温比市区低，请备外套；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜川-3658",
+      "name": "照金-香山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区含照金红色小镇与香山片区，各片区票务不同且未核实，以售票处公示为准；观光车另收费",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月，冬季另有滑雪项目",
+        "nearestAirport": null,
+        "nearestRail": "铜川东站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "照金为陕甘边革命根据地纪念地，纪念馆区域保持肃穆；香山寺庙区严禁烟火；冬季滑雪场运营时周边车流大，注意缓行；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜川-3659",
+      "name": "溪山胜境风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "溪山胜境门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": null,
+        "nearestRail": "铜川东站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "景区居照金深山，溪谷步道雨后湿滑；冬季可能闭园，出行前确认开放状态；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜川-3660",
+      "name": "玉华宫景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": 40,
+        "ticketNote": "旺季60元/人、淡季40元/人（景区公示价）；冬季滑雪及雪场设备另收费",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "08:00-17:00（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月避暑，12-2月滑雪",
+        "nearestAirport": null,
+        "nearestRail": "铜川东站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "玄奘纪念馆区域请保持安静肃穆；冬季雪场运营期间道路偶有结冰，自驾建议备防滑链；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-榆林-3661",
+      "name": "佳县白云山景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": "门票60元/人（平台价约58元）；庙会期间执行特殊票价以公告为准",
+        "freePolicy": "1.2米以下儿童、65周岁以上老人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约07:30-18:00（17:30停止入园），庙会期间适当延长，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月，农历三月三、九月九庙会最盛",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "白云观为西北最大道教建筑群，殿内严禁明火吸烟；神路陡峭600余级，登阶请量力；黄河岸边观景勿越护栏；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-榆林-3662",
+      "name": "红碱淖旅游景区",
+      "profile": {
+        "ticketPeak": 55,
+        "ticketOff": null,
+        "ticketNote": "旺季成人票55元（平台标准价），淡季及优惠票价以景区公示为准；游船、沙地摩托等项目另收费",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:30-18:00（17:30停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖区为遗鸥等珍稀鸟类栖息地，繁殖期（5-7月）勿进入禁行滩涂；水面风浪大时停航，勿乘无证快艇；沙漠区注意防晒补水；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-榆林-3663",
+      "name": "榆阳区黑龙潭景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "黑龙潭景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00，以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "道观庙区依峡谷而建，龙潭水库边请勿下水；农历庙会期间人多车堵，建议错峰前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-榆林-3664",
+      "name": "榆阳区圣都乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "游乐园门票及项目通票价格未核实，以园区现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:30-21:00，以园区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月，暑期夜场最热闹",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "大型设备遇雷雨大风停开，退改以园区公告为准；儿童乘玩请确认身高限制并全程看护；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-榆林-3665",
+      "name": "榆阳区陕北民歌博物馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "博物馆门票信息未核实，此类场馆通常免费开放，以馆方现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外），以馆方公告为准",
+        "suggestedHours": 1,
+        "bestMonths": "全年适宜",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 12,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆内可体验民歌试听，请佩戴耳机勿外放；团体讲解需提前与馆方预约；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-榆林-3666",
+      "name": "神木市二郎山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "二郎山景区门票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山脊步道狭窄（俗称驼峰山），观景请勿越护栏；冬季风大寒冷，登顶注意防风保暖；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-榆林-3667",
+      "name": "神木市石峁遗址文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "石峁遗址及博物馆票务未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "遗址为核心考古区，须沿指定栈道参观，严禁进入未开放区域；可与高家堡古镇串联游览；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-榆林-3668",
+      "name": "神木市碧麟湾景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "碧麟湾景区门票及水上项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "水上项目按季节开放，乘船务必穿救生衣；节假日游乐设备排队久，建议错峰前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-榆林-3669",
+      "name": "绥德县名州古城景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "名州古城片区门票信息未核实，开放式街区通常免费，个别场馆以现场公示为准",
+        "freePolicy": null,
+        "openHours": "街区全天开放，场馆约09:00-17:30，以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "榆林榆阳机场",
+        "nearestRail": "榆林站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "疏属山汉画像石馆等场馆开放时间不一，前往前先确认；无定河畔夜间风大注意保暖；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-汉中-3670",
+      "name": "武侯墓景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": "门票60元/人（公示价，现场如有调整以售票处为准）",
+        "freePolicy": "1.2米以下儿童、65周岁以上老人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "汉中城固机场",
+        "nearestRail": "汉中站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": "0916-3316453",
+        "notices": "墓园古柏为千年名木，严禁攀爬刻划，殿内严禁烟火；可与勉县武侯祠、诸葛古镇串联游览；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-汉中-3671",
+      "name": "张良庙紫柏山",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "联票80元/人（含张良庙、紫柏山景区）；索道另收费，以景区公示为准",
+        "freePolicy": "儿童、老年人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "日常08:00-17:30，节假日07:30-18:00，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月，秋季红叶佳",
+        "nearestAirport": "汉中城固机场",
+        "nearestRail": "汉中站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "紫柏山天坑草甸海拔逾2000米，山顶风大温低请备外套；张良庙内古建碑刻请勿触摸；留坝山区路段雾多，自驾控速；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-汉中-3672",
+      "name": "长青华阳景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "华阳景区门票及观光车票价格未核实，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-10月，秋季红叶彩林最佳",
+        "nearestAirport": "汉中城固机场",
+        "nearestRail": "汉中站",
+        "driveFromCityMin": 170,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "景区在长青国家级自然保护区内，遇羚牛、金丝猴请保持距离勿投喂；华阳古镇至景区山路弯多，雨雾天减速慢行；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-汉中-3673",
+      "name": "黎坪景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "门票与往返观光车常作108元套票销售，大门票单票价格未核实，以售票处公示为准；观光车另收费",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5-10月，10月红叶最佳",
+        "nearestAirport": "汉中城固机场",
+        "nearestRail": "汉中站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "剑峡、枫林瀑布段步道湿滑，请穿防滑鞋；秋季红叶季自驾车流大、车位紧张，建议早到；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-汉中-3674",
+      "name": "青木川景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费游览；魏氏宅院、荣盛魁、烟馆等收费景点通票60元/人（网上约53元起）",
+        "freePolicy": "古镇免费进入；通票对儿童、老年人等有优惠价，以景区公示为准",
+        "openHours": "08:30-17:30（17:00停止入场），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "汉中城固机场",
+        "nearestRail": "汉中站",
+        "driveFromCityMin": 210,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "回龙场老街为木结构建筑，全街严禁烟火；西沟栈道段雨后湿滑；地处陕甘川交界，自驾经宁强山路较长请备足油料；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-汉中-3675",
+      "name": "武侯祠景区",
+      "profile": {
+        "ticketPeak": 25,
+        "ticketOff": null,
+        "ticketNote": "武侯祠单点票25元起；武侯祠+马超墓祠+天下武侯祠展览馆+冷兵器博物馆+郡丞府联票50元起，以景区公示为准",
+        "freePolicy": "1.2米以下儿童、65周岁以上老人、军人、残疾人等依规免票或优惠，以景区公示为准",
+        "openHours": "约08:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "汉中城固机场",
+        "nearestRail": "汉中站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "勉县武侯祠为皇帝下诏修建的官祠，古柏与旱莲为镇祠景观，请勿攀折；紧邻诸葛古镇，节假日演艺场次请提前确认；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    }
+  ]
+}

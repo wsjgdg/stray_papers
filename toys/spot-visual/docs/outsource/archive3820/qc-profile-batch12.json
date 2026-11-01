@@ -1,0 +1,28 @@
+{
+  "batch": 12,
+  "count": 100,
+  "low": 93,
+  "missingRequired": 92,
+  "sample": [
+    "scenic-淄博-1850",
+    "scenic-临沂-1820",
+    "scenic-淄博-1841",
+    "scenic-泰安-1784",
+    "scenic-济宁-1764",
+    "scenic-济宁-1781",
+    "scenic-潍坊-1759",
+    "scenic-威海-1803",
+    "scenic-淄博-1845",
+    "scenic-济宁-1770",
+    "scenic-临沂-1833",
+    "scenic-临沂-1835",
+    "scenic-济宁-1777",
+    "scenic-淄博-1842",
+    "scenic-淄博-1849",
+    "scenic-临沂-1814",
+    "scenic-临沂-1823",
+    "scenic-日照-1859",
+    "scenic-泰安-1795",
+    "scenic-临沂-1815"
+  ]
+}

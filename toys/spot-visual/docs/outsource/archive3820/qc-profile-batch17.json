@@ -1,0 +1,28 @@
+{
+  "batch": 17,
+  "count": 100,
+  "low": 65,
+  "missingRequired": 65,
+  "sample": [
+    "scenic-惠州-2370",
+    "scenic-佛山-2329",
+    "scenic-河源-2343",
+    "scenic-东莞-2383",
+    "scenic-汕头-2310",
+    "scenic-河源-2349",
+    "scenic-东莞-2384",
+    "scenic-汕尾-2379",
+    "scenic-珠海-2302",
+    "scenic-河源-2347",
+    "scenic-韶关-2341",
+    "scenic-河源-2350",
+    "scenic-佛山-2330",
+    "scenic-佛山-2326",
+    "scenic-深圳-2300",
+    "scenic-汕尾-2377",
+    "scenic-汕头-2311",
+    "scenic-深圳-2299",
+    "scenic-佛山-2325",
+    "scenic-河源-2348"
+  ]
+}

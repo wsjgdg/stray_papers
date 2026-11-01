@@ -1,0 +1,2622 @@
+{
+  "task": "景点档案结构化字段-批13",
+  "batch": 13,
+  "count": 100,
+  "authorship": "批13：Z.ai-GLM",
+  "items": [
+    {
+      "id": "scenic-德州-1866",
+      "name": "德州市泉城欧乐堡梦幻世界景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:30（主题乐园型，季节或有调整）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "德州东站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "大型主题乐园，旺季排队较长；夜场开放情况以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-德州-1867",
+      "name": "德州市庆云海岛金山寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（17:00停止入园，香期或延长）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "德州站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛型佛教寺院景区，香期客流较大；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-德州-1868",
+      "name": "夏津县德百温泉度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（温泉类，以当日泡池开放为准）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年（冬季泡汤体验佳）",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "德州东站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "自带泳衣泳帽；住宿客人泡汤权益以度假区规则为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-德州-1869",
+      "name": "乐陵千年枣林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-6月（枣花）、9-10月（采摘）",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "德州站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "枣林观光与采摘结合，采摘期客流量大；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-德州-1870",
+      "name": "德州董子园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（公园型）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "德州站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "董仲舒文化主题园区，城区可达性好；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-德州-1871",
+      "name": "德州市太阳谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（展馆型，周一或闭馆）；以场馆公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "德州站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "太阳能科技主题园区，展馆闭馆日与预约方式以场馆公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-德州-1872",
+      "name": "乐陵冀鲁边区革命纪念园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（纪念馆型，周一或闭馆）；以场馆公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "德州站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "红色主题纪念园，闭馆日以场馆公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-聊城-1873",
+      "name": "东昌湖旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:00-19:00（环湖开放区型，全天或分时段）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "聊城站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "环城湖滨开放区，部分园中园项目另收费；夜间灯光景观以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-聊城-1874",
+      "name": "聊城天沐·江北水城温泉度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（温泉类）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年（冬季泡汤体验佳）",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "聊城站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "自带泳衣泳帽；酒后不宜泡汤；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-聊城-1875",
+      "name": "阳谷景阳冈·狮子楼旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "阳谷站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "水浒主题，实景演出场次以景区当日公告为准；与狮子楼为联票关系以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-聊城-1876",
+      "name": "东阿阿胶城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "聊城站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "阿胶文化主题园区，含工业旅游参观动线；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-聊城-1877",
+      "name": "聊城市孔繁森纪念馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆，周一或闭馆）；以场馆公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "聊城站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "免费场馆通常需实名预约（以场馆最新公告为准）",
+        "officialSite": null,
+        "tel": null,
+        "notices": "英模人物纪念馆，闭馆日与预约方式以场馆公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-聊城-1878",
+      "name": "临清宛园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，夜景场次以景区公告为准）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "临清站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "运河园林式园区，夜间开放情况以景区公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1879",
+      "name": "滨州市杜受田故居",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "清代帝师故居，展馆闭馆日以场馆公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1880",
+      "name": "滨州孙武古城旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "孙子文化主题古城景区，演艺场次以景区当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1881",
+      "name": "黄河三角洲生态文化旅游岛",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园，上岛受船班约束）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黄河三角洲生态岛，需乘船进入且受天气影响，行前核实船班；候鸟季观鸟建议早到"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1882",
+      "name": "滨州市沾化冬枣生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，采摘季或延长）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "9-10月（冬枣采摘）",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "冬枣采摘季（9-10月）客流集中；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1883",
+      "name": "滨州市无棣古城旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古城类景区，夜间灯光与演艺以景区公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1884",
+      "name": "滨州市博兴县打渔张森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（森林公园型，全天或分时段）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "引黄灌溉水利工程与森林景观结合；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1885",
+      "name": "麻大湖旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖区游船受季节与天气影响，行前核实运营公告；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1886",
+      "name": "魏集古镇旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城堡式庄园与古镇结合，夜间灯光开放以景区公告为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滨州-1887",
+      "name": "鑫诚田园生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "济南遥墙国际机场",
+        "nearestRail": "滨州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "田园综合体，采摘与农事体验随季节变化；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-菏泽-1888",
+      "name": "水浒好汉城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "菏泽牡丹机场",
+        "nearestRail": "菏泽东站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "水浒主题文化园，实景演出场次以景区当日公告为准；节假日客流集中"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-菏泽-1889",
+      "name": "菏泽孙膑旅游城·亿城寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，佛教园区香期或延长）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "菏泽牡丹机场",
+        "nearestRail": "菏泽东站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "孙膑故里与古寺结合的园区；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-菏泽-1890",
+      "name": "单县浮龙湖生态旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，水上项目分时段）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "菏泽牡丹机场",
+        "nearestRail": "菏泽东站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖区水上项目受季节与天气影响，行前核实运营公告；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-菏泽-1891",
+      "name": "曹州牡丹园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:00-19:00（牡丹花期，非花期开放时间以园区公告为准）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月（牡丹花期）",
+        "nearestAirport": "菏泽牡丹机场",
+        "nearestRail": "菏泽东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "牡丹花期集中在4月，盛花期客流极大；花期外园区内容减少，行前确认开放状态"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-菏泽-1892",
+      "name": "单县幵山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "菏泽牡丹机场",
+        "nearestRail": "菏泽东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山体公园型景区；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-菏泽-1893",
+      "name": "单县科技馆景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆，周一或闭馆）；以场馆公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "菏泽牡丹机场",
+        "nearestRail": "菏泽东站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "科普场馆，闭馆日与预约方式以场馆公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1895",
+      "name": "古柏渡飞黄旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-18:00（游乐项目分场次）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "飞索等高空项目受天气影响可能临时停运；与丰乐樱花园相邻可联游"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1896",
+      "name": "古柏渡丰乐樱花园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-18:00（花期为集中开放时段）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-4月（樱花）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "樱花季集中在3月下旬至4月，花期外园区内容减少，行前确认；客流高峰建议早到"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1897",
+      "name": "中原福塔旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-22:00（观景层开放至夜间，登塔截止时间以当日公告为准）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "登塔观光票价随票种（观光层/旋转餐厅/夜间票）差异较大，购票前确认票种内容"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1898",
+      "name": "黄帝故里景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "景区免费开放（以景区公告为准；农历三月三拜祖大典等重大活动期间或有管控）",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州航空港站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "拜祖大典期间（农历三月三前后）人流极大且或限流，普通游客建议避开；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1899",
+      "name": "银基国际旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-18:00（大型度假区，乐园与水世界分时段）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "6-8月（水世界）、4-5月、9-10月（乐园）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州航空港站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "度假区含乐园、水世界、动物王国等多园区，各园区单独售票，购票前确认目标园区；节假日客流极大建议早到"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1900",
+      "name": "新密伏羲大峡谷",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷步道较多，穿防滑鞋；雨季注意景区防汛公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1901",
+      "name": "新密市三泉湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山地景区步道较长，备足饮水；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1902",
+      "name": "新密市红石林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "丹霞红岩景观与玻璃栈道组合，恐高者量力而行；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1903",
+      "name": "樱桃沟景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（近郊沟域型，全天或分时段）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-6月（樱桃采摘）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "樱桃采摘季（5-6月）客流集中，周末易堵车建议早到"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1904",
+      "name": "方特欢乐世界",
+      "profile": {
+        "ticketPeak": 273,
+        "ticketOff": null,
+        "ticketNote": "夜场票另有售；挂牌价或有调整，以景区当日公示为准",
+        "freePolicy": "1.1米（含）以下儿童免票（以景区公示为准）",
+        "openHours": "约09:30-17:30（园区型，夜场至21:00左右）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州东站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "寄存柜",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "热门项目排队时间长，入园后先玩人气项目；夜场与全天票票种不同，购票前确认"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-郑州-1905",
+      "name": "郑州·绿博园",
+      "profile": {
+        "ticketPeak": 20,
+        "ticketOff": null,
+        "ticketNote": "线上平台常有约18元优惠票；观光车另收费；以景区当日公示为准",
+        "freePolicy": "1.4米（含）以下儿童、60周岁及以上老人、现役军人、人民警察、消防救援人员、残疾人免票；教师、18周岁以下未成年人、全日制学生半价（以景区公示为准）",
+        "openHours": "旺季(3.15-10.14) 08:30-19:00（18:00停止售票）；淡季 09:00-18:00（17:00停止售票）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州东站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "无障碍通道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区面积大（99个展园），建议乘观光车或骑行；花展活动期间部分展区或有调整"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-郑州-1906",
+      "name": "郑州建业·华谊兄弟电影小镇",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-21:30（夜游为主，日场时段以景区公告为准）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月（夜游佳）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州东站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": true,
+        "reservationNote": "节假日通常需提前线上购票（以景区规则为准）",
+        "officialSite": null,
+        "tel": null,
+        "notices": "电影主题街区，夜间灯光与演艺为核心体验；节假日票务紧张建议提前预订"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1907",
+      "name": "黄河富景生态世界",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-18:00（生态园型，项目分时段）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "生态农庄与水上乐园组合，夏季为旺季；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1908",
+      "name": "丰乐农庄.黄河谷马拉湾海浪浴场景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-22:00（海浪浴场分场次）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-8月（水乐园）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "水乐园旺季为6-8月，自带泳衣泳帽；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1909",
+      "name": "嵩阳书院景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "儒家书院遗址，讲解服务可现场咨询；嵩山片区联票规则以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1910",
+      "name": "中岳庙 景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "五岳祭祀建筑群，登封片区多个景点可联游；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1911",
+      "name": "观星台",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "观星台为天文遗址，展陈区域闭馆安排以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1912",
+      "name": "大熊山仙人谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷与玻璃桥组合，高空项目恐高者量力而行；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1913",
+      "name": "郑州园博园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-18:00（17:30停止入园，夜间活动以景区公告为准）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州航空港站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园博园面积大，建议乘观光车；节庆花展期间部分展区或有调整"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1914",
+      "name": "郑州黄河文化公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:00-19:00（滨河开放区型，全天或分时段）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "郑州站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黄河文化主题公园，临水区域注意安全；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1915",
+      "name": "康百万庄园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "巩义站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "大型庄园建筑群，讲解服务可现场咨询；闭馆日以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1916",
+      "name": "竹林长寿山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，红叶季或延长）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "10-11月（红叶）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "巩义南站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "红叶季集中在10月下旬至11月，节假日客流集中；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郑州-1917",
+      "name": "杜甫故里",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "巩义站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "杜甫故里纪念馆型景区，闭馆日以场馆公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1919",
+      "name": "开封府",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": "夜游《南衙千秋月》90元（含全天不限次入园）；线上平台常有约59元优惠日场票",
+        "freePolicy": "70周岁以上老人、6周岁（含）以下或1.2米（含）以下儿童、现役及残疾军人、残疾人免票；60-69周岁老人、未成年人及全日制学生半价（以景区公示为准）",
+        "openHours": "日场约07:30-18:30（春夏秋至19:00、冬季至17:30，17:30停止入园）；夜游至22:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-5月、9-10月（菊展）、10-11月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "开衙迎宾、包公断案等实景演出场次以当日节目单为准；夜游票与日场票票种不同，购票前确认"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-开封-1920",
+      "name": "包公祠",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:30-18:30（18:00停止入园，冬季至17:30）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4-5月、10-11月（菊展）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "包公祠与开封府、包公湖相邻可步行串联；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1921",
+      "name": "开封龙亭公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:30-18:30（18:00停止入园，冬季至17:30）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、10-11月（菊展）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宋代皇宫遗址上的园林，秋季菊展为高峰；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1922",
+      "name": "大相国寺",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园，香期或延长）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "千年古刹，香期客流较大；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1923",
+      "name": "开封市铁塔公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:30停止入园，冬季至17:30）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4-5月、10-11月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "铁塔为开封标志古建，登塔或另行收费；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1924",
+      "name": "万岁山游览区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-22:00（武侠演出与夜游为核心，日场截止以当日公告为准）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "热门时段通常需提前线上购票（以景区规则为准）",
+        "officialSite": null,
+        "tel": null,
+        "notices": "近年热度极高的武侠主题园区，节假日票务紧张务必提前购票；演出场次密集，入园后先看节目单；另有含周边多景区的联票组合"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1925",
+      "name": "中国翰园碑林",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:30停止入园，冬季至17:30）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、10-11月（菊展）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "碑林书法主题园区，与万岁山相邻；与周边景区联票以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1926",
+      "name": "天波杨府公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:30-18:30（18:00停止入园，冬季至17:30）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、10-11月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "杨家将主题园林，演艺场次以景区当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1927",
+      "name": "朱仙镇启封故园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，夜景场次以景区公告为准）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "开封站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "启封故园与朱仙镇木版年画文化结合，夜间开放以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-开封-1928",
+      "name": "焦裕禄纪念园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，周一或闭馆）；以场馆公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "兰考站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "焦裕禄纪念园，庄重场所请保持安静；闭馆日以场馆公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1933",
+      "name": "重渡沟",
+      "profile": {
+        "ticketPeak": 120,
+        "ticketOff": null,
+        "ticketNote": "线上常有约99-118元优惠票；索道单程约59元、景区观光车与漂流等另收费",
+        "freePolicy": "1.4米（含）以下儿童、60周岁及以上老人、现役及退役军人、人民警察、消防救援人员、残疾人免票；全日制学生及18周岁以下、持教师资格证教师半价（以景区公示为准）",
+        "openHours": "全天开放（24小时）；索道与观光车分时段运营；以景区公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "5-9月（水量最佳）",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "北国水乡型山谷景区，农家住宿密集可住景区内；暑期有学生免票活动但需预约，行前核实；景区内观光车分段收费"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-洛阳-1934",
+      "name": "龙峪湾",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "森林公园型，冬季可能有封山防火期，行前务必核实；山路较长备足饮水"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1935",
+      "name": "抱犊寨",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古寨型山岳景区，登顶步道较陡；冬季防火期或闭园，行前核实"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1936",
+      "name": "养子沟",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山谷溪流型景区，夏季玩水备替换衣物；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1937",
+      "name": "伏牛山滑雪度假乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（雪季至夜间，以雪场运营公告为准）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "12-2月（滑雪）、5-10月（山地）",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 155,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "滑雪季（约12月-2月）与山地季票价结构不同，购票前确认项目；雪场装备租赁另收费"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1938",
+      "name": "天河大峡谷",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 170,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷型景区，步道沿溪而行，雨季注意安全；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1939",
+      "name": "栾川县竹海野生动物园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "全年（室内熊猫馆冬季亦可）",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 145,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "竹海生态与动物园结合，含大熊猫馆，节假日客流集中建议早到；演出场次以园区当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1940",
+      "name": "王府竹海景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "竹海与瀑布组合的山谷景区；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1941",
+      "name": "神灵寨风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "地质景观型，冬季防火期或闭园行前核实；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1942",
+      "name": "西泰山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "汝州站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "西泰山杜鹃花海（4-5月）为高峰；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1943",
+      "name": "恐龙谷漂流",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（漂流分场次，受水情约束）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-8月（漂流季）",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "汝州站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "漂流项目受水位与天气影响大，行前务必确认当日开漂；备替换衣物与防水袋"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1944",
+      "name": "木札岭",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "原始森林型山岳，冬季防火期或闭园行前核实；步道较长备足饮水"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1945",
+      "name": "天池山国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高山天池与森林步道结合；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1946",
+      "name": "青要山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山岳步道型，与黛眉山同属新安片区可串联；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1947",
+      "name": "黛眉山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "临黄河大观的崖壁景区，恐高路段量力而行；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1948",
+      "name": "千唐志斋博物馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入馆，周一或闭馆）；以场馆公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "石刻唐书专题博物馆，闭馆日以场馆公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1949",
+      "name": "小浪底",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:30（17:30停止入园，大坝观景区域或分时段）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-7月（调水调沙）、4-5月、9-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "调水调沙期（约6-7月）可观泄洪奇观，以水利部门公告为准；临水区域注意安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1950",
+      "name": "花果山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "宜阳站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "花果山取名自西游传说，山岳步道型；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1951",
+      "name": "二程文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "二程理学文化园区，展馆部分闭馆日以场馆公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1952",
+      "name": "中国国花园",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": "牡丹文化节期间收费且随花期浮动（约30-50元），非花期免费入园；洛阳旅游年票有效",
+        "freePolicy": "12周岁（含）以下或1.4米（含）以下儿童、60周岁（含）以上老人、现役及退役军人、残疾军人、人民警察、消防救援人员、残疾人免票；18周岁以下未成年人、全日制学生、教师半价（以园区公示为准）",
+        "openHours": "花期约07:00-19:00（东门/西门/南门开放）；非花期开放时间以园区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月（牡丹盛花期）",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国内最大牡丹专类园，4月盛花期客流极大建议错峰早到；花期票价随阶段调整，购票前以当日公告为准"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-洛阳-1953",
+      "name": "中国薰衣草庄园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-18:00（花期集中开放时段）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-6月（薰衣草）、9-10月",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "薰衣草花期集中在5-6月，花期外内容减少行前确认；节假日客流集中建议早到"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-洛阳-1954",
+      "name": "豪泽国际郁金香花海欢乐城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-18:00（花期为集中开放时段）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-5月（郁金香）",
+        "nearestAirport": "洛阳北郊机场",
+        "nearestRail": "洛阳龙门站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "郁金香花期为4-5月，游乐设施单独或套票收费，购票前确认"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1956",
+      "name": "画眉谷",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "平顶山西站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "画眉谷以瀑潭与杜鹃闻名，山路湿滑穿防滑鞋；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1957",
+      "name": "中国墨子文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，滑雪季至夜间）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "12-2月（滑雪）、5-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "平顶山西站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "墨子文化与尧山片区结合，雪季与山地季票价结构不同，购票前确认；游乐项目部分另收费"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1958",
+      "name": "白龟湖国家城市湿地公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:00-19:00（湿地公园型，全天或分时段）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "平顶山西站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "环湖开放区型，环湖骑行设施较好；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1959",
+      "name": "平顶山博物馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆，周一闭馆）；以场馆公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "平顶山西站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "博物馆通常需实名预约（以场馆最新公告为准）",
+        "officialSite": null,
+        "tel": null,
+        "notices": "应国墓地出土文物为特色，周一闭馆（法定节假日除外）为常见安排，行前确认"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1960",
+      "name": "二郎山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，水上游乐分时段）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "平顶山西站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "石漫滩水库边的水山组合景区，水上项目受季节影响；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1961",
+      "name": "灯台架景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "平顶山西站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山地峡谷型步道景区；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1962",
+      "name": "祥龙谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "平顶山西站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "舞钢山地景区群之一，可与二郎山串联；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1963",
+      "name": "三苏园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "郏县站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "三苏父子的墓园与祠庙合一，庄重场所请保持安静；闭馆安排以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1964",
+      "name": "平顶山市香山普门禅寺",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，香期或延长）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "平顶山西站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "观音文化古刹，香期（农历二月十九、六月十九、九月十九前后）客流大；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1965",
+      "name": "姚庄旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "郏县站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "长寿食养文化主题乡村游，餐饮体验为核心；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1966",
+      "name": "风穴寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "汝州站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "千年古刹与塔林，闭馆安排以景区公告为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-平顶山-1967",
+      "name": "河南九峰山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，冬季或封山）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "平顶山尧山站",
+        "nearestRail": "汝州站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山岳型，冬季防火期或闭园行前核实；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-新乡-1969",
+      "name": "新乡辉县万仙山风景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "景区内观光车45元另计（多线路常用）；门票2日有效；线上或有约72元优惠票",
+        "freePolicy": "70周岁（含）以上老人、1.2米（含）以下儿童、地市级以上摄影家协会会员、持国家记者证媒体记者免门票；60-69周岁老人、大中专学生等购优惠票（以景区公示为准）",
+        "openHours": "景区全天可入（约24小时）；观光车运营约07:30-18:30；以景区公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "6-8月（避暑戏水）、9-10月（红叶）",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "新乡东站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "郭亮挂壁公路必须乘观光车进入，白天私家车禁上山（住村民宿报备后限时通行）；节假日请早到避堵；绝壁长廊务必步行穿越体验最佳"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-新乡-1970",
+      "name": "新乡京华园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "新乡站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "京华村文化主题园区，城郊可达性好；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-新乡-1971",
+      "name": "新乡市比干庙景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "卫辉站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "比干庙为林氏寻根地，庄重场所请保持安静；闭馆安排以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-新乡-1972",
+      "name": "新乡市潞王陵景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园，周一或闭馆）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "新乡站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "明代藩王陵寝石刻群，陵区步道平缓；闭馆日与预约政策以景区公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-新乡-1973",
+      "name": "新乡市宝泉旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园，水上项目分时段）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "郑州新郑国际机场",
+        "nearestRail": "新乡东站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯"
+        ],
+        "needReservation": true,
+        "reservationNote": "节假日通常需提前线上购票（以景区规则为准）",
+        "officialSite": null,
+        "tel": null,
+        "notices": "太行水世界与山岳组合，暑期水乐园为高峰；高空项目恐高者量力而行"
+      },
+      "confidence": "low"
+    }
+  ]
+}

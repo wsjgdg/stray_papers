@@ -1,0 +1,28 @@
+{
+  "batch": 7,
+  "count": 100,
+  "low": 65,
+  "missingRequired": 65,
+  "sample": [
+    "scenic-六安-1247",
+    "scenic-安庆-1302",
+    "scenic-安庆-1316",
+    "scenic-芜湖-1284",
+    "scenic-宿州-1221",
+    "scenic-六安-1254",
+    "scenic-六安-1263",
+    "scenic-六安-1252",
+    "scenic-蚌埠-1224",
+    "scenic-铜陵-1289",
+    "scenic-滁州-1243",
+    "scenic-铜陵-1288",
+    "scenic-滁州-1239",
+    "scenic-安庆-1303",
+    "scenic-铜陵-1292",
+    "scenic-安庆-1301",
+    "scenic-安庆-1300",
+    "scenic-淮南-1237",
+    "scenic-六安-1268",
+    "scenic-安庆-1305"
+  ]
+}

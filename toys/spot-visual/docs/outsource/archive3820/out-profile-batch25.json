@@ -1,0 +1,2618 @@
+{
+  "task": "景点档案结构化字段-批25",
+  "batch": 25,
+  "count": 100,
+  "authorship": "批25：主会话",
+  "items": [
+    {
+      "id": "scenic-遂宁-3142",
+      "name": "遂宁市中国死海旅游度假区",
+      "profile": {
+        "ticketPeak": 199,
+        "ticketOff": null,
+        "ticketNote": "参考挂牌全价约199元/人（含盐卤漂浮体验），节假日或随套餐浮动，以景区公示为准；不含餐饮、SPA、住宿等二次消费",
+        "freePolicy": null,
+        "openHours": "约9:00-18:00，旺季常有夜场延长（分季调整，以现场公示为准）",
+        "suggestedHours": 5,
+        "bestMonths": "5-9月（夏季水上项目最全）",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "大英东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "寄存柜",
+          "医疗服务点",
+          "母婴室",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于大英县城，暑期与节假日客流大建议错峰；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3143",
+      "name": "遂宁市中国观音故里旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5、9-11月（农历二月十九香会节前后最旺）",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "含灵泉寺、广德寺等组团，寺塔区域台阶较多，香会期人流集中；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3144",
+      "name": "遂宁市中华侏罗纪探秘旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于射洪市硅化木地质公园一带，射洪暂无铁路直达，需自驾或客运班车前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3145",
+      "name": "遂宁市龙凤古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式古镇街区，免大门票（个别展馆、游乐项目另收费）",
+        "freePolicy": null,
+        "openHours": "街区全天开放（商户约10:00-21:00营业）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "涪江畔慢生活街区，适合近郊亲子休闲；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3146",
+      "name": "子昂故里文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于射洪市金华镇，陈子昂读书台所在金华山，暂无铁路直达需公路前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3147",
+      "name": "观音湖湿地公园旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "环观音湖开放型湿地公园，免门票（游船等另收费）",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、10-11月",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城区涪江沿线滨水绿道，傍晚锻炼人流多；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3148",
+      "name": "遂宁市安居区七彩明珠景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式乡村文旅景区，免大门票（园内游乐、体验项目另收费）",
+        "freePolicy": null,
+        "openHours": "全天开放（游乐项目约9:00-18:00分时段运营）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于安居区，花木田园组合适合亲子近郊游；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3149",
+      "name": "世界荷花博览园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "观音湖圣莲岛上开放式主题园区，免门票",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "6-8月（荷花盛放期）",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "盛花期集中在7月前后，冬季景观一般；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3150",
+      "name": "遂宁市射洪市舍得酒文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒厂工业旅游参访一般需提前预约成团，开放场次以酒旅部门安排为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3151",
+      "name": "海龙凯歌景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村振兴主题园区，免大门票（部分展馆、体验项目另收费）",
+        "freePolicy": null,
+        "openHours": "全天开放（展馆约9:00-17:00）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于安居区海龙村，乡村休闲与研学属性强；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-遂宁-3152",
+      "name": "高峰山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "南充高坪机场",
+        "nearestRail": "遂宁站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于蓬溪县文井镇，以八卦迷宫式道观建筑群著称，乡道弯多请慢行；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3153",
+      "name": "西昌市邛海泸山风景名胜区",
+      "profile": {
+        "ticketPeak": 5,
+        "ticketOff": null,
+        "ticketNote": "泸山门票约5元，邛海湿地公园免费开放，索道及山上寺庙等另计（历年参考价，以现场公示为准）",
+        "freePolicy": null,
+        "openHours": "邛海湿地环湖全天开放；泸山与索道约8:00-18:00（以现场公示为准）",
+        "suggestedHours": 4,
+        "bestMonths": "10-次年4月（冬春晴日观候鸟尤佳）",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "西昌站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "冬春阳光充足、湖畔候鸟集中，火把节期间城区住宿紧张；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3154",
+      "name": "冕宁县灵山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "冕宁站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于冕宁县，灵山寺香期人流集中，登山段台阶较多；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3155",
+      "name": "凉山州普格县螺髻山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约8:00-17:30（索道运营时段分季调整，冬季可能检修停运，以现场公示为准）",
+        "suggestedHours": 6,
+        "bestMonths": "4-10月（杜鹃花海4-6月最盛）",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "西昌西站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高海拔区域注意防晒防寒，节假日索道排队长，门票不含索道费用；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3156",
+      "name": "凉山州泸沽湖旅游景区",
+      "profile": {
+        "ticketPeak": 70,
+        "ticketOff": null,
+        "ticketNote": "参考全价约70元/人（近年挂牌价），学生、老人等优惠以景区公示为准；不含猪槽船、环湖包车等费用",
+        "freePolicy": null,
+        "openHours": "全天可进入，门票站售票约8:00-19:00（以现场为准）",
+        "suggestedHours": 6,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 270,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于盐源县与云南交界，山路弯多晕车者备药，环湖建议自驾或包车；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3157",
+      "name": "会理古城旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式古城街区，免大门票（个别会馆、展馆或另收费）",
+        "freePolicy": null,
+        "openHours": "街区全天开放",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "攀枝花南站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于会理市，无铁路直达，铁路需经攀枝花或西昌中转公路前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3158",
+      "name": "西昌安哈彝寨仙人洞",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "西昌站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于西昌市安哈镇，可结合彝家餐饮与歌舞体验，洞内湿滑注意防滑；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3159",
+      "name": "越西县文昌故里旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "越西站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于越西县，新成昆铁路越西站下车后仍需转乘汽车前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3160",
+      "name": "宁南金钟山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "西昌西站",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于宁南县城附近，公共交通有限建议自驾；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3161",
+      "name": "凯地里拉温泉旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天营业（温泉分日/夜场，以度假区公示为准）",
+        "suggestedHours": 4,
+        "bestMonths": "10-次年3月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "西昌西站",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于宁南县，温泉泡池分档计价且淡旺季差异明显；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3162",
+      "name": "彝海景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "彝海结盟红色纪念地，免大门票",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "冕宁站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于冕宁县北部高海拔山区，湖畔温凉注意防寒，山路弯多；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3163",
+      "name": "会理会议纪念地",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "长征红色纪念场所，免大门票",
+        "freePolicy": null,
+        "openHours": "纪念地全天开放（陈列馆约9:00-17:00，周一或闭馆整备，以现场公示为准）",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "攀枝花南站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "与会理古城可串联游览，团队讲解宜提前联系；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3164",
+      "name": "凉山州会东县老君峰旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "10-次年4月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 240,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于会东县金沙江畔，无铁路直达需长途自驾，出发前查路况天气；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3165",
+      "name": "凉山州西昌市茅坡樱红旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村樱桃主题园区，免大门票（采摘、餐饮另计费）",
+        "freePolicy": null,
+        "openHours": "全天开放（花期、果期人流集中）",
+        "suggestedHours": 2,
+        "bestMonths": "2-4月（樱桃花与采摘季）",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "西昌站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于西昌市郊山区，花期短暂而集中，出行前关注花期公告并核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3166",
+      "name": "凉山州雷波县马湖旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 220,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于雷波县高海拔湖盆，山路蜿蜒需预留车程，无铁路直达；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3167",
+      "name": "公母山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于盐源县，需自驾或包车前往，公共交通班次有限；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3168",
+      "name": "建昌古城景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "修缮后开放的古城街区，免大门票（部分展馆、演出另收费）",
+        "freePolicy": null,
+        "openHours": "街区全天开放（商户约10:00-22:00）",
+        "suggestedHours": 2,
+        "bestMonths": "10-次年4月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": "西昌站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于西昌城区，夜间灯光氛围佳，可与邛海串联游览；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-凉山彝族自治州-3169",
+      "name": "色拉尼布景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "西昌青山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 300,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于木里藏族自治县，路途较远建议预留整日车程，出发前查路况天气；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-攀枝花-3170",
+      "name": "攀枝花市二滩国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3,
+        "bestMonths": "10-次年4月",
+        "nearestAirport": "攀枝花保安营机场",
+        "nearestRail": "攀枝花南站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以二滩电站库区湖光山色为主，游船班期有限需现场确认；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-攀枝花-3171",
+      "name": "攀枝花市格萨拉生态旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 4,
+        "bestMonths": "4-6、9-11月",
+        "nearestAirport": "攀枝花保安营机场",
+        "nearestRail": "攀枝花南站",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于盐边县高海拔山区，昼夜温差大，途中盘山路长请备干粮；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-攀枝花-3172",
+      "name": "攀枝花市米易县颛顼龙洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "攀枝花保安营机场",
+        "nearestRail": "米易东站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于米易县，洞内湿滑温差大建议穿防滑鞋，冬春为康养旺季；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-攀枝花-3173",
+      "name": "米易傈僳梯田景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "4-5、9-10月",
+        "nearestAirport": "攀枝花保安营机场",
+        "nearestRail": "米易东站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于米易县新山傈僳族乡，观景台看日出云海需早到，乡道狭窄会车难；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-攀枝花-3174",
+      "name": "迤沙拉景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "10-次年4月",
+        "nearestAirport": "攀枝花保安营机场",
+        "nearestRail": "攀枝花南站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于仁和区，俚颇彝族聚居古村，红墙巷道多石阶请穿步行鞋；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3175",
+      "name": "泸州老窖旅游区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": "参考全价约60元/人（含国宝窖池群参观与讲解，历年价格），以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:30（闭园前约30分钟停止入园，以现场公示为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "老年人优惠",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城区国窖广场一带，参观多为场次制讲解，酒香浓郁可顺购文创酒品；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3176",
+      "name": "黄荆老林旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于古蔺县北部原始林区，瀑布群多，雨后步道湿滑；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3177",
+      "name": "太平古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "四渡赤水红色古镇，街区免大门票（陈列馆凭有效证件参观）",
+        "freePolicy": null,
+        "openHours": "街区全天开放（陈列馆约9:00-17:00）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于古蔺县赤水河畔，依山建街石梯较多，可与二郎镇串联；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3178",
+      "name": "天仙硐旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于纳溪区永宁河畔，崖壁与乐道古街步道湿滑；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3179",
+      "name": "泸州市张坝桂圆林旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式城市滨江公园，免门票",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "7-9月（桂圆成熟季）",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "长江边百年桂圆林，夏季成熟季可体验采摘，园区大可乘电瓶车；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3180",
+      "name": "花田酒地旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免大门票，园内花海、玻璃栈道等体验项目另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（体验项目约9:00-18:00）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-10月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于纳溪区清溪河谷，花期景观最盛，体验项目分项计价；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3181",
+      "name": "龙桥文化生态园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村文化园区，免大门票",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于泸县乡村，以龙桥石雕文化为特色，自驾前往更方便；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3182",
+      "name": "尧坝古镇",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式古镇街区，免大门票（个别场馆另收费）",
+        "freePolicy": null,
+        "openHours": "街区全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于合江县，影视取景地，赶集日与节假日人气最旺；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3183",
+      "name": "泸州市凤凰湖旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（游船等按班期运营）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于纳溪区，湖区面积大适合环湖自驾与露营野餐；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3184",
+      "name": "箭竹大黑洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于古蔺县箭竹苗族乡，洞内恒温且温差大备薄外套；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3185",
+      "name": "古郎景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于古蔺县山区，公共交通班次少建议自驾；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3186",
+      "name": "泸州市江阳区董允坝伞乡景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免大门票，节庆活动及园内体验项目另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（场馆约9:00-17:00）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于江阳区，伞文化与蔬菜主题田园，春季花海集中；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泸州-3187",
+      "name": "泸州市叙永县中国沈酒庄景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "泸州站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于叙永县山区酒庄，参访与品鉴宜提前联系确认场次；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3188",
+      "name": "三苏祠景区",
+      "profile": {
+        "ticketPeak": 47,
+        "ticketOff": null,
+        "ticketNote": "全价票47元/人（近年挂牌价，以现场公示为准），6周岁以下及60周岁以上等按政策减免",
+        "freePolicy": null,
+        "openHours": "约9:00-17:30（闭园前约1小时停止入园，以现场公示为准）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "眉山东站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "轮椅租借",
+          "寄存柜",
+          "老年人优惠",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于眉山城区，节假日馆内人多建议错峰，旺季或有夜游场次；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3189",
+      "name": "黑龙滩旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "环湖开放区域全天，游船按班期运营（以现场公示为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "眉山东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于仁寿县，大坝至半岛沿线点位分散，自驾更方便；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3190",
+      "name": "江湾神木园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "青神站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于青神县岷江畔，以乌木艺术藏品展示为主，可与竹艺城串联；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3191",
+      "name": "柳江古镇旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式古镇街区，免大门票（个别宅院、展馆另收费）",
+        "freePolicy": null,
+        "openHours": "街区全天开放",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月（烟雨柳江夏夜尤佳）",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "眉山东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于洪雅县，雨后江雾最有意境，节假日停车紧张建议早到；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3192",
+      "name": "国际竹艺城景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免大门票，竹编博物馆凭证件免费参观（特展或另计）",
+        "freePolicy": null,
+        "openHours": "园区全天开放，博物馆约9:00-17:00（周一可能闭馆整备，以现场公示为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "青神站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于青神县，竹编研学体验丰富，可顺访岷江江畔；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3193",
+      "name": "中国泡菜城景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免大门票，中国泡菜博物馆免费参观",
+        "freePolicy": null,
+        "openHours": "园区全天开放，博物馆约9:00-17:00（周一可能闭馆整备，以现场公示为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "眉山东站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于东坡区，工业旅游属性强，团体参观宜提前预约；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3194",
+      "name": "仁寿城市湿地公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式城市湿地公园，免门票",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "眉山东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于仁寿县城，傍晚锻炼与夜游人流量大；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3195",
+      "name": "瓦屋山景区",
+      "profile": {
+        "ticketPeak": 100,
+        "ticketOff": null,
+        "ticketNote": "参考全价约100元/人（近年挂牌价），观光车、索道另收费；冬季冰雪期开放安排以景区公示为准",
+        "freePolicy": null,
+        "openHours": "入园约8:00起，观光车与索道运营时段分季调整（以现场公示为准）",
+        "suggestedHours": 6,
+        "bestMonths": "4-6月（杜鹃）、12-次年2月（冰雪）",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "眉山东站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "轮椅租借",
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山顶海拔近2800米注意保暖与高反，冬季看雪需确认索道运行状态；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3196",
+      "name": "彭祖山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月（农历三月三庙会最旺）",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "彭山站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于彭山区，养生文化主题，登山台阶较多，与江口古镇相邻；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-眉山-3197",
+      "name": "老峨山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "眉山东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于丹棱县，登顶往返约3小时，雾天路面湿滑请慢行；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-资阳-3198",
+      "name": "资阳市陈毅故里景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "红色经典景区，免大门票（纪念馆凭证件参观）",
+        "freePolicy": null,
+        "openHours": "景区全天开放，陈毅纪念馆约9:00-17:00（周一可能闭馆整备，以现场公示为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "成都天府国际机场",
+        "nearestRail": "资阳北站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于乐至县，铁路尚在建设需公路前往，团队讲解宜预约；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-资阳-3199",
+      "name": "安岳石刻·圆觉洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "成都天府国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于安岳县城近郊，安岳石窟点多面广，本条仅指圆觉洞片区，无铁路直达需公路前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-资阳-3200",
+      "name": "宝森柠檬旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "10-11月（柠檬采摘季）",
+        "nearestAirport": "成都天府国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于安岳县，柠檬主题乡村园区，采摘季活动集中；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3201",
+      "name": "达州市真佛山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "达州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于达川区，庙宇建筑群依山而建，登山步道较长；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3202",
+      "name": "达州市渠县賨人谷旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "渠县站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于渠县，溶洞与峡谷步道兼有，洞内段湿滑；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3203",
+      "name": "达州市宣汉县洋烈水乡景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式乡村水乡景区，免大门票（游船、民宿另计）",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "达州站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于宣汉县君塘镇，州河沿岸适合亲子亲水与骑行；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3204",
+      "name": "达州市大竹县五峰山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": null,
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于大竹县竹海片区，无铁路直达，夏季避暑客流集中；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3205",
+      "name": "宣汉县巴山大峡谷旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 6,
+        "bestMonths": "4-6、10-11月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": null,
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于宣汉县北部，景区入口距达州市区较远需预留车程，门票与观光车套票种类多；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3206",
+      "name": "达州市宣汉县峨城山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": null,
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于宣汉县，竹海登山步道为主，公共交通不便建议自驾；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3207",
+      "name": "达州市万源八台山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "万源站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于万源市，观日出云海需早出发，节假日索道排队长；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3208",
+      "name": "通川区磐石月湖旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "达州站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于通川区磐石镇，近郊湖区与游乐园组合，项目分项计费；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3209",
+      "name": "万源市红军公园旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式城市纪念公园，免门票",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "万源站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于万源市城区，园内含战史陈列展陈，可与八台山串联；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3210",
+      "name": "碧瑶湾旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": null,
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "度假区型园区，餐饮住宿配套为主，建议自驾前往；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3211",
+      "name": "达州市渠县文峰山文化旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式文化主题公园，免大门票",
+        "freePolicy": null,
+        "openHours": "全天开放（文峰塔登塔时段以现场公示为准）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "渠县站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于渠县县城，傍晚锻炼人流多，夜景灯光佳；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3212",
+      "name": "达州市达川区乌梅山旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式乡村景区，免大门票（乌梅花节期间部分活动另收费）",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "1-3月（乌梅花期）",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "达州站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于达川区百节镇，花期集中且短暂，出行前关注花期公告并核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3213",
+      "name": "神剑园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "张爱萍将军故居红色纪念园区，免门票（展馆凭证件参观）",
+        "freePolicy": null,
+        "openHours": "园区全天开放，展馆约9:00-17:00（周一可能闭馆整备，以现场公示为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": "达州站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于通川区罗江镇，紧邻达州城区，研学团队较多宜错峰；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3214",
+      "name": "渔人部落旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": null,
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "乡村亲子游乐型园区，垂钓游乐项目分时段运营；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-达州-3215",
+      "name": "金山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "达州金垭机场",
+        "nearestRail": null,
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "公开资料较少，出发前请再次确认位置与开放状态，并核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3216",
+      "name": "内江市隆昌县石牌坊旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "石牌坊群沿古驿道街区开放，免大门票（个别展馆另收费）",
+        "freePolicy": null,
+        "openHours": "街区全天开放",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "隆昌北站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于隆昌市区，南北关牌坊群可步行串联，夜有灯光；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3217",
+      "name": "隆昌县古宇湖旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "环湖开放型景区，免大门票（游船另收费）",
+        "freePolicy": null,
+        "openHours": "全天开放（游船按班期运营）",
+        "suggestedHours": 2.5,
+        "bestMonths": "11-次年3月（越冬候鸟集中）",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "隆昌北站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "冬季候鸟集中，观鸟请保持距离勿投喂；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3218",
+      "name": "内江大千园旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式文化园区，免门票，张大千纪念馆凭证件免费参观",
+        "freePolicy": null,
+        "openHours": "园区全天开放，纪念馆约9:00-17:00（周一可能闭馆整备，以现场公示为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "内江北站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于市中区城区，书画主题紧凑游览半日即可；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3219",
+      "name": "内江市范长江文化旅游园区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放的纪念园区，展馆凭证件参观",
+        "freePolicy": null,
+        "openHours": "园区全天开放，展馆约9:00-17:00（周一可能闭馆整备，以现场公示为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "内江北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于东兴区田家镇，新闻主题研学为主，团队宜预约讲解；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3220",
+      "name": "市中区黄鹤湖旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "环湖乡村休闲景区，免大门票（游乐、餐饮另计）",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "内江北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于市中区近郊，适合周末亲子与环湖骑行；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3221",
+      "name": "乐贤半岛旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放型城市半岛文旅区，免大门票",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "内江北站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于市中区沱江转角处，步道骑行皆宜，傍晚江景最佳；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3222",
+      "name": "世界无花果博览园旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免大门票，果期采摘体验另计费",
+        "freePolicy": null,
+        "openHours": "全天开放（体验项目约9:00-18:00）",
+        "suggestedHours": 2,
+        "bestMonths": "7-10月（无花果果期）",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "内江北站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于威远县向义镇，无花果主题园区，果期活动与市集集中；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3223",
+      "name": "内江市威远县石板河旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3,
+        "bestMonths": "5-9月（夏季踩水最宜）",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "内江北站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于威远县连界镇，夏季踩水请备换洗衣物与防滑鞋，雨季水位变化大；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3224",
+      "name": "内江市资中县罗泉古镇旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式古镇街区，免大门票（个别会馆、展馆另收费）",
+        "freePolicy": null,
+        "openHours": "街区全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "资中北站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于资中县珠溪河畔，盐业遗产与盐神庙为标志，老街石板路多；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-内江-3225",
+      "name": "古佛顶旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "泸州云龙机场",
+        "nearestRail": "资中北站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "公开资料较少，出发前请再次确认位置与开放状态，并核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3227",
+      "name": "贵阳市乌当万象温泉景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3,
+        "bestMonths": "10-次年3月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳东站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于乌当区温泉带，泡池票种按人头分档，节假日需排队；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3228",
+      "name": "贵阳市白云泉湖公园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式城市公园，免门票",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "白云北站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于白云区城区，傍晚锻炼人流集中，环湖步道平缓；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3229",
+      "name": "贵阳市乌当乐湾国际温泉旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3.5,
+        "bestMonths": "10-次年3月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳东站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "度假酒店型温泉，住店客与散客票价不同，周末房源紧张；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3230",
+      "name": "双龙多彩贵州风景眼文创园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "文创园区免大门票，部分展馆、体验项目另收费",
+        "freePolicy": null,
+        "openHours": "园区全天开放，场馆约10:00-18:00（以现场公示为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "紧邻龙洞堡机场，适合候机前后顺访，非遗传习项目分场次；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3231",
+      "name": "修文黔贵六广温泉旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 4,
+        "bestMonths": "10-次年3月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳北站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于修文县六广河峡谷畔，冬季泡池最受欢迎，山路弯多；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3232",
+      "name": "贵阳市清镇乡愁贵州景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "清镇西站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于清镇市，农耕乡愁主题园区，节庆市集活动集中；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3233",
+      "name": "贵阳市贵安云漫湖休闲旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "度假区免大门票，园内游乐设施、萌宠互动等项目另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（游乐项目约9:30-18:00）",
+        "suggestedHours": 3,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳北站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于贵安新区，瑞士风情小镇适合拍照，游乐项目分项计价；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3234",
+      "name": "贵阳市修文阳明文化园旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳北站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于修文县城，含阳明洞遗迹与研学展馆，研学团队较多宜错峰；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3235",
+      "name": "贵阳市清镇时光贵州旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "文旅小镇街区免大门票，部分场馆、游乐另收费",
+        "freePolicy": null,
+        "openHours": "街区全天开放（商户约10:00-22:00）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "清镇西站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于清镇市，民国风情街区夜景灯光佳；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3236",
+      "name": "双龙多彩贵州城旅游综合体",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "文旅综合体免大门票，个别演出、体验项目另收费",
+        "freePolicy": null,
+        "openHours": "街区全天开放（商户约10:00-22:00）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "紧邻龙洞堡机场与贵阳东站方向，中转顺访方便，节庆市集多；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3237",
+      "name": "息烽集中营革命历史纪念馆景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "全国重点文物保护单位、免费开放纪念馆",
+        "freePolicy": "免费开放，凭身份证等有效证件入馆",
+        "openHours": "约9:00-17:00（16:30停止入馆），周一闭馆（法定节假日及临时调整以公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "息烽站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "距贵阳市区约1小时车程，团队讲解宜提前联系；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3238",
+      "name": "白云蓬莱仙界·白云休闲农业旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "农业观光园区免大门票，采摘与游乐项目另计费",
+        "freePolicy": null,
+        "openHours": "全天开放（体验项目约9:00-18:00）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5、9-11月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "白云北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "适老步道",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于白云区郊乡，花田果园体验分散，自驾更方便；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3239",
+      "name": "花溪湿地公园（孔学堂）景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "十里河滩湿地与孔学堂均免费开放",
+        "freePolicy": null,
+        "openHours": "湿地全天开放，孔学堂约9:00-17:00（周一闭馆，以现场公示为准）",
+        "suggestedHours": 3,
+        "bestMonths": "3-10月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于花溪城区，夏季避暑客流大，骑行绿道串联十里河滩；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3240",
+      "name": "贵阳市开阳白马峪旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2.5,
+        "bestMonths": "10-次年3月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "开阳站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于开阳县，山岳溪谷与温泉体验结合，班线车少建议自驾；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3241",
+      "name": "贵阳市修文桃源河旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 4,
+        "bestMonths": "5-10月（漂流季6-9月最旺）",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳北站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "漂流受水位与天气影响大，雨季可能临时停漂；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-贵阳-3242",
+      "name": "贵阳市乌当贵御温泉旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 3,
+        "bestMonths": "10-次年3月",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "贵阳东站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于乌当区，泡池分室内外，节假日满房常见建议早订；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    }
+  ]
+}

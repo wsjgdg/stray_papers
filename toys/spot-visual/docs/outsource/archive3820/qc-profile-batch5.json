@@ -1,0 +1,28 @@
+{
+  "batch": 5,
+  "count": 100,
+  "low": 62,
+  "missingRequired": 62,
+  "sample": [
+    "scenic-绍兴-1065",
+    "scenic-衢州-1045",
+    "scenic-衢州-1039",
+    "scenic-舟山-1088",
+    "scenic-温州-1026",
+    "scenic-温州-1018",
+    "scenic-绍兴-1073",
+    "scenic-衢州-1054",
+    "scenic-台州-1115",
+    "scenic-绍兴-1075",
+    "scenic-绍兴-1077",
+    "scenic-绍兴-1069",
+    "scenic-台州-1110",
+    "scenic-台州-1095",
+    "scenic-温州-1031",
+    "scenic-温州-1015",
+    "scenic-台州-1093",
+    "scenic-温州-1024",
+    "scenic-绍兴-1084",
+    "scenic-衢州-1040"
+  ]
+}

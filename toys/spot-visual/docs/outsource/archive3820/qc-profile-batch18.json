@@ -1,0 +1,28 @@
+{
+  "batch": 18,
+  "count": 100,
+  "low": 79,
+  "missingRequired": 79,
+  "sample": [
+    "scenic-南宁-2480",
+    "scenic-江门-2407",
+    "scenic-南宁-2472",
+    "scenic-南宁-2474",
+    "scenic-阳江-2414",
+    "scenic-南宁-2478",
+    "scenic-潮州-2458",
+    "scenic-湛江-2420",
+    "scenic-南宁-2484",
+    "scenic-江门-2406",
+    "scenic-清远-2448",
+    "scenic-清远-2442",
+    "scenic-茂名-2429",
+    "scenic-清远-2439",
+    "scenic-南宁-2475",
+    "scenic-清远-2445",
+    "scenic-南宁-2490",
+    "scenic-湛江-2419",
+    "scenic-南宁-2500",
+    "scenic-江门-2410"
+  ]
+}

@@ -1,0 +1,2182 @@
+{
+  "task": "景点档案结构化字段-批7",
+  "batch": 7,
+  "count": 100,
+  "authorship": "批7：Z.ai-GLM",
+  "items": [
+    {
+      "id": "scenic-宿州-1221",
+      "name": "宿州新汴河景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（开放式滨水河岸景区）",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "徐州观音国际机场",
+        "nearestRail": "宿州东站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "开放式滨水绿带，无封闭围合，傍晚人流多注意堤岸安全；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-蚌埠-1222",
+      "name": "蚌埠市张公山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（园内游乐设施约9:00-18:00，以园区公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "蚌埠滕湖机场",
+        "nearestRail": "蚌埠南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "城市山水中免费公园；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-蚌埠-1223",
+      "name": "蚌埠市禾泉农庄景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:30，餐饮住宿营业至晚间，以农庄公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "蚌埠滕湖机场",
+        "nearestRail": "蚌埠南站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "庄园型农庄，采摘/陶艺等体验项目现场付费；门票口径未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-蚌埠-1224",
+      "name": "蚌埠市花鼓灯嘉年华",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约9:30-17:30（闭园前1小时停止入园），节假日延长，以园区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "蚌埠滕湖机场",
+        "nearestRail": "蚌埠南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "游乐型园区，设备检修或天气原因可能临时停开；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-蚌埠-1225",
+      "name": "蚌埠市龙子湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（环湖步道及湿地栈桥全天可通行）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "蚌埠滕湖机场",
+        "nearestRail": "蚌埠南站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "开放式环湖景区；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-蚌埠-1226",
+      "name": "蚌埠市博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "9:00-17:00（16:00停止入馆），周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "蚌埠滕湖机场",
+        "nearestRail": "蚌埠南站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "免费开放，请携带身份证件；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阜阳-1228",
+      "name": "迪沟旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "阜阳西关机场",
+        "nearestRail": "阜阳西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于颍上县，距阜阳市区约60公里，建议自驾或乘班车至颍上后换乘；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阜阳-1229",
+      "name": "尤家花园·五里湖湿地旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "阜阳西关机场",
+        "nearestRail": "阜阳西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "位于颍上县五里湖畔，距阜阳市区约60公里，建议自驾；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阜阳-1230",
+      "name": "阜阳生态乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:30（16:30停止入园），节假日延长，以园区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "阜阳西关机场",
+        "nearestRail": "阜阳西站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "notices": "亲子园区，动物投喂等项目现场付费；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-淮南-1231",
+      "name": "八公山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "淮南南站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "门票政策近年多次调整，未能可靠核实，请以景区现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-淮南-1232",
+      "name": "寿县古城景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古城街区及城墙免费开放；楚文化博物馆免费，个别展馆/游船或另行收费，以现场公告为准",
+        "openHours": "街区全天开放；登城及场馆开放时段约8:30-17:30，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "淮南南站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于寿县，距淮南市区约50公里；商合杭高铁寿县站距古城约5公里，可乘至寿县站后换乘公交前往；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-淮南-1233",
+      "name": "寿春楚文化博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "9:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "淮南南站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于寿县古城内，可与城墙、孔庙步行串联；请携带身份证件；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-淮南-1234",
+      "name": "上窑旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "淮南南站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "森林防火期注意用火规定；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-淮南-1235",
+      "name": "焦岗湖旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30，游船班次以码头公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-8月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "淮南南站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "游船票另计，大风雷雨天气停航；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-淮南-1236",
+      "name": "龙湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（城市湖园）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "淮南南站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "市区老公园，免费开放；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-淮南-1237",
+      "name": "焦岗湖影视城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "淮南南站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "与焦岗湖景区相近可串联；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-淮南-1238",
+      "name": "天宝双遗文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约9:00-17:00（16:30停止入园），以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "淮南南站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于八公山麓，可与八公山景区串联；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滁州-1239",
+      "name": "安徽省琅琊山国家森林公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "大景区免费开放；园内醉翁亭40元、同乐园5元、琅琊古寺10元、南天门15元等小景点单独售票（2021年起执行，请以现场为准）",
+        "openHours": "景区约7:00-18:00（17:00停止入园），小景点开放时间略有差异，以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "滁州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "位于滁州市区西南，火车站有公交直达；节假日醉翁亭等景点人流大；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-滁州-1240",
+      "name": "凤阳县狼巷迷谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "滁州站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "谷内窄处仅容侧身，请穿防滑鞋；位于凤阳县，距滁州市区约70公里，建议自驾；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滁州-1241",
+      "name": "凤阳县小岗村乡村旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "村庄及纪念馆免费开放，农业园体验项目现场付费",
+        "openHours": "村庄全天开放，纪念馆约8:30-17:00（16:30停止入馆），以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "滁州站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "位于凤阳县小岗村，距滁州市区约70公里，建议自驾或乘班车前往；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-滁州-1242",
+      "name": "滁州白鹭岛国际生态旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "度假区全天开放，林间步道夜间不建议进入",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "滁州站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "位于来安县，距滁州市区约50公里，建议自驾；住岛消费另计；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-滁州-1243",
+      "name": "来安县景华生态文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:30，以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "滁州站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "位于来安县，距滁州市区较远，建议自驾；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1246",
+      "name": "红军广场景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "广场及革命博物馆免费开放",
+        "openHours": "广场全天开放，革命博物馆约8:30-17:00（16:30停止入馆），通常周一闭馆，以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "位于金寨县城，距六安市区约70公里；沪汉蓉铁路金寨站有接驳公交；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-六安-1247",
+      "name": "大别山主峰景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-16:30（15:30停止入园），登顶需预留充足时间，以景区公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "登顶段为大石块路需手脚并用，防滑鞋必备，雷雨大风勿登顶；位于霍山县，距六安市区约140公里，建议自驾并留足往返时间；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1248",
+      "name": "佛子岭景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30，坝区参观时段以水库管理方公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "泄洪期坝下危险，勿越警戒线；位于霍山县，距六安市区约65公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1249",
+      "name": "独山革命旧址群",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "旧址群街区免费开放",
+        "openHours": "街区全天开放，各旧址场馆约8:30-17:00，以管理方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "位于裕安区独山镇，距六安市区约40公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-六安-1250",
+      "name": "燕子河大峡谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-8月、9-10月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "栈道贴水，夏季戏水注意看护儿童；位于金寨县，距六安市区约110公里山路，建议自驾；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1251",
+      "name": "南岳山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "全天开放（山体公园），寺庙殿堂开放时段以现场为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "位于霍山县城旁，距六安市区约50公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1252",
+      "name": "横排头景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "全天开放（水利枢纽外场），展馆开放时段以现场为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "水闸区域勿翻越护栏；位于裕安区，距六安市区约40公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1253",
+      "name": "临淮岗景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "全天开放（工程外场），大汛期部分区域封闭，以管理方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "位于霍邱县，距六安市区约80公里，建议自驾；大汛期观闸注意安全；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1254",
+      "name": "大别山石窟景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "洞内阴凉湿滑，备薄外套与防滑鞋；位于裕安区张店镇，距市区约40公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1255",
+      "name": "东石笋景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "与皖西大裂谷、大别山石窟同在张店一线可串联；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1256",
+      "name": "悠然南山度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "度假区全天开放，运动场馆与酒店营业时间各异",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "位于六安城南近郊，运动/露营项目现场消费；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1257",
+      "name": "梅山水库景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30，坝区参观时段以水库管理方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "游湖船票另计；位于金寨县，距六安市区约70公里，可乘火车至金寨站后换乘；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1258",
+      "name": "万佛山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-16:30（15:30停止入园），以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "登山全程约4-5小时，带足饮水；位于舒城县，距六安市区约100公里，建议自驾；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1259",
+      "name": "龙井沟景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "雨后溪涨勿下河道；位于裕安区，距市区约35公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1260",
+      "name": "皖西大裂谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "窄处需侧身贴壁，穿防滑鞋，孕妇及行动不便者不宜进入；位于裕安区张店镇；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1261",
+      "name": "铜锣寨景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-16:30（15:30停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "山路陡峭注意防滑；位于霍山县，距六安市区约90公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1262",
+      "name": "九公寨景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "石阶较陡量力而行；位于裕安区，距市区约30公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1263",
+      "name": "皖西博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "9:00-17:00（16:00停止入馆），周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "免费开放，请携带身份证件；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-六安-1264",
+      "name": "悠然蓝溪文化旅游度假景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "街区免费开放，温泉、亲子乐园、游船等项目单独收费",
+        "openHours": "街区全天开放，温泉及场馆约10:00-22:00，以运营方公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "母婴室",
+          "寄存柜",
+          "无障碍通道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "位于六安城东三十铺一带；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-六安-1265",
+      "name": "小南京乡村旅游扶贫示范区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村开放式游览点，作坊体验与农家餐饮现场消费",
+        "openHours": "全天开放（乡村），体验项目营业时段以现场为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "位于金寨县，距六安市区约60公里，可乘火车至金寨站后换乘；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-六安-1266",
+      "name": "响洪甸水库景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30，坝区与码头时段以管理方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "游船票另计，风浪大时停航；位于金寨县，距六安市区约60公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1267",
+      "name": "大别山玉博园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:30，商铺营业时间各异，以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "玉石消费请理性辨别；位于金寨县，距六安市区约65公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1268",
+      "name": "大别山风情谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "栈道起伏不大，适合携老幼；位于裕安区张店镇；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-六安-1269",
+      "name": "梦幻海洋大世界景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约9:30-17:30（16:30停止入馆），表演场次以当日公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "合肥新桥国际机场",
+        "nearestRail": "六安站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "母婴室",
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "海豚表演等场次时间以馆方当日公告为准；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-马鞍山-1270",
+      "name": "采石矶景区",
+      "profile": {
+        "ticketPeak": 68,
+        "ticketOff": null,
+        "ticketNote": "观光车单程20元/往返30元另计",
+        "freePolicy": "儿童/学生/老人优惠票34元",
+        "openHours": "8:30-17:30（一般16:30停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "马鞍山东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "江边风大，矶头栈道雨天湿滑；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-马鞍山-1271",
+      "name": "德化堂中国古床博物馆",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约9:00-17:00（16:30停止入馆），周一闭馆可能性较大，以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "马鞍山东站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "notices": "民间专题博物馆，开放安排以馆方公示为准；票价未能可靠核实；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-马鞍山-1272",
+      "name": "大青山李白文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "墓园区约8:30-17:00（16:30停止入馆），山林区域全天，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "马鞍山东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "位于当涂县，距马鞍山市区约20公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-马鞍山-1273",
+      "name": "鸡笼山-半月湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "马鞍山东站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "位于和县，距马鞍山市区约50公里，建议自驾；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-马鞍山-1274",
+      "name": "香泉旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "街区全天开放，各汤池营业约9:00-23:00，以商家公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "11月-次年3月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "马鞍山东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "温泉消费另计，泡汤前勿空腹饮酒；位于和县，距市区约40公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-马鞍山-1275",
+      "name": "诗城人家景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:30（16:30停止入园），以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "马鞍山东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "雨天回廊观景更佳；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-马鞍山-1276",
+      "name": "濮塘景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "全天开放（山林景区），寺院开放时段以现场为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "马鞍山东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "位于马鞍山东郊，夏季注意防蚊，防火期严禁明火；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-芜湖-1277",
+      "name": "红色山水涧景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式红色纪念场馆免费参观",
+        "openHours": "室外全天开放，纪念馆约8:30-17:00，通常周一闭馆，以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "位于无为市，距芜湖市区约60公里，建议自驾或先至无为后换乘；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-芜湖-1278",
+      "name": "芜湖陶辛水韵景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30（16:30停止入园），游船班次以码头公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-8月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "小舟船票另计，夏季备防晒；位于湾沚区；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-芜湖-1279",
+      "name": "丫山花海石林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "3-5月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "石林区域穿防滑鞋；位于南陵县，距芜湖市区约50公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-芜湖-1280",
+      "name": "大浦乡村世界",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:30（16:30停止入园），温室与场馆时段以园区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "notices": "农事体验项目现场付费；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-芜湖-1281",
+      "name": "马仁奇峰森林旅游区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "索道上行55元/下行45元；玻璃桥、玻璃栈道等项目另计",
+        "openHours": "8:00-17:00（16:30停止检票），以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "恐高者慎入玻璃桥；雷雨大风天气高空项目关闭；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-芜湖-1282",
+      "name": "赭山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "公园免费开放，园内动物园等收费区域单独售票",
+        "openHours": "全天开放，动物园等约8:00-17:30，以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "城中公园，紧邻闹市；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-芜湖-1283",
+      "name": "王稼祥纪念园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费参观",
+        "openHours": "约8:30-17:00（16:30停止入馆），陈列室通常周一闭馆，以馆方公告为准",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "肃穆场所请保持安静；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-芜湖-1284",
+      "name": "鸠兹景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（城市广场），喷泉开放时段以现场公告为准",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "毗邻步行街与镜湖，可与市区景点串联；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-芜湖-1285",
+      "name": "雨耕山文化旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "街区免费进入，展馆、酒庄体验及夜场消费另行付费",
+        "openHours": "街区全天开放，展馆与商户营业约10:00-22:00，以现场公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "老建筑内多为展馆与酒吧，夜间氛围更佳；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-芜湖-1287",
+      "name": "鸠兹古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费进入，夜游演艺、部分展馆及亲子项目单独收费",
+        "openHours": "街区全天开放，室内场馆约10:00-21:00，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "芜湖站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "母婴室",
+          "寄存柜",
+          "无障碍通道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "毗邻方特与大白鲸公园，可串联亲子线路；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-铜陵-1288",
+      "name": "浮山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "池州九华山机场",
+        "nearestRail": "铜陵站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "摩崖石刻众多，建议请讲解；位于枞阳县，距铜陵市区约60公里，建议自驾；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜陵-1289",
+      "name": "汉武生态文化园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（城市生态园）",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "池州九华山机场",
+        "nearestRail": "铜陵站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "位于枞阳县城，距铜陵市区约50公里，需过江前往；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-铜陵-1290",
+      "name": "天井湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（城市湖园）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "池州九华山机场",
+        "nearestRail": "铜陵站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "城中开放式湖园；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-铜陵-1291",
+      "name": "永泉旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "度假区全天开放，民宿餐饮与农事体验时段各异，以运营方公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "池州九华山机场",
+        "nearestRail": "铜陵站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于义安区钟鸣镇一带山坞，距铜陵市区约30公里；住宿与体验项目现场消费；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜陵-1292",
+      "name": "凤凰山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式山野景区，无大门票（花期高峰可能临时交通管制）",
+        "openHours": "全天开放（山野谷地），花期管制措施以现场公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "池州九华山机场",
+        "nearestRail": "铜陵站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "牡丹花期（3-4月）人流车流大，建议早到；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-铜陵-1293",
+      "name": "铜陵博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "9:00-17:00（16:00停止入馆），周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "池州九华山机场",
+        "nearestRail": "铜陵站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "免费开放，请携带身份证件；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-铜陵-1294",
+      "name": "大通古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费开放，往返和悦洲的渡船及部分展馆另行收费",
+        "openHours": "街区全天开放，渡船与展馆开放时段以现场公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "池州九华山机场",
+        "nearestRail": "铜陵站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "江边注意汛期水位公告，观江豚请远观勿惊扰；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-铜陵-1295",
+      "name": "西湖湿地景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（城市湿地公园）",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "池州九华山机场",
+        "nearestRail": "铜陵站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "栈道观鸟请勿惊扰水鸟；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-安庆-1297",
+      "name": "太湖县花亭湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30，游船班次以码头公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "位于太湖县，距安庆市区约90公里；乘船票另计，大风停航；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1298",
+      "name": "太湖五千年文博园景区",
+      "profile": {
+        "ticketPeak": 120,
+        "ticketOff": null,
+        "ticketNote": "一期「一梦千年」120元、二期「十里画廊」100元，联票与优惠政策以景区公示为准",
+        "openHours": "约8:00-17:30（16:30停止入园），夜场安排以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "园区依山而建、台阶多，穿舒适鞋并留足脚力；位于太湖县城；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-安庆-1299",
+      "name": "安庆巨石山生态文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "崖顶栈道恐高者慎行；位于宜秀区，距安庆市区约25公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1300",
+      "name": "大龙山乌龙溪景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "全天开放（山林溪谷），管理时段以现场公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "溪谷雨后湿滑；距安庆市区约15公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1301",
+      "name": "菱湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "openHours": "全天开放（城市湖园）",
+        "suggestedHours": 1.5,
+        "bestMonths": "6-8月、9-10月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "老城湖园，与公园绿地相连；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-安庆-1302",
+      "name": "独秀园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:00（16:30停止入园），陈列室周一闭馆可能性较大，以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "肃穆场所请保持安静；距安庆市区约10公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1303",
+      "name": "桐城仙龙湖活海欢乐水世界景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "水世界运营季（约6-8月）9:00-18:00（17:00停止入园），非运营季园区缩时或关闭，以园区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "6-8月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "母婴室",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "水上项目注意防晒与儿童看护；位于桐城市，距安庆市区约60公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1304",
+      "name": "桐城嬉子湖生态景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30，游船班次以码头公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "11月-次年2月、6-8月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "冬季观候鸟请远观勿惊扰；位于桐城市，距市区约70公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1305",
+      "name": "桐城孔城老街",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "老街全天可通行，收费场馆约8:30-17:30，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于桐城市孔城镇，距安庆市区约50公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1306",
+      "name": "怀宁孔雀东南飞旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:30（16:30停止入园），演出场次以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-10月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于怀宁县小市镇，距安庆市区约40公里，也可自潜山方向前往；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1307",
+      "name": "宿松县石莲洞旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "洞内湿凉备薄外套；位于宿松县，距安庆市区约150公里，建议自驾或乘车至宿松县城；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1308",
+      "name": "宿松白崖寨景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "寨墙沿线崖边路窄，勿攀爬垛口；位于宿松县趾凤乡，距安庆市区约160公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1309",
+      "name": "明堂山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约7:30-16:30（15:30停止入园），索道停运时间以景区公告为准",
+        "suggestedHours": 5.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "高山天气多变，备防风外套；玻璃栈道恐高者慎行；位于岳西县，距安庆市区约130公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1310",
+      "name": "岳西天峡景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "3-4月、5-9月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "门票口径近年多变（是否含观光车不一），请以现场公示为准；位于岳西县，距安庆市区约110公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1311",
+      "name": "大别山彩虹瀑布旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-9月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "正午前后水雾大，备雨衣；位于岳西县黄尾镇，距安庆市区约100公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1312",
+      "name": "岳西妙道山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:00，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-8月、9-10月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "高山林地防火期禁明火；位于岳西县，距安庆市区约120公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1313",
+      "name": "天悦湾养生度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "温泉营业约10:00-22:00，客房全天，以度假区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "11月-次年3月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "温泉消费另计，酒后及心脑血管疾病者慎泡；位于岳西县城旁，距安庆市区约100公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1314",
+      "name": "潜山县白马潭景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:00（16:00停止入园），漂排班次以码头公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-9月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "漂流穿戴救生衣，儿童需成人陪同；位于潜山市，距安庆市区约75公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1315",
+      "name": "潜山山谷流泉文化园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "摩崖石刻请勿触碰拓印；位于潜山市天柱山麓，距安庆市区约75公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1316",
+      "name": "潜山县天龙关景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "攀岩溯溪项目需专业装备与教练，量力参与；位于潜山市，距安庆市区约75公里；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-安庆-1317",
+      "name": "潜山县皖光苑旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约8:30-17:00（16:30停止入馆），周一闭馆可能性较大，以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "安庆天柱山机场",
+        "nearestRail": "安庆站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于潜山市区，文史主题游览点；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宣城-1319",
+      "name": "敬亭山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "约7:30-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "宣城站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "门票政策近年多次调整，未能可靠核实，请以现场公示为准；位于宣城市区北郊，公交可达；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宣城-1320",
+      "name": "宣州区宣酒文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "参观制，约8:30-17:00（团体参观建议提前联系），以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "宣城站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "工业旅游园区，酿酒车间参观注意安全，品酒环节未成年人不参与；票价未能可靠核实，请以现场公示为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宣城-1321",
+      "name": "广德太极洞景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "洞内游船等体验项目另计",
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "宣城站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "洞内恒温较低备薄外套，路面湿滑穿防滑鞋；位于广德市，距宣城市区约110公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宣城-1322",
+      "name": "宁国恩龙世界木屋村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "openHours": "全天开放（度假区），木屋住宿与项目营业时间各异，以运营方公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "宣城站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于宁国市，距宣城市区约50公里；住宿及项目现场消费；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宣城-1323",
+      "name": "泾县新四军军部旧址纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费参观",
+        "openHours": "约8:30-17:00（16:30停止入馆），通常周一闭馆，以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "宣城站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "位于泾县云岭镇，距宣城市区约80公里，建议自驾；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宣城-1324",
+      "name": "泾县查济景区",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": "村落通票制",
+        "openHours": "约8:00-17:30（17:00停止售票），村内巷道全天可通行，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "宣城站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "写生旺季民宿紧张建议提前预订；位于泾县桃花潭镇，距宣城市区约90公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宣城-1325",
+      "name": "泾县皖南事变烈士陵园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "openHours": "陵园全天开放，陈列馆约8:30-17:00（16:30停止入馆），以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "宣城站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "肃穆场所请勿喧哗；位于泾县县城，距宣城市区约60公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宣城-1326",
+      "name": "泾县桃花潭景区",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": "门票含往返渡船",
+        "openHours": "旺季（3-11月）7:00-18:00（17:00停止入园）；淡季（12-2月）约8:00-17:00，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "芜湖宣州机场",
+        "nearestRail": "宣城站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "乘船看天气，风浪大时渡船停开；位于泾县桃花潭镇，距宣城市区约85公里；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    }
+  ]
+}

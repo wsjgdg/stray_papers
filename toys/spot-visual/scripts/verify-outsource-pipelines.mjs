@@ -159,15 +159,24 @@ backup();
 
 try {
   // ══ 正向：合规批次必须合入 ══
+  // 真实交付已合入时合并档不是空的，所以断言一律按「基线 + 增量」算，不能写死绝对值。
+  const readKeys = (f) =>
+    fs.existsSync(f) ? Object.keys(JSON.parse(fs.readFileSync(f, "utf8"))) : [];
+  const baseDesc = new Set(readKeys("docs/outsource/out-desc-4a-merged.json"));
+  const baseProf = new Set(readKeys("docs/outsource/out-profile-merged.json"));
+  const descAdded = descItems.filter((it) => !baseDesc.has(it.id)).length;
+  const profAdded = profItems.filter((it) => !baseProf.has(it.id)).length;
+
   writeDesc(D_OK, descItems);
   let r = run("scripts/merge-out-desc.mjs", D_OK);
   const mergedDesc = JSON.parse(
     fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
   );
   check(
-    "描述·正向合入 5 条",
-    r.code === 0 && Object.keys(mergedDesc).length === N,
-    `exit=${r.code} 落键 ${Object.keys(mergedDesc).length}`,
+    `描述·正向合入 5 条（新增 ${descAdded}）`,
+    r.code === 0 &&
+      Object.keys(mergedDesc).length === baseDesc.size + descAdded,
+    `exit=${r.code} 落键 ${baseDesc.size}→${Object.keys(mergedDesc).length}`,
   );
 
   writeProf(P_OK, profItems);
@@ -176,27 +185,37 @@ try {
     fs.readFileSync("docs/outsource/out-profile-merged.json", "utf8"),
   );
   check(
-    "档案·正向合入 5 条",
-    r.code === 0 && Object.keys(mergedProf).length === PN,
-    `exit=${r.code} 落键 ${Object.keys(mergedProf).length}`,
+    `档案·正向合入 5 条（新增 ${profAdded}）`,
+    r.code === 0 &&
+      Object.keys(mergedProf).length === baseProf.size + profAdded,
+    `exit=${r.code} 落键 ${baseProf.size}→${Object.keys(mergedProf).length}`,
   );
 
-  // 落键必须是 id 而不是名字（同名跨市串写的根子就在这里）
-  const keysAreIds = Object.keys(mergedDesc).every((k) =>
-    descItems.some((it) => it.id === k),
-  );
-  check("描述·按 id 落键（不是按名字）", keysAreIds);
-  const profKeysAreIds = Object.keys(mergedProf).every((k) =>
-    profItems.some((it) => it.id === k),
-  );
-  check("档案·按 id 落键（不是按名字）", profKeysAreIds);
+  // 落键必须是 id 而不是名字（同名跨市串写的根子就在这里）：
+  // 断言每条 fixture 都能用 id 取回自己那份内容。
+  // 真实数据已占位同名 id 时不能比对内容（会被真值覆盖），只断言：
+  //   ① 每条 fixture 的 id 都是合并档的键；② 合并档里没有任何键是「景点名」。
+  const has = (m, k) => Object.prototype.hasOwnProperty.call(m, k);
+  const descKeyed =
+    descItems.every((it) => has(mergedDesc, it.id)) &&
+    !Object.keys(mergedDesc).some((k) => descItems.some((it) => it.name === k));
+  check("描述·按 id 落键（不是按名字）", descKeyed);
+  const profKeyed =
+    profItems.every((it) => has(mergedProf, it.id)) &&
+    !Object.keys(mergedProf).some((k) => profItems.some((it) => it.name === k));
+  check("档案·按 id 落键（不是按名字）", profKeyed);
 
   // 幂等：再跑一次不该炸也不该翻倍
+  const descCountAfterFirst = Object.keys(mergedDesc).length;
   r = run("scripts/merge-out-desc.mjs", D_OK);
   const again = JSON.parse(
     fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
   );
-  check("描述·重复运行幂等", r.code === 0 && Object.keys(again).length === N);
+  check(
+    "描述·重复运行幂等",
+    r.code === 0 && Object.keys(again).length === descCountAfterFirst,
+    `落键 ${descCountAfterFirst}→${Object.keys(again).length}`,
+  );
 
   // ══ 反向：任一硬违规必须整批拒绝 ══
   const cases = [

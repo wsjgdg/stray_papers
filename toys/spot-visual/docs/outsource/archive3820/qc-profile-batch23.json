@@ -1,0 +1,28 @@
+{
+  "batch": 23,
+  "count": 100,
+  "low": 87,
+  "missingRequired": 40,
+  "sample": [
+    "scenic-甘孜藏族自治州-3038",
+    "scenic-阿坝藏族羌族自治州-2965",
+    "scenic-阿坝藏族羌族自治州-2961",
+    "scenic-阿坝藏族羌族自治州-2970",
+    "scenic-南充-3005",
+    "scenic-绵阳-2974",
+    "scenic-乐山-2938",
+    "scenic-阿坝藏族羌族自治州-2956",
+    "scenic-南充-3003",
+    "scenic-乐山-2933",
+    "scenic-广元-3021",
+    "scenic-广安-2999",
+    "scenic-广元-3033",
+    "scenic-南充-3004",
+    "scenic-绵阳-2991",
+    "scenic-乐山-2937",
+    "scenic-甘孜藏族自治州-3037",
+    "scenic-南充-3011",
+    "scenic-成都-2929",
+    "scenic-广元-3027"
+  ]
+}

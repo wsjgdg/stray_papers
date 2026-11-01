@@ -1,0 +1,28 @@
+{
+  "batch": 22,
+  "count": 100,
+  "low": 100,
+  "missingRequired": 52,
+  "sample": [
+    "scenic-重庆-2845",
+    "scenic-重庆-2851",
+    "scenic-重庆-2830",
+    "scenic-重庆-2864",
+    "scenic-成都-2918",
+    "scenic-重庆-2883",
+    "scenic-成都-2916",
+    "scenic-重庆-2879",
+    "scenic-成都-2902",
+    "scenic-重庆-2836",
+    "scenic-重庆-2846",
+    "scenic-重庆-2858",
+    "scenic-重庆-2878",
+    "scenic-成都-2898",
+    "scenic-成都-2913",
+    "scenic-重庆-2873",
+    "scenic-成都-2886",
+    "scenic-成都-2894",
+    "scenic-重庆-2871",
+    "scenic-重庆-2834"
+  ]
+}

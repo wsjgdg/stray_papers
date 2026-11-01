@@ -1,0 +1,2542 @@
+{
+  "task": "景点档案结构化字段-批37",
+  "batch": 37,
+  "count": 100,
+  "authorship": "批37：会话B",
+  "items": [
+    {
+      "id": "scenic-岳阳-4436",
+      "name": "岳阳市任弼时纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "依托任弼时故居设立的红色纪念地，含铜像广场与生平陈列；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-岳阳-4437",
+      "name": "岳阳市君山野生荷花世界旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-8月（荷花盛放期）",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以团湖野生荷花为特色，夏季赏荷注意防晒防蚊；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-岳阳-4438",
+      "name": "岳阳市平江纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "依托平江起义旧址（天岳书院）设立；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-岳阳-4439",
+      "name": "岳阳市张谷英旅游区",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-11月",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "保存完好的明清江南民居建筑群，村内石板巷道多、注意行走安全；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-岳阳-4440",
+      "name": "岳阳市圣安寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以寺院公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宗教活动场所，入寺请遵守礼仪、勿大声喧哗；出行前请核实最新开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-岳阳-4441",
+      "name": "岳阳市平江石牛寨景区",
+      "profile": {
+        "ticketPeak": 118,
+        "ticketOff": null,
+        "ticketNote": "玻璃桥、索道、观光车等项目另行收费（以景区公示为准）",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "索道/扶梯",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "丹霞崖壁、玻璃桥与高空项目为特色，遇大风雷雨天气可能停开；恐高者谨慎选择"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-岳阳-4442",
+      "name": "岳阳市天岳幕阜山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湘鄂赣交界山岳避暑地，山顶温差大注意防寒防滑；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-岳阳-4443",
+      "name": "岳阳市屈子文化园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-6月（端午前后）",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "纪念屈原的主题园区，端午期间有龙舟竞渡与祭祀活动；出行前请核实节庆安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-岳阳-4444",
+      "name": "岳阳市湘阴洋沙湖旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "旅游度假区免费进入，内部乐园、水世界、游船等项目另行收费（以景区公示为准）",
+        "freePolicy": "度假区免费开放",
+        "openHours": "全天开放（内部场馆与项目以公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "岳阳三荷机场",
+        "nearestRail": "岳阳东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "水世界等亲水项目以夏季开放为主；出行前请核实各项目开放时间"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4447",
+      "name": "长沙海底世界",
+      "profile": {
+        "ticketPeak": 150,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "母婴室",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆内有定场海洋科普表演，入园后建议先查看表演时刻；节假日客流较大"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4448",
+      "name": "长沙市大围山国家森林公园",
+      "profile": {
+        "ticketPeak": 98,
+        "ticketOff": null,
+        "ticketNote": "园内换乘、滑雪（冬季）、漂流等项目另行收费（以景区公示为准）",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-11月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "杜鹃花季（4-5月）与夏季避暑为高峰，冬季有滑雪项目；山路弯多注意驾驶安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4449",
+      "name": "长沙市杨开慧纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "含杨开慧故居、生平陈列与烈士陵园；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4450",
+      "name": "长沙市靖港古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费进入；各收费场馆联票及单馆票另计（以景区公示为准）",
+        "freePolicy": "古镇街区免费开放",
+        "openHours": "古镇街区全天开放（收费场馆约09:00-17:30，以公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湘江边古镇，节假日人流较多，部分场馆17:00后停止入场；出行前请核实联票政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4451",
+      "name": "长沙市浏阳胡耀邦故里旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "含胡耀邦故居、纪念馆与纪念广场；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4452",
+      "name": "长沙生态动物园",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketOff": null,
+        "ticketNote": "车行区乘车游览、森林剧场等另行收费（以园方公示为准）",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:00停止入园）；以园方公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "观光车/电瓶车",
+          "母婴室",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "车行区节假日排队较长，建议早入园；请勿投喂动物"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4453",
+      "name": "湖南省森林植物园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（预约方式以园方公告为准）",
+        "openHours": "约08:00-18:00（17:00停止入园）；以园方公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-4月（樱花季）",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": "樱花季等客流高峰园方可能实行预约限流，以园方公告为准",
+        "officialSite": null,
+        "tel": null,
+        "notices": "樱花季客流集中，建议错峰出行；园内水域较多，注意看护儿童"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4454",
+      "name": "石燕湖生态旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以水上项目与森林拓展为特色，参与前留意安全提示；出行前请核实项目开放情况"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4455",
+      "name": "长沙市宁乡紫龙湾旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以度假区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "11-2月（温泉季）",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "灰汤温泉度假区，泡浴请自备泳衣；冬季为高峰期建议错峰"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4456",
+      "name": "长沙市沩山密印景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "千年古刹密印寺所在，山区气温较低；参拜请遵守寺院礼仪"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4457",
+      "name": "长沙市洋湖湿地景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "全天开放（科普馆等场馆以公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-11月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城市湿地公园，夏季注意防蚊；生态保育区域请勿进入"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4458",
+      "name": "长沙市关山旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-11月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宁乡三国主题乡村旅游区；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4459",
+      "name": "长沙黑麋峰国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "森林公园以徒步登高为主，注意防滑防蚊；出行前请核实最新开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4460",
+      "name": "长沙千龙湖生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（内部项目以度假区公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "望城湖畔休闲度假区，水上项目以夏季开放为主；出行前请核实项目安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4461",
+      "name": "长沙市浏阳秋收起义纪念园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "含秋收起义文家市会师旧址与纪念馆；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4462",
+      "name": "长沙市新华联铜官窑古镇景区",
+      "profile": {
+        "ticketPeak": 168,
+        "ticketOff": null,
+        "ticketNote": "园内部分演艺与体验项目另计（以景区公示为准）",
+        "freePolicy": null,
+        "openHours": "约09:00-21:00（20:00停止入园）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "全年（夜间演艺为特色）",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "夜间灯会与演艺是亮点；节假日人流大，注意照看随行老人与儿童"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4463",
+      "name": "长沙市田汉文化园旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "约09:00-17:00（16:30停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "田汉故居与戏剧艺术主题园区；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4464",
+      "name": "长沙铜官窑国家考古遗址公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "约09:00-17:00（16:30停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以谭家坡龙窑遗迹为核心展示；与新华联铜官窑古镇为两个不同景区，请勿混淆"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4465",
+      "name": "长沙市望城光明大观园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-11月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "乡村旅游区，花海与采摘项目季节性强；出行前请核实活动安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长沙-4466",
+      "name": "长沙县影珠山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（登山路线路况以当地公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4-11月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "抗战遗址与山地森林景观并存，山路弯多注意驾驶安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郴州-4468",
+      "name": "郴州市苏仙岭旅游区",
+      "profile": {
+        "ticketPeak": 45,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:30-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "索道/扶梯",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "「三绝碑」与苏仙传说为看点；登顶步道较陡，可乘索道并量力而行"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-郴州-4469",
+      "name": "郴州市汝城福泉山庄",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以度假区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "11-2月（温泉季）",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "热水镇温泉水温较高，泡浴注意时间并适量补水；请自备泳衣"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郴州-4470",
+      "name": "郴州市莽山国家森林公园",
+      "profile": {
+        "ticketPeak": 98,
+        "ticketOff": null,
+        "ticketNote": "索道、观光车等项目另行收费（以景区公示为准）",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-11月",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区气候多变，注意防雨防滑；索道遇大风可能临时停运；冬季山顶可见冰挂雾凇"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-郴州-4471",
+      "name": "郴州市万华岩旅游区",
+      "profile": {
+        "ticketPeak": 55,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年（溶洞常年恒温）",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "溶洞内常年恒温约18℃、地面湿滑，请穿防滑鞋并跟随指示线路"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-郴州-4472",
+      "name": "郴州市王仙岭旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-11月",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城郊登高与森林步道为主；夏季注意防蚊防暑"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郴州-4473",
+      "name": "郴州市龙女景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-22:00（21:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "温泉与龙女传说主题，泡浴请自备泳衣；出行前请核实温泉项目开放安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郴州-4474",
+      "name": "郴州市九龙江国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-11月",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "南岭森林瀑布景观，徒步请穿防滑鞋；夏季注意防蚊"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郴州-4475",
+      "name": "郴州市宝山工矿旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "桂阳矿山主题景区，请按指定路线参观；出行前请核实井下游览等项目开放安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郴州-4476",
+      "name": "郴州市飞天山国家地质公园",
+      "profile": {
+        "ticketPeak": 78,
+        "ticketOff": null,
+        "ticketNote": "游船、竹筏等水上游览项目另行收费（以景区公示为准）",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-11月",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "丹霞地貌与翠江风光结合，崖边游览注意安全；游船受水位与天气影响"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-郴州-4477",
+      "name": "郴州市安仁稻田公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "全天开放（内部场馆以公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月（油菜花季）",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "3月油菜花季与安仁「赶分社」民俗活动期为游览高峰"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郴州-4478",
+      "name": "郴州市永兴板梁古村旅游区",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湘南古民居建筑群，村内巷道多，注意防火与文物保护"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-郴州-4479",
+      "name": "郴州市西瑶绿谷旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "临武山林瀑布与瑶乡风情；部分区域通信信号弱，建议结伴出行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-郴州-4480",
+      "name": "郴州市汝城沙洲红色旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观场馆）",
+        "openHours": "景区全天开放（纪念馆约09:00-17:00，16:30停止入馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "「半条被子」故事发生地，瑶族村寨与红色陈列结合；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-郴州-4481",
+      "name": "郴州市天堂温泉景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约10:00-23:00（22:00停止入园）；以度假区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "11-2月（温泉季）",
+        "nearestAirport": "郴州北湖机场",
+        "nearestRail": "郴州西站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "温泉区请自备泳衣；酒后与空腹不宜长时间泡浴"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邵阳-4483",
+      "name": "邵阳市湘窖生态文化酿酒城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "邵阳武冈机场",
+        "nearestRail": "邵阳站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "白酒工业旅游点，参观请按指定路线并留意酒窖区域禁烟规定；出行前请核实预约方式"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邵阳-4484",
+      "name": "邵阳市黄桑生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "邵阳武冈机场",
+        "nearestRail": "邵阳站",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "绥宁原始次生林生态区，部分区域通信信号弱，建议结伴并备足补给"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邵阳-4485",
+      "name": "武冈云山国家森林公园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-11月",
+        "nearestAirport": "邵阳武冈机场",
+        "nearestRail": "邵阳站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "登山步道较长，注意补水与防滑；山顶温差大"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邵阳-4486",
+      "name": "邵阳市新邵白水洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-11月",
+        "nearestAirport": "邵阳武冈机场",
+        "nearestRail": "邵阳站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷与瀑布景观，雨后水量大注意远离河道；出行前请核实最新开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邵阳-4487",
+      "name": "邵阳市隆回大花瑶虎形山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（村寨与山林区域）",
+        "suggestedHours": 3,
+        "bestMonths": "5-6月（映山红）；农历七月「讨僚皈」",
+        "nearestAirport": "邵阳武冈机场",
+        "nearestRail": "邵阳站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "花瑶聚居地，农历七月「讨僚皈」传统节庆期间民俗活动丰富；山区昼夜温差大，请尊重当地习俗"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邵阳-4488",
+      "name": "邵阳蔡锷故里景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "约09:00-17:00（16:30停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "邵阳武冈机场",
+        "nearestRail": "邵阳站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "蔡锷故居与生平陈列；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-株洲-4490",
+      "name": "株洲市炎陵神农谷景区",
+      "profile": {
+        "ticketPeak": 108,
+        "ticketOff": null,
+        "ticketNote": "观光车等项目另行收费（以景区公示为准）",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5-10月（夏季避暑）",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "中亚热带原始森林与瀑布群，夏季凉爽宜避暑；徒步瀑布一线请量力而行"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-株洲-4491",
+      "name": "株洲市茶陵云阳山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宗教文化与登高结合，山顶温差大；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-株洲-4492",
+      "name": "株洲市方特欢乐世界",
+      "profile": {
+        "ticketPeak": 280,
+        "ticketOff": null,
+        "ticketNote": "实行一票制，园内餐饮及部分二次消费另计（以园方公示为准）",
+        "freePolicy": null,
+        "openHours": "约09:30-17:30（16:30停止入园）；节假日延时至夜间并可能加开夜场，以园方当日公告为准",
+        "suggestedHours": 6.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "热门项目排队较长，建议开园即入并先玩人气项目；部分设备有身高限制"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-株洲-4493",
+      "name": "株洲市神农城炎帝文化主题公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "全天开放（内部场馆以公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城市开放公园，神农塔与神农湖为核心；傍晚与周末客流较大"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-株洲-4494",
+      "name": "株洲市红军标语博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "全国唯一以红军标语为专题的博物馆，位于炎陵县城；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-株洲-4495",
+      "name": "株洲市酒仙湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-11月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "攸县酒埠江环湖游船为特色，受天气影响可能停航；湖区夏季注意防晒防蚊"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-株洲-4496",
+      "name": "株洲市芋园文化旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-株洲-4497",
+      "name": "株洲茶陵工农兵政府旧址景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "茶陵县工农兵政府是中国共产党领导创建的第一个县级工农兵政权；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-株洲-4498",
+      "name": "株洲茶陵县花湖谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-11月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "株洲西站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "花海与湖谷景观季节性强；出行前请核实花期与项目安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-常德-4500",
+      "name": "常德市柳叶湖旅游度假区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "度假区免费；湖上游船、沙滩公园游乐等项目另行收费（以景区公示为准）",
+        "freePolicy": "度假区免费开放",
+        "openHours": "全天开放（内部场馆与项目以公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城市型度假区，环湖绿道适合骑行慢跑；夏季水上活动注意安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-常德-4501",
+      "name": "常德市夹山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "石门夹山寺与闯王陵为核心看点，亦是「茶禅一味」文化发源地之一；出行前请核实最新开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-常德-4502",
+      "name": "常德市花岩溪景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-11月",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "白鹭栖息地，春夏观鸟为宜；山区注意防蚊防滑"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-常德-4503",
+      "name": "常德市规划展示馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "集中展示常德城市规划与建设成果；出行前请核实最新开放政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-常德-4504",
+      "name": "常德市城头山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "澧县城头山是年代最早的新石器时代古城遗址之一，含遗址公园与博物馆；请勿触碰遗迹"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-常德-4505",
+      "name": "常德市林伯渠故居景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "临澧修梅镇，含林伯渠故居、生平陈列与铜像广场；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-常德-4506",
+      "name": "常德市彭山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-11月",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "澧水河畔乡村生态景区，适合亲子休闲；出行前请核实项目安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-常德-4507",
+      "name": "常德市枫林花海景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月（花期）",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "桃源枫树乡花海园区，景观季节性强；出行前请核实花期"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-常德-4508",
+      "name": "常德市卡乐星球旅游景区",
+      "profile": {
+        "ticketPeak": 200,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-17:30（16:30停止入园）；以园方当日公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "全年",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "柳叶湖畔科技主题乐园，部分设备有身高与身体条件限制；节假日排队较长建议早入园"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-常德-4509",
+      "name": "常德石门县龙王洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年（溶洞常年恒温）",
+        "nearestAirport": "常德桃花源机场",
+        "nearestRail": "常德站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于石门县的喀斯特溶洞，洞内常年恒温、湿滑处注意防滑（注意与张家界慈利龙王洞区分）"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4511",
+      "name": "湘西州凤凰古城旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古城街区免费进入；「凤凰九景」（沈从文故居、沱江泛舟等）联票约128元/人，以景区公示为准",
+        "freePolicy": "古城街区免费开放",
+        "openHours": "古城全天开放；九景各场馆约08:00-17:30（以公示为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年（4-10月为佳）",
+        "nearestAirport": "铜仁凤凰机场",
+        "nearestRail": "凤凰古城站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "节假日沱江两岸人流密集，注意人身财物安全；古城内石板路多，建议穿舒适的鞋"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4512",
+      "name": "湘西州吉首市乾州古城景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "古城街区全天开放（内部场馆约08:30-17:30，以公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "吉首东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "吉首城区古城，「三门开」城门格局为特色；场馆联票政策出行前请核实"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4513",
+      "name": "湘西州凤凰南华山神凤文化景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "铜仁凤凰机场",
+        "nearestRail": "凤凰古城站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "登高可俯瞰凤凰古城与沱江全景；步道较陡请量力而行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4514",
+      "name": "湘西州猛洞河漂流景区",
+      "profile": {
+        "ticketPeak": 228,
+        "ticketOff": null,
+        "ticketNote": "票价一般含接驳车与救生装备；对儿童、老人有年龄及身体条件限制（以景区公示为准）",
+        "freePolicy": null,
+        "openHours": "漂流期一般为4-10月，每日约09:00起分批放船（14:00停止入场）；冬季停漂；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-9月",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "吉首东站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "永顺猛洞河全程漂流约3小时，湿身概率高，请备换洗衣物与防水袋；勿携带贵重物品上船"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4515",
+      "name": "湘西州芙蓉镇景区",
+      "profile": {
+        "ticketPeak": 108,
+        "ticketOff": null,
+        "ticketNote": "园内演艺、夜游等项目另行收费（以景区公示为准）",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；夜间开放时段以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年（4-10月为佳）",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "芙蓉镇站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "永顺「挂在瀑布上的千年古镇」，瀑布夜景与灯光为特色；石板路夜间游览注意脚下安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4516",
+      "name": "湘西州红石林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-11月",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "古丈西站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古丈少见的红色碳酸盐岩石林，雨后色彩更艳、石面湿滑注意安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4517",
+      "name": "湘西州凤凰奇梁洞景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年（洞内常年恒温）",
+        "nearestAirport": "铜仁凤凰机场",
+        "nearestRail": "凤凰古城站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "凤凰城郊大型喀斯特溶洞，洞内恒温、局部湿滑请穿防滑鞋"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4518",
+      "name": "湘西浦市古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费进入；部分大院、展馆单独售票（以景区公示为准）",
+        "freePolicy": "古镇街区免费开放",
+        "openHours": "古镇街区全天开放（内部场馆以公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "吉首东站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "泸溪沅水边古商城，吉家大院等院落定时开放；出行前请核实场馆开放情况"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4519",
+      "name": "湘西自治州老司城景区",
+      "profile": {
+        "ticketPeak": 98,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-11月",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "芙蓉镇站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "永顺世界文化遗产「土司遗址」核心片区之一；遗址区以步行参观为主，注意防滑"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4520",
+      "name": "湘西州里耶古城景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆）；以馆方公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "龙山北站",
+        "driveFromCityMin": 170,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "龙山里耶为秦简出土地，建议先参观里耶秦简博物馆再看古城遗址；出行前请核实场馆开放情况"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4521",
+      "name": "湘西民族文化园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "约09:00-17:00（16:00停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "吉首东站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "吉首集中展示湘西州博物馆、非遗馆等场馆的民族文化园区；出行前请核实最新开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4522",
+      "name": "湘西龙山县太平山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-11月",
+        "nearestAirport": "张家界荷花国际机场",
+        "nearestRail": "龙山北站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "龙山县城郊宗教名山，山路弯多注意驾驶安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湘西土家族苗族自治州-4523",
+      "name": "湘西凤凰县中华大熊猫苑",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "铜仁凤凰机场",
+        "nearestRail": "凤凰古城站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "参观请保持安静、勿拍打玻璃、勿投喂；大熊猫中午常在馆舍休息"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-益阳-4524",
+      "name": "益阳奥林匹克公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "全天开放（内部场馆以公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "益阳南站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "体育主题公园，赛事活动期间部分区域限行"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-益阳-4525",
+      "name": "益阳山乡巨变第一村旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放",
+        "openHours": "全天开放（周立波故居等场馆以公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "益阳南站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "赫山区谢林港镇清溪村，周立波故居与《山乡巨变》创作原型地，村内清溪书屋等文学空间有特色"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-益阳-4526",
+      "name": "益阳市安化茶马古道风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "益阳南站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "安化黑茶产区茶旅线路，含洞市老街等点位；山区路段弯多注意驾驶安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-益阳-4527",
+      "name": "益阳安化云台山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "益阳南站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "茶园云海与喀斯特景观，清晨观景为宜；山路弯多注意驾驶安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-益阳-4528",
+      "name": "益阳天意木国景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "益阳南站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "木文化主题博览园，以大型根雕木雕藏品为主；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4529",
+      "name": "永州市九嶷山舜帝陵景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宁远九嶷山舜帝陵寝所在，紫霞岩、玉琯岩等景点较分散；祭祖大典与节假日客流大，建议预留充足时间"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4530",
+      "name": "永州市祁阳浯溪碑林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湘江边摩崖石刻群，颜真卿书《大唐中兴颂》为镇园之宝；石刻请勿拓印触摸"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4531",
+      "name": "永州市双牌阳明山旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-5月（杜鹃花季）",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "双牌阳明山4-5月野生杜鹃花海为最大看点；山区昼夜温差大"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4532",
+      "name": "永州市柳宗元文化旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "柳子街历史街区免费；柳子庙等场馆门票另计（价格以景区公示为准）",
+        "freePolicy": "街区免费开放",
+        "openHours": "街区全天开放（柳子庙约09:00-17:00，以公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 35,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "零陵柳子街历史街区与柳子庙为核心，与柳宗元《永州八记》文化相关联；石板路注意行走安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-永州-4533",
+      "name": "永州市东安舜皇山旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "森林瀑布与老山界红色印记；徒步请穿防滑鞋，夏季注意防蚊防暑"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4534",
+      "name": "永州市桐子坳景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "11月中旬至12月上旬（银杏季）",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "双牌桐子坳以古银杏群闻名，深秋银杏金黄为最佳观赏期，非银杏季景观较一般"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4535",
+      "name": "永州市江永勾蓝瑶寨景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（演出与体验项目定时）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年（农历五月「洗泥节」）",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "江永城堡式瑶寨布局独特，农历五月「洗泥节」有民俗活动；请尊重当地习俗"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4536",
+      "name": "永州市零陵东山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（内部场馆以公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 35,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "零陵城区东山区域，高山寺等历史遗存集中；出行前请核实最新开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4537",
+      "name": "永州市蓝山云冰山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "12-2月（冰挂雾凇）",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "索道/扶梯",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "蓝山湘粤界山，冬季冰挂雾凇为特色，需防寒防滑；冰雪天气山路可能临时交通管制"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4538",
+      "name": "永州市宁远下灌旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（内部场馆以公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宁远下灌村有「江南第一村」之称，状元李郃故里与麻将文化展示；出行前请核实最新开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4539",
+      "name": "永州市道县濂溪故里景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "道县楼田村为理学开山周敦颐故里，《爱莲说》主题景观；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4540",
+      "name": "永州道县陈树湘红色文化园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件参观）",
+        "openHours": "约09:00-17:00（16:30停止入馆）；周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "「断肠明志」红34师师长陈树湘主题纪念园；参观请保持肃静；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4541",
+      "name": "永州祁阳市石洞源景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "祁阳潘市镇石洞源为陶铸故居所在地，红色文化村落；出行前请核实最新预约与开放政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-永州-4542",
+      "name": "永州新田县龙家大院景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "永州零陵机场",
+        "nearestRail": "永州站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "新田保存较完整的明清古民居建筑群，村落布局讲究；村内巷道复杂注意辨别路线"
+      },
+      "confidence": "low"
+    }
+  ]
+}

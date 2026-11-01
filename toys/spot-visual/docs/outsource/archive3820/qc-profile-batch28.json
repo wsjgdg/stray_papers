@@ -1,0 +1,28 @@
+{
+  "batch": 28,
+  "count": 100,
+  "low": 95,
+  "missingRequired": 63,
+  "sample": [
+    "scenic-玉溪-3466",
+    "scenic-红河哈尼族彝族自治州-3485",
+    "scenic-楚雄彝族自治州-3474",
+    "scenic-昌都-3549",
+    "scenic-红河哈尼族彝族自治州-3499",
+    "scenic-德宏傣族景颇族自治州-3517",
+    "scenic-临沧-3524",
+    "scenic-西安-3556",
+    "scenic-玉溪-3462",
+    "scenic-德宏傣族景颇族自治州-3514",
+    "scenic-林芝-3545",
+    "scenic-玉溪-3463",
+    "scenic-红河哈尼族彝族自治州-3484",
+    "scenic-日喀则-3533",
+    "scenic-临沧-3522",
+    "scenic-普洱-3508",
+    "scenic-红河哈尼族彝族自治州-3487",
+    "scenic-红河哈尼族彝族自治州-3497",
+    "scenic-西安-3555",
+    "scenic-普洱-3505"
+  ]
+}
