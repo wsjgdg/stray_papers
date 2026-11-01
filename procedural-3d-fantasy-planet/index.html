@@ -4439,7 +4439,7 @@
             const groundKind = rng();
             // platMat geometry radii differ (platform/disc are r=1, block is 1 wide), hence the numbers.
             if (groundKind < .46) put('platform', platMat, 0, 0, 0, yaw0, .19 * k, .34, .19 * k);
-            else if (groundKind < .74) put('block', platMat, 0, 0, 0, yaw0, .26 * k, .012, .22 * k);
+            else if (groundKind < .74) put('block', platMat, 0, 0, 0, yaw0, .19 * k, .012, .16 * k);
             else put('disc', platMat, 0, 0, 0, yaw0, .095 * k, .16, .095 * k);
             // ---- landmark ----------------------------------------------------------------------
             const landmark = pick(LANDMARKS[id]);
@@ -4533,7 +4533,7 @@
                 put('spire', 'timber', 0, 0, .010 + towerH * .97, yaw0, .049 * k, towerH * .44, .049 * k);
                 put('ring', 'glass', 0, 0, .010 + towerH * .30, yaw0, .046 * k, .046 * k, .046 * k);
               } else if (landmark === 'dock') {
-                const dw = .125 * k, dd = .048 * k, lift = .026 * k;
+                const dw = .092 * k, dd = .036 * k, lift = .022 * k;
                 for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
                   const [px, pz] = local(yaw0, sx * dw * .38, sz * dd * .34);
                   put('beam', 'timber', px, pz, 0, yaw0, .012, lift, .012);
@@ -4610,9 +4610,9 @@
             if (plan === 'lane' || plan === 'row') {
               const count = 3 + Math.floor(rng() * 3);
               for (let i = 0; i < count; i++) {
-                const lane = (i - (count - 1) / 2) * .048 * k;
-                const side = plan === 'row' ? 1 : (i % 2 ? 1 : -1);
-                const back = (.050 + rng() * .012) * k;
+                const lane = (i - (count - 1) / 2) * .042 * k;
+                const side = plan === 'row' ? (i % 3 ? 1 : -1) : (i % 2 ? 1 : -1);
+                const back = (.044 + rng() * .010) * k;
                 const [lx, lz] = local(yaw0, lane, side * back);
                 houseAt(lx, lz, yaw0 + (plan === 'row' ? 0 : Math.PI * side) + (rng() - .5) * .12, pick(kinds), .9 + rng() * .30);
               }
