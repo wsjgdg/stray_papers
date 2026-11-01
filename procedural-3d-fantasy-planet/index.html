@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="chart-22">
+  <meta name="aetheris-build" content="world-chart-23">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -276,11 +276,50 @@
 
     #minimapFrame { position: absolute; z-index: 5; left: clamp(26px, 5.8vw, 105px); top: 122px; width: 146px; height: 146px; display: none;
       border-radius: 50%; border: 1px solid rgba(165, 238, 225, .24); background: radial-gradient(circle at 50% 50%, rgba(6, 20, 26, .74), rgba(3, 11, 16, .92));
-      box-shadow: 0 12px 34px rgba(2, 8, 12, .38), inset 0 0 26px rgba(0, 0, 0, .55); pointer-events: none; }
+      box-shadow: 0 12px 34px rgba(2, 8, 12, .38), inset 0 0 26px rgba(0, 0, 0, .55);
+      pointer-events: auto; cursor: zoom-in; transition: border-color .3s ease, box-shadow .3s ease; }
+    #minimapFrame:hover, #minimapFrame:focus-visible { border-color: rgba(165, 238, 225, .62); outline: none;
+      box-shadow: 0 12px 34px rgba(2, 8, 12, .38), inset 0 0 26px rgba(0, 0, 0, .55), 0 0 22px rgba(120, 232, 206, .16); }
+    .minimap-expand { position: absolute; right: -3px; bottom: 2px; width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center;
+      font-size: 8px; font-weight: 700; letter-spacing: .02em; color: #cdf6e6; background: rgba(5, 18, 24, .86); border: 1px solid rgba(165, 238, 225, .34); }
     body[data-mode="ground"]:not(.transitioning) #minimapFrame { display: block; }
     #minimap { width: 100%; height: 100%; display: block; border-radius: 50%; }
     .minimap-fwd { position: absolute; left: 50%; top: -2px; width: 0; height: 0; transform: translateX(-50%);
       border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid rgba(198, 246, 232, .85); }
+
+    /* Full-screen chart of the whole planet. Same bitmap as the disc, north-up, nothing re-sampled. */
+    #worldMap { position: fixed; inset: 0; z-index: 8; display: grid; place-items: center; padding: clamp(14px, 3vw, 40px);
+      background: radial-gradient(120% 100% at 50% 42%, rgba(5, 20, 27, .9), rgba(2, 8, 12, .97));
+      opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .34s ease, visibility 0s .34s; }
+    body.worldmap-open #worldMap { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .34s ease; }
+    .worldmap-panel { width: min(1120px, 100%); display: flex; flex-direction: column; gap: 12px; transform: translateY(10px) scale(.99);
+      transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+    body.worldmap-open .worldmap-panel { transform: none; }
+    .worldmap-head { display: flex; align-items: center; gap: 16px; }
+    .worldmap-head > div:first-child { flex: 1; min-width: 0; }
+    .worldmap-kicker { display: block; font-size: 8px; letter-spacing: .42em; color: #7f9c95; font-weight: 700; }
+    .worldmap-title { display: block; margin-top: 6px; font-size: 15px; letter-spacing: .2em; color: #eafaf3; font-weight: 700; }
+    .worldmap-coords { font-size: 10px; letter-spacing: .22em; color: #86c3b4; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .worldmap-close { width: 30px; height: 30px; flex: none; border: 1px solid rgba(165, 238, 225, .26); border-radius: 50%; background: transparent;
+      color: #a8cfc2; font-size: 11px; line-height: 1; cursor: pointer; }
+    .worldmap-close:hover { color: #eafaf3; border-color: rgba(165, 238, 225, .6); }
+    .worldmap-stage { display: block; line-height: 0; }
+    #worldMapCanvas { display: block; margin: 0 auto; border-radius: 12px; border: 1px solid rgba(165, 238, 225, .2);
+      box-shadow: 0 26px 70px rgba(1, 6, 9, .55), inset 0 0 0 1px rgba(0, 0, 0, .3); }
+    .worldmap-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 9px; letter-spacing: .16em; color: #a8cfc2; }
+    .worldmap-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .worldmap-legend i { width: 11px; height: 11px; display: inline-block; }
+    .worldmap-legend .lg-town { width: 6px; height: 6px; margin: 0 2px; background: #e2f4e8; }
+    .worldmap-legend .lg-altar { background: #ffce82; transform: rotate(45deg); width: 8px; height: 8px; margin: 0 1px; }
+    .worldmap-legend .lg-ley { height: 1px; background: rgba(150, 234, 214, .7); }
+    .worldmap-legend .lg-herd { width: 5px; height: 5px; border-radius: 50%; background: #d6ecff; margin: 0 3px; }
+    .worldmap-legend .lg-you { border: 1px solid #eaffe9; border-radius: 50%; }
+    .worldmap-hint { margin-left: auto; color: #7f9c95; }
+    @media (max-width: 760px) {
+      .worldmap-legend { font-size: 8px; gap: 6px 12px; }
+      .worldmap-legend .worldmap-hint { display: none; }
+      .worldmap-title { font-size: 13px; }
+    }
 
     #diveVeil { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .9s ease;
       background: radial-gradient(125% 95% at 50% 38%, rgba(38,128,138,.06), rgba(3,26,36,.58) 74%, rgba(2,18,26,.78) 100%); }
@@ -438,6 +477,10 @@
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.2 3.4h8.9L16.8 7v9.6H4.2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M13 3.5V7h3.7M6.9 10.4h6.9M6.9 13.1h4.8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
           <span class="archive-key">O</span>
         </button>
+        <button id="mapChip" class="archive-chip" type="button" aria-controls="worldMap" aria-expanded="false" aria-label="Open the survey chart (G)" title="Survey chart · G">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.2"/><ellipse cx="10" cy="10" rx="2.9" ry="6.5" stroke="currentColor" stroke-width="1"/><path d="M3.5 10h13M4.6 6.6h10.8M4.6 13.4h10.8" stroke="currentColor" stroke-width=".9" stroke-linecap="round"/></svg>
+          <span class="archive-key">G</span>
+        </button>
         <span class="top-divider"></span>
         <button class="weather-chip" id="weatherButton" type="button" title="Cycle weather · R" aria-label="Cycle weather">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15.5h9.2a3.3 3.3 0 0 0 .4-6.6A5.4 5.4 0 0 0 6.2 10 2.8 2.8 0 0 0 7 15.5Z"/><path d="M8 18.5l-1 2M12 18.5l-1 2M16 18.5l-1 2"/></svg>
@@ -461,9 +504,11 @@
     <div id="pointerPrompt" class="pointer-prompt">CLICK THE WORLD TO LOOK AROUND &nbsp; / &nbsp; ESC TO RELEASE</div>
     <div class="mobile-hint"><span class="orbit-mobile-hint">DRAG TO ORBIT / PINCH TO ZOOM</span><span class="ground-mobile-hint">DRAG TO LOOK / PAD TO WALK</span></div>
     <div id="diveVeil" aria-hidden="true"></div>
-    <div id="minimapFrame" aria-hidden="true">
+    <div id="minimapFrame" role="button" tabindex="0" aria-controls="worldMap" aria-expanded="false"
+         aria-label="Open the survey chart of the whole planet (G)" title="Survey chart · G">
       <canvas id="minimap" width="256" height="256"></canvas>
       <span class="minimap-fwd"></span>
+      <span class="minimap-expand" aria-hidden="true">G</span>
     </div>
     <div id="markers" aria-label="Nearby sanctuaries"></div>
     <div id="siteReadout" aria-live="off"><span class="readout-region" id="regionLabel">VAELMAR</span><span class="readout-sep"></span><span class="readout-biome" id="biomeLabel">LUMINOUS GROVE</span><span class="readout-sep"></span><span id="coordLabel">0.0°N 0.0°E</span></div>
@@ -492,6 +537,25 @@
       </button>
     </footer>
 
+    <div id="worldMap" aria-hidden="true" aria-label="Survey chart of the whole planet">
+      <div class="worldmap-panel">
+        <div class="worldmap-head">
+          <div><span class="worldmap-kicker">SURVEY CHART · WHOLE PLANET</span><strong class="worldmap-title">全球测绘图</strong></div>
+          <div class="worldmap-coords" id="worldMapCoords">0.0°N 0.0°E</div>
+          <button id="worldMapClose" class="worldmap-close" type="button" aria-label="Close the chart">✕</button>
+        </div>
+        <div class="worldmap-stage"><canvas id="worldMapCanvas" width="1600" height="800"></canvas></div>
+        <div class="worldmap-legend" aria-label="Legend">
+          <span><i class="lg-town"></i>聚落</span>
+          <span><i class="lg-altar"></i>祭坛 · 灵脉节点</span>
+          <span><i class="lg-ley"></i>灵脉</span>
+          <span><i class="lg-herd"></i>兽群</span>
+          <span><i class="lg-you"></i>你 · 虚线是足下巡检范围</span>
+          <span class="worldmap-hint">G / ESC 关闭</span>
+        </div>
+      </div>
+    </div>
+
     <aside id="archive" class="archive" aria-label="Field archive" aria-hidden="true">
       <div class="archive-head">
         <div><span class="archive-kicker">FIELD ARCHIVE</span><strong class="archive-title">野档 · 非官方</strong></div>
@@ -509,7 +573,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'chart-22';
+    const BUILD_ID = 'world-chart-23';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4793,7 +4857,7 @@
       // bitmap sliding under you. (Two earlier versions rescanned the ground at runtime and both
       // showed it: the first in camera-relative rings, the second in a world-anchored patch that
       // still had to be re-baked every three metres of walking.)
-      const MAP_RANGE = .40;                       // visible disc radius, world units
+      const MAP_RANGE = .72;                       // visible disc radius, world units (about 3 km)
       const MAP_W = compact ? 1024 : 2048, MAP_H = MAP_W / 2;
       const MAP_TAU = Math.PI * 2;
       const MAP_PROVINCES = ['vaelmar', 'sennar', 'caelth', 'mirella', 'vessper'];
@@ -4803,7 +4867,7 @@
       const mapCtx = mapCanvas ? mapCanvas.getContext('2d') : null;
       const mapBasis = { up: new THREE.Vector3(1, 0, 0), right: new THREE.Vector3(0, 0, 1), fwd: new THREE.Vector3(0, 1, 0) };
       const mapSample = new THREE.Vector3(), mapOffset = new THREE.Vector3(), mapPoint = { x: 0, y: 0 };
-      let mapChart = null, mapNeedsDraw = true;
+      let mapChart = null, mapProvinceCentroids = null, mapNeedsDraw = true;
 
       function mapBasisUpdate() {
         mapBasis.up.copy(state.direction).normalize();
@@ -4862,6 +4926,7 @@
         chart.width = MAP_W; chart.height = MAP_H;
         const chartCtx = chart.getContext('2d'), image = chartCtx.createImageData(MAP_W, MAP_H), data = image.data;
         const cls = new Uint8Array(MAP_W * MAP_H);
+        const sums = MAP_PROVINCES.map(() => ({ x: 0, y: 0, z: 0 }));   // cos(lat)-weighted, for labels
         for (let y = 0; y < MAP_H; y++) {
           const lat = (.5 - (y + .5) / MAP_H) * Math.PI, cosLat = Math.cos(lat), sinLat = Math.sin(lat);
           for (let x = 0; x < MAP_W; x++) {
@@ -4872,6 +4937,7 @@
               c = 1 + Math.max(0, MAP_PROVINCES.indexOf(provinceAt(mapSample, h)));
             }
             cls[p] = c;
+            if (c) { const sum = sums[c - 1]; sum.x += cosLat * cosLat * lonSin[x]; sum.y += cosLat * sinLat; sum.z += cosLat * cosLat * lonCos[x]; }
             // Feather the fill across the shoreline: a hard class boundary rasterised at chart
             // resolution turns into a staircase once the disc magnifies it three times.
             const t = clamp((h - (SEA - .0042)) / .0084, 0, 1);
@@ -4897,6 +4963,10 @@
           if (a && ((right && a !== right) || (below && a !== below)) && (x + y) % 5 < 3) put(p, MAP_BORDER, .5);
         }
         chartCtx.putImageData(image, 0, 0);
+        mapProvinceCentroids = sums.map(sum => {
+          const len = Math.hypot(sum.x, sum.y, sum.z) || 1;
+          return new THREE.Vector3(sum.x / len, sum.y / len, sum.z / len);
+        });
         mapChart = chart;
         mapNeedsDraw = true;
       }
@@ -4989,6 +5059,156 @@
         mapBasisUpdate();
         mapDraw();
         mapNeedsDraw = false;
+      }
+
+      // ---- World chart (full screen) -------------------------------------------------------
+      // Exactly the same baked bitmap as the disc, drawn whole and north-up. Opening it costs one
+      // drawImage plus a handful of markers; nothing is projected, sampled or re-baked, so it looks
+      // identical at every latitude and never "develops" while you look at it.
+      const worldMapEl = document.getElementById('worldMap');
+      const worldCanvasEl = document.getElementById('worldMapCanvas');
+      const worldCtx = worldCanvasEl ? worldCanvasEl.getContext('2d') : null;
+      const worldCoordsEl = document.getElementById('worldMapCoords');
+      const worldChip = document.getElementById('mapChip'), minimapEl = document.getElementById('minimapFrame');
+      const worldScratch = { x: 0, y: 0 };
+      let worldMapOpen = false, worldMapFrame = 0;
+
+      function mapWorldSize() {
+        if (!worldCanvasEl) return;
+        const stage = worldCanvasEl.parentElement;
+        const room = Math.max(320, ((window.innerHeight || 720) - 172) * 2);
+        const w = Math.max(300, Math.floor(Math.min((stage && stage.clientWidth) || 1120, room)));
+        // Never ask for more pixels than the chart itself has: past 1:1 it would only be blurrier
+        // and slower, since the drawn land is already at the bitmap's own resolution.
+        const scale = Math.min(2, window.devicePixelRatio || 1, MAP_W / w);
+        worldCanvasEl.style.width = w + 'px';
+        worldCanvasEl.style.height = Math.floor(w / 2) + 'px';
+        worldCanvasEl.width = Math.round(w * scale);
+        worldCanvasEl.height = Math.round(w / 2 * scale);
+      }
+      // Direction -> chart pixel. The chart's own convention: lon = atan2(x, z), lat = asin(y).
+      function mapWorldPoint(dir, out) {
+        out.x = (Math.atan2(dir.x, dir.z) / MAP_TAU + .5) * worldCanvasEl.width;
+        out.y = (.5 - Math.asin(clamp(dir.y, -1, 1)) / Math.PI) * worldCanvasEl.height;
+        return out;
+      }
+
+      function mapWorldDraw() {
+        if (!worldCtx || !mapChart || !worldCanvasEl) return;
+        const W = worldCanvasEl.width, H = worldCanvasEl.height, ctx = worldCtx, s = W / 1600;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(mapChart, 0, 0, W, H);
+        ctx.fillStyle = 'rgba(4, 16, 22, .2)'; ctx.fillRect(0, 0, W, H);
+        // Graticule, then the equator and the prime meridian a shade brighter.
+        ctx.lineWidth = Math.max(1, s);
+        ctx.strokeStyle = 'rgba(10, 38, 46, .55)';
+        ctx.beginPath();
+        for (let lon = -150; lon < 180; lon += 30) { const x = (lon / 360 + .5) * W; ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+        for (let lat = -60; lat <= 60; lat += 30) { if (!lat) continue; const y = (.5 - lat / 180) * H; ctx.moveTo(0, y); ctx.lineTo(W, y); }
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(120, 214, 196, .16)';
+        ctx.beginPath();
+        ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2);
+        ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H);
+        ctx.stroke();
+        // Graticule labels, so the chart can be read as a chart and not just a picture.
+        ctx.font = `600 ${Math.round(9 * s)}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`;
+        ctx.fillStyle = 'rgba(168, 207, 194, .42)';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        for (let lat = -60; lat <= 60; lat += 30) if (lat) ctx.fillText(`${Math.abs(lat)}°${lat > 0 ? 'N' : 'S'}`, 6 * s, (.5 - lat / 180) * H);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        for (let lon = -180; lon <= 180; lon += 60) {
+          const x = (lon / 360 + .5) * W, label = lon === 0 ? '0°' : `${Math.abs(lon)}°${lon > 0 ? 'E' : 'W'}`;
+          ctx.fillText(label, clamp(x, 14 * s, W - 14 * s), H - 15 * s);
+        }
+        // Living fauna first, so markers sit on top of the herds.
+        ctx.fillStyle = 'rgba(214, 236, 255, .72)';
+        for (let i = 0; i < flocks.length; i++) {
+          const len = Math.hypot(flockWorld[i * 3], flockWorld[i * 3 + 1], flockWorld[i * 3 + 2]);
+          if (len < .001) continue;
+          const p = mapWorldPoint(mapSample.set(flockWorld[i * 3] / len, flockWorld[i * 3 + 1] / len, flockWorld[i * 3 + 2] / len), worldScratch);
+          ctx.fillRect(p.x - 2 * s, p.y - 2 * s, 4 * s, 4 * s);
+        }
+        // Towns.
+        for (const site of settlementDirs) {
+          const p = mapWorldPoint(site.dir, worldScratch);
+          ctx.fillStyle = 'rgba(226, 244, 232, .5)';
+          ctx.fillRect(p.x - 2.2 * s, p.y - 2.2 * s, 4.4 * s, 4.4 * s);
+        }
+        // Ley lines between altars, then the altars. Pairs that would cross the antimeridian are
+        // skipped rather than wrapped — a line jumping the seam reads as a bug, not a ley line.
+        const anchors = landmarks.map(landmark => mapWorldPoint(landmark.direction, { x: 0, y: 0 }));
+        ctx.strokeStyle = 'rgba(150, 234, 214, .22)'; ctx.lineWidth = Math.max(1, s);
+        ctx.beginPath();
+        for (let i = 0; i < anchors.length; i++) for (let j = i + 1; j < anchors.length; j++) {
+          if (Math.abs(anchors[i].x - anchors[j].x) > W * .42) continue;
+          ctx.moveTo(anchors[i].x, anchors[i].y); ctx.lineTo(anchors[j].x, anchors[j].y);
+        }
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255, 206, 130, .95)';
+        for (const a of anchors) {
+          const r = 8 * s;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y - r); ctx.lineTo(a.x + r, a.y); ctx.lineTo(a.x, a.y + r); ctx.lineTo(a.x - r, a.y);
+          ctx.closePath(); ctx.fill();
+        }
+        // Province names last, so markers never bury them; outlined to hold up over any fill.
+        if (mapProvinceCentroids) {
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.font = `700 ${Math.round(11 * s)}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`;
+          ctx.lineJoin = 'round'; ctx.lineWidth = 3.4 * s; ctx.strokeStyle = 'rgba(4, 16, 22, .8)';
+          mapProvinceCentroids.forEach((centre, i) => {
+            const p = mapWorldPoint(centre, worldScratch);
+            if (p.y < 18 * s || p.y > H - 18 * s) return;
+            const label = MAP_PROVINCES[i].toUpperCase();
+            ctx.strokeText(label, p.x, p.y);
+            ctx.fillStyle = 'rgba(238, 255, 249, .82)';
+            ctx.fillText(label, p.x, p.y);
+          });
+        }
+        // Where you are: a ring, the range of the little disc, and the way you are facing.
+        const n = state.direction;
+        const lat = Math.asin(clamp(n.y, -1, 1)), lon = Math.atan2(n.x, n.z);
+        const cosLat = Math.max(.05, Math.cos(lat));
+        const me = mapWorldPoint(n, worldScratch);
+        ctx.save();
+        ctx.setLineDash([4 * s, 4 * s]);
+        ctx.strokeStyle = 'rgba(190, 255, 240, .55)'; ctx.lineWidth = Math.max(1, 1.2 * s);
+        ctx.beginPath();
+        ctx.ellipse(me.x, me.y, MAP_RANGE / (R * cosLat) / MAP_TAU * W, MAP_RANGE / R / Math.PI * H, 0, 0, MAP_TAU);
+        ctx.stroke();
+        ctx.restore();
+        const east = mapSample.set(Math.cos(lon), 0, -Math.sin(lon)).dot(state.heading);
+        const north = mapOffset.set(-Math.sin(lat) * Math.sin(lon), Math.cos(lat), -Math.sin(lat) * Math.cos(lon)).dot(state.heading);
+        ctx.strokeStyle = 'rgba(232, 255, 246, .9)'; ctx.lineWidth = Math.max(1.4, 2 * s);
+        ctx.beginPath();
+        ctx.moveTo(me.x, me.y);
+        ctx.lineTo(me.x + east * 26 * s, me.y - north * 26 * s);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(5, 18, 24, .9)';
+        ctx.beginPath(); ctx.arc(me.x, me.y, 5.4 * s, 0, MAP_TAU); ctx.fill();
+        ctx.strokeStyle = 'rgba(232, 255, 246, .95)'; ctx.lineWidth = Math.max(1.4, 1.8 * s);
+        ctx.beginPath(); ctx.arc(me.x, me.y, 5.4 * s, 0, MAP_TAU); ctx.stroke();
+        if (worldCoordsEl) {
+          const deg = 180 / Math.PI;
+          worldCoordsEl.textContent = `${Math.abs(lat * deg).toFixed(1)}°${lat >= 0 ? 'N' : 'S'}  ${Math.abs(lon * deg).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`;
+        }
+      }
+
+      function setWorldMap(open) {
+        if (worldMapOpen === open) return;
+        worldMapOpen = open;
+        document.body.classList.toggle('worldmap-open', open);
+        if (worldMapEl) worldMapEl.setAttribute('aria-hidden', String(!open));
+        if (worldChip) worldChip.setAttribute('aria-expanded', String(open));
+        if (minimapEl) minimapEl.setAttribute('aria-expanded', String(open));
+        if (!open) return;
+        if (archiveOpen) setArchive(false);
+        keys.clear();
+        if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
+        mapWorldSize();
+        mapWorldDraw();
       }
 
       // Optional generated soundscape: wind, a low pad, and a night shimmer.
@@ -5192,6 +5412,7 @@
           </section>`;
       }
       function setArchive(open) {
+        if (open && worldMapOpen) setWorldMap(false);
         archiveOpen = open;
         if (open) {
           buildArchive();
@@ -5205,6 +5426,16 @@
         archiveChip.setAttribute('aria-expanded', String(open));
       }
       archiveChip.addEventListener('click', () => setArchive(!archiveOpen));
+      if (worldChip) worldChip.addEventListener('click', () => setWorldMap(!worldMapOpen));
+      const worldClose = document.getElementById('worldMapClose');
+      if (worldClose) worldClose.addEventListener('click', () => setWorldMap(false));
+      if (minimapEl) {
+        minimapEl.addEventListener('click', () => setWorldMap(true));
+        minimapEl.addEventListener('keydown', event => {
+          if (event.code === 'Enter') { event.preventDefault(); event.stopPropagation(); setWorldMap(true); }
+        });
+      }
+      if (worldMapEl) worldMapEl.addEventListener('click', event => { if (event.target === worldMapEl) setWorldMap(false); });
       archiveClose.addEventListener('click', () => setArchive(false));
       window.addEventListener('keydown',event=>{
         if(!startup.ready)return;
@@ -5218,6 +5449,10 @@
         if(event.code==='KeyE'&&!event.repeat){triggerEvent();return;}
         if(event.code==='KeyM'&&!event.repeat){toggleSound();return;}
         if(event.code==='KeyO'&&!event.repeat){setArchive(!archiveOpen);return;}
+        if(event.code==='KeyG'&&!event.repeat){setWorldMap(!worldMapOpen);return;}
+        if(event.code==='Escape'&&worldMapOpen){setWorldMap(false);return;}
+        // While the chart is up you are reading, not walking: swallow everything but the toggles.
+        if(worldMapOpen)return;
         if(event.code==='Escape'&&archiveOpen){setArchive(false);return;}
         if(event.code==='Space'&&!event.repeat)jump();
         keys.add(event.code);
@@ -5276,7 +5511,7 @@
       window.addEventListener('resize',()=>{
         if(resizeQueued)return;
         resizeQueued=true;
-        requestAnimationFrame(()=>{resizeQueued=false;applyViewportSize();});
+        requestAnimationFrame(()=>{resizeQueued=false;applyViewportSize();if(worldMapOpen){mapWorldSize();mapWorldDraw();}});
       });
       document.addEventListener('visibilitychange',()=>{lastFrame=0;clearInput();quality.cooldown=5;});
       canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;status.hidden=false;statusText.textContent='RESTORING THE WORLD';clearInput();});
@@ -5535,6 +5770,7 @@
             mp.needsUpdate=true;
           }
           if(surface){updateReadout();minimapUpdate();}
+          if(worldMapOpen&&(++worldMapFrame%8)===0)mapWorldDraw();
           updateAudioMix(daylight,surface);
         }
       }
