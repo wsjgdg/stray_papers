@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="sea-glass-20">
+  <meta name="aetheris-build" content="still-map-21">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -275,8 +275,8 @@
     }
 
     #minimapFrame { position: absolute; z-index: 5; left: clamp(26px, 5.8vw, 105px); top: 122px; width: 146px; height: 146px; display: none;
-      border-radius: 50%; border: 1px solid rgba(165, 238, 225, .24); background: radial-gradient(circle at 50% 50%, rgba(6, 20, 26, .58), rgba(3, 11, 16, .84));
-      box-shadow: 0 12px 34px rgba(2, 8, 12, .38), inset 0 0 26px rgba(0, 0, 0, .55); pointer-events: none; backdrop-filter: blur(2px); }
+      border-radius: 50%; border: 1px solid rgba(165, 238, 225, .24); background: radial-gradient(circle at 50% 50%, rgba(6, 20, 26, .74), rgba(3, 11, 16, .92));
+      box-shadow: 0 12px 34px rgba(2, 8, 12, .38), inset 0 0 26px rgba(0, 0, 0, .55); pointer-events: none; }
     body[data-mode="ground"]:not(.transitioning) #minimapFrame { display: block; }
     #minimap { width: 100%; height: 100%; display: block; border-radius: 50%; }
     .minimap-fwd { position: absolute; left: 50%; top: -2px; width: 0; height: 0; transform: translateX(-50%);
@@ -509,7 +509,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'sea-glass-20';
+    const BUILD_ID = 'still-map-21';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4787,19 +4787,37 @@
       }
 
       // ---- Local survey map ----------------------------------------------------------------
-      // A disc drawn around the walker, not a world atlas: the eight rings are scanned a sector
-      // at a time from real heightAt/provinceAt samples, so the coastline it shows is the one you
-      // can actually reach. Positions are projected into the walker's own basis, which makes it
-      // a heading-up map with no rotation bookkeeping, and all of it is skipped in orbit mode.
-      const MAP_SECTORS = 32, MAP_RINGS = 10, MAP_RANGE = .40, MAP_TAU = Math.PI * 2;
+      // A disc of the ground under your feet, drawn from a *cached* patch of world: the patch is
+      // baked once into a bitmap in a stable east/north frame and afterwards only blitted, rotated.
+      // Nothing is resampled while the patch is fresh, so standing still reproduces the same
+      // picture frame after frame. (The first version rescanned one ring of camera-relative cells
+      // per frame: a coastline flickered between water and land because the two halves of the
+      // sweep disagreed, and 64 heightAt calls ran every single frame.)
+      const MAP_RANGE = .40;      // visible disc radius, world units
+      const MAP_PATCH = .58;      // cached half-extent; the .18 margin is the walk budget
+      const MAP_CELLS = 56;       // cells per side of the patch
+      const MAP_PX = 6;           // patch bitmap pixels per cell
+      const MAP_MARGIN = .085;    // re-anchor once the walker drifts this far from the centre
+      const MAP_TAU = Math.PI * 2;
       const MAP_PROVINCES = ['vaelmar', 'sennar', 'caelth', 'mirella', 'vessper'];
       const MAP_FILL = ['#5d8c68', '#9b7d4c', '#8ca4b6', '#4e9c8f', '#7d78b4'];
+      const MAP_WATER = '#0a2430';
       const mapCanvas = document.getElementById('minimap');
       const mapCtx = mapCanvas ? mapCanvas.getContext('2d') : null;
-      const mapCell = new Uint8Array(MAP_SECTORS * MAP_RINGS);
+      const mapSide = MAP_CELLS * MAP_PX, mapStep = MAP_PATCH * 2 / MAP_CELLS;
+
+      function mapMakePatch() {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = mapSide;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = MAP_WATER; ctx.fillRect(0, 0, mapSide, mapSide);
+        return { canvas, ctx, cls: new Uint8Array(MAP_CELLS * MAP_CELLS), center: new THREE.Vector3(1, 0, 0), east: new THREE.Vector3(0, 0, 1), north: new THREE.Vector3(0, 1, 0) };
+      }
+      const mapPatchA = mapMakePatch(), mapPatchB = mapMakePatch();
+      let mapActive = null, mapNeedsDraw = true, mapFrames = 0;
+      const mapJob = { active: false, cursor: 0, patch: mapPatchA };
       const mapBasis = { up: new THREE.Vector3(1, 0, 0), right: new THREE.Vector3(0, 0, 1), fwd: new THREE.Vector3(0, 1, 0) };
       const mapSample = new THREE.Vector3(), mapOffset = new THREE.Vector3(), mapPoint = { x: 0, y: 0 };
-      let mapRing = 0, mapFrames = 0, mapTick = 0, mapNeedsDraw = true;
 
       function mapBasisUpdate() {
         mapBasis.up.copy(state.direction).normalize();
@@ -4808,80 +4826,108 @@
         mapBasis.fwd.normalize();
         mapBasis.right.crossVectors(mapBasis.fwd, mapBasis.up).normalize();
       }
-      // World -> disc offset. +x is the walker's right, +y is straight ahead.
+      // World -> disc offset for markers. +x is the walker's right, +y is straight ahead.
       function mapProject(dir) {
         mapOffset.copy(dir).sub(mapBasis.up).multiplyScalar(R);
         mapPoint.x = mapOffset.dot(mapBasis.right);
         mapPoint.y = mapOffset.dot(mapBasis.fwd);
         return mapPoint;
       }
-      function mapScanRing(ring) {
-        const r = (ring + .5) / MAP_RINGS * MAP_RANGE / R;
-        for (let s = 0; s < MAP_SECTORS; s++) {
-          const a = (s + .5) / MAP_SECTORS * MAP_TAU;
-          mapSample.copy(mapBasis.up).addScaledVector(mapBasis.right, Math.cos(a) * r).addScaledVector(mapBasis.fwd, Math.sin(a) * r).normalize();
-          const h = heightAt(mapSample);
-          let value = 1;
-          if (h >= SEA - .004) value = 2 + Math.max(0, MAP_PROVINCES.indexOf(provinceAt(mapSample, h)));
-          mapCell[ring * MAP_SECTORS + s] = value;
+      function mapRequestPatch(center) {
+        if (!mapCtx) return;
+        const patch = mapJob.patch === mapPatchA ? mapPatchB : mapPatchA;
+        patch.center.copy(center).normalize();
+        if (mapJob.active && patch.center.distanceToSquared(mapJob.patch.center) < 1e-9) return;
+        patch.east.crossVectors(Math.abs(patch.center.y) > .95 ? new THREE.Vector3(1, 0, 0) : UP, patch.center).normalize();
+        patch.north.crossVectors(patch.center, patch.east).normalize();
+        patch.cls.fill(0);
+        patch.ctx.fillStyle = MAP_WATER; patch.ctx.fillRect(0, 0, mapSide, mapSide);
+        mapJob.active = true; mapJob.cursor = 0; mapJob.patch = patch;
+      }
+      // One slice of the bake per frame, on a millisecond budget, like the ground patch itself.
+      // Cells come from the terrain mesh (baseMeshRadius, no fractal noise), so a cell costs a few
+      // microseconds instead of the ten heightAt would.
+      function mapAdvance(budgetMs) {
+        if (!mapJob.active) return false;
+        const patch = mapJob.patch, ctx = patch.ctx, deadline = performance.now() + Math.max(.5, budgetMs);
+        while (mapJob.cursor < MAP_CELLS * MAP_CELLS) {
+          const i = mapJob.cursor % MAP_CELLS, j = (mapJob.cursor / MAP_CELLS) | 0;
+          const offEast = -MAP_PATCH + (i + .5) * mapStep, offNorth = MAP_PATCH - (j + .5) * mapStep;
+          // Only the inscribed circle is ever visible (rotation stays inside it), so the four
+          // corners are not sampled at all — a fifth of the bake, free.
+          if (offEast * offEast + offNorth * offNorth <= MAP_PATCH * MAP_PATCH) {
+            mapSample.copy(patch.center).addScaledVector(patch.east, offEast / R).addScaledVector(patch.north, offNorth / R).normalize();
+            let cls = 1;
+            const h = baseMeshRadius(mapSample) - R;
+            if (h >= SEA - .002) cls = 2 + Math.max(0, MAP_PROVINCES.indexOf(provinceAt(mapSample, h)));
+            patch.cls[mapJob.cursor] = cls;
+            ctx.fillStyle = cls === 1 ? MAP_WATER : MAP_FILL[cls - 2];
+            ctx.fillRect(i * MAP_PX - .5, j * MAP_PX - .5, MAP_PX + 1, MAP_PX + 1);
+          }
+          if ((++mapJob.cursor & 31) === 0 && performance.now() >= deadline) return true;
         }
+        mapBakeEdges(patch);
+        mapActive = patch;
+        mapJob.active = false;
+        mapNeedsDraw = true;
+        return false;
+      }
+      // Coast and province lines are baked into the bitmap too, so they cannot flicker either.
+      // Drawn as solid rects rather than strokes: at 6 px per cell a hairline is one pixel anyway,
+      // and rects composite in order with no line-width or dash state to get wrong.
+      function mapBakeEdges(patch) {
+        const ctx = patch.ctx, cls = patch.cls;
+        ctx.save();
+        for (let j = 0; j < MAP_CELLS; j++) for (let i = 0; i < MAP_CELLS; i++) {
+          const a = cls[j * MAP_CELLS + i];
+          if (!a) continue;
+          const x = i * MAP_PX, y = j * MAP_PX;
+          const paint = (edge, vertical) => {
+            const coast = (a === 1) !== (edge === 1);
+            if (!coast && !(a > 1 && edge > 1 && a !== edge)) return;
+            if (coast) {
+              ctx.globalAlpha = .95; ctx.fillStyle = '#d7fff5';
+              ctx.fillRect(vertical ? x + MAP_PX - 1.2 : x, vertical ? y : y + MAP_PX - 1.2, vertical ? 2.4 : MAP_PX, vertical ? MAP_PX : 2.4);
+            } else {
+              ctx.globalAlpha = .55; ctx.fillStyle = '#f2e6c4';
+              // Dashed province border: three dashes per cell edge.
+              for (let d = 0; d < 3; d++) {
+                const t = d / 3.4 * MAP_PX;
+                ctx.fillRect(vertical ? x + MAP_PX - .5 : x + t, vertical ? y + t : y + MAP_PX - .5, vertical ? 1.1 : MAP_PX / 3.6, vertical ? MAP_PX / 3.6 : 1.1);
+              }
+            }
+          };
+          if (i + 1 < MAP_CELLS) { const b = cls[j * MAP_CELLS + i + 1]; if (b) paint(b, true); }
+          if (j + 1 < MAP_CELLS) { const b = cls[(j + 1) * MAP_CELLS + i]; if (b) paint(b, false); }
+        }
+        ctx.restore();
       }
       function mapDraw() {
         if (!mapCtx) return;
-        const ctx = mapCtx, size = mapCanvas.width, c = size / 2, rad = c - 4, step = rad / MAP_RINGS;
+        const ctx = mapCtx, size = mapCanvas.width, c = size / 2, rad = c - 4, u = rad / MAP_RANGE;
         ctx.clearRect(0, 0, size, size);
         ctx.save();
         ctx.beginPath(); ctx.arc(c, c, rad, 0, MAP_TAU); ctx.clip();
-        ctx.fillStyle = 'rgba(9, 33, 44, .95)'; ctx.fillRect(0, 0, size, size);
-        // Land: one annular sector per cell, coloured by the province that owns it. Cells are
-        // grown by half a pixel so neighbouring fills meet instead of leaving hairline seams.
-        const padA = .7 / rad, padR = .7;
-        for (let ring = 0; ring < MAP_RINGS; ring++) {
-          const r0 = ring * step, r1 = r0 + step + padR;
-          for (let s = 0; s < MAP_SECTORS; s++) {
-            const value = mapCell[ring * MAP_SECTORS + s];
-            if (value < 2) continue;
-            const a0 = s / MAP_SECTORS * MAP_TAU - padA, a1 = (s + 1) / MAP_SECTORS * MAP_TAU + padA;
-            ctx.beginPath();
-            ctx.arc(c, c, r1, -a1, -a0);
-            ctx.arc(c, c, r0, -a0, -a1, true);
-            ctx.closePath();
-            ctx.fillStyle = MAP_FILL[value - 2];
-            ctx.fill();
-          }
+        ctx.fillStyle = MAP_WATER; ctx.fillRect(0, 0, size, size);
+        if (mapActive && mapActive.center.distanceTo(state.direction) * R < MAP_PATCH - MAP_RANGE + .02) {
+          // Walker position and facing inside the cached (east, south) bitmap frame, then one
+          // rotated blit: forward ends up pointing at the top of the disc.
+          mapOffset.copy(state.direction).sub(mapActive.center).multiplyScalar(R);
+          const pe = mapOffset.dot(mapActive.east), pn = mapOffset.dot(mapActive.north);
+          const fe = state.heading.dot(mapActive.east), fs = -state.heading.dot(mapActive.north);
+          const rot = -Math.PI / 2 - Math.atan2(fs, fe);
+          const k = u * mapStep / MAP_PX;
+          ctx.save();
+          ctx.translate(c, c);
+          ctx.rotate(rot);
+          ctx.drawImage(mapActive.canvas, (-MAP_PATCH - pe) * u, (-MAP_PATCH + pn) * u, mapSide * k, mapSide * k);
+          ctx.restore();
         }
-        // Coast and province lines, traced at the radius where the sample class flips.
-        const coast = new Float32Array(MAP_SECTORS).fill(-1), border = new Float32Array(MAP_SECTORS).fill(-1);
-        for (let s = 0; s < MAP_SECTORS; s++) {
-          let prev = mapCell[s];
-          for (let ring = 1; ring < MAP_RINGS; ring++) {
-            const cur = mapCell[ring * MAP_SECTORS + s];
-            if (prev > 0 && cur > 0) {
-              if (coast[s] < 0 && (prev === 1) !== (cur === 1)) coast[s] = ring * step;
-              else if (border[s] < 0 && prev > 1 && cur > 1 && prev !== cur) border[s] = ring * step;
-            }
-            prev = cur;
-          }
-        }
-        const traceEdges = (edges, color, width, dash) => {
-          ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []);
-          ctx.beginPath();
-          for (let s = 0; s < MAP_SECTORS; s++) {
-            const r = edges[s], rn = edges[(s + 1) % MAP_SECTORS];
-            if (r < 0 || rn < 0) continue;
-            const a = (s + .5) / MAP_SECTORS * MAP_TAU, an = (s + 1.5) / MAP_SECTORS * MAP_TAU;
-            ctx.moveTo(c + Math.cos(a) * r, c - Math.sin(a) * r);
-            ctx.lineTo(c + Math.cos(an) * rn, c - Math.sin(an) * rn);
-          }
-          ctx.stroke(); ctx.setLineDash([]);
-        };
-        traceEdges(border, 'rgba(238, 226, 190, .46)', 1, [3, 3]);
-        traceEdges(coast, 'rgba(196, 246, 236, .82)', 1.6);
         // Towns, then sanctuaries with the ley lines that tie them together.
         const toDisc = (dir, limit) => {
           const p = mapProject(dir), d = Math.hypot(p.x, p.y) / MAP_RANGE;
           if (d > limit) return null;
-          return { x: c + p.x / MAP_RANGE * rad, y: c - p.y / MAP_RANGE * rad };
+          return { x: c + p.x * u, y: c - p.y * u };
         };
         ctx.fillStyle = 'rgba(226, 244, 232, .66)';
         for (const site of settlementDirs) {
@@ -4890,8 +4936,7 @@
         }
         const anchors = [];
         for (const landmark of landmarks) {
-          const q = toDisc(landmark.direction, 1); if (!q) continue;
-          anchors.push(q);
+          const q = toDisc(landmark.direction, 1); if (q) anchors.push(q);
         }
         ctx.strokeStyle = 'rgba(150, 234, 214, .34)'; ctx.lineWidth = .9;
         ctx.beginPath();
@@ -4906,13 +4951,13 @@
           ctx.moveTo(q.x, q.y - 3.4); ctx.lineTo(q.x + 3.4, q.y); ctx.lineTo(q.x, q.y + 3.4); ctx.lineTo(q.x - 3.4, q.y);
           ctx.closePath(); ctx.fill();
         }
-        // Living fauna: each flock is one drifting mote, so clusters read as a herd.
+        // Living fauna: one drifting mote per flock, so clusters read as a herd.
         ctx.fillStyle = 'rgba(214, 236, 255, .8)';
         for (let i = 0; i < flocks.length; i++) {
           const len = Math.hypot(flockWorld[i * 3], flockWorld[i * 3 + 1], flockWorld[i * 3 + 2]);
           if (len < .001) continue;
-          mapOffset.set(flockWorld[i * 3] / len, flockWorld[i * 3 + 1] / len, flockWorld[i * 3 + 2] / len);
-          const q = toDisc(mapOffset, .97); if (!q) continue;
+          mapSample.set(flockWorld[i * 3] / len, flockWorld[i * 3 + 1] / len, flockWorld[i * 3 + 2] / len);
+          const q = toDisc(mapSample, .97); if (!q) continue;
           ctx.fillRect(q.x - .9, q.y - .9, 1.8, 1.8);
         }
         // Range rings and the walker.
@@ -4928,14 +4973,22 @@
       function minimapUpdate() {
         if (!mapCtx) return;
         mapBasisUpdate();
-        // One ring per frame is a full refresh in a sixth of a second; the compact tier scans
-        // every other frame (~0.3 s) to keep its heightAt budget intact.
-        if (!compact || (++mapTick & 1) === 0) {
-          mapScanRing(mapRing);
-          mapRing = (mapRing + 1) % MAP_RINGS;
-        }
-        // Redraw at 15 Hz on full detail, 7.5 Hz on compact: the scan barely moves per frame.
-        if (mapNeedsDraw || (++mapFrames % (compact ? 8 : 4)) === 0) { mapDraw(); mapNeedsDraw = false; }
+        // Turning never invalidates the cache — that is the whole point of a world-anchored patch.
+        // Only walking does, and only once the walker has used up the margin.
+        const swing = d => (d.distanceTo(state.direction) * R);
+        const drift = mapActive ? swing(mapActive.center) : Infinity;
+        if (!mapActive) mapRequestPatch(state.direction);
+        else if (drift > MAP_PATCH - MAP_RANGE) {
+          // A jump (landing, view switch) leaves the cached patch unable to reach the rim of the
+          // disc, so bake the new one in a single go instead of drawing a half-covered map. It
+          // happens behind a transition, and it beats a disc that flickers water for a fifth.
+          mapRequestPatch(state.direction);
+          while (mapJob.active) mapAdvance(1e9);
+        } else if (drift > MAP_MARGIN) mapRequestPatch(state.direction);
+        else if (mapJob.active && swing(mapJob.patch.center) > MAP_MARGIN * 2.2) mapRequestPatch(state.direction);
+        if (mapJob.active) mapAdvance(1.1);
+        // The picture is cached, so redrawing is cheap; 12 Hz is plenty for drifting fauna.
+        if (mapNeedsDraw || (++mapFrames % 5) === 0) { mapDraw(); mapNeedsDraw = false; }
       }
 
       // Optional generated soundscape: wind, a low pad, and a night shimmer.
@@ -5514,6 +5567,13 @@
       });
       setPhase('shader-compilation', 'PREPARING THE LIGHT');
       if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
+      // Bake the survey patch while the loader is still up, so the first first-person frame already
+      // has ground on the disc (and nobody ever watches it fill in).
+      if (mapCtx) {
+        mapRequestPatch(landing);
+        for (let guard = 0; mapJob.active && guard < 80; guard++) { mapAdvance(14); await yieldFrame(); }
+        mapDraw();
+      }
       renderer.shadowMap.needsUpdate=true;renderScene();
       startup.ready=true;startup.phase='running';
       status.hidden=true;document.body.classList.remove('loading');
