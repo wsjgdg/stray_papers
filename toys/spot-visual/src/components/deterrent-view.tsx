@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from "react";
 import {
   motion,
   AnimatePresence,
@@ -243,10 +250,13 @@ function Dial({
   value,
   onChange,
   realData,
+  uvNote,
 }: {
   value: number;
   onChange: (i: number) => void;
   realData: UvNow | null;
+  /** 数据来源说明：选没选目的地，取到的是谁家的天气，写清楚（不做减法，只把口径讲明） */
+  uvNote?: ReactNode;
 }) {
   // 棘轮拖动：motionX 跟手，跨 slot 边界触发短震，松手 spring 回弹到刻度
   const { motionX, handleStart, handleMove, handleEnd, snapTo } =
@@ -390,6 +400,12 @@ function Dial({
           </div>
         </div>
       </motion.div>
+
+      {uvNote && (
+        <p className="mt-2.5 mx-auto max-w-md text-center text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+          {uvNote}
+        </p>
+      )}
     </div>
   );
 }
@@ -1505,6 +1521,30 @@ export default function DeterrentView() {
     };
   }, [uvToday, timeIndex, uvWhere]);
 
+  // 数据来源说明（只加提示、不减信息）：
+  //  - 有目的地：明确是按该地坐标取的小时实测
+  //  - 没目的地：说明这是「你所在位置」的天气，并告诉用户怎么做才会换成目的地
+  //  - 没拿到：说明显示的是典型值
+  const uvNote = useMemo<ReactNode>(() => {
+    if (realData) {
+      return destCoords ? (
+        <>
+          已按「{uvWhere}」的坐标取 {TIME_PERIODS[timeIndex]?.label}（
+          {TIME_PERIODS[timeIndex]?.hour}:00）实测 UV。换个假想目的地，这里会跟着换。
+        </>
+      ) : (
+        <>
+          没选假想目的地，此刻显示的是<b>你所在位置</b>的实测天气；在上方搜一个目的地，
+          就会换成那个景点的实测值。
+        </>
+      );
+    }
+    if (destCoords)
+      return <>「{uvWhere}」该小时没取到实测数据，下面用典型值估算。</>;
+    return <>未取到实测天气（未授权定位或该小时无数据），下面用典型值估算。</>;
+  }, [realData, destCoords, uvWhere, timeIndex]);
+
+
   return (
     <div className="relative min-h-full">
       <DialBackground period={period} fromIdx={prevTimeIdx} toIdx={timeIndex} />
@@ -1558,6 +1598,7 @@ export default function DeterrentView() {
             value={timeIndex}
             onChange={handleTimeChange}
             realData={realData}
+            uvNote={uvNote}
           />
         </div>
 
