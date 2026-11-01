@@ -372,19 +372,8 @@ function Sidebar({
     <aside
       className={`hidden md:flex flex-col border-r border-gray-200 dark:border-gray-700/80 dark:border-gray-700 bg-white dark:bg-gray-900 transition-all duration-300 ${collapsed ? "w-16" : "w-52"}`}
     >
-      {/* Logo */}
-      <div className="h-16 flex items-center gap-2.5 px-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
-          <MapPin className="w-4.5 h-4.5 text-white" />
-        </div>
-        {!collapsed && (
-          <span className="font-bold text-gray-900 dark:text-gray-100 text-sm truncate">
-            景点览胜
-          </span>
-        )}
-      </div>
-      {/* Nav（按相近用途分组） */}
-      <nav className="flex-1 py-3 px-2 space-y-1">
+      {/* Nav（按相近用途分组）——模块品牌由全局 TopNav 承担，侧栏不再自挂 logo */}
+      <nav className="flex-1 pt-4 py-3 px-2 space-y-1 overflow-y-auto">
         {NAV_GROUPS.map((group) => (
           <div key={group.title} className="mb-1">
             {!collapsed && (
@@ -527,9 +516,11 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
                   });
               }}
               onClick={() => setActiveView(item.key)}
-              className={`flex-1 min-w-0 py-2 text-[11px] font-medium text-center transition-colors shrink-0 ${active ? "text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600" : "text-gray-400 dark:text-gray-500"}`}
+              // 不能 flex-1：13 个视图等分 390px 会把每个标签压成「景…」一个字。
+              // 按内容宽度排列 + 容器横向滚动，标签才读得出来。
+              className={`shrink-0 px-3 py-2 text-[11px] font-medium text-center whitespace-nowrap transition-colors ${active ? "text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600" : "text-gray-400 dark:text-gray-500"}`}
             >
-              <span className="block truncate px-0.5" title={item.label}>
+              <span className="block" title={item.label}>
                 {item.label}
               </span>
             </button>
@@ -553,14 +544,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         exit={{ x: -260 }}
         className="absolute left-0 top-0 bottom-0 w-60 bg-white dark:bg-gray-900 shadow-xl p-4 pt-6"
       >
-        <div className="flex items-center gap-2.5 mb-6 px-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-            <MapPin className="w-4.5 h-4.5 text-white" />
-          </div>
-          <span className="font-bold text-gray-900 dark:text-gray-100 text-sm">
-            景点览胜
-          </span>
-        </div>
+        {/* 模块品牌由全局 TopNav 承担，抽屉不再自挂 logo */}
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
             const active = activeView === item.key;
@@ -2366,6 +2350,17 @@ function SpotsView() {
     return base;
   }, [citiesExpanded, cityFilter]);
 
+  // 反向入口：选中某省时给「看该省味道」——中国味道那边已经能跳过来，
+  // 这边以前是单向的，看完广东景点想看看广东吃什么只能自己回 /food 再找。
+  const foodProv = useMemo(() => {
+    if (!cityFilter) return null;
+    return (
+      PROVINCE_FOODS.find(
+        (p) => p.name === cityFilter || p.fullName === cityFilter,
+      ) ?? null
+    );
+  }, [cityFilter]);
+
   // ═══ 筛选 ↔ URL 同步：?prov=广东&cat=自然风光&lv=5A&q=古镇 ═══
   // 以前筛选只写在 localStorage 里：链接发给别人，对方看到的是全国；
   // 而「中国味道」早就是 ?prov= 可分享的，两页口径不一致。
@@ -3015,6 +3010,18 @@ function SpotsView() {
             返回全国
           </button>
         )}
+        {foodProv && (
+          <a
+            href={withSharecode(
+              `/food?prov=${encodeURIComponent(foodProv.name)}`,
+            )}
+            className="ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 font-medium"
+            title={`去中国味道看「${foodProv.name}」的代表菜与口味`}
+          >
+            <UtensilsCrossed className="w-3 h-3" />
+            看该省味道
+          </a>
+        )}
       </p>
       {/* Content */}
       {filteredSpots.length === 0 ? (
@@ -3649,13 +3656,17 @@ export default function Home() {
 
   return (
     <div className="min-h-[calc(100vh-52px)] flex flex-col bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50">
+      {/* 移动端头部必须待在这层（垂直流），不能放进下面那个横向 flex：
+          它 md:hidden，在横向 flex 里是个 display:block 的兄弟项，
+          会把 main（flex-1 min-w-0）压成 0 宽——移动端整片内容变成空白。
+          桌面端它 display:none 不占位，所以这个坑一直没被桌面端的验收发现。 */}
+      <MobileHeader onMenuOpen={() => setMobileMenu(true)} />
+      <MobileMenu open={mobileMenu} onClose={() => setMobileMenu(false)} />
       <div className="flex flex-1 min-h-0">
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
-        <MobileHeader onMenuOpen={() => setMobileMenu(true)} />
-        <MobileMenu open={mobileMenu} onClose={() => setMobileMenu(false)} />
         <main className="flex-1 min-w-0 overflow-hidden">
           <div className="h-full flex flex-col">
             {/* Desktop header bar */}
@@ -3664,7 +3675,7 @@ export default function Home() {
                 {NAV_ITEMS.find((n) => n.key === activeView)?.label}
               </h2>
               <div className="text-xs text-gray-400 dark:text-gray-500">
-                景点览胜 · 支持自定义 JSON 导入
+                支持自定义 JSON 导入
               </div>
             </div>
             {/* Content area */}
