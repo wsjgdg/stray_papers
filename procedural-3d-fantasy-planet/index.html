@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="quiet-look-13">
+  <meta name="aetheris-build" content="still-water-14">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,6 +72,7 @@
       z-index: 2;
       pointer-events: none;
       background:
+        radial-gradient(135% 105% at 50% 44%, rgba(2, 7, 13, 0) 42%, rgba(2, 7, 13, .30) 78%, rgba(2, 7, 13, .52) 100%),
         linear-gradient(90deg, rgba(4, 12, 24, .74) 0%, rgba(4, 12, 24, .42) 21%, rgba(4, 12, 24, .03) 53%, transparent 75%),
         linear-gradient(0deg, rgba(3, 9, 18, .78) 0%, transparent 19%, transparent 80%, rgba(3, 9, 18, .3) 100%);
       transition: opacity 1.1s ease;
@@ -286,7 +287,7 @@
       .switch-button .keycap { display: none; }
       .switch-button svg { width: 17px; height: 17px; }
       .pointer-prompt { display: none; }
-      .shade { background: linear-gradient(180deg, rgba(3, 11, 22, .66) 0%, rgba(3, 11, 22, .25) 35%, transparent 60%, rgba(3, 11, 22, .65) 100%); }
+      .shade { background: radial-gradient(140% 110% at 50% 42%, rgba(2, 7, 13, 0) 44%, rgba(2, 7, 13, .26) 80%, rgba(2, 7, 13, .46) 100%), linear-gradient(180deg, rgba(3, 11, 22, .66) 0%, rgba(3, 11, 22, .25) 35%, transparent 60%, rgba(3, 11, 22, .65) 100%); }
       .mobile-controls { display: block; position: absolute; inset: 0; z-index: 5; pointer-events: none; }
       .mobile-controls button, .joystick { pointer-events: auto; touch-action: none; }
       body.touch .mobile-hint { display: block; position: absolute; z-index: 5; left: 25px; bottom: calc(94px + env(safe-area-inset-bottom)); color: #b3c9c5; font-size: 8px; font-weight: 700; letter-spacing: .13em; pointer-events: none; }
@@ -426,7 +427,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'quiet-look-13';
+    const BUILD_ID = 'still-water-14';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -692,17 +693,38 @@
       let composer = null, bloomPass = null, bloomOn = false;
       if (!compact) {
         try {
-          const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
+          const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { ShaderPass }] = await Promise.all([
             import('three/addons/postprocessing/EffectComposer.js'),
             import('three/addons/postprocessing/RenderPass.js'),
             import('three/addons/postprocessing/UnrealBloomPass.js'),
-            import('three/addons/postprocessing/OutputPass.js')
+            import('three/addons/postprocessing/OutputPass.js'),
+            import('three/addons/postprocessing/ShaderPass.js')
           ]);
           composer = new EffectComposer(renderer);
           composer.addPass(new RenderPass(scene, camera));
-          bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .34, .55, .96);
+          bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .22, .62, 1.02);
           composer.addPass(bloomPass);
           composer.addPass(new OutputPass());
+          // Filmic grade applied after tone mapping, i.e. in display space: a gentle S-curve,
+          // cool shadows / warm highlights, and a whisker more chroma. Strength is deliberately
+          // low — it should read as "photographed", never as a filter.
+          composer.addPass(new ShaderPass({
+            uniforms: { tDiffuse: { value: null }, uAmount: { value: 1 } },
+            vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+            fragmentShader: `
+              uniform sampler2D tDiffuse; uniform float uAmount; varying vec2 vUv;
+              void main(){
+                vec3 c = texture2D(tDiffuse, vUv).rgb;
+                float l = dot(c, vec3(.2126, .7152, .0722));
+                vec3 sCurve = c * c * (3.0 - 2.0 * c);
+                vec3 g = mix(c, sCurve, .26 * uAmount);
+                g *= mix(vec3(.965, .995, 1.045), vec3(1.035, 1.005, .962), smoothstep(.12, .82, l));
+                float lg = dot(g, vec3(.2126, .7152, .0722));
+                g = mix(vec3(lg), g, 1.0 + .07 * uAmount);
+                gl_FragColor = vec4(clamp(g, 0.0, 1.0), 1.0);
+              }
+            `
+          }));
           composer.renderTarget1.samples = 4;
           composer.renderTarget2.samples = 4;
           composer.setPixelRatio(renderer.getPixelRatio());
@@ -1641,7 +1663,7 @@
             // Physical Beer-Lambert depth extinction + clear moonlight penetration in crystal shallows.
             vec3 sandFloor = vec3(.42, .39, .28) * (.82 + wnA.b * .28);
             vec3 transmittance = exp(-depth * vec3(22.0, 5.8, 4.1));
-            vec3 scatterColor = mix(vec3(.028, .36, .31), vec3(.004, .038, .098), smoothstep(.02, .28, depth));
+            vec3 scatterColor = mix(vec3(.022, .178, .162), vec3(.004, .020, .046), smoothstep(.02, .28, depth));
             vec3 body = (sandFloor * transmittance + scatterColor * (1.0 - transmittance)) * (.30 + day * .88);
 
             // Refracted Voronoi optical caustics dancing across shallow seabeds.
@@ -1654,7 +1676,7 @@
 
             // Subsurface emerald glow through backlit wave crests & shoaling rollers.
             float sss = pow(clamp(dot(view, -uSun) * .5 + .5, 0.0, 1.0), 3.8) * smoothstep(-.1, .65, crest) * day * near;
-            body += vec3(.035, .30, .24) * sss * 1.18;
+            body += vec3(.016, .115, .098) * sss * .72;
 
             vec3 color = mix(body, skyColor, fresnel);
             float cover = cloudCoverAt(vWorld, uSun);
@@ -1690,12 +1712,12 @@
             vec3 foamColor = vec3(.88, .96, .95) * foamShade * (.42 + day * .58) + vec3(.5, .42, .32) * twilight * foamShade * .3;
             // Bioluminescent dinoflagellate plankton ("sea sparkle") igniting surf, whitecaps & shallow reefs on the dark side.
             float planktonPulse = .75 + .25 * sin(uTime * 1.9 + wnA.b * 9.0);
-            vec3 bioPlankton = mix(vec3(.06, .88, .96), vec3(.22, 1.0, .74), foamCells) * night * planktonPulse;
-            foamColor += bioPlankton * (.55 + shoreSwash * .85);
+            vec3 bioPlankton = mix(vec3(.05, .48, .56), vec3(.14, .58, .44), foamCells) * night * planktonPulse;
+            foamColor += bioPlankton * (.16 + shoreSwash * .30);
             color = mix(color, foamColor, totalFoam * .88);
             color += vec3(.05, .22, .2) * shoreSwash * day * .42;
             float reefGlow = smoothstep(.11, .004, depth) * wnA.b * night;
-            color += vec3(.04, .46, .52) * reefGlow * (.55 + .45 * near) + bioPlankton * surfRoller * .42;
+            color += vec3(.028, .175, .205) * reefGlow * (.30 + .22 * near) + bioPlankton * surfRoller * .16;
 
             // Feather ultra-thin water edge smoothly into wet coastal sand to eliminate hard shoreline jag.
             vec3 wetEdgeSand = vec3(.14, .125, .095) * (.38 + day * .75);
@@ -1761,11 +1783,11 @@
             float sunDot=dot(n,uSun);
             float day=smoothstep(-.55,.75,sunDot);
             // Rayleigh-like blue limb, warm terminator scattering, plus nocturnal airglow & aurora veil on the dark hemisphere.
-            vec3 color=mix(vec3(.075,.20,.38),vec3(.16,.48,.86)*.78,day);
+            vec3 color=mix(vec3(.052,.115,.20),vec3(.14,.34,.62)*.8,day);
             float nightAirglow = (1.0 - day) * (.65 + .35 * sin(n.y * 9.0 + n.x * 5.0));
-            color += vec3(.05,.24,.22) * nightAirglow * .55;
+            color += vec3(.026,.105,.108) * nightAirglow * .34;
             float terminator=(1.0-smoothstep(0.0,.42,abs(sunDot)))*smoothstep(-.32,.08,sunDot);
-            color+=vec3(.92,.4,.13)*terminator*.6;
+            color+=vec3(.90,.42,.16)*terminator*.52;
             float forward=pow(max(dot(ray,uSun),0.0),7.0);
             color+=vec3(1.0,.78,.5)*forward*.55*smoothstep(-.4,.2,sunDot);
             gl_FragColor=vec4(color,edge*density*.78);
@@ -1785,12 +1807,12 @@
             vec3 ray=normalize(vSkyPosition-cameraPosition);
             float altitude=clamp(dot(ray,uUp),0.0,1.0), sunHeight=dot(uSun,uUp);
             float day=smoothstep(-.23,.28,sunHeight);
-            vec3 horizon=mix(vec3(.028,.062,.105),vec3(.16,.29,.32),day);
-            vec3 zenith=mix(vec3(.007,.020,.048),vec3(.012,.065,.14),day);
+            vec3 horizon=mix(vec3(.022,.046,.082),vec3(.168,.262,.300),day);
+            vec3 zenith=mix(vec3(.005,.014,.036),vec3(.014,.046,.105),day);
             vec3 color=mix(horizon,zenith,pow(altitude,.42));
             // Subtle nocturnal aurora ribbon arching across the dark sky.
             float auroraBand=exp(-pow((altitude-.34)*5.5 + sin(ray.x*4.2+ray.z*3.6)*.45, 2.0));
-            color += vec3(.04,.20,.19) * auroraBand * (1.0 - day) * .55;
+            color += vec3(.022,.098,.108) * auroraBand * (1.0 - day) * .34;
             float glow=pow(max(dot(ray,uSun),0.0),12.0)*(1.0-smoothstep(.03,.5,abs(sunHeight)));
             color+=vec3(.36,.13,.035)*glow*.7;
             float sunAlign=dot(ray,uSun);
@@ -2579,11 +2601,11 @@
               float cardBacklit = pow(max(dot(normalize(vViewPosition), -cardSunView), 0.0), 4.2);
               float cardSunSide = smoothstep(-.05, .32, dot(normalize(vCardTreeUp), uForestSun));
               float cardFoliage = smoothstep(.01, .06, diffuseColor.g - diffuseColor.r * .78) * leafSurface.b;
-              totalEmissiveRadiance += diffuseColor.rgb * vec3(1.18, 1.08, .52) * cardBacklit * cardSunSide * cardFoliage * .72;
+              totalEmissiveRadiance += diffuseColor.rgb * vec3(1.16, 1.06, .58) * cardBacklit * cardSunSide * cardFoliage * .44;
               float cardNight = 1.0 - smoothstep(-.18, .32, dot(normalize(vCardTreeUp), uForestSun));
               float cardPulse = .82 + .18 * sin(uForestTime * 1.05 + vCardPosition.y * 22.0 + vCardPosition.x * 15.0);
-              vec3 bioTint = mix(vec3(.07, .82, .68), vec3(.22, .95, .52), smoothstep(.08, .25, vCardPosition.y));
-              totalEmissiveRadiance += (diffuseColor.rgb * .28 + bioTint * cardFoliage * ${glowStrength.toFixed(2)}) * cardNight * cardPulse;
+              vec3 bioTint = mix(vec3(.05, .44, .38), vec3(.13, .55, .33), smoothstep(.08, .25, vCardPosition.y));
+              totalEmissiveRadiance += (diffuseColor.rgb * .13 + bioTint * cardFoliage * ${(glowStrength * .52).toFixed(2)}) * cardNight * cardPulse;
             `);
         };
         material.customProgramCacheKey = () => cacheKey + '-' + BUILD_ID;
@@ -2680,17 +2702,17 @@
           vec3 sunView = normalize((viewMatrix * vec4(uForestSun, 0.0)).xyz);
           float backlit = pow(max(dot(normalize(vViewPosition), -sunView), 0.0), 5.0);
           float sunSide = smoothstep(-.05, .3, dot(normalize(vTreeUp), uForestSun));
-          totalEmissiveRadiance += diffuseColor.rgb * vec3(1.15, 1.05, .55) * backlit * canopyMask * sunSide * .55;
+          totalEmissiveRadiance += diffuseColor.rgb * vec3(1.12, 1.03, .60) * backlit * canopyMask * sunSide * .38;
           float veins = mix(.28,pow(.5+.5*sin(vLeafPosition.y*520.0+sin(vLeafPosition.x*260.0)*2.0+vLeafPosition.z*210.0),8.0),1.0-smoothstep(.0008,.0045,leafPixel));
           float barkMycelium = smoothstep(.62, .88, 1.0 - barkHeight) * barkMask;
-          float pulse = .84 + .16 * sin(uForestTime * .95 + vLeafPosition.y * 16.0);
-          totalEmissiveRadiance += (diffuseColor.rgb * .24 + vec3(.04,.52,.38)*canopyMask*veins + vec3(.08,.65,.58)*barkMycelium*.45) * night * pulse;
+          float pulse = .90 + .10 * sin(uForestTime * .95 + vLeafPosition.y * 16.0);
+          totalEmissiveRadiance += (diffuseColor.rgb * .10 + vec3(.030,.185,.158)*canopyMask*veins + vec3(.048,.255,.235)*barkMycelium*.22) * night * pulse;
         `);
       };
       treeMaterial.customProgramCacheKey = () => 'aetheris-living-canopy-' + BUILD_ID;
       const rockMaterial = surfaceMaterial('rock');
       // Luminous mineral clusters: subtle crystal sheen by day, intense multi-hue mineral beacon on the dark hemisphere.
-      const crystalMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .18, metalness: .16, emissive: 0x1e8f82, emissiveIntensity: .45 });
+      const crystalMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .22, metalness: .18, emissive: 0x1e8f82, emissiveIntensity: .20 });
       crystalMaterial.onBeforeCompile = shader => {
         shader.uniforms.uMineralSun = { value: sun };
         shader.uniforms.uPulseTime = pulseTime;
@@ -2714,7 +2736,7 @@
             float hueVar = fract(sin(dot(floor(vCrystalWorld * 14.0), vec3(12.9898, 78.233, 37.719))) * 43758.5453);
             vec3 mineralHue = hueVar < .45 ? vec3(.16, 1.05, .88) : hueVar < .78 ? vec3(.34, .68, 1.18) : vec3(1.12, .72, .26);
             float pulse = .82 + .18 * sin(uPulseTime * 1.8 + hueVar * 12.0);
-            totalEmissiveRadiance += mineralHue * (.32 + tipGlow * 1.15) * (.18 + night * 1.45) * pulse;
+            totalEmissiveRadiance += mineralHue * (.16 + tipGlow * .62) * (.10 + night * .72) * pulse;
           `);
       };
       crystalMaterial.customProgramCacheKey = () => 'aetheris-mineral-crystal-' + BUILD_ID;
@@ -2741,7 +2763,7 @@
               float night = 1.0 - smoothstep(-.2, .3, dot(normalize(vBioWorld), uBioSun));
               float crown = smoothstep(${tipThreshold}, ${tipThreshold} + .035, vBioLocal.y);
               float pulse = .84 + .16 * sin(uPulseTime * 1.4 + vBioWorld.x * 9.0);
-              totalEmissiveRadiance += (diffuseColor.rgb * .26 + ${glowColor} * crown * .95) * night * pulse;
+              totalEmissiveRadiance += (diffuseColor.rgb * .11 + ${glowColor} * crown * .48) * night * pulse;
             `);
         };
         mat.customProgramCacheKey = () => key + '-' + BUILD_ID;
@@ -2878,7 +2900,7 @@
           void main(){
             vec3 drift = position + vec3(sin(uTime*.55+aPhase), sin(uTime*.38+aPhase*1.7), cos(uTime*.46+aPhase))*.028;
             float night=1.0-smoothstep(-.18,.36,dot(normalize(drift),uSun));
-            vGlow=(.06+night*1.05)*(.68+.32*sin(uTime*1.15+aPhase))*(1.0+uEventGlow*2.4);
+            vGlow=(.04+night*.58)*(.68+.32*sin(uTime*1.15+aPhase))*(1.0+uEventGlow*2.4);
             vHue=fract(aPhase * .3183);
             vec4 p=modelViewMatrix*vec4(drift,1.0);
             gl_PointSize=clamp(26.0*uRatio/max(.28,-p.z),1.4,24.0*uRatio);
@@ -3156,8 +3178,8 @@
           `);
       };
       bronzeMaterial.customProgramCacheKey = () => 'aetheris-bronze-patina-1';
-      const runeMaterial = new THREE.MeshStandardMaterial({ color: 0xbaf5e6, emissive: 0x3adcc4, emissiveIntensity: 2.2, roughness: .26, metalness: .14 });
-      const lanternMaterial = new THREE.MeshStandardMaterial({ color: 0xfff0c8, emissive: 0xffb648, emissiveIntensity: 2.5, roughness: .22, metalness: .1 });
+      const runeMaterial = new THREE.MeshStandardMaterial({ color: 0xbaf5e6, emissive: 0x3adcc4, emissiveIntensity: 1.45, roughness: .3, metalness: .14 });
+      const lanternMaterial = new THREE.MeshStandardMaterial({ color: 0xfff0c8, emissive: 0xffb648, emissiveIntensity: 1.8, roughness: .26, metalness: .1 });
       const beaconMaterial = new THREE.MeshBasicMaterial({ color: 0x6af0d8, transparent: true, opacity: .16, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
       const ruinGlowMaterial = new THREE.SpriteMaterial({ map: softGlow, color: 0x74e8d2, transparent: true, opacity: .36, depthWrite: false, blending: THREE.AdditiveBlending });
       const lanternGlowMaterial = new THREE.SpriteMaterial({ map: softGlow, color: 0xffca72, transparent: true, opacity: .34, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -4415,29 +4437,30 @@
         updateEvents(dt, daylight);
         const eventChill=eventFx.chill;
         skyUniforms.uChill.value=eventChill;
-        // Soften night fog slightly and tint with luminous blue-teal airglow so distant nocturnal mountains remain ~80% readable.
-        scene.fog.density=skyUniforms.uGround.value*(.085+dayAmount*.035)*fogWeather;
-        scene.fog.color.setRGB(.032+dayAmount*.048,.066+dayAmount*.082,.102+dayAmount*.072);
+        // Aerial perspective only: a neutral blue-grey haze, denser by day so distance reads as depth.
+        scene.fog.density=skyUniforms.uGround.value*(.076+dayAmount*.030)*fogWeather;
+        // Neutral blue-grey haze: aerial perspective reads as distance, not as coloured fog.
+        scene.fog.color.setRGB(mix(.024,.118,dayAmount),mix(.038,.158,dayAmount),mix(.054,.176,dayAmount));
         scene.fog.color.lerp(weather.tint, weatherNow.tintAmount * (surface ? .76 : .2));
         if (eventFx.tint > 0) scene.fog.color.lerp(eventTint, eventFx.tint * .55);
         if (eventChill > 0) scene.fog.density *= 1 + eventChill * .35;
         waterUniforms.uFogColor.value.copy(scene.fog.color);
         waterUniforms.uFogDensity.value=scene.fog.density;
         hemi.position.copy(surface?state.direction:UP);
-        hemi.intensity=((surface ? .56+dayAmount*.22 : .64) * (0.45 + weatherNow.light * .55) + weather.flash * .38) * (1 - eventChill * .42);
+        hemi.intensity=((surface ? .40+dayAmount*.16 : .48) * (0.45 + weatherNow.light * .55) + weather.flash * .38) * (1 - eventChill * .42);
         const warm=smooth(-.02,.32,daylight);
         sunlight.color.setRGB(1,.82+warm*.13,.58+warm*.24);
-        sunlight.intensity=((2.35+warm*.42) * weatherNow.light + weather.flash * .45) * (1 - eventChill * .93);
-        moonlight.intensity=(.22+nightAmount*.62) * (0.6 + weatherNow.light * .4);
+        sunlight.intensity=((2.62+warm*.34) * weatherNow.light + weather.flash * .45) * (1 - eventChill * .93);
+        moonlight.intensity=(.15+nightAmount*.38) * (0.6 + weatherNow.light * .4);
         // Anti-solar starlight fill always illuminates the planet's dark hemisphere evenly.
         antiSunLight.position.copy(sun).multiplyScalar(-24);
-        antiSunLight.intensity=(surface ? .52 + nightAmount * .46 : .72) * (0.55 + weatherNow.light * .45) * (1 + eventChill * .2);
+        antiSunLight.intensity=(surface ? .34 + nightAmount * .27 : .48) * (0.55 + weatherNow.light * .45) * (1 + eventChill * .2);
         hemi.color.setRGB(.48+dayAmount*.20,.64+dayAmount*.15,.78+dayAmount*.07);
         hemi.groundColor.setRGB(.12+dayAmount*.04,.18+dayAmount*.03,.17+dayAmount*.02);
-        renderer.toneMappingExposure=(surface ? 1.18 - dayAmount * .04 : 1.16) * (0.88 + weatherNow.light * .12) * (1 - eventChill * .14);
+        renderer.toneMappingExposure=(surface ? 1.11 - dayAmount * .015 : 1.10) * (0.88 + weatherNow.light * .12) * (1 - eventChill * .14);
         clouds[0].material.color.setRGB(.42+dayAmount*.58,.50+dayAmount*.50,.58+dayAmount*.42);
         clouds[1].material.color.setRGB(.46+dayAmount*.54,.54+dayAmount*.46,.62+dayAmount*.38);
-        clouds[0].material.opacity = .48 + weatherNow.cloud * .4;
+        clouds[0].material.opacity = .40 + weatherNow.cloud * .38;
         clouds[1].material.opacity = .18 + weatherNow.cloud * .28;
         stars.material.opacity=clamp(.9*(1-skyUniforms.uGround.value*dayAmount*.94)*(1-weatherNow.cloud*.22) + eventChill*.55, 0, 1);
         sunSprite.material.opacity=.9 * weatherNow.light * (1 - eventChill*.72);
