@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="province-flora-25">
+  <meta name="aetheris-build" content="built-mass-26">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'province-flora-25';
+    const BUILD_ID = 'built-mass-26';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3152,9 +3152,11 @@
         { min: .052, max: .30, near: 20, grove: true, size: [.58, 1.16] },
         { min: .040, max: .26, near: 16, grove: true, size: [.60, 1.22] },
         { min: .016, max: .13, near: 14, damp: true, size: [.78, 1.42] },
-        { count: compact ? 140 : 400, min: .09, max: .54, near: 10, size: [.62, 1.5] },
-        { count: compact ? 150 : 340, min: .024, max: .48, near: 16, size: [.72, 1.72] },
-        { count: compact ? 34 : 90, min: .25, max: .66, near: 0, crag: true, biomes: ['alpine', 'volcanic'], size: [.8, 1.65] },
+        { count: compact ? 190 : 540, min: .09, max: .54, near: 12, size: [.62, 1.5] },
+        // Crystals are no longer scattered planet-wide: their count is the provincial quota in
+        // PROVINCE_CRYSTAL below, and only the height band and size band live here.
+        { count: 0, min: .024, max: .48, near: 16, size: [.72, 1.72] },
+        { count: compact ? 44 : 120, min: .25, max: .66, near: 0, crag: true, biomes: ['alpine', 'volcanic'], size: [.8, 1.65] },
         { min: .014, max: .15, near: 8, size: [.72, 1.25] },
         { min: .045, max: .30, near: 0, size: [.55, 1.15] },
         { min: .022, max: .34, near: 0, size: [.70, 1.55] },
@@ -3218,6 +3220,10 @@
           spores.push(glow.x, glow.y, glow.z); sporePhases.push(rng() * TAU);
         }
       }
+      // Crystals are not ground cover. They belong to the two provinces whose geology actually makes
+      // them — vessper's impact basin and sennar's volcanic glass — and nowhere else; the rest of the
+      // planet gets stone and crags, which is also why vessper reads as mineral rather than barren.
+      const PROVINCE_CRYSTAL = { vessper: compact ? 150 : 340, sennar: compact ? 22 : 48 };
       const forestRandom = seeded(51377), landingProvince = provinceAt(landing);
       // A pool of land sites per province, sampled once. Each species then draws its candidates from
       // its own province's pool: no planet-wide rejection sampling, and a province that cannot grow
@@ -3231,13 +3237,14 @@
           const h = heightAt(n);
           if (h < SEA + .004 || h > .52) continue;
           const id = provinceAt(n);
-          if (!PROVINCE_FLORA[id]) continue;
+          if (!PROVINCE_FLORA[id] && !PROVINCE_CRYSTAL[id]) continue;
           (landPool[id] || (landPool[id] = [])).push({ n, h });
         }
       }
       const poolUsed = {};
-      // 1. Ground: boulders, crystals and crags follow geology, not climate — they are everywhere.
-      for (const type of [ROCK, CRYSTAL, CRAG]) {
+      // 1. Ground: boulders and crags are geology and appear everywhere; crystal is provincial and
+      //    handled in pass 3, after the pools are known.
+      for (const type of [ROCK, CRAG]) {
         const rule = speciesRules[type];
         let placed = 0;
         for (let attempts = 0; placed < rule.count && attempts < rule.count * 45; attempts++) {
@@ -3281,6 +3288,24 @@
             if (rule.grove && noise(site.n.x * 10 + 23, site.n.y * 10 - 7, site.n.z * 10) < -.28) continue;
             if (rule.damp && noise(site.n.x * 5.5 - 4, site.n.y * 5.5 + 12, site.n.z * 5.5 + 3) < .05) continue;
             plant(type, site.n, site.h, rule.size[0] + forestRandom() * (rule.size[1] - rule.size[0]), forestRandom);
+            used[index] = 1; placed++;
+          }
+          await yieldFrame();
+        }
+      }
+      // 3. Crystals: only where the ground makes them.
+      {
+        const rule = speciesRules[CRYSTAL];
+        for (const [province, count] of Object.entries(PROVINCE_CRYSTAL)) {
+          const pool = landPool[province] || [];
+          const used = poolUsed[province] = poolUsed[province] || new Uint8Array(pool.length);
+          const order = pool.map((_, i) => i);
+          for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(forestRandom() * (i + 1)); const swap = order[i]; order[i] = order[j]; order[j] = swap; }
+          let placed = 0;
+          for (let c = 0; c < order.length && placed < count; c++) {
+            const index = order[c], site = pool[index];
+            if (used[index] || site.h < rule.min || site.h > rule.max) continue;
+            plant(CRYSTAL, site.n, site.h, rule.size[0] + forestRandom() * (rule.size[1] - rule.size[0]), forestRandom);
             used[index] = 1; placed++;
           }
           await yieldFrame();
@@ -3993,29 +4018,207 @@
       // wells in Sennar, observatory domes on Caelth, stilt rings in Mirella, crystal shards on
       // Vessper. Clusters are static and instanced, so crossing a border changes the skyline.
       const provinceMat = {
-        // Provincial materials are mid-tone on purpose: the old near-black basalt read as sticks
-        // against the terrain, not as built mass.
-        timber: new THREE.MeshStandardMaterial({ color: 0x8b7a5d, roughness: .92, metalness: 0 }),
-        basalt: new THREE.MeshStandardMaterial({ color: 0x7d7468, roughness: .84, metalness: .06 }),
-        pale: new THREE.MeshStandardMaterial({ color: 0xc6c1ad, roughness: .78, metalness: .02 }),
-        glass: new THREE.MeshStandardMaterial({ color: 0xb6ded4, roughness: .30, metalness: .34, emissive: 0x2f7a6f, emissiveIntensity: .60 }),
-        crystal: new THREE.MeshStandardMaterial({ color: 0xb4cfe0, roughness: .20, metalness: .10, emissive: 0x5a8db2, emissiveIntensity: .42 }),
-        lamp: new THREE.MeshStandardMaterial({ color: 0x2a1c10, roughness: .55, metalness: .08, emissive: 0xffb35e, emissiveIntensity: 1.7 })
+        // Province materials multiply their own baked vertex tints (plinth, body, cornice, window
+        // recess), so the building reads as assembled mass rather than one flat colour.
+        timber: new THREE.MeshStandardMaterial({ color: 0x9c8a6a, vertexColors: true, roughness: .92, metalness: 0, dithering: true }),
+        basalt: new THREE.MeshStandardMaterial({ color: 0x8c8275, vertexColors: true, roughness: .84, metalness: .06, dithering: true }),
+        pale: new THREE.MeshStandardMaterial({ color: 0xd2ccb8, vertexColors: true, roughness: .78, metalness: .02, dithering: true }),
+        glass: new THREE.MeshStandardMaterial({ color: 0xb6ded4, vertexColors: true, roughness: .30, metalness: .34, emissive: 0x2f7a6f, emissiveIntensity: .40 }),
+        crystal: new THREE.MeshStandardMaterial({ color: 0xb4cfe0, vertexColors: true, roughness: .20, metalness: .10, emissive: 0x5a8db2, emissiveIntensity: .26 }),
+        lamp: new THREE.MeshStandardMaterial({ color: 0x2a1c10, vertexColors: true, roughness: .55, metalness: .08, emissive: 0xffb35e, emissiveIntensity: 1.7 })
       };
+      // ---- Provincial building parts ----------------------------------------------------------
+      // A part is one unit: 1 wide, 1 deep, 1 tall, origin at its base, centred in x/z. An instance
+      // is then simply "how wide, how tall, how deep". Every part bakes its own vertex tint, which
+      // is what stops a house reading as one flat slab: plinth, plinth cap, battered body, cornice,
+      // window recesses, sill and lintel all live in the same geometry and the same draw call.
+      const partTint = (geometry, color, variation = .09) => bakeColor(geometry, color, variation);
+      const partBox = (w, h, d, color, y, tx = 0, tz = 0, variation = .09) => {
+        const g = new THREE.BoxGeometry(w, h, d);
+        g.translate(tx, y + h / 2, tz);
+        return partTint(g, color, variation);
+      };
+      // Walls: plinth, battered body, cornice, three recessed windows, one door.
+      function wallPart() {
+        const parts = [
+          partBox(1.10, .070, 1.10, '#ada695', 0),
+          partBox(1.15, .022, 1.15, '#ded8c8', .070)
+        ];
+        const body = new THREE.BoxGeometry(.98, .80, .98, 1, 3, 1);
+        const p = body.attributes.position;
+        for (let i = 0; i < p.count; i++) {
+          const t = (p.getY(i) + .40) / .80;
+          p.setXYZ(i, p.getX(i) * (1 - .055 * t), p.getY(i), p.getZ(i) * (1 - .055 * t));
+        }
+        body.translate(0, .092 + .40, 0);
+        body.computeVertexNormals();
+        parts.push(partTint(body, '#e8e3d8', .10));
+        parts.push(partBox(1.07, .042, 1.07, '#ffffff', .892));
+        for (const [nx, nz] of [[1, 0], [-1, 0], [0, 1]]) {
+          const xFace = nx !== 0, px = nx * .488, pz = nz * .488;
+          parts.push(partBox(xFace ? .026 : .30, .27, xFace ? .30 : .026, '#4b4840', .30, px, pz, .05));
+          parts.push(partBox(xFace ? .040 : .35, .022, xFace ? .35 : .040, '#ffffff', .282, px + nx * .004, pz + nz * .004, .05));
+          parts.push(partBox(xFace ? .040 : .35, .022, xFace ? .35 : .040, '#ffffff', .578, px + nx * .004, pz + nz * .004, .05));
+        }
+        parts.push(partBox(.33, .50, .028, '#3d3a34', .092, 0, -.489, .06));
+        parts.push(partBox(.40, .026, .046, '#ffffff', .592, 0, -.497, .06));
+        return join(parts);
+      }
+      // A gabled roof with overhanging eaves: box, ridge collapsed, fascia and a ridge beam.
+      function gablePart() {
+        const W = .60, D = .55, rise = 1;
+        const roof = new THREE.BoxGeometry(W * 2, rise, D * 2, 1, 1, 1);
+        const p = roof.attributes.position;
+        for (let i = 0; i < p.count; i++) if (p.getY(i) > 0) p.setX(i, 0);
+        roof.translate(0, rise * .5, 0);
+        roof.computeVertexNormals();
+        const parts = [partTint(roof, '#ffffff', .10)];
+        for (const sz of [-1, 1]) parts.push(partBox(W * 2.04, .030, .045, '#c8c1b0', -.012, 0, sz * D, .06));
+        for (const sx of [-1, 1]) parts.push(partBox(.045, .030, D * 2.04, '#c8c1b0', -.012, sx * W, 0, .06));
+        parts.push(partBox(.048, .040, D * 1.92, '#b3ab99', rise - .012, 0, 0, .05));
+        for (const sz of [-1, 1]) parts.push(partBox(W * 1.96, .026, .05, '#d6cfbe', .055, 0, sz * D * .52, .05));
+        return join(parts);
+      }
+      // A hipped roof: four slopes to an apex, with a lifted eave and a finial.
+      function hipPart() {
+        const cone = new THREE.ConeGeometry(.86, 1, 4, 1);
+        cone.rotateY(Math.PI / 4);
+        cone.scale(1 / .86 * .74, 1, 1 / .86 * .74);
+        cone.translate(0, .5, 0);
+        cone.computeVertexNormals();
+        const parts = [partTint(cone, '#ffffff', .09)];
+        for (const [sx, sz, w, d] of [[0, -1, 1.12, .05], [0, 1, 1.12, .05], [-1, 0, .05, 1.12], [1, 0, .05, 1.12]]) {
+          parts.push(partBox(w, .034, d, '#cdc6b4', -.014, sx * .52, sz * .52, .06));
+        }
+        parts.push(partBox(.05, .05, .05, '#e6dfcd', 1.0, 0, 0, .05));
+        return join(parts);
+      }
+      // A flared spire: pagoda-like cone for towers and round halls.
+      function spirePart() {
+        const cone = new THREE.ConeGeometry(.62, 1, 10, 3);
+        const p = cone.attributes.position;
+        for (let i = 0; i < p.count; i++) {
+          const y = p.getY(i), t = (y + .5);
+          const flare = 1 + Math.pow(1 - t, 2.2) * .55;
+          p.setXYZ(i, p.getX(i) * flare, y, p.getZ(i) * flare);
+        }
+        cone.translate(0, .5, 0);
+        cone.computeVertexNormals();
+        const parts = [partTint(cone, '#ffffff', .09),
+          partBox(.10, .036, .10, '#d8d1bf', -.014, 0, 0, .05),
+          new THREE.SphereGeometry(.028, 7, 5).translate(0, 1.02, 0)];
+        parts[2] = partTint(parts[2], '#e9e2cf', .05);
+        return join(parts);
+      }
+      // A heavy observatory drum: ringed base, cornice, a door and a narrow slit.
+      function drumPart() {
+        const disc = (r, h, y, color) => {
+          const g = new THREE.CylinderGeometry(r, r, h, 14, 1);
+          g.translate(0, y + h / 2, 0);
+          return partTint(g, color, .05);
+        };
+        const parts = [disc(.52, .050, 0, '#b6b0a1'), disc(.54, .020, .050, '#e2dccb')];
+        const body = new THREE.CylinderGeometry(.47, .50, .86, 14, 1);
+        body.translate(0, .52, 0);
+        parts.push(partTint(body, '#e8e3d7', .09));
+        for (const y of [.34, .62, .88]) {
+          const band = new THREE.CylinderGeometry(.505, .505, .016, 14, 1);
+          band.translate(0, y, 0);
+          parts.push(partTint(band, '#ffffff', .05));
+        }
+        parts.push(partBox(.30, .42, .04, '#43403a', .09, 0, -.485, .06));
+        parts.push(partBox(.09, .22, .03, '#43403a', .52, 0, -.492, .05));
+        return join(parts);
+      }
+      // A dome with its drum and finial.
+      function domePart() {
+        const shell = new THREE.SphereGeometry(.5, 14, 8, 0, TAU, 0, Math.PI * .5);
+        shell.translate(0, .06, 0);
+        const base = new THREE.CylinderGeometry(.505, .50, .06, 14, 1);
+        base.translate(0, .03, 0);
+        const parts = [
+          partTint(base, '#c3bdac', .06),
+          partTint(shell, '#ffffff', .07),
+          partBox(.05, .06, .05, '#e9e2cf', 1.0, 0, 0, .05)
+        ];
+        return join(parts);
+      }
+      // Round tower: eight sides, two band rings, slit windows, a crown platform.
+      function towerPart() {
+        const body = new THREE.CylinderGeometry(.40, .48, .92, 8, 1);
+        body.translate(0, .48, 0);
+        const ring = (rTop, rBottom, h, y, color, seg = 12) => {
+          const g = new THREE.CylinderGeometry(rTop, rBottom, h, seg, 1);
+          g.translate(0, y + h / 2, 0);
+          return partTint(g, color, .05);
+        };
+        const parts = [partTint(body, '#ffffff', .09),
+          ring(.50, .52, .05, .90, '#e4ded0'),
+          ring(.55, .55, .026, .95, '#cfc8b6')];
+        for (const y of [.28, .58]) {
+          const band = new THREE.CylinderGeometry(.445, .455, .020, 8, 1);
+          band.translate(0, y, 0);
+          parts.push(partTint(band, '#f4efe2', .05));
+        }
+        for (const [a, y] of [[0, .42], [Math.PI, .62], [1.9, .30]]) {
+          parts.push(partBox(.07, .17, .03, '#43403a', y, Math.sin(a) * .43, Math.cos(a) * .43, .05));
+        }
+        return join(parts);
+      }
+      // A raised platform with a rim — the ground a town stands on.
+      function platformPart() {
+        const base = new THREE.CylinderGeometry(.50, .47, .06, 16, 1);
+        base.translate(0, .03, 0);
+        const parts = [partTint(base, '#b7b0a0', .08)];
+        const rim = new THREE.TorusGeometry(.48, .022, 5, 24);
+        rim.rotateX(Math.PI / 2); rim.translate(0, .058, 0);
+        parts.push(partTint(rim, '#ffffff', .06));
+        return join(parts);
+      }
+      // A parapet segment, a walkway, a mast: the small pieces that make a place inhabited.
+      function ledgePart() {
+        return join([partBox(1.0, .10, .12, '#e6e0d0', 0), partBox(1.04, .026, .16, '#ffffff', .10)]);
+      }
+      function beamPart() {
+        return join([
+          partBox(1.0, .035, .10, '#dcd5c4', 0),
+          partBox(1.0, .016, .016, '#ffffff', .085, 0, -.042, .05),
+          partBox(1.0, .016, .016, '#ffffff', .085, 0, .042, .05)
+        ]);
+      }
+      function mastPart() {
+        const spike = new THREE.CylinderGeometry(.012, .045, 1, 6, 1);
+        spike.translate(0, .5, 0);
+        const parts = [partTint(spike, '#ffffff', .08),
+          partBox(1.0, .022, .022, '#e9e2d0', .78, 0, 0, .05),
+          new THREE.TorusGeometry(.10, .012, 4, 12).rotateX(Math.PI / 2).translate(0, .52, 0)];
+        parts[2] = partTint(parts[2], '#ffffff', .05);
+        return join(parts);
+      }
       const provinceGeo = {
-        tower: new THREE.CylinderGeometry(.012, .020, 1, 8, 1),
-        block: new THREE.BoxGeometry(1, 1, 1, 1, 1, 1),
-        dome: new THREE.SphereGeometry(1, 10, 6, 0, TAU, 0, Math.PI / 2),
-        disc: new THREE.CylinderGeometry(1, 1, .08, 12, 1),
-        ring: new THREE.TorusGeometry(1, .07, 5, 18),
-        shard: new THREE.OctahedronGeometry(1, 0),
-        cone: new THREE.ConeGeometry(.5, 1, 6, 1),
-        lamp: new THREE.OctahedronGeometry(1, 0)
+        wall: wallPart(),
+        roof: gablePart(),
+        hip: hipPart(),
+        spire: spirePart(),
+        drum: drumPart(),
+        dome: domePart(),
+        tower: towerPart(),
+        platform: platformPart(),
+        ledge: ledgePart(),
+        beam: beamPart(),
+        mast: mastPart(),
+        ring: partTint(new THREE.TorusGeometry(1, .07, 5, 20).rotateX(Math.PI / 2), '#ffffff', .06),
+        shard: partTint(new THREE.OctahedronGeometry(1, 0), '#ffffff', .10),
+        disc: partTint(new THREE.CylinderGeometry(1, 1, .08, 14, 1), '#ffffff', .06),
+        block: partTint(new THREE.BoxGeometry(1, 1, 1, 1, 1, 1), '#ffffff', .06),
+        window: partTint(new THREE.BoxGeometry(1, 1, .30), '#ffffff', .05),
+        lamp: partTint(new THREE.OctahedronGeometry(1, 0), '#ffffff', .05)
       };
       function provinceDressing() {
         const rng = seeded(52033);
         const quota = { vaelmar: 24, sennar: 22, caelth: 22, mirella: 22, vessper: 18 };
         const sites = { vaelmar: [], sennar: [], caelth: [], mirella: [], vessper: [] };
+        const taken = [];
         // A site is legal land at a believable altitude. `limit` keeps the scattered pass from
         // exceeding each province's quota while still letting guaranteed towns through.
         const trySite = (dir, bulk, limit) => {
@@ -4023,6 +4226,9 @@
           if (h < .03 || h > .26) return false;
           const id = provinceAt(dir, h);
           if (sites[id].length >= limit(id)) return false;
+          // Towns are ~.40 units across, so two of them closer than .26 would share a platform.
+          if (taken.some(other => other.distanceTo(dir) < .20)) return false;
+          taken.push(dir);
           sites[id].push({ dir, h, bulk });
           return true;
         };
@@ -4041,7 +4247,7 @@
         });
         // 3. Scattered provincial towns until each province is furnished.
         const done = () => Object.keys(quota).every(id => sites[id].length >= quota[id]);
-        for (let i = 0; i < 26000 && !done(); i++) trySite(randomDirection(rng), .9 + rng() * .5, id => quota[id]);
+        for (let i = 0; i < 60000 && !done(); i++) trySite(randomDirection(rng), .9 + rng() * .5, id => quota[id]);
         // Keep the town list for the survey map; it is the only consumer that needs plain directions.
         settlementDirs.length = 0;
         for (const id of Object.keys(sites)) for (const site of sites[id]) settlementDirs.push(site);
@@ -4052,103 +4258,144 @@
           if (!buckets.has(key)) buckets.set(key, []);
           buckets.get(key).push({ origin: position, quat: quat.clone(), scale });
         };
-        const mesh = new THREE.Matrix4(), q = new THREE.Quaternion(), spin = new THREE.Quaternion(), tiltQ = new THREE.Quaternion();
-        const axis = new THREE.Vector3(), origin = new THREE.Vector3(), east = new THREE.Vector3(), north = new THREE.Vector3(), pos = new THREE.Vector3();
-        const makeAt = site => {
-          origin.copy(site.dir).multiplyScalar(R + site.h);
-          east.crossVectors(Math.abs(site.dir.y) > .94 ? new THREE.Vector3(1, 0, 0) : UP, site.dir).normalize();
-          north.crossVectors(site.dir, east).normalize();
-          q.setFromUnitVectors(UP, site.dir);
-          return (e, n, up) => pos.copy(origin).addScaledVector(east, e).addScaledVector(north, n).addScaledVector(site.dir, up).clone();
+        const mesh = new THREE.Matrix4(), axis = new THREE.Vector3();
+        // ---- Towns ---------------------------------------------------------------------------
+        // One settlement per site: a platform, a landmark, a lane of dwellings (body + roof + lit
+        // windows + doorstep) and the small pieces — walkways, parapets, masts, rings — that make a
+        // place read as inhabited. Each province builds the same grammar with its own roof, wall
+        // material and silhouette.
+        const yawQuat = new THREE.Quaternion();
+        // The layout below is written in "house units" and scaled once here: the player's eye is
+        // .10 units above the ground, so a dwelling has to be roughly two eye-heights tall to read
+        // as something you could walk into rather than a model on a table.
+        const TOWN_SCALE = 1.8;
+        const styleOf = {
+          vaelmar: { wall: 'timber', roof: 'roof', roofMat: 'timber', spread: 1.22, rise: .74 },
+          sennar: { wall: 'basalt', roof: 'hip', roofMat: 'basalt', spread: 1.12, rise: .34 },
+          caelth: { wall: 'pale', roof: 'dome', roofMat: 'pale', spread: 1.02, rise: .52 },
+          mirella: { wall: 'timber', roof: 'spire', roofMat: 'timber', spread: 1.12, rise: .70 }
         };
         for (const id of Object.keys(sites)) {
           for (const site of sites[id]) {
-            const at = makeAt(site), k = site.bulk;
-            // Faces are random per piece so a town never looks like a grid.
-            const face = () => spin.setFromAxisAngle(UP, rng() * TAU);
-            const lean = angle => tiltQ.setFromAxisAngle(axis.set(Math.cos(angle), 0, Math.sin(angle)).normalize(), rng() * .5);
+            const k = site.bulk, yaw0 = rng() * TAU;
+            const origin = site.dir.clone().multiplyScalar(R + site.h);
+            const qBase = new THREE.Quaternion().setFromUnitVectors(UP, site.dir);
+            const ax = new THREE.Vector3(1, 0, 0).applyQuaternion(qBase);
+            const az = new THREE.Vector3(0, 0, 1).applyQuaternion(qBase);
+            const put = (geo, mat, lx, lz, up, yaw, sx, sy, sz) => push(geo, mat,
+              origin.clone().addScaledVector(ax, lx * TOWN_SCALE).addScaledVector(az, lz * TOWN_SCALE).addScaledVector(site.dir, up * TOWN_SCALE),
+              qBase.clone().multiply(yawQuat.setFromAxisAngle(UP, yaw)),
+              new THREE.Vector3(sx * TOWN_SCALE, sy * TOWN_SCALE, sz * TOWN_SCALE));
+            // Local offset inside a rotated piece, expressed in the site's own frame.
+            const local = (yaw, px, pz) => {
+              const c = Math.cos(yaw), s = Math.sin(yaw);
+              return [px * c + pz * s, -px * s + pz * c];
+            };
+            const dwelling = (lx, lz, yaw, w, d, h, style) => {
+              put('wall', style.wall, lx, lz, .004, yaw, w, h, d);
+              put(style.roof, style.roofMat, lx, lz, .004 + h * .955, yaw, w * style.spread, h * style.rise, d * style.spread);
+              for (const face of [-1, 1]) {
+                const [wx, wz] = local(yaw, 0, face * (d * .5 + .004));
+                put('window', 'lamp', lx + wx, lz + wz, h * .34, yaw, w * .26, h * .24, .004);
+              }
+              const [dx, dz] = local(yaw, 0, -(d * .5 + .006));
+              put('ledge', style.roofMat, lx + dx, lz + dz, .004, yaw, w * .42, .012, .030);
+            };
+            put('platform', id === 'vessper' ? 'basalt' : (id === 'sennar' ? 'basalt' : (id === 'caelth' ? 'pale' : 'timber')),
+              0, 0, 0, yaw0, .19 * k, .34, .19 * k);
             if (id === 'vaelmar') {
-              // A raised moss platform, one archive tower, and timber houses with lit crowns.
-              push('block', 'timber', at(0, 0, .004), q, new THREE.Vector3(.20 * k, .010, .20 * k));
-              const spire = (.16 + rng() * .12) * k;
-              push('tower', 'timber', at(.02, -.01, spire * .5), q, new THREE.Vector3(2.1, spire, 2.1));
-              push('dome', 'glass', at(.02, -.01, spire * .98), q, new THREE.Vector3(.036, .030, .036));
-              for (let i = 0, n = 4 + Math.floor(rng() * 3); i < n; i++) {
-                const e = (rng() - .5) * .13, nn = (rng() - .5) * .13, height = (.05 + rng() * .06) * k;
-                face();
-                push('block', 'timber', at(e, nn, height * .5), q.clone().multiply(spin), new THREE.Vector3(.042, height, .042));
-                push('cone', 'timber', at(e, nn, height + .008), q, new THREE.Vector3(.062, .026, .062));
-                push('lamp', 'lamp', at(e, nn, height * .68), q, new THREE.Vector3(.006, .008, .006));
+              // Archive tower with a flared spire, then gabled longhouses down a moss lane.
+              const t = (.105 + rng() * .035) * k;
+              put('tower', 'timber', .058 * k, 0, .010, yaw0, .052 * k, t, .052 * k);
+              put('spire', 'timber', .058 * k, 0, .010 + t * .97, yaw0, .058 * k, t * .52, .058 * k);
+              put('lamp', 'lamp', .058 * k, 0, .010 + t * .97 + t * .50, yaw0, .007, .009, .007);
+              const houses = 4 + Math.floor(rng() * 3);
+              for (let i = 0; i < houses; i++) {
+                const lane = (i - (houses - 1) / 2) * .046 * k, side = i % 2 ? 1 : -1;
+                const [lx, lz] = local(yaw0, lane, side * (.046 + rng() * .010) * k);
+                const w = (.050 + rng() * .012) * k, d = (.038 + rng() * .008) * k, h = (.048 + rng() * .020) * k;
+                dwelling(lx, lz, yaw0 + (rng() - .5) * .16, w, d, h, styleOf.vaelmar);
               }
               for (let i = 0; i < 2; i++) {
-                const a = rng() * TAU, len = (.09 + rng() * .08) * k;
-                face();
-                push('block', 'timber', at(Math.cos(a) * len, Math.sin(a) * len, .05 + rng() * .05), q.clone().multiply(spin), new THREE.Vector3(len * 1.8, .006, .007));
+                const [bx, bz] = local(yaw0, (rng() - .5) * .08, (rng() - .5) * .08);
+                put('beam', 'timber', bx, bz, (.018 + rng() * .024) * k, yaw0 + rng() * TAU, (.05 + rng() * .04) * k, .010, .010);
               }
+              put('lamp', 'lamp', -.075 * k, .05 * k, .022 * k, 0, .005, .007, .005);
             } else if (id === 'sennar') {
-              // Plinth, one fat wind tower with a cap, a mirror well, and flat-roofed houses.
-              push('block', 'basalt', at(0, 0, .005), q, new THREE.Vector3(.22 * k, .010, .19 * k));
-              const tower = (.13 + rng() * .09) * k;
-              push('tower', 'basalt', at(-.03, .01, tower * .5), q, new THREE.Vector3(2.4, tower, 2.4));
-              push('cone', 'basalt', at(-.03, .01, tower + .012), q, new THREE.Vector3(.075, .05, .075));
-              push('block', 'basalt', at(-.03, .01, tower * .62), q, new THREE.Vector3(.070, .010, .070));
-              lean(rng() * TAU); tiltQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.58));
-              push('disc', 'glass', at(.055, .045, .020), q.clone().multiply(tiltQ), new THREE.Vector3(.062, 1, .062));
-              for (let i = 0, n = 3 + Math.floor(rng() * 3); i < n; i++) {
-                const e = (rng() - .5) * .14, nn = (rng() - .5) * .14, height = (.04 + rng() * .06) * k;
-                face();
-                push('block', 'basalt', at(e, nn, height * .5), q.clone().multiply(spin), new THREE.Vector3(.046, height, .040));
-                push('block', 'basalt', at(e, nn, height + .006), q, new THREE.Vector3(.052, .010, .046));
-                push('lamp', 'lamp', at(e, nn, height * .55), q, new THREE.Vector3(.005, .007, .005));
+              // Fat wind tower with a cap and ring ledges, a tilted mirror, and flat-roofed houses.
+              const t = (.10 + rng() * .05) * k;
+              put('tower', 'basalt', -.045 * k, .010 * k, .010, yaw0, .048 * k, t, .048 * k);
+              put('hip', 'basalt', -.045 * k, .010 * k, .010 + t * .96, yaw0, .054 * k, .024 * k, .054 * k);
+              for (const f of [.42, .74]) put('ledge', 'basalt', -.045 * k, .010 * k, .010 + t * f, yaw0, .052 * k, .007, .052 * k);
+              const mirrorYaw = rng() * TAU;
+              put('disc', 'glass', .050 * k, .048 * k, .014, mirrorYaw, .052 * k, .16, .052 * k);
+              put('disc', 'glass', .050 * k, .048 * k, .022, mirrorYaw + .4, .042 * k, .14, .042 * k);
+              const houses = 3 + Math.floor(rng() * 3);
+              for (let i = 0; i < houses; i++) {
+                const lane = (i - (houses - 1) / 2) * .044 * k, side = i % 2 ? 1 : -1;
+                const [lx, lz] = local(yaw0, lane, side * (.044 + rng() * .010) * k);
+                const w = (.050 + rng() * .014) * k, d = (.042 + rng() * .010) * k, h = (.034 + rng() * .014) * k;
+                dwelling(lx, lz, yaw0 + (rng() - .5) * .12, w, d, h, styleOf.sennar);
+                put('ledge', 'basalt', lx, lz, .004 + h * .955 + h * .18, yaw0, w * .92, .010, d * .92);
               }
               for (let i = 0; i < 2; i++) {
-                const a = rng() * TAU, len = (.07 + rng() * .06) * k;
-                push('block', 'basalt', at(Math.cos(a) * len, Math.sin(a) * len, .008), q, new THREE.Vector3(len * 1.7, .018, .012));
+                const a = rng() * TAU, len = (.055 + rng() * .035) * k;
+                put('ledge', 'basalt', Math.cos(a) * len, Math.sin(a) * len, .006, a + Math.PI / 2, .04 * k, .012, .010);
               }
             } else if (id === 'caelth') {
-              // A heavy base drum, one dome, a slit window, and a watch spire beside it.
-              const R0 = (.05 + rng() * .025) * k;
-              push('block', 'pale', at(0, 0, R0 * .30), q, new THREE.Vector3(R0 * 2.2, R0 * .62, R0 * 2.2));
-              push('dome', 'pale', at(0, 0, R0 * .60), q, new THREE.Vector3(R0, R0 * .82, R0));
-              push('lamp', 'lamp', at(R0 * .55, R0 * .3, R0 * 1.02), q, new THREE.Vector3(.006, .007, .006));
-              const spire = (.16 + rng() * .10) * k;
-              push('tower', 'pale', at(-R0 * 1.7, R0 * .9, spire * .5), q, new THREE.Vector3(1.5, spire, 1.5));
-              push('cone', 'pale', at(-R0 * 1.7, R0 * .9, spire + .01), q, new THREE.Vector3(.045, .034, .045));
-              for (let i = 0, n = 2 + Math.floor(rng() * 2); i < n; i++) {
-                const e = (rng() - .5) * .13, nn = (rng() - .5) * .13, r = (.025 + rng() * .022) * k;
-                face();
-                push('block', 'pale', at(e, nn, r * .34), q.clone().multiply(spin), new THREE.Vector3(r * 2.3, r * .68, r * 2.3));
-                push('dome', 'pale', at(e, nn, r * .62), q, new THREE.Vector3(r, r * .80, r));
-                push('lamp', 'lamp', at(e, nn, r * .62), q, new THREE.Vector3(.005, .006, .005));
+              // A ringed observatory drum under a dome, a watch spire, and domed stone houses.
+              const drumR = (.038 + rng() * .012) * k, drumH = (.048 + rng() * .016) * k;
+              put('drum', 'pale', 0, 0, .010, yaw0, drumR * 2, drumH, drumR * 2);
+              const domeY = .010 + drumH;
+              put('dome', 'pale', 0, 0, domeY, yaw0, drumR * 2.02, drumR * 1.30, drumR * 2.02);
+              put('lamp', 'lamp', 0, 0, domeY + drumR * 1.28, yaw0, .006, .008, .006);
+              const spire = (.10 + rng() * .05) * k;
+              put('tower', 'pale', -drumR * 2.4, drumR * 1.1, .008, yaw0, .026 * k, spire, .026 * k);
+              put('spire', 'pale', -drumR * 2.4, drumR * 1.1, .008 + spire * .97, yaw0, .042 * k, spire * .32, .042 * k);
+              for (let i = 0, n = 4 + Math.floor(rng() * 2); i < n; i++) {
+                const a = i * TAU / n + rng() * .4, dist = (.068 + rng() * .020) * k;
+                const lx = Math.cos(a) * dist, lz = Math.sin(a) * dist;
+                const w = (.044 + rng() * .012) * k, h = (.034 + rng() * .014) * k;
+                dwelling(lx, lz, a, w, w * .92, h, styleOf.caelth);
               }
             } else if (id === 'mirella') {
-              // A ring of stilt houses over a shallow platform, each under a singing ring.
-              push('disc', 'timber', at(0, 0, .006), q, new THREE.Vector3(.17 * k, 1, .17 * k));
-              for (let i = 0, n = 4 + Math.floor(rng() * 2); i < n; i++) {
-                const a = i * TAU / n + rng() * .3, d = .07 + rng() * .05, h2 = (.045 + rng() * .04) * k;
-                const e = Math.cos(a) * d, nn = Math.sin(a) * d;
-                for (let k4 = 0; k4 < 4; k4++) {
-                  const b = k4 * TAU / 4 + .78;
-                  push('tower', 'timber', at(e + Math.cos(b) * .012, nn + Math.sin(b) * .012, h2 * .5), q, new THREE.Vector3(.5, h2, .5));
+              // Stilt houses in a ring around a singing tower, each under a flared thatch cone.
+              const towerH = (.085 + rng() * .028) * k;
+              put('tower', 'timber', 0, 0, .010, yaw0, .040 * k, towerH, .040 * k);
+              put('spire', 'timber', 0, 0, .010 + towerH * .97, yaw0, .049 * k, towerH * .44, .049 * k);
+              put('ring', 'glass', 0, 0, .010 + towerH * .30, yaw0, .046 * k, .046 * k, .046 * k);
+              const houses = 4 + Math.floor(rng() * 2);
+              for (let i = 0; i < houses; i++) {
+                const a = i * TAU / houses + rng() * .3, dist = (.070 + rng() * .018) * k;
+                const lx = Math.cos(a) * dist, lz = Math.sin(a) * dist;
+                const w = (.048 + rng() * .012) * k, d = (.038 + rng() * .010) * k, h = (.052 + rng() * .018) * k;
+                // Stilts first, then the house standing on them.
+                for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+                  const [px, pz] = local(a + Math.PI / 2, sx * w * .34, sz * d * .34);
+                  put('beam', 'timber', lx + px, lz + pz, 0, a, .009, h * .34, .009);
                 }
-                push('block', 'timber', at(e, nn, h2 + .012), q, new THREE.Vector3(.048, .016, .048));
-                push('cone', 'timber', at(e, nn, h2 + .035), q, new THREE.Vector3(.066, .024, .066));
-                push('ring', 'glass', at(e, nn, h2 + .052), q, new THREE.Vector3(.036, .036, .010));
-                push('lamp', 'lamp', at(e, nn, h2 + .022), q, new THREE.Vector3(.006, .007, .006));
+                dwelling(lx, lz, a + Math.PI / 2, w, d, h * .78, styleOf.mirella);
+                put('ring', 'glass', lx, lz, h * .66 - h * .014, a, .036 * k, .036 * k, .036 * k);
+                const [bx, bz] = local(a, 0, -dist * 1.02);
+                put('beam', 'timber', bx, bz, h * .42, a + Math.PI / 2, dist * .9, .010, .010);
               }
-              push('ring', 'glass', at(0, 0, .020), q, new THREE.Vector3(.10, .10, .024));
             } else {
-              // A launch basin: a wide base ring, one tall crystal, and a field of shards.
-              push('ring', 'crystal', at(0, 0, .008), q, new THREE.Vector3(.10, .10, .05));
-              const big = (.20 + rng() * .10) * k;
-              lean(rng() * TAU);
-              push('shard', 'crystal', at(0, 0, big * .5), q.clone().multiply(tiltQ), new THREE.Vector3(.022, big * .5, .022));
-              push('lamp', 'lamp', at(0, 0, big * .9), q, new THREE.Vector3(.007, .009, .007));
-              for (let i = 0, n = 5 + Math.floor(rng() * 4); i < n; i++) {
-                const a = rng() * TAU, d = rng() * .13, height = (.05 + rng() * .09) * k, t = rng() * .45;
-                face(); tiltQ.setFromAxisAngle(axis.set(Math.cos(a), 0, Math.sin(a)).normalize(), t);
-                push('shard', 'crystal', at(Math.cos(a) * d, Math.sin(a) * d, height * .5), q.clone().multiply(tiltQ), new THREE.Vector3(.010 + rng() * .008, height * .5, .010 + rng() * .008));
+              // Launch basin: a wide ring, one tall crystal, a field of shards and two masts.
+              put('ring', 'crystal', 0, 0, .006, yaw0, .11 * k, .11 * k, .05);
+              const big = (.12 + rng() * .06) * k;
+              const leanA = rng() * TAU;
+              yawQuat.setFromAxisAngle(axis.set(Math.cos(leanA), 0, Math.sin(leanA)).normalize(), .06 + rng() * .12);
+              push('shard', 'crystal', origin.clone().addScaledVector(site.dir, big * .45),
+                qBase.clone().multiply(yawQuat), new THREE.Vector3(.026 * k, big * .55, .026 * k));
+              for (let i = 0; i < 2; i++) {
+                const a = rng() * TAU, dist = (.07 + rng() * .04) * k;
+                put('mast', 'crystal', Math.cos(a) * dist, Math.sin(a) * dist, .004, a, .030 * k, (.14 + rng() * .08) * k, .030 * k);
               }
+              for (let i = 0, n = 5 + Math.floor(rng() * 4); i < n; i++) {
+                const a = rng() * TAU, d = (.05 + rng() * .10) * k, height = (.05 + rng() * .09) * k;
+                put('shard', 'crystal', Math.cos(a) * d, Math.sin(a) * d, height * .3, a, .012 * k, height * .5, .012 * k);
+              }
+              put('lamp', 'lamp', 0, 0, big * .55, 0, .006, .008, .006);
             }
           }
         }
