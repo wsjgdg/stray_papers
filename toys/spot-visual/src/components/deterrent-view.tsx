@@ -38,6 +38,7 @@ import {
 import { MOUNTAIN_ROUTES } from "@/lib/mountain-routes.generated";
 import { SPOT_TERRAIN } from "@/lib/spot-terrain.generated";
 import { BreathRing } from "@/components/shared/breath-ring";
+import { getPinyinKeys } from "@/lib/spot-data";
 import { LiquidCharge } from "@/components/shared/liquid-charge";
 import { PressureButton } from "@/components/shared/pressure-button";
 import {
@@ -762,6 +763,119 @@ const BAD_REVIEWS: Record<string, { title: string; reviews: string[] }> = {
   },
 };
 
+/* ═══ 假想目的地选择器：5931 条景点用原生 select 滚不动，改成搜索 + 候选列表 ═══ */
+function SpotPicker({
+  spots,
+  value,
+  onChange,
+}: {
+  spots: { id: string; name: string }[];
+  value: string | null;
+  onChange: (id: string | null) => void;
+}) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const selected = value ? spots.find((s) => s.id === value) : null;
+
+  const matches = useMemo(() => {
+    const key = q.trim().toLowerCase();
+    if (!key) return spots.slice(0, 8);
+    const out: { id: string; name: string }[] = [];
+    for (const s of spots) {
+      const name = s.name.toLowerCase();
+      let hit = name.includes(key);
+      if (!hit && /^[a-z]+$/.test(key)) {
+        const py = getPinyinKeys(s.name);
+        hit = py.full.includes(key) || py.initials.includes(key);
+      }
+      if (hit) {
+        out.push(s);
+        if (out.length >= 8) break;
+      }
+    }
+    return out;
+  }, [q, spots]);
+
+  // 点空白处收起候选
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [open]);
+
+  const pick = (id: string | null) => {
+    onChange(id);
+    setQ("");
+    setOpen(false);
+  };
+
+  return (
+    <div ref={boxRef} className="relative">
+      <div className="flex items-center gap-2">
+        <input
+          value={open ? q : (selected?.name ?? "")}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => {
+            setQ("");
+            setOpen(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && matches[0]) pick(matches[0].id);
+            if (e.key === "Escape") setOpen(false);
+          }}
+          placeholder={
+            selected ? selected.name : "搜索景点名或拼音，如 黄山 / hs"
+          }
+          aria-label="搜索假想目的地"
+          className="flex-1 min-w-0 px-3 py-2 text-sm bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300"
+        />
+        {selected && (
+          <button
+            onClick={() => pick(null)}
+            aria-label="清除假想目的地"
+            className="shrink-0 p-2 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+      {open && (
+        <div className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+          <button
+            onClick={() => pick(null)}
+            className="w-full text-left px-3 py-2 text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            — 未指定（仅做时段评估） —
+          </button>
+          {matches.length === 0 && (
+            <p className="px-3 py-2 text-xs text-gray-400">没有匹配的景点</p>
+          )}
+          {matches.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => pick(s.id)}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-500/10 ${
+                s.id === value
+                  ? "text-rose-600 dark:text-rose-400 font-medium"
+                  : "text-gray-700 dark:text-gray-200"
+              }`}
+            >
+              {s.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ReviewPopup({
   conditionId,
   origin,
@@ -1169,7 +1283,7 @@ function ConclusionButton({
             </div>
 
             {/* PTSI 详情 */}
-            <div className="bg-white dark:bg-gray-900/10 backdrop-blur-md rounded-2xl px-6 py-4 mb-3 text-center">
+            <div className="bg-white/10 border border-white/15 backdrop-blur-md rounded-2xl px-6 py-4 mb-3 text-center">
               <div className="text-white/60 text-xs mb-1">
                 PTSI 出行指数
                 {selectedSpotName && (
@@ -1230,7 +1344,7 @@ function ConclusionButton({
                 e.stopPropagation();
                 handleShare();
               }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-900/20 hover:bg-white/30 backdrop-blur-md rounded-full text-white text-sm font-bold transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 backdrop-blur-md rounded-full text-white text-sm font-bold transition-all"
             >
               <Share2 className="w-4 h-4" />
               分享结论
@@ -1360,18 +1474,11 @@ export default function DeterrentView() {
               可选 · 用于结论球社交化匹配
             </span>
           </div>
-          <select
-            value={selectedSpotId ?? ""}
-            onChange={(e) => setSelectedSpotId(e.target.value || null)}
-            className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-300"
-          >
-            <option value="">— 未指定（仅做时段评估） —</option>
-            {spots.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <SpotPicker
+            spots={spots}
+            value={selectedSpotId}
+            onChange={setSelectedSpotId}
+          />
         </div>
 
         {/* ═══ 健康预警拨盘 ═══ */}

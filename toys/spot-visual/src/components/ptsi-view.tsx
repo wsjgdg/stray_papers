@@ -22,6 +22,7 @@ import {
   calcPTSIForSpots,
 } from "@/lib/ptsi-calculator";
 import type { PTSIResult } from "@/lib/spot-data";
+import { SPOT_PROFILES } from "@/lib/spot-profiles.generated";
 import SevenDayWindow from "./ptsi-seven-day";
 
 /* ═══ 身体条件选项 ═══ */
@@ -304,10 +305,28 @@ function HourlyChart({ conditions }: { conditions: string[] }) {
 function SpotRanking({ conditions }: { conditions: string[] }) {
   const { spots } = useAppStore();
   const ranking = useMemo(() => {
-    // 只排有高德评分的精选池：UV/条件对全库同分，无评分的 1637 条会把 top10 变成随机抽样
-    const pool = spots.filter((s) => s.rating);
+    // 只排「有评分 + 有 A 级等级」的池：
+    //  - 无评分的 1637 条会把 top10 变成随机抽样
+    //  - 只有评分不限等级时，顶端会变成「人少不累的社区公园」（评分低→拥挤 0），
+    //    对出行决策没意义；A 级等级把范围收回到真正的景区。
+    // 评分门槛 4.4：把「有评分但评分一般」的长尾挡在外面，否则榜首会是一堆
+    // 4.2 分、几乎没人去的小园子（分高只是因为不挤，对出行决策没帮助）。
+    const pool = spots.filter(
+      (s) =>
+        typeof s.rating === "number" &&
+        s.rating >= 4.4 &&
+        (s.level === "5A" || s.level === "4A"),
+    );
     const ratingOf = new Map(pool.map((s) => [s.name, s.rating]));
-    const results = calcPTSIForSpots(pool, conditions);
+    // 逐景点差异因子：评分/等级 → 拥挤预估，档案建议时长 → 暴露时长
+    // （以前这里对每个景点传同一个 UV 和 0 拥挤，全表同分，看起来「所有项都是一个值」）
+    const enriched = pool.map((s) => ({
+      name: s.name,
+      rating: s.rating,
+      level: s.level,
+      suggestedHours: SPOT_PROFILES[s.id]?.suggestedHours ?? null,
+    }));
+    const results = calcPTSIForSpots(enriched, conditions);
     return results.sort(
       (a, b) =>
         b.ptsi.score - a.ptsi.score ||
@@ -323,7 +342,7 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
           景点适宜度排行
         </span>
         <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
-          仅统计有高德评分的精选景点
+          评分≥4.4 的 A 级景区 · 拥挤按时长/热度预估
         </span>
       </div>
       <div className="space-y-2">

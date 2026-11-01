@@ -1,32 +1,67 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Share2, Check, UtensilsCrossed, MapPin, Flame, ChevronLeft, Loader2, Sparkles, Layers, Download } from 'lucide-react';
-import type { EChartsOption } from 'echarts';
-import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, TASTE_DIMENSIONS, getProvince } from '@/lib/food-data';
-import { TASTE_EVIDENCE, EVIDENCE_LABEL, EVIDENCE_STYLE, SCOVILLE_BANDS, getDishNutrition, sodiumToScore } from '@/lib/taste-evidence';
-import { getDishIngredients, SODIUM_BANDS } from '@/lib/ingredient-nutrition';
-import { DISH_SODIUM, SODIUM_DATASET_SIZE } from '@/lib/dish-sodium.generated';
-import { getSimilarTaste, tierOf, TIER_LABEL, TIER_STYLE, type EvidenceTier } from '@/lib/taste-similar';
-import { downloadShareCard } from '@/lib/share-card';
-import { TasteTest, DishCompare } from '@/components/food/food-panels';
-import { DISH_IMPACT } from '@/lib/dish-impact.generated';
-import { resolveCityFood } from '@/lib/food-city';
-import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
-import { TasteRadar } from '@/components/food/taste-radar';
-import { TasteScatter } from '@/components/food/taste-scatter';
-import { DishVisual } from '@/components/food/dish-visual';
-import ChinaMap, { type MapRegistration } from '@/components/map/china-map';
-import { cn } from '@/lib/utils';
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { motion } from "framer-motion";
+import {
+  Share2,
+  Check,
+  UtensilsCrossed,
+  MapPin,
+  Flame,
+  ChevronLeft,
+  Loader2,
+  Sparkles,
+  Layers,
+  Download,
+} from "lucide-react";
+import type { EChartsOption } from "echarts";
+import {
+  PROVINCE_FOODS,
+  CUISINE_COLORS,
+  TASTE_KEYS,
+  TASTE_DIMENSIONS,
+  getProvince,
+} from "@/lib/food-data";
+import {
+  TASTE_EVIDENCE,
+  EVIDENCE_LABEL,
+  EVIDENCE_STYLE,
+  SCOVILLE_BANDS,
+  getDishNutrition,
+  sodiumToScore,
+} from "@/lib/taste-evidence";
+import { getDishIngredients, SODIUM_BANDS } from "@/lib/ingredient-nutrition";
+import { DISH_SODIUM, SODIUM_DATASET_SIZE } from "@/lib/dish-sodium.generated";
+import {
+  getSimilarTaste,
+  tierOf,
+  TIER_LABEL,
+  TIER_STYLE,
+  type EvidenceTier,
+} from "@/lib/taste-similar";
+import { downloadShareCard } from "@/lib/share-card";
+import { TasteTest, DishCompare } from "@/components/food/food-panels";
+import { DISH_IMPACT } from "@/lib/dish-impact.generated";
+import { resolveCityFood } from "@/lib/food-city";
+import { loadCityGeo, getCachedCityGeo, type CityGeo } from "@/lib/city-geo";
+import { TasteRadar } from "@/components/food/taste-radar";
+import { TasteScatter } from "@/components/food/taste-scatter";
+import { DishVisual } from "@/components/food/dish-visual";
+import ChinaMap, { type MapRegistration } from "@/components/map/china-map";
+import { cn } from "@/lib/utils";
 
 const REGION_COLORS: Record<string, string> = {
-  华北: '#F59E0B', 东北: '#10B981', 华东: '#3B82F6', 华中: '#8B5CF6',
-  华南: '#EC4899', 西南: '#EF4444', 西北: '#D97706',
+  华北: "#F59E0B",
+  东北: "#10B981",
+  华东: "#3B82F6",
+  华中: "#8B5CF6",
+  华南: "#EC4899",
+  西南: "#EF4444",
+  西北: "#D97706",
 };
-const REGION_ORDER = ['华北', '东北', '华东', '华中', '华南', '西南', '西北'];
+const REGION_ORDER = ["华北", "东北", "华东", "华中", "华南", "西南", "西北"];
 
-const FALLBACK_CITY_COLOR = '#CBD5E1';
+const FALLBACK_CITY_COLOR = "#CBD5E1";
 
 /** 辣度热力色阶：0 浅米 → 100 深红（只用于「热力」着色模式） */
 function heatColor(v: number): string {
@@ -36,16 +71,71 @@ function heatColor(v: number): string {
   const mix = c0.map((a, i) => Math.round(a + (c1[i] - a) * t));
   return `rgb(${mix[0]},${mix[1]},${mix[2]})`;
 }
-const SELECTED_COLOR = '#0F766E';
+const SELECTED_COLOR = "#0F766E";
+
+/** 全国概览：未选省时的默认面板（原来这里直接展示「四川省」，像进了省页） */
+function NationalOverview({
+  onPick,
+  onOpenAtlas,
+}: {
+  onPick: (name: string) => void;
+  onOpenAtlas: () => void;
+}) {
+  const provinces = PROVINCE_FOODS;
+  const cuisines = Array.from(new Set(provinces.map((p) => p.cuisine)));
+  const regions = Array.from(
+    new Set(provinces.map((p) => p.region ?? "")),
+  ).filter(Boolean);
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-[11px] px-2 py-0.5 rounded-full text-white bg-emerald-600">
+          全国
+        </span>
+        <h2 className="text-lg font-bold text-gray-900">
+          34 个省级行政区 · 一省一菜
+        </h2>
+      </div>
+      <p className="text-xs text-gray-500 leading-relaxed mb-4">
+        当前是全国视图。点上方地图里的任意省份，或下面的大区标签，进入省级风味档案；
+        再点城市看「一市一味」。共 {provinces.length} 个省级条目、
+        {cuisines.length} 类菜系
+        {regions.length > 0 ? `、${regions.length} 个大区` : ""}。
+      </p>
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {provinces.map((p) => (
+          <button
+            key={p.code}
+            onClick={() => onPick(p.name)}
+            title={`${p.fullName} · ${p.dish}（${p.cuisine}）`}
+            className="text-[11px] px-2 py-1 rounded-full border border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-700 transition-colors"
+          >
+            {p.name} · {p.dish}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+        <button
+          onClick={onOpenAtlas}
+          className="text-xs font-medium text-emerald-700 hover:underline"
+        >
+          先看口味图谱（全国 34 省辣度/咸鲜分布）→
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function FoodPage() {
-  const [provCode, setProvCode] = useState('SC');
+  // 默认不预选省份（'' = 全国视图）：此前默认 'SC'，一进来就是「四川省」面板，
+  // 看起来像省份页而不是全国页。
+  const [provCode, setProvCode] = useState("");
   /** 下钻中的省份简称；null = 全国视图 */
   const [drill, setDrill] = useState<string | null>(null);
   /** 下钻后选中的城市展示简称 */
   const [citySel, setCitySel] = useState<string | null>(null);
   /** 城市清单搜索词（匹配城市名或该地菜名） */
-  const [cityQuery, setCityQuery] = useState('');
+  const [cityQuery, setCityQuery] = useState("");
   /** URL 带进来的 city，等城市清单加载后套用（不能被同步 effect 提前清掉） */
   const pendingCity = useRef<string | null>(null);
   /** 信息卡引用 */
@@ -64,24 +154,26 @@ export default function FoodPage() {
   /** 小屏（手机）判断，用于给地图/雷达换尺寸 */
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const m = window.matchMedia('(max-width: 639px)');
+    const m = window.matchMedia("(max-width: 639px)");
     const h = () => setIsMobile(m.matches);
     h();
-    m.addEventListener('change', h);
-    return () => m.removeEventListener('change', h);
+    m.addEventListener("change", h);
+    return () => m.removeEventListener("change", h);
   }, []);
   /** 地图配色：按大区 / 按菜系 */
-  const [colorBy, setColorBy] = useState<'region' | 'cuisine' | 'heat'>('region');
+  const [colorBy, setColorBy] = useState<"region" | "cuisine" | "heat">(
+    "region",
+  );
   /** 地图高亮的省份（与数据面板的 provCode 分开，返回全国时清空高亮） */
   const [highlightProv, setHighlightProv] = useState<string | null>(null);
   /** 地图首帧骨架屏，绘制完成后隐藏 */
   const [mapReady, setMapReady] = useState(false);
   /** 左栏视图：地图 / 口味图谱 */
   /** 主视图：地图 / 图谱 / 口味测试 / 对比。四个都在同一位置切换，工具不再藏在下方 */
-  const [view, setView] = useState<'map' | 'atlas' | 'test' | 'compare'>('map');
+  const [view, setView] = useState<"map" | "atlas" | "test" | "compare">("map");
 
   const selected = getProvince(provCode) ?? PROVINCE_FOODS[0];
-  const cuisineColor = CUISINE_COLORS[selected.cuisine] ?? '#64748B';
+  const cuisineColor = CUISINE_COLORS[selected.cuisine] ?? "#64748B";
 
   const nameToCode = useMemo(() => {
     const m: Record<string, string> = {};
@@ -102,14 +194,20 @@ export default function FoodPage() {
     setCityErr(null);
     setCityLoading(true);
     loadCityGeo(drill)
-      .then((g) => { if (alive) setCityGeo(g); })
+      .then((g) => {
+        if (alive) setCityGeo(g);
+      })
       .catch((e: unknown) => {
         if (!alive) return;
         setCityGeo(null);
-        setCityErr(e instanceof Error ? e.message : '加载失败');
+        setCityErr(e instanceof Error ? e.message : "加载失败");
       })
-      .finally(() => { if (alive) setCityLoading(false); });
-    return () => { alive = false; };
+      .finally(() => {
+        if (alive) setCityLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, [drill]);
 
   // 只在「手机 + 点地图选中 + 说明卡完全不在视野内」时才滚动。
@@ -118,11 +216,11 @@ export default function FoodPage() {
     if (!citySel || !scrollOnCitySelect.current) return;
     scrollOnCitySelect.current = false;
     const el = infoRef.current;
-    if (!el || typeof window === 'undefined') return;
+    if (!el || typeof window === "undefined") return;
     if (window.innerWidth >= 1024) return;
     const r = el.getBoundingClientRect();
     if (r.top < window.innerHeight && r.bottom > 0) return;
-    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    el.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [citySel]);
 
   useEffect(() => {
@@ -130,22 +228,25 @@ export default function FoodPage() {
     return () => clearTimeout(t);
   }, []);
 
-  const enterProvince = useCallback((name: string) => {
-    const code = nameToCode[name];
-    if (!code) return;
-    setProvCode(code);
-    setHighlightProv(code);
-    setDrill(name);
-    setCitySel(null);
-  }, [nameToCode]);
+  const enterProvince = useCallback(
+    (name: string) => {
+      const code = nameToCode[name];
+      if (!code) return;
+      setProvCode(code);
+      setHighlightProv(code);
+      setDrill(name);
+      setCitySel(null);
+    },
+    [nameToCode],
+  );
 
   // 深链：?prov=海南 / ?prov=HI 直接进入该省下钻视图（便于分享与复现）
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search).get('prov');
+    const p = new URLSearchParams(window.location.search).get("prov");
     if (!p) {
       // URL 没带参数时，回到上次浏览的位置
       try {
-        const saved = JSON.parse(localStorage.getItem('food:last') ?? 'null');
+        const saved = JSON.parse(localStorage.getItem("food:last") ?? "null");
         if (saved?.prov) {
           pendingCity.current = saved.city ?? null;
           enterProvince(saved.prov);
@@ -159,7 +260,7 @@ export default function FoodPage() {
     if (hit) enterProvince(hit.name);
     if (p) return;
     try {
-      const saved = JSON.parse(localStorage.getItem('food:last') ?? 'null');
+      const saved = JSON.parse(localStorage.getItem("food:last") ?? "null");
       if (saved?.prov) {
         pendingCity.current = saved.city ?? null;
         enterProvince(saved.prov);
@@ -171,7 +272,10 @@ export default function FoodPage() {
   useEffect(() => {
     if (!drill) return;
     try {
-      localStorage.setItem('food:last', JSON.stringify({ prov: drill, city: citySel ?? null }));
+      localStorage.setItem(
+        "food:last",
+        JSON.stringify({ prov: drill, city: citySel ?? null }),
+      );
     } catch {}
   }, [drill, citySel]);
 
@@ -179,18 +283,23 @@ export default function FoodPage() {
     setDrill(null);
     setCitySel(null);
     setHighlightProv(null);
+    // 回到全国 = 不预选省份，面板展示全国概览（与首屏一致）
+    setProvCode("");
   }, []);
 
   // ── 城市列表（含代表菜解析结果） ────────────────────────
   const cityRows = useMemo(() => {
     if (!cityGeo) return [];
-    return cityGeo.cities.map((c) => ({ ...c, food: resolveCityFood(selected, c.fullName) }));
+    return cityGeo.cities.map((c) => ({
+      ...c,
+      food: resolveCityFood(selected, c.fullName),
+    }));
   }, [cityGeo, selected]);
 
-// URL 同步：?prov=四川&city=成都，刷新/分享都能还原到市级
+  // URL 同步：?prov=四川&city=成都，刷新/分享都能还原到市级
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    const c = pendingCity.current ?? sp.get('city');
+    const c = pendingCity.current ?? sp.get("city");
     if (c) pendingCity.current = c;
     if (c && cityRows.some((r) => r.label === c)) setCitySel(c);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,45 +307,57 @@ export default function FoodPage() {
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    if (drill) sp.set('prov', drill);
-    else sp.delete('prov');
-    if (citySel) sp.set('city', citySel);
-    else sp.delete('city');
+    if (drill) sp.set("prov", drill);
+    else sp.delete("prov");
+    if (citySel) sp.set("city", citySel);
+    else sp.delete("city");
     const qs = sp.toString();
-    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+    window.history.replaceState(
+      null,
+      "",
+      qs ? `?${qs}` : window.location.pathname,
+    );
   }, [drill, citySel]);
 
   // 键盘：←→ 切省，↑↓ 切市
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       // 只有地图视图才响应方向键：工具面板（测试/对比）里按方向键不该偷偷切省
-      if (view !== 'map') return;
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      if (view !== "map") return;
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
         const names = PROVINCE_FOODS.map((p) => p.name);
         const i = drill ? names.indexOf(drill) : -1;
-        const next = e.key === 'ArrowRight' ? (i + 1) % names.length : (i - 1 + names.length) % names.length;
+        const next =
+          e.key === "ArrowRight"
+            ? (i + 1) % names.length
+            : (i - 1 + names.length) % names.length;
         enterProvince(names[next]);
         e.preventDefault();
-      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
         if (!cityRows.length) return;
         const i = citySel ? cityRows.findIndex((c) => c.label === citySel) : -1;
-        const next = e.key === 'ArrowDown' ? (i + 1) % cityRows.length : (i - 1 + cityRows.length) % cityRows.length;
+        const next =
+          e.key === "ArrowDown"
+            ? (i + 1) % cityRows.length
+            : (i - 1 + cityRows.length) % cityRows.length;
         setCitySel(cityRows[next].label);
         e.preventDefault();
       }
     };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [drill, cityRows, citySel, enterProvince, view]);
 
-
-
-  const localCount = useMemo(() => cityRows.filter((c) => c.food.isLocal).length, [cityRows]);
+  const localCount = useMemo(
+    () => cityRows.filter((c) => c.food.isLocal).length,
+    [cityRows],
+  );
 
   const activeCity = useMemo(
-    () => (citySel ? cityRows.find((c) => c.label === citySel) ?? null : null),
+    () =>
+      citySel ? (cityRows.find((c) => c.label === citySel) ?? null) : null,
     [cityRows, citySel],
   );
 
@@ -249,41 +370,52 @@ export default function FoodPage() {
         areaColor:
           p.code === highlightProv
             ? SELECTED_COLOR
-            : colorBy === 'cuisine'
-              ? CUISINE_COLORS[p.cuisine] ?? '#94A3B8'
-              : colorBy === 'heat'
+            : colorBy === "cuisine"
+              ? (CUISINE_COLORS[p.cuisine] ?? "#94A3B8")
+              : colorBy === "heat"
                 ? heatColor(p.taste.辣)
-                : REGION_COLORS[p.region] ?? '#94A3B8',
+                : (REGION_COLORS[p.region] ?? "#94A3B8"),
         opacity: p.code === highlightProv ? 1 : 0.78,
-        borderColor: '#ffffff',
+        borderColor: "#ffffff",
         borderWidth: 0.6,
       },
     }));
     return {
       tooltip: {
-        trigger: 'item',
+        trigger: "item",
         formatter: (p: any) => {
           const prov = PROVINCE_FOODS.find((x) => x.name === p.name);
           return prov
             ? `<b>${prov.fullName}</b><br/>代表菜：${prov.dish}<br/>菜系：${prov.cuisine}<br/><span style="color:#0F766E">点击下钻到市级 →</span>`
-            : String(p.name ?? '');
+            : String(p.name ?? "");
         },
       },
       series: [
         {
-          type: 'map',
-          map: 'china-compliant',
-          roam: 'move',
+          type: "map",
+          map: "china-compliant",
+          roam: "move",
           scaleLimit: { min: 1, max: 1 },
-          layoutCenter: ['50%', '50%'],
-          layoutSize: '96%',
-          selectedMode: 'single',
+          layoutCenter: ["50%", "50%"],
+          layoutSize: "96%",
+          selectedMode: "single",
           label: { show: false },
           emphasis: {
-            label: { show: true, color: '#ffffff', fontWeight: 'bold', fontSize: 11 },
-            itemStyle: { areaColor: SELECTED_COLOR, shadowColor: 'rgba(15,23,42,0.5)', shadowBlur: 26, shadowOffsetX: 10, shadowOffsetY: 12 },
+            label: {
+              show: true,
+              color: "#ffffff",
+              fontWeight: "bold",
+              fontSize: 11,
+            },
+            itemStyle: {
+              areaColor: SELECTED_COLOR,
+              shadowColor: "rgba(15,23,42,0.5)",
+              shadowBlur: 26,
+              shadowOffsetX: 10,
+              shadowOffsetY: 12,
+            },
           },
-          itemStyle: { borderColor: '#ffffff', borderWidth: 0.6 },
+          itemStyle: { borderColor: "#ffffff", borderWidth: 0.6 },
           data,
         },
       ],
@@ -295,7 +427,7 @@ export default function FoodPage() {
     if (!cityGeo || !cityRows.length) return nationalOption;
     const data = cityRows.map((c) => {
       const color =
-        colorBy === 'heat'
+        colorBy === "heat"
           ? heatColor(selected.taste.辣)
           : c.food.isLocal
             ? (CUISINE_COLORS[c.food.cuisine] ?? cuisineColor)
@@ -305,51 +437,66 @@ export default function FoodPage() {
         value: 1,
         itemStyle: {
           areaColor: c.label === citySel ? SELECTED_COLOR : color,
-          ...(c.label === citySel ? {
-              shadowColor: 'rgba(15,23,42,0.5)',
-              shadowBlur: 26,
-              shadowOffsetX: 10,
-              shadowOffsetY: 12,
-              borderColor: '#ffffff',
-              borderWidth: 2,
-            } : {}),
+          ...(c.label === citySel
+            ? {
+                shadowColor: "rgba(15,23,42,0.5)",
+                shadowBlur: 26,
+                shadowOffsetX: 10,
+                shadowOffsetY: 12,
+                borderColor: "#ffffff",
+                borderWidth: 2,
+              }
+            : {}),
           opacity: 1,
-          borderColor: '#ffffff',
+          borderColor: "#ffffff",
           borderWidth: c.label === citySel ? 1.4 : 0.7,
         },
       };
     });
     return {
       tooltip: {
-        trigger: 'item',
+        trigger: "item",
         formatter: (p: any) => {
           const row = cityRows.find((x) => x.label === p.name);
-          if (!row) return String(p.name ?? '');
-          return `<b>${row.fullName}</b><br/>代表菜：${row.food.dish}<br/>${row.food.isLocal ? '城市专属名食' : '沿用省域风味'}`;
+          if (!row) return String(p.name ?? "");
+          return `<b>${row.fullName}</b><br/>代表菜：${row.food.dish}<br/>${row.food.isLocal ? "城市专属名食" : "沿用省域风味"}`;
         },
       },
       series: [
         {
-          type: 'map',
+          type: "map",
           map: cityGeo.mapName,
-          roam: 'move',
+          roam: "move",
           scaleLimit: { min: 1, max: 1 },
           // 用剔除远海岛礁后的包围盒定初始视野，避免主陆地被压扁/挤出画面
           boundingCoords: cityGeo.viewBounds,
-          layoutCenter: ['50%', '50%'],
-          layoutSize: '96%',
-          selectedMode: 'single',
+          layoutCenter: ["50%", "50%"],
+          layoutSize: "96%",
+          selectedMode: "single",
           label: { show: false },
           emphasis: {
-            label: { show: true, color: '#ffffff', fontWeight: 'bold', fontSize: 11 },
+            label: {
+              show: true,
+              color: "#ffffff",
+              fontWeight: "bold",
+              fontSize: 11,
+            },
             itemStyle: { areaColor: SELECTED_COLOR },
           },
-          itemStyle: { borderColor: '#ffffff', borderWidth: 0.7 },
+          itemStyle: { borderColor: "#ffffff", borderWidth: 0.7 },
           data,
         },
       ],
     };
-  }, [cityGeo, cityRows, citySel, drill, cuisineColor, nationalOption, colorBy]);
+  }, [
+    cityGeo,
+    cityRows,
+    citySel,
+    drill,
+    cuisineColor,
+    nationalOption,
+    colorBy,
+  ]);
 
   const maps = useMemo<MapRegistration[]>(
     () => (cityGeo ? [{ name: cityGeo.mapName, geo: cityGeo.geo }] : []),
@@ -358,18 +505,21 @@ export default function FoodPage() {
 
   const option = drill && cityGeo ? provinceOption : nationalOption;
 
-  const onSelect = useCallback((p: any) => {
-    if (p?.seriesType !== 'map' || !p.name) return;
-    if (!drill) {
-      enterProvince(p.name);
-      return;
-    }
-    if (!cityGeo) return;
-    if (cityRows.some((c) => c.label === p.name)) {
-      scrollOnCitySelect.current = true;
-      setCitySel(p.name);
-    }
-  }, [drill, cityGeo, cityRows, enterProvince]);
+  const onSelect = useCallback(
+    (p: any) => {
+      if (p?.seriesType !== "map" || !p.name) return;
+      if (!drill) {
+        enterProvince(p.name);
+        return;
+      }
+      if (!cityGeo) return;
+      if (cityRows.some((c) => c.label === p.name)) {
+        scrollOnCitySelect.current = true;
+        setCitySel(p.name);
+      }
+    },
+    [drill, cityGeo, cityRows, enterProvince],
+  );
 
   // ── 面板数据：城市优先，否则省域 ────────────────────────
   const panel = useMemo(() => {
@@ -377,7 +527,7 @@ export default function FoodPage() {
       return {
         key: `city-${activeCity.fullName}`,
         title: activeCity.fullName,
-        sub: `${selected.fullName} · ${activeCity.food.isLocal ? '城市专属名食' : '省域风味'}`,
+        sub: `${selected.fullName} · ${activeCity.food.isLocal ? "城市专属名食" : "省域风味"}`,
         dish: activeCity.food.dish,
         cuisine: activeCity.food.cuisine,
         desc: activeCity.food.desc,
@@ -400,19 +550,27 @@ export default function FoodPage() {
   const panelColor = CUISINE_COLORS[panel.cuisine] ?? cuisineColor;
 
   const cityErrText = useMemo(() => {
-    if (!cityErr) return '';
-    if (/\b404\b/.test(cityErr)) return '上游边界数据源未收录该行政区的地级边界';
-    if (/Failed to fetch|NetworkError/i.test(cityErr)) return '边界数据请求失败，请检查网络后重试';
+    if (!cityErr) return "";
+    if (/\b404\b/.test(cityErr))
+      return "上游边界数据源未收录该行政区的地级边界";
+    if (/Failed to fetch|NetworkError/i.test(cityErr))
+      return "边界数据请求失败，请检查网络后重试";
     return cityErr;
   }, [cityErr]);
 
   const sortedTaste = useMemo(
-    () => TASTE_KEYS.map((k) => ({ k, v: selected.taste[k] })).sort((a, b) => b.v - a.v),
+    () =>
+      TASTE_KEYS.map((k) => ({ k, v: selected.taste[k] })).sort(
+        (a, b) => b.v - a.v,
+      ),
     [selected],
   );
 
   const shareText = useMemo(() => {
-    const top = sortedTaste.slice(0, 2).map((t) => t.k).join('·');
+    const top = sortedTaste
+      .slice(0, 2)
+      .map((t) => t.k)
+      .join("·");
     const where = panel.isCity ? panel.title : selected.fullName;
     return `【中国味道 · ${where}】\n代表菜：${panel.dish}（${panel.cuisine}）\n口味标签：${top}\n风味印象：${panel.desc}\n—— 用 WorkBuddy 打造的《华夏探索》探索中国味道 #WorkBuddy #1024程序员节`;
   }, [panel, selected.fullName, sortedTaste]);
@@ -433,7 +591,9 @@ export default function FoodPage() {
       <div className="mb-5">
         <div className="flex flex-wrap items-center gap-2 mb-1">
           <UtensilsCrossed className="w-5 h-5 text-rose-500" />
-          <h1 className="text-xl font-bold text-gray-900">中国味道 · 一省一菜 → 一市一味</h1>
+          <h1 className="text-xl font-bold text-gray-900">
+            中国味道 · 一省一菜 → 一市一味
+          </h1>
           {drill && (
             <button
               onClick={backToNation}
@@ -445,10 +605,10 @@ export default function FoodPage() {
           <div className="ml-auto inline-flex flex-wrap rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs shrink-0">
             {(
               [
-                ['map', '味道地图'],
-                ['atlas', '口味图谱'],
-                ['test', '口味测试'],
-                ['compare', '对比'],
+                ["map", "味道地图"],
+                ["atlas", "口味图谱"],
+                ["test", "口味测试"],
+                ["compare", "对比"],
               ] as const
             ).map(([k, label]) => (
               <button
@@ -456,10 +616,10 @@ export default function FoodPage() {
                 onClick={() => setView(k)}
                 aria-pressed={view === k}
                 className={cn(
-                  'px-2.5 py-1 rounded-md font-medium transition-colors',
+                  "px-2.5 py-1 rounded-md font-medium transition-colors",
                   view === k
-                    ? 'bg-white text-emerald-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700',
+                    ? "bg-white text-emerald-700 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700",
                 )}
               >
                 {label}
@@ -468,235 +628,346 @@ export default function FoodPage() {
           </div>
         </div>
         <p className="text-sm text-gray-500">
-          {view === 'atlas'
-            ? '把 34 道省级代表菜铺在「辣 × 甜」平面上：横轴辣度、纵轴甜度，点越大越鲜。点击任意点下钻到该省。'
-            : view === 'test'
-              ? '拖动六个维度，系统匹配口味最接近的省域代表菜；点结果跳到该省。'
-              : view === 'compare'
-                ? '并排对比两道菜的口味雷达、价格、碳足迹与每份钠。'
-                : drill
-              ? <>已下钻到 <b className="text-gray-700">{selected.fullName}</b>，点击地图上的市/区查看该地代表菜；也可用下方城市清单定位。</>
-              : '点击任意省份下钻到市级，下方查看代表菜与口味档案。'}
+          {view === "atlas" ? (
+            "把 34 道省级代表菜铺在「辣 × 甜」平面上：横轴辣度、纵轴甜度，点越大越鲜。点击任意点下钻到该省。"
+          ) : view === "test" ? (
+            "拖动六个维度，系统匹配口味最接近的省域代表菜；点结果跳到该省。"
+          ) : view === "compare" ? (
+            "并排对比两道菜的口味雷达、价格、碳足迹与每份钠。"
+          ) : drill ? (
+            <>
+              已下钻到 <b className="text-gray-700">{selected.fullName}</b>
+              ，点击地图上的市/区查看该地代表菜；也可用下方城市清单定位。
+            </>
+          ) : (
+            "点击任意省份下钻到市级，下方查看代表菜与口味档案。"
+          )}
         </p>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_380px] gap-5 items-start">
         {/* ══ 左栏：地图 + 地图下方的说明/城市清单/分享卡 ══ */}
         <div className="min-w-0 space-y-5">
-        {/* ══ 味道地图 / 口味图谱 ══ */}
-        {view === 'atlas' ? (
-          <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <TasteScatter active={drill} onPick={(n) => enterProvince(n)} height={isMobile ? 320 : 620} />
-            <p className="px-4 py-2 text-[11px] text-gray-400 border-t border-gray-100">
-              横轴辣度、纵轴甜度，点越大越鲜；颜色为菜系。点击任意点下钻到该省。
-            </p>
-          </section>
-        ) : view === 'test' ? (
-          <TasteTest onPick={(p) => enterProvince(p.name)} />
-        ) : view === 'compare' ? (
-          <DishCompare left={cmpL} right={cmpR} onLeft={setCmpL} onRight={setCmpR} />
-        ) : (
-        <section className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          {!mapReady && (
-            <div className="absolute inset-0 z-10 bg-white flex flex-col items-center justify-center gap-3">
-              <div className="w-3/4 h-3/5 rounded-xl bg-gray-100 animate-pulse" />
-              <div className="text-[11px] text-gray-300">正在绘制味道地图…</div>
-            </div>
-          )}
-          <ChinaMap
-            option={option}
-            onSelect={onSelect}
-            maps={maps}
-            height={isMobile ? 380 : 620}
-            className="w-full [&_canvas]:!h-full"
-          />
-
-          {/* 加载/失败遮罩 */}
-          {drill && (cityLoading || cityErr) && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/78 backdrop-blur-[2px] text-center px-6">
-              {cityLoading ? (
-                <>
-                  <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
-                  <p className="text-sm text-gray-600">正在加载 {selected.fullName} 市级边界…</p>
-                </>
-              ) : (
-                <>
-                  <Layers className="w-6 h-6 text-gray-400" />
-                  <p className="text-sm font-medium text-gray-700">{selected.fullName} 暂无市级矢量边界</p>
-                  <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed">{cityErrText}</p>
-                  <p className="text-xs text-gray-400">仍可查看右侧的省域代表菜。</p>
-                  <button onClick={backToNation} className="mt-1 text-xs font-medium text-emerald-700 underline">返回全国视图</button>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* 图例 */}
-          {drill ? (
-            <div className="absolute left-3 bottom-3 flex flex-wrap gap-2 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2 max-w-[85%]">
-              <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
-                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: cuisineColor }} />城市专属名食
-              </span>
-              <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
-                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: FALLBACK_CITY_COLOR }} />沿用省域风味
-              </span>
-              <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
-                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: SELECTED_COLOR }} />当前选中
-              </span>
-            </div>
-          ) : (
-            <div className="absolute left-3 bottom-3 flex flex-wrap gap-1.5 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2 max-w-[85%]">
-              {colorBy === 'heat' ? (
-                <span className="flex items-center gap-1">
-                  <span className="text-[11px] text-gray-600">不辣</span>
-                  <span className="w-24 h-2.5 rounded" style={{ background: 'linear-gradient(90deg,#FEF2F2,#B91C1C,#7F1D1D)' }} />
-                  <span className="text-[11px] text-gray-600">极辣</span>
-                </span>
-              ) : null}
-              {(colorBy === 'heat' ? [] : colorBy === 'cuisine' ? Object.keys(CUISINE_COLORS) : REGION_ORDER).map((r) => (
-                <span key={r} className="inline-flex items-center gap-1 text-[11px] text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: colorBy === 'cuisine' ? CUISINE_COLORS[r] ?? '#94A3B8' : REGION_COLORS[r] }} />
-                  {r}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <div className="absolute right-3 top-3 inline-flex rounded-lg border border-gray-200 bg-white/90 backdrop-blur p-0.5 text-[10px]">
-              {([['region', '按大区'], ['cuisine', '按菜系'], ['heat', '辣度热力']] as const).map(([k, label]) => (
-                <button
-                  key={k}
-                  onClick={() => setColorBy(k)}
-                  className={cn(
-                    'px-1.5 py-0.5 rounded-md transition-colors',
-                    colorBy === k ? 'bg-emerald-600 text-white' : 'text-gray-500 hover:text-gray-700',
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-          </div>
-          <div className="absolute left-3 top-3 text-[10px] text-gray-500 bg-white/85 rounded px-1.5 py-0.5 hidden sm:block">
-            可拖拽平移（不可缩放）· ←→ 切省 ↑↓ 切市{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
-          </div>
-
-          {/* 视野剔除提示（如三沙市岛礁跨越南海，会把本岛压扁） */}
-          {drill && cityGeo && cityGeo.offscreen.length > 0 && (
-            <div className="absolute right-3 bottom-3 max-w-[230px] text-[10px] text-gray-500 bg-white/88 backdrop-blur-sm border border-gray-200 rounded-lg px-2 py-1.5 leading-relaxed">
-              {cityGeo.offscreen.map((o) => o.fullName).join('、')} 的范围远超本岛，已移出初始视野，可在右侧城市清单中查看。
-            </div>
-          )}
-        </section>
-        )}
-
-        {/* ══ 地图下方：菜品说明 · 城市清单 · 分享卡 ══
-            右栏放雷达和口味条就够高了，把文字类内容挪到地图下方，
-            左栏不再空一大片，整页高度也更接近。 */}
-        <motion.div
-          ref={infoRef}
-          key={`${panel.key}-info`}
-          initial={{ opacity: 0.45 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.14 }}
-          className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm"
-        >
-          <div className="flex items-start gap-3 mb-3">
-            <span className="shrink-0 mt-0.5 text-[11px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: panelColor }}>
-              {panel.cuisine}
-            </span>
-            <p className="text-sm text-gray-600 leading-relaxed">{panel.desc}</p>
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-wrap text-[11px] mb-3">
-            <span className="text-gray-400 shrink-0">口味相近</span>
-            {getSimilarTaste(selected.name, 5).map((x) => (
-              <button
-                key={x.prov.name}
-                onClick={() => enterProvince(x.prov.name)}
-                title={x.prov.fullName + ' · ' + x.prov.dish + ' · 相似度 ' + (x.sim * 100).toFixed(0) + '%'}
-                className="px-2 py-0.5 rounded-full border border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-700 transition-colors"
-              >
-                {x.prov.dish}
-              </button>
-            ))}
-          </div>
-
-          {drill && cityRows.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-gray-700">城市清单</span>
-                <span className="text-[10px] text-gray-400">{localCount}/{cityRows.length} 有专属名食</span>
-              </div>
-              <input
-                value={cityQuery}
-                onChange={(e) => setCityQuery(e.target.value)}
-                placeholder="搜索城市或菜名…"
-                className="w-full mb-1.5 px-2 py-1 text-[11px] rounded-lg border border-gray-200 focus:border-emerald-400 focus:outline-none"
+          {/* ══ 味道地图 / 口味图谱 ══ */}
+          {view === "atlas" ? (
+            <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <TasteScatter
+                active={drill}
+                onPick={(n) => enterProvince(n)}
+                height={isMobile ? 320 : 620}
               />
-              <div className="flex flex-wrap gap-1.5 max-h-[104px] overflow-y-auto pr-1 content-start">
-                {cityRows
-                  .filter((c) => {
-                    const q = cityQuery.trim();
-                    if (!q) return true;
-                    return c.label.includes(q) || c.food.dish.includes(q) || c.fullName.includes(q);
-                  })
-                  .map((c) => (
+              <p className="px-4 py-2 text-[11px] text-gray-400 border-t border-gray-100">
+                横轴辣度、纵轴甜度，点越大越鲜；颜色为菜系。点击任意点下钻到该省。
+              </p>
+            </section>
+          ) : view === "test" ? (
+            <TasteTest onPick={(p) => enterProvince(p.name)} />
+          ) : view === "compare" ? (
+            <DishCompare
+              left={cmpL}
+              right={cmpR}
+              onLeft={setCmpL}
+              onRight={setCmpR}
+            />
+          ) : (
+            <section className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              {!mapReady && (
+                <div className="absolute inset-0 z-10 bg-white flex flex-col items-center justify-center gap-3">
+                  <div className="w-3/4 h-3/5 rounded-xl bg-gray-100 animate-pulse" />
+                  <div className="text-[11px] text-gray-300">
+                    正在绘制味道地图…
+                  </div>
+                </div>
+              )}
+              <ChinaMap
+                option={option}
+                onSelect={onSelect}
+                maps={maps}
+                height={isMobile ? 380 : 620}
+                className="w-full [&_canvas]:!h-full"
+              />
+
+              {/* 加载/失败遮罩 */}
+              {drill && (cityLoading || cityErr) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/78 backdrop-blur-[2px] text-center px-6">
+                  {cityLoading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
+                      <p className="text-sm text-gray-600">
+                        正在加载 {selected.fullName} 市级边界…
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Layers className="w-6 h-6 text-gray-400" />
+                      <p className="text-sm font-medium text-gray-700">
+                        {selected.fullName} 暂无市级矢量边界
+                      </p>
+                      <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed">
+                        {cityErrText}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        仍可查看右侧的省域代表菜。
+                      </p>
+                      <button
+                        onClick={backToNation}
+                        className="mt-1 text-xs font-medium text-emerald-700 underline"
+                      >
+                        返回全国视图
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* 图例 */}
+              {drill ? (
+                <div className="absolute left-3 bottom-3 flex flex-wrap gap-2 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2 max-w-[85%]">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                    <span
+                      className="w-2.5 h-2.5 rounded-sm"
+                      style={{ backgroundColor: cuisineColor }}
+                    />
+                    城市专属名食
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                    <span
+                      className="w-2.5 h-2.5 rounded-sm"
+                      style={{ backgroundColor: FALLBACK_CITY_COLOR }}
+                    />
+                    沿用省域风味
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                    <span
+                      className="w-2.5 h-2.5 rounded-sm"
+                      style={{ backgroundColor: SELECTED_COLOR }}
+                    />
+                    当前选中
+                  </span>
+                </div>
+              ) : (
+                <div className="absolute left-3 bottom-3 flex flex-wrap gap-1.5 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2 max-w-[85%]">
+                  {colorBy === "heat" ? (
+                    <span className="flex items-center gap-1">
+                      <span className="text-[11px] text-gray-600">不辣</span>
+                      <span
+                        className="w-24 h-2.5 rounded"
+                        style={{
+                          background:
+                            "linear-gradient(90deg,#FEF2F2,#B91C1C,#7F1D1D)",
+                        }}
+                      />
+                      <span className="text-[11px] text-gray-600">极辣</span>
+                    </span>
+                  ) : null}
+                  {(colorBy === "heat"
+                    ? []
+                    : colorBy === "cuisine"
+                      ? Object.keys(CUISINE_COLORS)
+                      : REGION_ORDER
+                  ).map((r) => (
+                    <span
+                      key={r}
+                      className="inline-flex items-center gap-1 text-[11px] text-gray-600"
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-sm"
+                        style={{
+                          backgroundColor:
+                            colorBy === "cuisine"
+                              ? (CUISINE_COLORS[r] ?? "#94A3B8")
+                              : REGION_COLORS[r],
+                        }}
+                      />
+                      {r}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="absolute right-3 top-3 inline-flex rounded-lg border border-gray-200 bg-white/90 backdrop-blur p-0.5 text-[10px]">
+                {(
+                  [
+                    ["region", "按大区"],
+                    ["cuisine", "按菜系"],
+                    ["heat", "辣度热力"],
+                  ] as const
+                ).map(([k, label]) => (
                   <button
-                    key={c.fullName}
-                    onClick={() => setCitySel(c.label)}
-                    title={`${c.fullName} · ${c.food.dish}`}
+                    key={k}
+                    onClick={() => setColorBy(k)}
                     className={cn(
-                      'text-[11px] px-2 py-0.5 rounded-full border transition-colors',
-                      c.label === citySel
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : c.food.isLocal
-                          ? 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400 hover:text-emerald-700'
-                          : 'bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-300',
+                      "px-1.5 py-0.5 rounded-md transition-colors",
+                      colorBy === k
+                        ? "bg-emerald-600 text-white"
+                        : "text-gray-500 hover:text-gray-700",
                     )}
                   >
-                    {c.label}
+                    {label}
                   </button>
                 ))}
               </div>
-            </div>
+              <div className="absolute left-3 top-3 text-[10px] text-gray-500 bg-white/85 rounded px-1.5 py-0.5 hidden sm:block">
+                可拖拽平移（不可缩放）· ←→ 切省 ↑↓ 切市
+                {drill && cityGeo
+                  ? ` · 共 ${cityRows.length} 个地级行政区`
+                  : ""}
+              </div>
+
+              {/* 视野剔除提示（如三沙市岛礁跨越南海，会把本岛压扁） */}
+              {drill && cityGeo && cityGeo.offscreen.length > 0 && (
+                <div className="absolute right-3 bottom-3 max-w-[230px] text-[10px] text-gray-500 bg-white/88 backdrop-blur-sm border border-gray-200 rounded-lg px-2 py-1.5 leading-relaxed">
+                  {cityGeo.offscreen.map((o) => o.fullName).join("、")}{" "}
+                  的范围远超本岛，已移出初始视野，可在右侧城市清单中查看。
+                </div>
+              )}
+            </section>
           )}
 
-          <div className="mt-3 pt-3 border-t border-gray-100 grid gap-3 sm:grid-cols-[1fr_210px] sm:items-end">
-            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-1">
-                <Flame className="w-3.5 h-3.5 text-rose-500" /> 分享卡 · #WorkBuddy #1024程序员节
+          {/* ══ 地图下方：菜品说明 · 城市清单 · 分享卡 ══
+            右栏放雷达和口味条就够高了，把文字类内容挪到地图下方，
+            左栏不再空一大片，整页高度也更接近。 */}
+          {provCode === "" ? (
+            <NationalOverview
+              onPick={(n) => enterProvince(n)}
+              onOpenAtlas={() => setView("atlas")}
+            />
+          ) : (
+            <motion.div
+              ref={infoRef}
+              key={`${panel.key}-info`}
+              initial={{ opacity: 0.45 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.14 }}
+              className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm"
+            >
+              <div className="flex items-start gap-3 mb-3">
+                <span
+                  className="shrink-0 mt-0.5 text-[11px] px-2 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: panelColor }}
+                >
+                  {panel.cuisine}
+                </span>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {panel.desc}
+                </p>
               </div>
-              <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-[72px] overflow-y-auto">{shareText}</pre>
-            </div>
-            <div className="grid gap-2">
-              <button
-                onClick={copyShare}
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-colors border border-emerald-200"
-              >
-                {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                {copied ? '已复制分享文案' : '复制分享文案'}
-              </button>
-              <button
-                onClick={() =>
-                  downloadShareCard({
-                    title: panel.title,
-                    cuisine: panel.cuisine,
-                    taste: selected.taste,
-                    tier: TIER_LABEL[tierOf({
-                      dish: !!DISH_SODIUM[panel.dish],
-                      nutrition: !!getDishNutrition(panel.dish),
-                      ingredient: !!getDishIngredients(panel.dish),
-                    })],
-                  })
-                }
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors border border-gray-300"
-              >
-                <Download className="w-4 h-4" />
-                导出分享卡图片
-              </button>
-            </div>
-          </div>
-        </motion.div>
+
+              <div className="flex items-center gap-1.5 flex-wrap text-[11px] mb-3">
+                <span className="text-gray-400 shrink-0">口味相近</span>
+                {getSimilarTaste(selected.name, 5).map((x) => (
+                  <button
+                    key={x.prov.name}
+                    onClick={() => enterProvince(x.prov.name)}
+                    title={
+                      x.prov.fullName +
+                      " · " +
+                      x.prov.dish +
+                      " · 相似度 " +
+                      (x.sim * 100).toFixed(0) +
+                      "%"
+                    }
+                    className="px-2 py-0.5 rounded-full border border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-700 transition-colors"
+                  >
+                    {x.prov.dish}
+                  </button>
+                ))}
+              </div>
+
+              {drill && cityRows.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-semibold text-gray-700">
+                      城市清单
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      {localCount}/{cityRows.length} 有专属名食
+                    </span>
+                  </div>
+                  <input
+                    value={cityQuery}
+                    onChange={(e) => setCityQuery(e.target.value)}
+                    placeholder="搜索城市或菜名…"
+                    className="w-full mb-1.5 px-2 py-1 text-[11px] rounded-lg border border-gray-200 focus:border-emerald-400 focus:outline-none"
+                  />
+                  <div className="flex flex-wrap gap-1.5 max-h-[104px] overflow-y-auto pr-1 content-start">
+                    {cityRows
+                      .filter((c) => {
+                        const q = cityQuery.trim();
+                        if (!q) return true;
+                        return (
+                          c.label.includes(q) ||
+                          c.food.dish.includes(q) ||
+                          c.fullName.includes(q)
+                        );
+                      })
+                      .map((c) => (
+                        <button
+                          key={c.fullName}
+                          onClick={() => setCitySel(c.label)}
+                          title={`${c.fullName} · ${c.food.dish}`}
+                          className={cn(
+                            "text-[11px] px-2 py-0.5 rounded-full border transition-colors",
+                            c.label === citySel
+                              ? "bg-emerald-600 text-white border-emerald-600"
+                              : c.food.isLocal
+                                ? "bg-white text-gray-700 border-gray-300 hover:border-emerald-400 hover:text-emerald-700"
+                                : "bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-300",
+                          )}
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-3 pt-3 border-t border-gray-100 grid gap-3 sm:grid-cols-[1fr_210px] sm:items-end">
+                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-1">
+                    <Flame className="w-3.5 h-3.5 text-rose-500" /> 分享卡 ·
+                    #WorkBuddy #1024程序员节
+                  </div>
+                  <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-[72px] overflow-y-auto">
+                    {shareText}
+                  </pre>
+                </div>
+                <div className="grid gap-2">
+                  <button
+                    onClick={copyShare}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-colors border border-emerald-200"
+                  >
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
+                    {copied ? "已复制分享文案" : "复制分享文案"}
+                  </button>
+                  <button
+                    onClick={() =>
+                      downloadShareCard({
+                        title: panel.title,
+                        cuisine: panel.cuisine,
+                        taste: selected.taste,
+                        tier: TIER_LABEL[
+                          tierOf({
+                            dish: !!DISH_SODIUM[panel.dish],
+                            nutrition: !!getDishNutrition(panel.dish),
+                            ingredient: !!getDishIngredients(panel.dish),
+                          })
+                        ],
+                      })
+                    }
+                    className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors border border-gray-300"
+                  >
+                    <Download className="w-4 h-4" />
+                    导出分享卡图片
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* ══ 详情面板 ══ */}
@@ -708,49 +979,74 @@ export default function FoodPage() {
             这里改成：不做进出场动画（只做透明度微变），并给高度会变的块预留固定高度，
             让整块面板在切换城市时尺寸恒定。
           */}
-          <motion.div
-            key={panel.key}
-            initial={{ opacity: 0.45 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.14 }}
-          >
-            <div className="min-h-[52px] flex items-start justify-between gap-2 mb-1">
-              <h2 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{panel.title}</h2>
-              <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: panelColor }}>{panel.cuisine}</span>
-            {(() => {
-              // 一层数据一个角标：同时有菜肴实测与营养库时都显示，不互相覆盖
-              const tiers: EvidenceTier[] = [];
-              if (DISH_SODIUM[panel.dish]) tiers.push('dish');
-              if (getDishNutrition(panel.dish)) tiers.push('nutrition');
-              if (getDishIngredients(panel.dish)) tiers.push('ingredient');
-              if (!tiers.length) tiers.push('self');
-              return tiers.map((t) => (
+          {provCode === "" ? (
+            <NationalOverview
+              onPick={(n) => enterProvince(n)}
+              onOpenAtlas={() => setView("atlas")}
+            />
+          ) : (
+            <motion.div
+              key={panel.key}
+              initial={{ opacity: 0.45 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.14 }}
+            >
+              <div className="min-h-[52px] flex items-start justify-between gap-2 mb-1">
+                <h2 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">
+                  {panel.title}
+                </h2>
                 <span
-                  key={t}
-                  className={'shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border ' + TIER_STYLE[t]}
-                  title="这道菜目前有几层外部数据可核"
+                  className="shrink-0 text-[11px] px-2 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: panelColor }}
                 >
-                  {TIER_LABEL[t]}
+                  {panel.cuisine}
                 </span>
-              ));
-            })()}
-            </div>
-            <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
-              <MapPin className="w-3 h-3" />{panel.sub}
-            </p>
+                {(() => {
+                  // 一层数据一个角标：同时有菜肴实测与营养库时都显示，不互相覆盖
+                  const tiers: EvidenceTier[] = [];
+                  if (DISH_SODIUM[panel.dish]) tiers.push("dish");
+                  if (getDishNutrition(panel.dish)) tiers.push("nutrition");
+                  if (getDishIngredients(panel.dish)) tiers.push("ingredient");
+                  if (!tiers.length) tiers.push("self");
+                  return tiers.map((t) => (
+                    <span
+                      key={t}
+                      className={
+                        "shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border " +
+                        TIER_STYLE[t]
+                      }
+                      title="这道菜目前有几层外部数据可核"
+                    >
+                      {TIER_LABEL[t]}
+                    </span>
+                  ));
+                })()}
+              </div>
+              <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                {panel.sub}
+              </p>
 
-            {/* 固定高度的徽标位：无论是否城市视角，占位一致 */}
-            <div className="h-6 mb-3">
-              {panel.isCity && (
-                <div className={cn(
-                  'inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full',
-                  panel.isLocal ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-50 text-gray-500 border border-gray-200',
-                )}>
-                  {panel.isLocal ? <Sparkles className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
-                  {panel.isLocal ? '城市专属名食' : '沿用省域风味'}
-                </div>
-              )}
-            </div>
+              {/* 固定高度的徽标位：无论是否城市视角，占位一致 */}
+              <div className="h-6 mb-3">
+                {panel.isCity && (
+                  <div
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full",
+                      panel.isLocal
+                        ? "bg-amber-50 text-amber-700 border border-amber-200"
+                        : "bg-gray-50 text-gray-500 border border-gray-200",
+                    )}
+                  >
+                    {panel.isLocal ? (
+                      <Sparkles className="w-3 h-3" />
+                    ) : (
+                      <Layers className="w-3 h-3" />
+                    )}
+                    {panel.isLocal ? "城市专属名食" : "沿用省域风味"}
+                  </div>
+                )}
+              </div>
 
               <div className="mb-3">
                 <DishVisual
@@ -762,7 +1058,11 @@ export default function FoodPage() {
               </div>
 
               <div className="flex justify-center mb-2">
-                <TasteRadar taste={selected.taste} color={panelColor} size={isMobile ? 190 : 240} />
+                <TasteRadar
+                  taste={selected.taste}
+                  color={panelColor}
+                  size={isMobile ? 190 : 240}
+                />
               </div>
 
               {/* 口径披露：逐维度标出来源等级，有数据的给数据，没有的直接说没有 */}
@@ -771,14 +1071,20 @@ export default function FoodPage() {
                   onClick={() => setShowBasis((v) => !v)}
                   className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  {panel.isCity ? '口味取所属省域参考' : '口味雷达为本项目自评口径'}
-                  <span className="underline decoration-dotted underline-offset-2">{showBasis ? '收起依据' : '依据？'}</span>
+                  {panel.isCity
+                    ? "口味取所属省域参考"
+                    : "口味雷达为本项目自评口径"}
+                  <span className="underline decoration-dotted underline-offset-2">
+                    {showBasis ? "收起依据" : "依据？"}
+                  </span>
                 </button>
               </div>
               {showBasis && (
                 <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50/80 p-2.5 text-left">
                   <p className="text-[10px] text-gray-500 leading-relaxed mb-2">
-                    6 个维度里，<b className="text-gray-700">咸、甜有公开刻度</b>（钠 mg/100g 与蔗糖相对甜度），
+                    6 个维度里，
+                    <b className="text-gray-700">咸、甜有公开刻度</b>（钠
+                    mg/100g 与蔗糖相对甜度），
                     <b className="text-gray-700">辣锚定 Scoville 量表</b>；
                     <b className="text-gray-700">酸、香、鲜没有公开量纲</b>。
                     具体数值仍是本项目按各自的 0/50/100 锚点定标，不是实测结果。
@@ -789,21 +1095,25 @@ export default function FoodPage() {
                     if (!nut) {
                       return (
                         <p className="text-[10px] leading-relaxed text-gray-400 mb-2 border-l-2 border-gray-200 pl-2">
-                          「{panel.dish}」在 USDA FoodData Central 没有能对上的条目，
-                          咸 / 甜也退回自评；其余维度见下表。
+                          「{panel.dish}」在 USDA FoodData Central
+                          没有能对上的条目， 咸 / 甜也退回自评；其余维度见下表。
                         </p>
                       );
                     }
                     return (
                       <div className="text-[10px] leading-relaxed text-gray-500 mb-2 border-l-2 border-emerald-300 pl-2">
                         <div className="font-semibold text-gray-700 mb-0.5">
-                          营养库有对应条目 · 钠 {nut.sodiumMg} mg/100g · 糖 {nut.sugarsG} g/100g
+                          营养库有对应条目 · 钠 {nut.sodiumMg} mg/100g · 糖{" "}
+                          {nut.sugarsG} g/100g
                         </div>
                         <div className="text-gray-500">
-                          {nut.description}（{nut.dataType}，fdcId {nut.fdcId}）。{nut.caveat}
+                          {nut.description}（{nut.dataType}，fdcId {nut.fdcId}
+                          ）。{nut.caveat}
                         </div>
                         <div className="text-gray-400 mt-0.5">
-                          按 800mg/100g 归一到 100 折算，咸度刻度值约 {sodiumToScore(nut.sodiumMg)}（当前自评估值 {selected.taste.咸}）。
+                          按 800mg/100g 归一到 100 折算，咸度刻度值约{" "}
+                          {sodiumToScore(nut.sodiumMg)}（当前自评估值{" "}
+                          {selected.taste.咸}）。
                         </div>
                       </div>
                     );
@@ -813,16 +1123,28 @@ export default function FoodPage() {
                     {TASTE_DIMENSIONS.map((d) => {
                       const ev = TASTE_EVIDENCE[d.key];
                       return (
-                        <li key={d.key} className="text-[10px] leading-snug text-gray-500">
+                        <li
+                          key={d.key}
+                          className="text-[10px] leading-snug text-gray-500"
+                        >
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-semibold text-gray-700">{d.name}</span>
-                            <span className={cn('px-1 py-px rounded border text-[9px] font-medium', EVIDENCE_STYLE[ev.level])}>
+                            <span className="font-semibold text-gray-700">
+                              {d.name}
+                            </span>
+                            <span
+                              className={cn(
+                                "px-1 py-px rounded border text-[9px] font-medium",
+                                EVIDENCE_STYLE[ev.level],
+                              )}
+                            >
                               {EVIDENCE_LABEL[ev.level]}
                             </span>
                             <span className="text-gray-600">{ev.scale}</span>
                           </div>
                           <div className="text-gray-400 mt-0.5">{ev.note}</div>
-                          <div className="text-gray-400 mt-0.5">0 = {d.low}；100 = {d.high}</div>
+                          <div className="text-gray-400 mt-0.5">
+                            0 = {d.low}；100 = {d.high}
+                          </div>
                         </li>
                       );
                     })}
@@ -837,26 +1159,54 @@ export default function FoodPage() {
                           菜肴级实测 · 中国菜肴数据集（3,302 道，CC BY 4.0）
                         </div>
                         <div className="text-[10px] text-gray-600 leading-relaxed">
-                          每份钠 <b>{sd.na} mg</b>（库内条目「{sd.db}」，{sd.serving} 份）
-                          <span className="text-gray-400"> · </span>
-                          在 3,302 道菜中排前 <b>{Math.max(1, 100 - sd.pct)}%</b>
-                          <span className="text-gray-400">（分位 {sd.pct}）</span>
+                          每份钠 <b>{sd.na} mg</b>（库内条目「{sd.db}」，
+                          {sd.serving} 份）
+                          <span className="text-gray-400"> · </span>在 3,302
+                          道菜中排前 <b>{Math.max(1, 100 - sd.pct)}%</b>
+                          <span className="text-gray-400">
+                            （分位 {sd.pct}）
+                          </span>
                         </div>
                         <div className="mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.max(2, sd.pct)}%` }} />
+                          <div
+                            className="h-full rounded-full bg-emerald-500"
+                            style={{ width: `${Math.max(2, sd.pct)}%` }}
+                          />
                         </div>
                         {(() => {
                           const im = DISH_IMPACT[panel.dish];
                           if (!im) return null;
                           return (
                             <div className="mt-1 text-[10px] text-gray-500">
-                              {im.price != null && <span>每份 <b>{im.price} 元</b></span>}
-                              {im.carbon != null && <span className="text-gray-300"> · </span>}
-                              {im.carbon != null && <span>碳足迹 <b>{im.carbon} g</b></span>}
-                              {im.water != null && <span className="text-gray-300"> · </span>}
-                              {im.water != null && <span>水 <b>{im.water} L</b></span>}
-                              {im.land != null && <span className="text-gray-300"> · </span>}
-                              {im.land != null && <span>土地 <b>{im.land} m²</b></span>}
+                              {im.price != null && (
+                                <span>
+                                  每份 <b>{im.price} 元</b>
+                                </span>
+                              )}
+                              {im.carbon != null && (
+                                <span className="text-gray-300"> · </span>
+                              )}
+                              {im.carbon != null && (
+                                <span>
+                                  碳足迹 <b>{im.carbon} g</b>
+                                </span>
+                              )}
+                              {im.water != null && (
+                                <span className="text-gray-300"> · </span>
+                              )}
+                              {im.water != null && (
+                                <span>
+                                  水 <b>{im.water} L</b>
+                                </span>
+                              )}
+                              {im.land != null && (
+                                <span className="text-gray-300"> · </span>
+                              )}
+                              {im.land != null && (
+                                <span>
+                                  土地 <b>{im.land} m²</b>
+                                </span>
+                              )}
                             </div>
                           );
                         })()}
@@ -877,22 +1227,36 @@ export default function FoodPage() {
                         </div>
                         <div className="space-y-0.5">
                           {ing.items.map((it) => (
-                            <div key={it.code} className="flex items-baseline gap-1.5 text-[10px] text-gray-500">
-                              <span className="text-gray-700 font-medium">{it.name}</span>
+                            <div
+                              key={it.code}
+                              className="flex items-baseline gap-1.5 text-[10px] text-gray-500"
+                            >
+                              <span className="text-gray-700 font-medium">
+                                {it.name}
+                              </span>
                               <span className="text-gray-300">#{it.code}</span>
                               <span>{it.energyKcal} kcal</span>
                               <span className="text-gray-300">·</span>
                               <span>钠 {it.sodiumMg} mg</span>
                               {it.gi != null && (
-                                <span className="text-amber-600" title={'GI 对应食物：' + it.giSource}>
+                                <span
+                                  className="text-amber-600"
+                                  title={"GI 对应食物：" + it.giSource}
+                                >
                                   GI {it.gi}
                                 </span>
                               )}
-                              {it.note && <span className="text-gray-400">（{it.note}）</span>}
+                              {it.note && (
+                                <span className="text-gray-400">
+                                  （{it.note}）
+                                </span>
+                              )}
                             </div>
                           ))}
                         </div>
-                        <p className="text-[10px] text-gray-400 leading-relaxed mt-1">{ing.caveat}</p>
+                        <p className="text-[10px] text-gray-400 leading-relaxed mt-1">
+                          {ing.caveat}
+                        </p>
                         <p className="text-[10px] text-gray-400 leading-relaxed mt-0.5">
                           这是主料数据，不是整道菜的实测值。
                         </p>
@@ -901,10 +1265,15 @@ export default function FoodPage() {
                   })()}
 
                   <div className="mt-2 border-t border-gray-200 pt-2">
-                    <div className="text-[10px] font-semibold text-gray-600 mb-0.5">咸度刻度的量纲锚定</div>
+                    <div className="text-[10px] font-semibold text-gray-600 mb-0.5">
+                      咸度刻度的量纲锚定
+                    </div>
                     <div className="space-y-0.5">
                       {SODIUM_BANDS.map((b) => (
-                        <div key={b.label} className="text-[10px] text-gray-500">
+                        <div
+                          key={b.label}
+                          className="text-[10px] text-gray-500"
+                        >
                           {b.label}：{b.range} → 刻度 {b.score}
                         </div>
                       ))}
@@ -912,10 +1281,14 @@ export default function FoodPage() {
                   </div>
 
                   <div className="mt-2 border-t border-gray-200 pt-2">
-                    <div className="text-[10px] font-semibold text-gray-600 mb-0.5">辣度换算参照 · Scoville</div>
+                    <div className="text-[10px] font-semibold text-gray-600 mb-0.5">
+                      辣度换算参照 · Scoville
+                    </div>
                     <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-gray-500">
                       {SCOVILLE_BANDS.map((b) => (
-                        <span key={b.label}>{b.label}：{b.range}（{b.example}）</span>
+                        <span key={b.label}>
+                          {b.label}：{b.range}（{b.example}）
+                        </span>
                       ))}
                     </div>
                   </div>
@@ -930,16 +1303,26 @@ export default function FoodPage() {
               <div className="space-y-2 mb-4">
                 {sortedTaste.map((t) => (
                   <div key={t.k} className="flex items-center gap-2">
-                    <span className="w-4 text-xs font-medium text-gray-500">{t.k}</span>
+                    <span className="w-4 text-xs font-medium text-gray-500">
+                      {t.k}
+                    </span>
                     <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${t.v}%`, backgroundColor: panelColor }} />
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${t.v}%`,
+                          backgroundColor: panelColor,
+                        }}
+                      />
                     </div>
-                    <span className="w-6 text-right text-xs text-gray-400">{t.v}</span>
+                    <span className="w-6 text-right text-xs text-gray-400">
+                      {t.v}
+                    </span>
                   </div>
                 ))}
               </div>
-
             </motion.div>
+          )}
         </aside>
       </div>
 
@@ -947,8 +1330,12 @@ export default function FoodPage() {
         省域代表菜汇编自公开资料（百度百科《中国菜》名录等）；市级代表菜为公开饮食文化常识整理，
         未收录的城市明确标注「沿用省域风味」，不做臆造。口味雷达数值为按菜系特征的估算标签，仅供文化科普与演示。
         <br />
-        <b className="text-gray-500">数据覆盖：</b>菜肴级钠 37 / 432 道（中国菜肴数据集 3,302 道，CC BY 4.0）；USDA 营养库钠糖 7 道；主料参照 330 道（中国食物成分表第 6 版）；其余为自评。逐维度依据见详情页「依据？」。
-        地图为矢量静态边界（省级与大部分市级来自 DataV GeoAtlas；台湾 20 县市边界 DataV 未提供，取自 GeoJSON.cn），
+        <b className="text-gray-500">数据覆盖：</b>菜肴级钠 37 / 432
+        道（中国菜肴数据集 3,302 道，CC BY 4.0）；USDA 营养库钠糖 7 道；主料参照
+        330 道（中国食物成分表第 6
+        版）；其余为自评。逐维度依据见详情页「依据？」。
+        地图为矢量静态边界（省级与大部分市级来自 DataV GeoAtlas；台湾 20
+        县市边界 DataV 未提供，取自 GeoJSON.cn），
         含台湾、南海诸岛，非在线地图服务，不请求境外瓦片。
       </p>
     </div>

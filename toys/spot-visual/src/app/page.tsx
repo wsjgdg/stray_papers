@@ -49,6 +49,7 @@ import {
   Download,
   Route,
   Dices,
+  LocateFixed,
   Ticket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1843,7 +1844,7 @@ function Lightbox({
               onIndex((index - 1 + photos.length) % photos.length);
             }}
             aria-label="上一张图片"
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/35 hover:bg-black/50 text-white flex items-center justify-center transition-colors"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
@@ -1853,7 +1854,7 @@ function Lightbox({
               onIndex((index + 1) % photos.length);
             }}
             aria-label="下一张图片"
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/35 hover:bg-black/50 text-white flex items-center justify-center transition-colors"
           >
             <ChevronRight className="w-6 h-6" />
           </button>
@@ -1865,7 +1866,7 @@ function Lightbox({
       <button
         onClick={onClose}
         aria-label="关闭图片查看器"
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/35 hover:bg-black/50 text-white flex items-center justify-center transition-colors"
       >
         <X className="w-5 h-5" />
       </button>
@@ -1891,7 +1892,7 @@ function CompareBar() {
               key={s.id}
               onClick={() => toggleCompare(s.id)}
               title="点击移出"
-              className="flex items-center gap-1.5 text-xs bg-white dark:bg-gray-900/10 hover:bg-white/20 rounded-full pl-1 pr-2 py-1 shrink-0"
+              className="flex items-center gap-1.5 text-xs bg-white/15 hover:bg-white/25 border border-white/20 rounded-full pl-1 pr-2 py-1 shrink-0"
             >
               <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-700 shrink-0">
                 {s.image ? (
@@ -1924,7 +1925,7 @@ function CompareBar() {
           onClick={clearCompare}
           title="清空对比"
           aria-label="清空对比"
-          className="shrink-0 w-7 h-7 rounded-full bg-white dark:bg-gray-900/10 hover:bg-white/20 flex items-center justify-center"
+          className="shrink-0 w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -2416,16 +2417,59 @@ function SpotsView() {
   }, [spots, activeCategory, searchQuery, cityFilter, userLoc, levelFilter]);
 
   const randomBrowse = useCallback(() => {
-    // 尊重当前筛选：有过滤结果时从过滤池随机，否则全库
+    // 尊重当前筛选：有过滤结果时从过滤池随机，否则全库，最后兜底内置示例。
+    // 空数组时 Math.random()*0 会取到 undefined → 弹窗不出现，表现就是「点了没反应」。
     const pool =
       filteredSpots.length > 0
         ? filteredSpots
         : spots.length > 0
           ? spots
           : sampleSpots;
+    if (pool.length === 0) {
+      setOsmMsg({ type: "err", text: "景点库为空，无法随机抽一个" });
+      return;
+    }
     const pick = pool[Math.floor(Math.random() * pool.length)];
     setSelectedSpot(pick);
-  }, [filteredSpots, spots, setSelectedSpot]);
+    setOsmMsg({
+      type: "ok",
+      text: `随手抽到「${pick.name}」${cityFilter ? `（当前在「${cityFilter}」筛选内）` : ""}`,
+    });
+  }, [filteredSpots, spots, sampleSpots, setSelectedSpot, cityFilter]);
+
+  // ═══ 定位：给「城市探索」输入框左侧图标一个真动作（按距离排序 + 提示）═══
+  const handleLocateForCity = useCallback(() => {
+    if (!navigator.geolocation) {
+      setOsmMsg({ type: "err", text: "当前浏览器不支持定位" });
+      return;
+    }
+    if (userLoc) {
+      setUserLoc(null);
+      if (sortMode === "distance") setSortMode("default");
+      setOsmMsg({ type: "ok", text: "已取消按距离排序，恢复默认顺序" });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setSortMode("distance");
+        setLocating(false);
+        setOsmMsg({
+          type: "ok",
+          text: "已定位，景点列表按离你最近的顺序排列",
+        });
+      },
+      () => {
+        setLocating(false);
+        setOsmMsg({
+          type: "err",
+          text: "未获得定位授权，已保持原排序（可在浏览器地址栏左侧重新允许）",
+        });
+      },
+      { timeout: 8000 },
+    );
+  }, [userLoc, sortMode, setSortMode]);
 
   // 哨兵进入视口 → 加载下一页
   useEffect(() => {
@@ -2521,7 +2565,7 @@ function SpotsView() {
             全国库 {LIBRARY_SPOTS.length} 景点 · 零外链
           </span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap gap-1.5 mb-2.5">
             {(citiesExpanded ? HOT_PROVINCES : HOT_PROVINCES.slice(0, 12)).map(
               (hc) => {
@@ -2554,8 +2598,27 @@ function SpotsView() {
               </button>
             )}
           </div>
-          <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+          <div className="relative flex-1 min-w-[220px]">
+            <button
+              type="button"
+              onClick={handleLocateForCity}
+              disabled={locating}
+              title={
+                userLoc
+                  ? "已定位 · 点击取消按距离排序"
+                  : "定位我，并按离我最近的顺序浏览"
+              }
+              aria-label="定位并按距离排序"
+              className={`absolute left-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors ${
+                userLoc
+                  ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
+                  : "text-gray-400 dark:text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+              } ${locating ? "animate-pulse" : ""}`}
+            >
+              <LocateFixed
+                className={`w-4 h-4 ${locating ? "animate-spin" : ""}`}
+              />
+            </button>
             <Input
               value={city}
               onChange={(e) => setCity(e.target.value)}
@@ -2569,9 +2632,9 @@ function SpotsView() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+            className="shrink-0 gap-1.5 text-xs border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
             onClick={randomBrowse}
-            title="从景点库随机抽一个看看"
+            title="从景点库随机抽一个打开详情"
           >
             <Dices className="w-3.5 h-3.5" />
             随便看看
