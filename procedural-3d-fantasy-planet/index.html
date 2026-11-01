@@ -688,6 +688,9 @@
       const eventTint = new THREE.Color(0x2ad8c0);
       const eventFx = { glow: 0, ley: 0, chill: 0, meteor: 0, migration: 0, tint: 0 };
       const eventRandom = seeded(20260214);
+      // The Detuned's signature: while an operation runs, the ley grid occasionally slips a
+      // fraction of a semitone. One pulse = a light flicker + (if sound is on) a wrong note.
+      const detune = { next: 0, pulse: 0, count: 0, notes: 0 };
 
       // Cinematic bloom on capable desktops; the loop falls back to direct rendering.
       let composer = null, bloomPass = null, bloomOn = false;
@@ -3808,6 +3811,8 @@
         eventState.intensity = 0;
         eventState.last = id;
         eventState.seen++;
+        detune.next = 2.6 + eventRandom() * 2.4;
+        detune.pulse = 0;
         eventTint.set(def.tint);
         if (announce) {
           eventTitle.textContent = def.label;
@@ -3824,6 +3829,7 @@
         eventState.next = 58 + eventRandom() * 54;
         for (const key of eventFxKeys) eventFx[key] = 0;
         eventGlow.value = 0;
+        detune.pulse = 0;
         eventBanner.classList.remove('visible');
       }
       let eventBarFrame = 0;
@@ -3836,6 +3842,15 @@
           const rampOut = smooth(0, 2.8, eventState.duration - eventState.time);
           eventState.intensity = Math.min(rampIn, rampOut);
           for (const key of eventFxKeys) eventFx[key] = (def.fx[key] || 0) * eventState.intensity;
+          detune.pulse = Math.max(0, detune.pulse - dt / .85);
+          if (eventState.time > 2.2) {
+            detune.next -= dt;
+            if (detune.next <= 0) {
+              detune.pulse = 1; detune.count++; detune.notes++;
+              playDetune();
+              detune.next = 3.2 + eventRandom() * 3.4;
+            }
+          }
           if (++eventBarFrame % 6 === 0) {
             eventBar.style.width = (clamp(eventState.time / eventState.duration, 0, 1) * 100).toFixed(1) + '%';
           }
@@ -4327,6 +4342,26 @@
         }catch(_){soundOn=false;}
       }
       soundButton.addEventListener('click',toggleSound);
+      // Two sines a few cents apart: the "wrong note" the Detuned slip into the ley hum.
+      function playDetune(){
+        if(!audio||!soundOn)return;
+        try{
+          const t=audio.ctx.currentTime;
+          const base=[196,220,246.94,174.61][detune.notes%4]*(1+(eventRandom()-.5)*.012);
+          const drift=1+(eventRandom()>.5?1:-1)*(.008+eventRandom()*.012);
+          const gain=audio.ctx.createGain(),band=audio.ctx.createBiquadFilter();
+          band.type='bandpass';band.frequency.value=base*2.1;band.Q.value=3.4;
+          gain.connect(band).connect(audio.master);
+          for(const ratio of [1,drift]){
+            const osc=audio.ctx.createOscillator();
+            osc.type='sine';osc.frequency.value=base*ratio;
+            osc.connect(gain);osc.start(t);osc.stop(t+1.15);
+          }
+          gain.gain.setValueAtTime(0,t);
+          gain.gain.linearRampToValueAtTime(.05,t+.014);
+          gain.gain.exponentialRampToValueAtTime(.0008,t+.9);
+        }catch(_){ /* audio is decoration: never let it break the frame */ }
+      }
       function updateAudioMix(daylight,surface){
         if(!audio||!soundOn)return;
         const t=audio.ctx.currentTime,night=1-smooth(-.2,.3,daylight);
@@ -4526,15 +4561,17 @@
           }
         }
         if(frame%2===0)updateMarkers();
+        // A slip in the grid: sanctuaries dim and stutter for a moment, then recover.
+        const detuneDim=detune.pulse>0?1-detune.pulse*(.45+.55*Math.sin(elapsed*47))*.55:1;
         for(const landmark of landmarks){
           landmark.group.position.copy(landmark.direction).multiplyScalar(landmark.base+Math.sin(elapsed*.6+landmark.phase)*.018);
           landmark.halo.rotation.y=elapsed*.13;landmark.crystal.rotation.y=elapsed*.32;
           const siteNight=1-smooth(-.2,.28,landmark.direction.dot(sun));
           const sitePulse=.85+.15*Math.sin(elapsed*1.6+landmark.phase);
-          landmark.sanctuaryLight.intensity=(.15+siteNight*1.65)*sitePulse*(1+eventFx.ley*.9);
+          landmark.sanctuaryLight.intensity=(.15+siteNight*1.65)*sitePulse*(1+eventFx.ley*.9)*detuneDim;
           landmark.beacon.visible=siteNight>.04;
-          landmark.glow.material.opacity=.24+siteNight*.32;
-          landmark.altarGlow.material.opacity=.18+siteNight*.34;
+          landmark.glow.material.opacity=(.24+siteNight*.32)*detuneDim;
+          landmark.altarGlow.material.opacity=(.18+siteNight*.34)*detuneDim;
           for(let i=0;i<6;i++){
             const a=i*TAU/6+elapsed*.09+landmark.phase;
             transform.position.set(Math.cos(a)*(.36+i*.014),-.1+Math.sin(a*2+elapsed*.4)*.08,Math.sin(a)*(.36+i*.014));
@@ -4545,8 +4582,8 @@
         }
         const leyBoost=eventFx.ley;
         beaconMaterial.opacity=(.08+nightAmount*.18)*(1+leyBoost*1.6);
-        runeMaterial.emissiveIntensity=(1.6+nightAmount*1.35)*(1+leyBoost*1.45);
-        lanternMaterial.emissiveIntensity=(1.8+nightAmount*1.55)*(1+leyBoost*1.1);
+        runeMaterial.emissiveIntensity=(1.6+nightAmount*1.35)*(1+leyBoost*1.45)*detuneDim;
+        lanternMaterial.emissiveIntensity=(1.8+nightAmount*1.55)*(1+leyBoost*1.1)*detuneDim;
         updateLeyRing();
         updateVeilDisc();
         if(frame%12===0){
@@ -4613,8 +4650,8 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
-        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();}
       };
       window.addEventListener('pagehide',event=>{
         if(event.persisted)return;

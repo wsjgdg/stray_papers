@@ -132,6 +132,18 @@ python3 -m http.server 8080
 - 尊重 `prefers-reduced-motion`：时长缩短为 70%，仍然有淡入淡出。
 - 事件使用独立的 PRNG（`seeded(20260214)`），不会扰动地形、植被、圣所的既有随机序列——同一颗星球的世界布局与之前完全一致。
 
+#### 走音者的错音（v3 新增）
+
+每一次作业进行到 `2.2 s` 之后，灵脉会不定期"走音"一次（间隔 `3.2–6.6 s`，单次作业通常 3–7 下）：
+
+- **看**：九圣所的灯光、符文、灯笼与祭坛光环会在那一瞬**暗下去并轻微抖动**，约 0.85 s 内恢复；
+- **听**：打开声音（`M`）时，会听到一声很轻的**双音失谐**——两个正弦波相差 8–20 音分，经带通后短促收尾；
+- **只在作业期间出现**，平时灵脉是干净的。控制台可用 `aetheris.detune()` 手动来一下，`diagnostics().detune` 是本次会话的次数。
+
+设定上这是走音者在往穹顶的读数里塞假数据；副作用是它同时也在唤醒沟底的沉默者（见 [`WORLD.md`](WORLD.md) §6.5、[`worklog.md`](worklog.md) §三）。
+
+> 作业的**代价系统**（借走光/空气/生长/动物之后的偿付）已设计但尚未实装，方案在 [`WORLD.md`](WORLD.md) §6.6，等四个选择点定下来再开工。
+
 ---
 
 ## 5. 性能设计
@@ -164,6 +176,7 @@ window.aetheris.triggerEvent()      // 随机触发一次穹顶作业（等同�
 window.aetheris.triggerEvent('veil')// 'ley' | 'starfall' | 'veil' | 'bloom' | 'migration'
 window.aetheris.events              // 全部事件 id
 window.aetheris.jump()              // 等同按 Space（仅地表模式生效）
+window.aetheris.detune()            // 手动触发一次"走音"（灯光抖动 + 双音失谐）
 window.aetherisStartup              // 启动阶段、自检结果、错误详情
 ```
 
@@ -178,6 +191,7 @@ procedural-3d-fantasy-planet/
 ├── index.html   # 完整应用：样式 + HUD + 世界生成 + 渲染循环
 ├── README.md
 ├── WORLD.md     # 星球设定集：五块大陆、三片水域、穹顶文明、权力体系、五项作业、文明等级
+├── worklog.md   # 开发日志与路线图：已做 / 先不做 / 待讨论
 └── js/          # 早期模块化原型（core / planet / flora / ruins / sky / player / quality）
                  # 当前 index.html 不引用这些文件，保留仅作历史参考
 ```
@@ -191,4 +205,5 @@ procedural-3d-fantasy-planet/
 - 星球半径 4.2 单位，属于「可玩的小行星尺度」：为了让走路手感成立，地表细节用局部高密度补丁 + 远处基础网格混合（0.145–0.19 rad 过渡带）实现，而不是全局位移贴图。
 - 行星尺度的陆地植被是**预生成 + 分块 LOD**，不会随昼夜或天气重新生长；贴地草花会随玩家在局部重新散布。
 - 音效是合成声景，非采样素材；移动端默认不自动播放（需用户手势，符合浏览器策略）。
+- 还没做但已经想清楚的事（追捕、沉默者苏醒、作业代价）记在 [`worklog.md`](worklog.md)。
 - 世界观的正式描述在 [`WORLD.md`](WORLD.md)：页面里的 7 个 biome、9 座圣所、5 项穹顶作业都是那份设定的「正史」部分；「异象」只是地表人的误称，真相见 WORLD.md §6。其余（大陆命名、水下遗迹、浮空城、走音者）仍是草案。
