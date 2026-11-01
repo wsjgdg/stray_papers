@@ -369,10 +369,22 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
       <div className="space-y-2">
         {ranking.slice(0, 10).map((item, i) => {
           const vs = VERDICT_STYLE[item.ptsi.verdict];
+          const hit = useAppStore
+            .getState()
+            .spots.find((s) => s.name === item.name);
           return (
             <div
               key={item.name}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => {
+                if (!hit) return;
+                useAppStore.getState().setSelectedSpot(hit);
+                useAppStore.getState().setActiveView("spots");
+              }}
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                hit ? "cursor-pointer" : ""
+              }`}
+              role={hit ? "button" : undefined}
+              aria-label={hit ? `查看 ${item.name} 详情` : undefined}
             >
               <span
                 className={`w-6 text-center font-bold text-sm ${i < 3 ? "text-amber-500" : "text-gray-400 dark:text-gray-500"}`}
@@ -480,8 +492,9 @@ export default function PTSIView() {
           </div>
 
           <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
-            分项口径：紫外线（按时段估算 UV）· 身体条件（你的勾选）· 体力消耗（景点体力值
-            0–100）· 降水概率（7 日窗口用 Open-Meteo 实况）· 建议游玩时长（景点档案）。
+            分项口径：紫外线（按时段估算 UV）· 身体条件（你的勾选）·
+            体力消耗（景点体力值 0–100）· 降水概率（7 日窗口用 Open-Meteo
+            实况）· 建议游玩时长（景点档案）。
             拥挤/排队维度已移除——本项目没有实时客流数据，不编造数值。
           </p>
         </div>

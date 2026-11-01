@@ -514,9 +514,10 @@ export const useAppStore = create<AppStore>()(
         // 旅人测试上次结果（结果页「上次测试」对比）
         lastPersona: s.lastPersona,
         // 筛选条件持久化：刷新/重开保持浏览上下文
+        // cityFilter 例外：不持久化。省份筛选残留会造成「下次进站仍停在某省」，
+        // 跨会话恢复交给 URL ?prov= 深链（首屏优先读 URL），无深链回全国
         searchQuery: s.searchQuery,
         activeCategory: s.activeCategory,
-        cityFilter: s.cityFilter,
         levelFilter: s.levelFilter,
         sortMode: s.sortMode,
         theme: s.theme,

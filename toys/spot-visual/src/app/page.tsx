@@ -87,7 +87,8 @@ import {
 import { loadPoiPhotos, peekPoiPhotos } from "@/lib/poi-photos";
 import { withSharecode } from "@/lib/share-link";
 import { PROVINCE_FOODS } from "@/lib/food-data";
-import { CITY_CENTERS } from "@/lib/city-centers.generated";
+import { requestHere, locateFailText, locateOkText } from "@/lib/geolocation";
+import { useFocusSpot } from "@/lib/focus-spot";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
@@ -1686,9 +1687,8 @@ function SpotDetailDialog() {
             {parseCoords(spot) && (
               <button
                 onClick={() => {
-                  try {
-                    sessionStorage.setItem("ptsi:focusSpotId", spot.id);
-                  } catch {}
+                  // 统一写「关注景点」，7 日窗口与劝退指南都跟着这个走
+                  useFocusSpot.getState().setName(spot.id);
                   setSelectedSpot(null);
                   setActiveView("ptsi");
                 }}
@@ -2241,22 +2241,35 @@ function SpotsView() {
   const cityFilter = useAppStore((s) => s.cityFilter);
   const setCityFilter = useAppStore((s) => s.setCityFilter);
 
-  const handleCityExplore = useCallback(() => {
-    const c = city.trim().replace(/市$/, "");
-    if (!c) return;
-    // 库内有该城市 → 过滤视图；没有 → 实时通道兜底（部分环境不可用）
-    const hit = spots.some((s) => s.address.includes(c));
-    if (hit) {
-      setCityFilter(c);
-      setOsmMsg({
-        type: "ok",
-        text: `已筛选「${c}」的景点（收藏与行程不受影响）`,
-      });
-    } else {
+  const handleCityExplore = useCallback(
+    (opts: { allowReplace?: boolean } = {}) => {
+      const c = city.trim().replace(/市$/, "");
+      if (!c) return;
+      // 库内有该城市 → 过滤视图；没有 → 实时通道兜底（部分环境不可用）
+      const hit = spots.some((s) => s.address.includes(c));
+      if (hit) {
+        setCityFilter(c);
+        setOsmMsg({
+          type: "ok",
+          text: `已筛选「${c}」的景点（收藏与行程不受影响）`,
+        });
+        return;
+      }
+      // 回车（allowReplace 未置位）不做破坏性动作：exploreOsm 会替换整个景点库，
+      // 而定位成功会自动把城市名填进输入框，误按回车就被拉到「替换 5931 条」的确认框上，
+      // 太近了。回车只提示，真要替换必须点「探索该城市」按钮。
+      if (!opts.allowReplace) {
+        setOsmMsg({
+          type: "err",
+          text: `库内暂无「${c}」的景点。想看实时通道的结果，请点右侧「探索该城市」（会替换当前景点库）；或换个城市名。`,
+        });
+        return;
+      }
       setCityFilter(null);
       exploreOsm();
-    }
-  }, [city, spots, exploreOsm]);
+    },
+    [city, spots, exploreOsm],
+  );
 
   // ═══ 随便看看：实时探索不可用（离线/限流）时，从景点库随机抽一个直接看 ═══
 
@@ -2313,42 +2326,97 @@ function SpotsView() {
   const setSortMode = useAppStore((st) => st.setSortMode);
 
   // ═══ 离我最近排序（geolocation，拒绝授权优雅降级） ═══
+  // 定位坐标存 sessionStorage：sortMode 是持久化的，若定位只活在内存里，
+  // 刷新后下拉框仍显示「离我最近」、列表却是库顺序（名不符实）。
+  // sessionStorage 让刷新后距离排序继续成立；关标签页即失效，不当长期凭据。
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(
-    null,
+    () => {
+      try {
+        const raw = sessionStorage.getItem("spot:userLoc");
+        return raw ? (JSON.parse(raw) as { lat: number; lng: number }) : null;
+      } catch {
+        return null;
+      }
+    },
   );
+  useEffect(() => {
+    try {
+      if (userLoc)
+        sessionStorage.setItem("spot:userLoc", JSON.stringify(userLoc));
+      else sessionStorage.removeItem("spot:userLoc");
+    } catch {
+      /* 静默 */
+    }
+  }, [userLoc]);
 
   // ═══ 等级快速过滤：只看 5A / 4A（null = 不过滤） ═══
   const levelFilter = useAppStore((s) => s.levelFilter);
   const setLevelFilter = useAppStore((s) => s.setLevelFilter);
   const [locating, setLocating] = useState(false);
 
+  // ═══ 筛选 ↔ URL 同步：?prov=广东&cat=自然风光&lv=5A&q=古镇 ═══
+  // 以前筛选只写在 localStorage 里：链接发给别人，对方看到的是全国；
+  // 而「中国味道」早就是 ?prov= 可分享的，两页口径不一致。
+  // 首屏以 URL 为准（深链优先，其次才是上次会话的状态）。
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const p = sp.get("prov");
+    const cat = sp.get("cat");
+    const lv = sp.get("lv");
+    const q = sp.get("q");
+    if (p) setCityFilter(p);
+    if (cat) setActiveCategory(cat);
+    if (lv === "5A" || lv === "4A") setLevelFilter(lv);
+    if (q) setSearchQuery(q);
+    // 只在首屏读一次，之后交给用户操作驱动
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    // 保留 sharecode 等其它参数，只增删自己的四个
+    if (cityFilter) sp.set("prov", cityFilter);
+    else sp.delete("prov");
+    if (activeCategory !== "全部") sp.set("cat", activeCategory);
+    else sp.delete("cat");
+    if (levelFilter) sp.set("lv", levelFilter);
+    else sp.delete("lv");
+    const q = searchQuery.trim();
+    if (q) sp.set("q", q);
+    else sp.delete("q");
+    const qs = sp.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${qs ? `?${qs}` : ""}`,
+    );
+  }, [cityFilter, activeCategory, levelFilter, searchQuery]);
+
   // ═══ 分页渲染：1200+ 卡片一次性渲染会拖慢首屏，先渲染 60 张，滚动到底自动加载 ═══
   const PAGE_SIZE = 60;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const toggleNearbySort = useCallback(() => {
+  const toggleNearbySort = useCallback(async () => {
     if (userLoc) {
       setUserLoc(null);
       if (sortMode === "distance") setSortMode("default");
-      return;
-    }
-    if (!navigator.geolocation) {
-      alert("当前浏览器不支持定位");
+      setOsmMsg({ type: "ok", text: "已取消按距离排序，恢复默认顺序" });
       return;
     }
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setSortMode("distance");
-        setLocating(false);
-      },
-      () => {
-        alert("未获得定位授权，已保持原排序");
-        setLocating(false);
-      },
-      { timeout: 8000 },
-    );
+    // 和城市探索那个定位图标走**同一套**逻辑（精度门槛 + 最近城市），
+    // 以前这里是裸 getCurrentPosition：几十公里的 IP 定位也照单全收，
+    // 还不告诉你定位到了哪，同一页两个入口给出相反结论。
+    const r = await requestHere();
+    setLocating(false);
+    if (!r.ok) {
+      setOsmMsg({ type: "err", text: locateFailText(r) });
+      return;
+    }
+    setUserLoc({ lat: r.fix.lat, lng: r.fix.lng });
+    setSortMode("distance");
+    if (r.nearest) setCity(r.nearest.name);
+    setOsmMsg({ type: "ok", text: locateOkText(r.nearest, r.fix.accuracy) });
   }, [userLoc, sortMode, setSortMode]);
 
   const filteredSpots = useMemo(() => {
@@ -2440,12 +2508,8 @@ function SpotsView() {
     });
   }, [filteredSpots, spots, sampleSpots, setSelectedSpot, cityFilter]);
 
-  // ═══ 定位：给「城市探索」输入框左侧图标一个真动作（按距离排序 + 提示）═══
-  const handleLocateForCity = useCallback(() => {
-    if (!navigator.geolocation) {
-      setOsmMsg({ type: "err", text: "当前浏览器不支持定位" });
-      return;
-    }
+  // ═══ 定位：城市探索图标与排序栏「离我最近」共用同一套逻辑（src/lib/geolocation.ts）═══
+  const handleLocateForCity = useCallback(async () => {
     if (userLoc) {
       setUserLoc(null);
       if (sortMode === "distance") setSortMode("default");
@@ -2453,72 +2517,20 @@ function SpotsView() {
       return;
     }
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        // 精度门槛：浏览器定位在桌面端常常走「网络/IP 定位」，误差可以到几十甚至上千公里
-        // （广州用户被定位到北京就是这么来的）。精度差就不假装成功，直接说清楚。
-        const accuracy = Number.isFinite(pos.coords.accuracy)
-          ? pos.coords.accuracy
-          : Number.POSITIVE_INFINITY;
-        if (accuracy > 50_000) {
-          setLocating(false);
-          setOsmMsg({
-            type: "err",
-            text: `定位不可靠（精度约 ±${Math.round(accuracy / 1000)} 公里，通常是网络/IP 定位，不是 GPS）。已取消定位，请手动输入城市名筛选，或在浏览器设置里允许「精确位置」后重试。`,
-          });
-          return;
-        }
-        setUserLoc(here);
-        setSortMode("distance");
-        setLocating(false);
-        // 把经纬度翻成「最近城市」再提示：否则用户只看到一屏北京景点，
-        // 会误以为「定位只显示北京」。定位只改排序，不过滤。
-        // city-centers 只收了地级市（直辖市下辖的是「东城区」这类区），
-        // 四个直辖市单独补中心点，否则在北京定位会被判成「廊坊」。
-        const MUNICIPAL: [string, [number, number]][] = [
-          ["北京", [116.4074, 39.9042]],
-          ["上海", [121.4737, 31.2304]],
-          ["天津", [117.201, 39.0842]],
-          ["重庆", [106.5516, 29.563]],
-        ];
-        let nearestCity = "";
-        let nearestKm = Infinity;
-        const consider = (name: string, lng: number, lat: number) => {
-          const km = haversineKm(here, { lat, lng });
-          if (km < nearestKm) {
-            nearestKm = km;
-            nearestCity = name;
-          }
-        };
-        for (const [name, [lng, lat]] of MUNICIPAL) consider(name, lng, lat);
-        for (const [name, [lng, lat]] of Object.entries(CITY_CENTERS)) {
-          if (/[区县旗]$/.test(name)) continue;
-          consider(name.replace(/(市|地区|自治州|盟)$/, ""), lng, lat);
-        }
-        const accTxt = Number.isFinite(accuracy)
-          ? `（定位误差约 ±${Math.max(1, Math.round(accuracy / 1000))} 公里）`
-          : "";
-        // 关键：把最近城市写回输入框。定位只改排序不改筛选，但输入框一直留着
-        // 默认的「北京」，用户就会以为「明明在广州，怎么显示北京」——定位是成功的，
-        // 是这行文字没更新。回填后输入框显示真实城市，回车即按该城市筛选。
-        if (nearestCity) setCity(nearestCity);
-        setOsmMsg({
-          type: accuracy > 5_000 ? "err" : "ok",
-          text: nearestCity
-            ? `已定位到「${nearestCity}」附近${accTxt}：列表按距离从近到远排，不做城市过滤；输入框已填上「${nearestCity}」，回车即只看该城市。`
-            : "已定位，景点列表按离你最近的顺序排列（未做城市过滤）",
-        });
-      },
-      () => {
-        setLocating(false);
-        setOsmMsg({
-          type: "err",
-          text: "未获得定位授权，已保持原排序（可在浏览器地址栏左侧重新允许）",
-        });
-      },
-      { timeout: 8000 },
-    );
+    const r = await requestHere();
+    setLocating(false);
+    if (!r.ok) {
+      setOsmMsg({ type: "err", text: locateFailText(r) });
+      return;
+    }
+    setUserLoc({ lat: r.fix.lat, lng: r.fix.lng });
+    setSortMode("distance");
+    // 精度门槛内但误差仍偏大（5–50km）时提示语用警示色：排序可用，但别当精确距离看
+    if (r.nearest) setCity(r.nearest.name);
+    setOsmMsg({
+      type: r.fix.accuracy > 5_000 ? "err" : "ok",
+      text: locateOkText(r.nearest, r.fix.accuracy),
+    });
   }, [userLoc, sortMode, setSortMode]);
 
   // 哨兵进入视口 → 加载下一页
@@ -2694,7 +2706,7 @@ function SpotsView() {
               value={city}
               onChange={(e) => setCity(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleCityExplore();
+                if (e.key === "Enter") handleCityExplore(); // 回车只筛选，不替换景点库
               }}
               placeholder="输入城市，如 苏州 / 洛阳 / 大连 / 哈尔滨"
               className="pl-10 h-11 bg-white dark:bg-gray-900 border-emerald-200 dark:border-emerald-500/30 text-sm"
@@ -2715,7 +2727,7 @@ function SpotsView() {
             size="sm"
             className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
             disabled={osmLoading}
-            onClick={handleCityExplore}
+            onClick={() => handleCityExplore({ allowReplace: true })}
           >
             {osmLoading ? (
               <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
