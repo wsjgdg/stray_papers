@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="world-chart-23">
+  <meta name="aetheris-build" content="plates-24">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -313,6 +313,10 @@
     .worldmap-legend .lg-altar { background: #ffce82; transform: rotate(45deg); width: 8px; height: 8px; margin: 0 1px; }
     .worldmap-legend .lg-ley { height: 1px; background: rgba(150, 234, 214, .7); }
     .worldmap-legend .lg-herd { width: 5px; height: 5px; border-radius: 50%; background: #d6ecff; margin: 0 3px; }
+    .worldmap-legend .lg-anchor { border: 1px solid #befff0; border-radius: 50%; position: relative; }
+    .worldmap-legend .lg-anchor::before, .worldmap-legend .lg-anchor::after { content: ""; position: absolute; background: #befff0; }
+    .worldmap-legend .lg-anchor::before { left: 50%; top: 2px; bottom: 2px; width: 1px; transform: translateX(-50%); }
+    .worldmap-legend .lg-anchor::after { top: 50%; left: 2px; right: 2px; height: 1px; transform: translateY(-50%); }
     .worldmap-legend .lg-you { border: 1px solid #eaffe9; border-radius: 50%; }
     .worldmap-hint { margin-left: auto; color: #7f9c95; }
     @media (max-width: 760px) {
@@ -320,6 +324,11 @@
       .worldmap-legend .worldmap-hint { display: none; }
       .worldmap-title { font-size: 13px; }
     }
+
+    #teleportVeil { position: fixed; inset: 0; z-index: 9; pointer-events: none; opacity: 0;
+      background: radial-gradient(70% 60% at 50% 46%, rgba(196, 255, 240, .3), rgba(3, 15, 21, .95)); }
+    body.teleporting #teleportVeil { animation: teleportFlash .95s ease-out; }
+    @keyframes teleportFlash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
 
     #diveVeil { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .9s ease;
       background: radial-gradient(125% 95% at 50% 38%, rgba(38,128,138,.06), rgba(3,26,36,.58) 74%, rgba(2,18,26,.78) 100%); }
@@ -504,6 +513,7 @@
     <div id="pointerPrompt" class="pointer-prompt">CLICK THE WORLD TO LOOK AROUND &nbsp; / &nbsp; ESC TO RELEASE</div>
     <div class="mobile-hint"><span class="orbit-mobile-hint">DRAG TO ORBIT / PINCH TO ZOOM</span><span class="ground-mobile-hint">DRAG TO LOOK / PAD TO WALK</span></div>
     <div id="diveVeil" aria-hidden="true"></div>
+    <div id="teleportVeil" aria-hidden="true"></div>
     <div id="minimapFrame" role="button" tabindex="0" aria-controls="worldMap" aria-expanded="false"
          aria-label="Open the survey chart of the whole planet (G)" title="Survey chart · G">
       <canvas id="minimap" width="256" height="256"></canvas>
@@ -550,6 +560,7 @@
           <span><i class="lg-altar"></i>祭坛 · 灵脉节点</span>
           <span><i class="lg-ley"></i>灵脉</span>
           <span><i class="lg-herd"></i>兽群</span>
+          <span><i class="lg-anchor"></i>锚点 · 点击传送</span>
           <span><i class="lg-you"></i>你 · 虚线是足下巡检范围</span>
           <span class="worldmap-hint">G / ESC 关闭</span>
         </div>
@@ -573,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'world-chart-23';
+    const BUILD_ID = 'plates-24';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -1435,17 +1446,34 @@
       // crystal basins to Vessper, everything temperate-north to Vaelmar. The result is stable
       // for the whole session and never contradicts the biome label next to it.
       const PROVINCE_NAMES = { vaelmar: 'VAELMAR', sennar: 'SENNAR', caelth: 'CAELTH', mirella: 'MIRELLA', vessper: 'VESSPER' };
-      function provinceAt(n, h) {
-        const lat = Math.asin(clamp(n.y, -1, 1)) * 180 / Math.PI;
-        const lon = Math.atan2(n.x, n.z) * 180 / Math.PI;
-        const biome = biomeAt(n, Math.max(h, SEA));
-        if (Math.abs(lat) >= 62) return 'vessper';
-        if (biome === 'tundra') return 'caelth';
-        if (biome === 'alpine') return lat < 0 ? 'caelth' : (Math.abs(lat) > 48 ? 'vessper' : 'vaelmar');
-        if (biome === 'desert' || biome === 'volcanic') return 'sennar';
-        if (biome === 'tropical') return 'mirella';
-        if (lat >= 16) return 'vaelmar';
-        return lon < 0 ? 'sennar' : 'mirella';
+      // The five provinces are CONTIGUOUS PLATES, not a patchwork of biomes. Each is a cell of a
+      // weighted nearest-seed partition (a power diagram) on the sphere, so a border is one long
+      // curve from coast to coast instead of a speckle of one colour inside another. The weights
+      // were tuned so every province owns about a fifth of the land (0.20 each, ±0.2%), and two
+      // noise fields bend the cell edges so they wander like coastlines rather than reading as
+      // chords drawn with a ruler.
+      const PROVINCE_SEEDS = [
+        { id: 'vaelmar', lat: 42, lon: 55, weight: -.008 },
+        { id: 'sennar', lat: 5, lon: -60, weight: .224 },
+        { id: 'caelth', lat: -52, lon: 10, weight: .054 },
+        { id: 'mirella', lat: -10, lon: 130, weight: -.368 },
+        { id: 'vessper', lat: 68, lon: -150, weight: .154 }
+      ].map(({ id, lat, lon, weight }) => {
+        const phi = lat * Math.PI / 180, lambda = lon * Math.PI / 180;
+        return { id, weight, x: Math.cos(phi) * Math.sin(lambda), y: Math.sin(phi), z: Math.cos(phi) * Math.cos(lambda) };
+      });
+      function provinceAt(n) {
+        // A tangent displacement built from two noise fields. Continuous everywhere, so the cells
+        // stay whole while their borders stop being straight chords.
+        const a = noise(n.x * 2.7 + 13.1, n.y * 2.7 - 4.7, n.z * 2.7 + 7.3);
+        const b = noise(n.x * 2.7 - 8.2, n.y * 2.7 + 5.9, n.z * 2.7 - 11.4);
+        const qx = n.x - n.z * a * .26, qy = n.y + n.z * b * .26, qz = n.z + (n.x * a - n.y * b) * .26;
+        let best = PROVINCE_SEEDS[0], score = -Infinity;
+        for (const seed of PROVINCE_SEEDS) {
+          const d = qx * seed.x + qy * seed.y + qz * seed.z + seed.weight;
+          if (d > score) { score = d; best = seed; }
+        }
+        return best.id;
       }
       // Depth is arbitrary world units; this is a presentation scale only (≈ 4–350 m).
       function depthMeters(depth) { return Math.round(4 + depth * 760); }
@@ -4868,6 +4896,30 @@
       const mapBasis = { up: new THREE.Vector3(1, 0, 0), right: new THREE.Vector3(0, 0, 1), fwd: new THREE.Vector3(0, 1, 0) };
       const mapSample = new THREE.Vector3(), mapOffset = new THREE.Vector3(), mapPoint = { x: 0, y: 0 };
       let mapChart = null, mapProvinceCentroids = null, mapNeedsDraw = true;
+      // Teleport anchors: a waypoint network thin enough to read, dense enough to reach anything.
+      const ANCHOR_SPACING = 1.25, ANCHOR_LIMIT = 18;
+      const mapAnchors = [], mapAnchorPoints = [];
+      let mapAnchorHover = -1, mapTeleportTimer = 0;
+
+      // Every anchor is a town that already exists on land (heightAt between .03 and .26), so none
+      // of them can sit in the sea or on a cliff edge; they are taken greedily from a shuffled town
+      // list, which spreads them evenly without favouring any one province.
+      function buildAnchors() {
+        mapAnchors.length = 0;
+        const rng = seeded(9157), order = settlementDirs.slice();
+        for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const swap = order[i]; order[i] = order[j]; order[j] = swap; }
+        const gap = Math.cos(ANCHOR_SPACING / R);
+        const claim = dir => mapAnchors.push({ direction: dir.clone(), province: provinceAt(dir), label: '' });
+        claim(landing);                                     // you always start at one
+        for (const site of order) {
+          if (mapAnchors.length >= ANCHOR_LIMIT) break;
+          if (mapAnchors.some(anchor => anchor.direction.dot(site.dir) > gap)) continue;
+          if (heightAt(site.dir) < SEA + .02) continue;               // never anchor in the surf
+          claim(site.dir);
+        }
+        mapAnchors.forEach((anchor, i) => { anchor.label = `${PROVINCE_NAMES[anchor.province]} · ${String(i + 1).padStart(2, '0')}`; });
+        mapNeedsDraw = true;
+      }
 
       function mapBasisUpdate() {
         mapBasis.up.copy(state.direction).normalize();
@@ -5014,6 +5066,12 @@
           const q = toDisc(site.dir, .98); if (!q) continue;
           ctx.fillRect(q.x - 1.1, q.y - 1.1, 2.2, 2.2);
         }
+        // Teleport anchors read as small hollow rings, so they cannot be mistaken for a town dot.
+        ctx.strokeStyle = 'rgba(190, 255, 240, .72)'; ctx.lineWidth = .9;
+        for (const anchor of mapAnchors) {
+          const q = toDisc(anchor.direction, .99); if (!q) continue;
+          ctx.beginPath(); ctx.arc(q.x, q.y, 2.7, 0, MAP_TAU); ctx.stroke();
+        }
         const anchors = [];
         for (const landmark of landmarks) {
           const q = toDisc(landmark.direction, 1); if (q) anchors.push(q);
@@ -5153,6 +5211,29 @@
           ctx.moveTo(a.x, a.y - r); ctx.lineTo(a.x + r, a.y); ctx.lineTo(a.x, a.y + r); ctx.lineTo(a.x - r, a.y);
           ctx.closePath(); ctx.fill();
         }
+        // Anchors: the only clickable thing on this chart, so they get their own glyph.
+        mapAnchorPoints.length = 0;
+        mapAnchors.forEach((anchor, i) => {
+          const p = mapWorldPoint(anchor.direction, { x: 0, y: 0 });
+          mapAnchorPoints.push(p);
+          const hot = i === mapAnchorHover, r = (hot ? 8.6 : 6.4) * s;
+          ctx.strokeStyle = hot ? 'rgba(214, 255, 246, 1)' : 'rgba(190, 255, 240, .78)';
+          ctx.lineWidth = Math.max(1.2, (hot ? 2.4 : 1.6) * s);
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, MAP_TAU); ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y - r * .45); ctx.lineTo(p.x, p.y + r * .45);
+          ctx.moveTo(p.x - r * .45, p.y); ctx.lineTo(p.x + r * .45, p.y);
+          ctx.stroke();
+          if (hot) {
+            ctx.font = `700 ${Math.round(11 * s)}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+            ctx.lineJoin = 'round'; ctx.lineWidth = 3.2 * s; ctx.strokeStyle = 'rgba(4, 16, 22, .85)';
+            ctx.strokeText(anchor.label, p.x, p.y - r - 4 * s);
+            ctx.fillStyle = 'rgba(230, 255, 248, .96)';
+            ctx.fillText(anchor.label, p.x, p.y - r - 4 * s);
+            ctx.textBaseline = 'middle';
+          }
+        });
         // Province names last, so markers never bury them; outlined to hold up over any fill.
         if (mapProvinceCentroids) {
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -5209,6 +5290,57 @@
         if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
         mapWorldSize();
         mapWorldDraw();
+      }
+
+      function mapPickAnchor(event) {
+        if (!worldCanvasEl || !mapAnchors.length) return -1;
+        const rect = worldCanvasEl.getBoundingClientRect();
+        if (!rect.width || !rect.height) return -1;
+        const x = (event.clientX - rect.left) / rect.width * worldCanvasEl.width;
+        const y = (event.clientY - rect.top) / rect.height * worldCanvasEl.height;
+        const reach = 16 * (worldCanvasEl.width / 1600);
+        let best = -1, bestDistance = reach;
+        mapAnchorPoints.forEach((p, i) => {
+          const d = Math.hypot(p.x - x, p.y - y);
+          if (d < bestDistance) { bestDistance = d; best = i; }
+        });
+        return best;
+      }
+
+      // Teleport: the anchors are the only clickable thing on the chart, and picking one flies you
+      // there on the same camera arc the orbit -> surface switch uses. Nothing is rebuilt — the
+      // destination is already painted on the chart you clicked.
+      function teleportTo(anchor) {
+        if (!anchor || !startup.ready || stopped || contextLost || state.transition) return;
+        setWorldMap(false);
+        clearInput();
+        if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
+        const from = camera.position.clone(), fromRotation = camera.quaternion.clone();
+        state.direction.copy(anchor.direction);
+        state.radius = groundRadius(state.direction) + EYE;
+        state.velocity = 0; state.grounded = true; state.water = false; state.submerged = false;
+        state.depth = 0; state.crouch = 0; state.walkPhase = 0; state.faceTarget = null; state.pitch = .13;
+        resetGroundMotion();
+        // Arrive facing up the meridian (falling back to east at the poles).
+        const lat = Math.asin(clamp(state.direction.y, -1, 1)), lon = Math.atan2(state.direction.x, state.direction.z);
+        const north = mapOffset.set(-Math.sin(lat) * Math.sin(lon), Math.cos(lat), -Math.sin(lat) * Math.cos(lon));
+        headingToward(north.lengthSq() > 1e-6 ? north : mapOffset.set(1, 0, 0));
+        state.mode = 'ground';
+        requestGroundRefresh(state.direction);
+        groundPose();
+        explore();
+        state.transition = {
+          from, fromRotation, to: targetPosition.clone(), toRotation: targetRotation.clone(),
+          fromNormal: from.clone().normalize(), arc: new THREE.Quaternion().setFromUnitVectors(from.clone().normalize(), targetPosition.clone().normalize()),
+          time: 0, duration: reducedMotion ? .4 : 1.3
+        };
+        document.body.dataset.mode = 'ground';
+        document.body.classList.add('transitioning', 'teleporting');
+        clearTimeout(mapTeleportTimer);
+        mapTeleportTimer = setTimeout(() => document.body.classList.remove('teleporting'), 1000);
+        document.getElementById('modeNumber').textContent = '02';
+        modeLabel.textContent = 'SURFACE / WALKING';
+        canvas.focus({ preventScroll: true });
       }
 
       // Optional generated soundscape: wind, a low pad, and a night shimmer.
@@ -5436,6 +5568,19 @@
         });
       }
       if (worldMapEl) worldMapEl.addEventListener('click', event => { if (event.target === worldMapEl) setWorldMap(false); });
+      if (worldCanvasEl) {
+        worldCanvasEl.addEventListener('mousemove', event => {
+          if (!worldMapOpen) return;
+          const hit = mapPickAnchor(event);
+          worldCanvasEl.style.cursor = hit >= 0 ? 'pointer' : 'default';
+          if (hit !== mapAnchorHover) { mapAnchorHover = hit; mapWorldDraw(); }
+        });
+        worldCanvasEl.addEventListener('mouseleave', () => { if (mapAnchorHover !== -1) { mapAnchorHover = -1; if (worldMapOpen) mapWorldDraw(); } });
+        worldCanvasEl.addEventListener('click', event => {
+          const hit = mapPickAnchor(event);
+          if (hit >= 0) teleportTo(mapAnchors[hit]);
+        });
+      }
       archiveClose.addEventListener('click', () => setArchive(false));
       window.addEventListener('keydown',event=>{
         if(!startup.ready)return;
@@ -5805,6 +5950,7 @@
       if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
       // Bake the survey patch while the loader is still up, so the first first-person frame already
       // has ground on the disc (and nobody ever watches it fill in).
+      buildAnchors();
       await mapBakeChart();
       mapDraw();
       renderer.shadowMap.needsUpdate=true;renderScene();
