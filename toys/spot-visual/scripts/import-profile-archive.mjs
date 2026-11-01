@@ -13,7 +13,8 @@
  *   node scripts/import-profile-archive.mjs [归档目录，默认 docs/outsource/archive3820]
  *
  * 验收（任一硬违规 → 退出码 1，不写任何文件）：
- *   1. 每条 id 必须已回填，且属于仓库「待补池」（5A/4A 且尚无档案）；
+ *   1. 每条 id 必须已回填，且属于「待补池」（5A/4A 且尚无档案）∪「合并档已有 id」
+ *      （后者用于收官全量重交：已交付过的条目按 id 幂等覆盖）；
  *   2. name 与库条目逐字符一致；同一 id 在全包内不得重复；
  *   3. ticketPeak 非负或 null（null 必须 low）；openHours 缺失必须 low；
  *      suggestedHours ∈ [0.5,12]（null 必须 low）；driveFromCityMin ∈ [1,600] 或 null；
@@ -68,7 +69,9 @@ function writeAtomic(file, text) {
   fs.renameSync(tmp, file);
 }
 
-const archiveDir = path.resolve(process.argv[2] ?? "docs/outsource/archive3820");
+const archiveDir = path.resolve(
+  process.argv[2] ?? "docs/outsource/archive3820",
+);
 if (!fs.existsSync(archiveDir)) {
   console.error(`✗ 归档目录不存在: ${archiveDir}`);
   process.exit(2);
@@ -94,8 +97,36 @@ for (let n = 1; n <= 60; n++) {
   const b = JSON.parse(fs.readFileSync(p, "utf8"));
   for (const it of b.items) pool.set(it.id, it);
 }
-if (!pool.size) {
-  console.error("✗ 仓库待补池为空（profile-batch*.json 缺失）");
+const knownName = new Map(); // id -> 权威 name
+for (const [id, it] of pool) knownName.set(id, it.name);
+
+const mergedPath = MERGED;
+const alreadyMerged = new Set(
+  fs.existsSync(mergedPath)
+    ? Object.keys(JSON.parse(fs.readFileSync(mergedPath, "utf8")))
+    : [],
+);
+
+// 已交付过的条目不在待补池里了，但收官重交会再送一遍：
+// 从上一版已验收归档（同目录下的 out-profile-batch*.json）补 id→name，用于逐字符校验。
+for (const dir of ["docs/outsource/archive3820", "docs/outsource"]) {
+  const abs = path.resolve(dir);
+  if (!fs.existsSync(abs)) continue;
+  for (const f of fs.readdirSync(abs)) {
+    if (!/^out-profile-batch\d+(-legacy)?\.json$/.test(f)) continue;
+    try {
+      const b = JSON.parse(fs.readFileSync(path.join(abs, f), "utf8"));
+      for (const it of b.items ?? []) {
+        if (it?.id && it?.name && !knownName.has(it.id))
+          knownName.set(it.id, it.name);
+      }
+    } catch {
+      /* 非本管线的文件忽略 */
+    }
+  }
+}
+if (!pool.size && !alreadyMerged.size) {
+  console.error("✗ 仓库待补池与合并档都为空（清单与生成表均缺失）");
   process.exit(2);
 }
 
@@ -115,13 +146,14 @@ for (const f of files) {
   for (const item of out.items) {
     items++;
     const tag = `${item.name ?? "?"} (id=${item.id ?? "缺"}, ${f})`;
-    const src = pool.get(item.id);
-    if (!src) {
-      bad.push(`id 不在待补池: ${tag}`);
+    const inPool = pool.has(item.id);
+    if (!inPool && !alreadyMerged.has(item.id)) {
+      bad.push(`id 既不在待补池、也不在合并档: ${tag}`);
       continue;
     }
-    if (item.name !== src.name) {
-      bad.push(`name 不一致: ${tag} out="${item.name}" 池="${src.name}"`);
+    const wantName = knownName.get(item.id);
+    if (wantName && item.name !== wantName) {
+      bad.push(`name 不一致: ${tag} out="${item.name}" 权威="${wantName}"`);
       continue;
     }
     if (seen.has(item.id)) {
@@ -157,7 +189,11 @@ for (const f of files) {
       continue;
     }
     if (p.suggestedHours !== null) {
-      if (!isNum(p.suggestedHours) || p.suggestedHours < 0.5 || p.suggestedHours > 12) {
+      if (
+        !isNum(p.suggestedHours) ||
+        p.suggestedHours < 0.5 ||
+        p.suggestedHours > 12
+      ) {
         bad.push(`suggestedHours 越界: ${tag} = ${p.suggestedHours}`);
         continue;
       }
@@ -166,7 +202,11 @@ for (const f of files) {
       continue;
     }
     if (p.driveFromCityMin != null) {
-      if (!isNum(p.driveFromCityMin) || p.driveFromCityMin < 1 || p.driveFromCityMin > 600) {
+      if (
+        !isNum(p.driveFromCityMin) ||
+        p.driveFromCityMin < 1 ||
+        p.driveFromCityMin > 600
+      ) {
         bad.push(`driveFromCityMin 越界: ${tag} = ${p.driveFromCityMin}`);
         continue;
       }
@@ -197,7 +237,8 @@ for (const f of files) {
 
     // 归一：可选字段缺失一律补 null，避免读取侧出现 undefined
     const normalized = { ...p };
-    for (const k of OPTIONAL_KEYS) if (normalized[k] === undefined) normalized[k] = null;
+    for (const k of OPTIONAL_KEYS)
+      if (normalized[k] === undefined) normalized[k] = null;
     if (isLow) normalized.low = true;
     collected[item.id] = normalized;
   }
@@ -209,7 +250,9 @@ if (bad.length) {
   process.exit(1);
 }
 
-const merged = fs.existsSync(MERGED) ? JSON.parse(fs.readFileSync(MERGED, "utf8")) : {};
+const merged = fs.existsSync(MERGED)
+  ? JSON.parse(fs.readFileSync(MERGED, "utf8"))
+  : {};
 let added = 0;
 for (const [id, v] of Object.entries(collected)) {
   if (!merged[id]) added++;
@@ -254,7 +297,9 @@ const remaining = [...pool.keys()].filter((id) => !merged[id]);
 console.log(
   `✓ 导入 ${Object.keys(collected).length} 条（本次新增 ${added}，合并档累计 ${Object.keys(merged).length}）`,
 );
-console.log(`  low ${low}（${((low / Object.keys(collected).length) * 100).toFixed(1)}%）｜必填三件套缺失 ${missingRequired}`);
+console.log(
+  `  low ${low}（${((low / Object.keys(collected).length) * 100).toFixed(1)}%）｜必填三件套缺失 ${missingRequired}`,
+);
 console.log(`  → ${path.relative(process.cwd(), MERGED)}`);
 console.log(`  → ${path.relative(process.cwd(), OUT_TS)}`);
 console.log(`  待补池剩余未交付 ${remaining.length} 条（需回到清单继续外包）`);

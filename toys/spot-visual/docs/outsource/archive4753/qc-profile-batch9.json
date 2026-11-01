@@ -1,0 +1,28 @@
+{
+  "batch": 9,
+  "count": 100,
+  "low": 85,
+  "missingRequired": 84,
+  "sample": [
+    "scenic-锡林郭勒盟-532",
+    "scenic-鄂尔多斯-481",
+    "scenic-长春-588",
+    "scenic-鄂尔多斯-456",
+    "scenic-阿拉善盟-555",
+    "scenic-锡林郭勒盟-538",
+    "scenic-阿拉善盟-556",
+    "scenic-长治-374",
+    "scenic-邯郸-203",
+    "scenic-鄂尔多斯-472",
+    "scenic-鄂尔多斯-475",
+    "scenic-长治-375",
+    "scenic-长春-581",
+    "scenic-邯郸-211",
+    "scenic-长治-377",
+    "scenic-鄂尔多斯-465",
+    "scenic-长治-376",
+    "scenic-鄂尔多斯-479",
+    "scenic-鄂尔多斯-471",
+    "scenic-长治-372"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "batch": 1,
+  "count": 100,
+  "low": 34,
+  "missingRequired": 34,
+  "sample": [
+    "poi-青岛-12",
+    "poi-成都-5",
+    "poi-重庆-3",
+    "poi-昆明-6",
+    "poi-洛阳-6",
+    "scenic--264",
+    "poi-杭州-19",
+    "poi-长沙-30",
+    "scenic--266",
+    "poi-苏州-6",
+    "poi-重庆-7",
+    "poi-武汉-42",
+    "scenic--277",
+    "poi-晋中-3",
+    "poi-重庆-35",
+    "poi-长沙-27",
+    "poi-西安-17",
+    "scenic--278",
+    "poi-重庆-5",
+    "poi-青岛-57"
+  ]
+}

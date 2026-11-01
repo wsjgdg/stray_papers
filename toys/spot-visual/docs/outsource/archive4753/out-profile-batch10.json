@@ -1,0 +1,866 @@
+{
+  "task": "景点档案结构化字段-批10",
+  "batch": 10,
+  "count": 33,
+  "authorship": "批10：主会话",
+  "items": [
+    {
+      "id": "scenic-阿拉善盟-559",
+      "name": "阿拉善左旗通湖草原旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；骑马与演艺项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月草原季",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "地处腾格里沙漠东缘与沙坡头相邻，昼夜温差大备外套；草原风大注意防风"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-560",
+      "name": "阿拉善左旗金沙堡地生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:30；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-561",
+      "name": "阿拉善右旗巴丹吉林沙漠景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；越野车进出沙漠腹地为必选项，费用以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约07:30-19:00；以景区公告为准",
+        "suggestedHours": 8,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 360,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": true,
+        "reservationNote": "沙漠腹地穿越须预约正规越野车队与向导",
+        "officialSite": null,
+        "tel": null,
+        "notices": "世界遗产巴丹吉林沙漠—沙山湖泊群，腹地无信号务必结伴报备行程；必鲁图峰攀登耗体力，量力而行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-562",
+      "name": "额济纳旗大漠胡杨景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；胡杨观赏季实行旺季票价，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00（胡杨季延长夜场）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "9月下旬-10月中旬胡杨黄金期",
+        "nearestAirport": "额济纳桃来机场",
+        "nearestRail": "额济纳站",
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": true,
+        "reservationNote": "胡杨观赏季人流量大，建议提前线上购票",
+        "officialSite": null,
+        "tel": null,
+        "notices": "距盟府巴彦浩特约600公里，远途出行预留时间；黄金周住宿紧张提前预订"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-563",
+      "name": "额济纳旗黑城弱水胡杨风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；旺季胡杨季票价上浮，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "9月下旬-10月中旬",
+        "nearestAirport": "额济纳桃来机场",
+        "nearestRail": "额济纳站",
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黑城遗址与弱水胡杨林同区，区间距离长乘观光车；遗址区请勿攀爬城墙"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-564",
+      "name": "额济纳旗东风航天城景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；参观受任务期管制，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "以航天城当日公告为准（任务期与管制期暂停开放）",
+        "suggestedHours": 4,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "额济纳桃来机场",
+        "nearestRail": "额济纳站",
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": true,
+        "reservationNote": "涉管区域须提前申请预约并携带有效证件审核",
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒泉卫星发射中心所在地，开放时间随任务安排变动大，行前务必电话确认；请勿对禁区拍摄"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-565",
+      "name": "额济纳旗居延海景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "日出前开放观日出（约05:30-19:00，随季节调整）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "9-10月观日出芦苇、春秋观鸟",
+        "nearestAirport": "额济纳桃来机场",
+        "nearestRail": "额济纳站",
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "观日出需凌晨出发，湖边清晨气温极低备厚外套；候鸟栖息地勿惊扰"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鸡西-705",
+      "name": "北大荒书法长廊文化中心",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鸡西兴凯湖机场",
+        "nearestRail": "密山站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "碑刻长廊依山分布，步行段较长；冬春交替路面冰滑注意"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鸡西-706",
+      "name": "密山市铁西森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月",
+        "nearestAirport": "鸡西兴凯湖机场",
+        "nearestRail": "密山站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鸡西-707",
+      "name": "当壁镇兴凯湖旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；湖滨游乐项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月",
+        "nearestAirport": "鸡西兴凯湖机场",
+        "nearestRail": "密山站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "中俄界湖湖滨，风大浪急时勿下水；边境地带遵守边防管理规定"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鸡西-708",
+      "name": "兴凯湖新开流景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月、4月观鸟",
+        "nearestAirport": "鸡西兴凯湖机场",
+        "nearestRail": "鸡西站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "新开流遗址为肃慎人渔猎文化遗存；湖岗沙路行走注意防滑防晒"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鸡西-709",
+      "name": "麒麟山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月、冬季滑雪",
+        "nearestAirport": "鸡西兴凯湖机场",
+        "nearestRail": "鸡西站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "季节性滑雪场与夏季山岳游并行，项目开放以当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鹤岗-766",
+      "name": "萝北名山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月、冬季界江冰雪",
+        "nearestAirport": null,
+        "nearestRail": "鹤岗站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黑龙江畔中俄界江风光，冬季江面活动遵守安全区域划定；边境地带带好证件"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鹤岗-767",
+      "name": "萝北太平沟景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；黄金古镇等项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月",
+        "nearestAirport": null,
+        "nearestRail": "鹤岗站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "淘金文化与界江峡谷结合，山路弯多自驾慢行；兴龙峡谷步道湿滑穿防滑鞋"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鹤岗-768",
+      "name": "绥滨月牙湖北方民族园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": null,
+        "nearestRail": "鹤岗站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鹤岗-769",
+      "name": "鹤岗市清源湖旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": null,
+        "nearestRail": "鹤岗站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鹤岗-770",
+      "name": "鹤岗森林公园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": null,
+        "nearestRail": "鹤岗站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "林区防火期严禁烟火；林区蚊虫多备驱蚊用品"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-黑河-720",
+      "name": "瑷珲历史陈列馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": "免费开放，凭有效证件入馆",
+        "openHours": "约09:00-16:30，16:00停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "黑河瑷珲机场",
+        "nearestRail": "黑河站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "团队参观与讲解需提前预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "国家一级博物馆，中俄东部领土变迁史专题展陈；参观保持肃穆馆内勿用闪光灯"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-黑河-721",
+      "name": "黑河中俄民族风情园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "黑河瑷珲机场",
+        "nearestRail": "黑河站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "俄罗斯族风情主题园区，演艺场次以当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-黑河-722",
+      "name": "北安市庆华军工遗址旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": "免费开放，凭有效证件入馆",
+        "openHours": "约09:00-16:30，16:00停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "黑河瑷珲机场",
+        "nearestRail": "北安站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "老军工企业遗址改造，枪械生产史展陈丰富；团队讲解提前预约"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-黑河-723",
+      "name": "山口湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；游船另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6-9月、冬季冰雪",
+        "nearestAirport": "黑河瑷珲机场",
+        "nearestRail": "北安站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖区冬季冰面活动遵守安全区划定；游船班次受天气影响"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-黑河-724",
+      "name": "农垦嫩江农场源明湖旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "黑河瑷珲机场",
+        "nearestRail": "嫩江站",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "农垦田园与湖泊景观结合，距市区远出行自备车辆"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-黔东南苗族侗族自治州-3343",
+      "name": "黔东南州雷山西江千户苗寨景区",
+      "profile": {
+        "ticketPeak": 110,
+        "ticketOff": null,
+        "ticketNote": "参考价110元，四程观光车另计（约20元/程）；以现场公示为准",
+        "freePolicy": null,
+        "openHours": "景区全天可入，观景台与场馆约08:30-22:00；以景区公告为准",
+        "suggestedHours": 8,
+        "bestMonths": "四季皆宜，10月苗年与8月吃新节",
+        "nearestAirport": "贵阳龙洞堡国际机场",
+        "nearestRail": "凯里南站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": true,
+        "reservationNote": "实名制购票，旺季与节庆日建议提前线上预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "苗寨依山而建步道台阶多，夜景观景台人多注意脚下；吊脚楼群为木结构防火期严禁烟火"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-齐齐哈尔-731",
+      "name": "龙腾生态温泉度假庄园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉与客房分票种，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:00，21:00停止入场；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "齐齐哈尔站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "东北冬季路面积雪结冰注意行车；泳衣泳帽自备"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-齐齐哈尔-732",
+      "name": "碾子山旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；滑雪与军事体验项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月、12-2月滑雪",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "碾子山站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山地与军工主题结合，华安军工文化园参观部分区域需登记；季节项目以公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-齐齐哈尔-733",
+      "name": "江桥抗战纪念地",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": "免费开放，凭有效证件入馆",
+        "openHours": "约09:00-16:30，16:00停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "江桥站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "江桥抗战为九一八后有组织抵抗的重要事件，纪念地参观保持肃穆"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-齐齐哈尔-734",
+      "name": "泰湖国家湿地公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "公园免费开放，部分体验项目另计",
+        "freePolicy": "免费开放",
+        "openHours": "全天开放；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "泰来站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湿地观鸟保持距离勿惊扰；夏季蚊虫多备驱蚊用品"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-齐齐哈尔-735",
+      "name": "扎龙温泉旅游名镇（鹤之汤）度假景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉票种多样，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:00，21:00停止入场；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "齐齐哈尔站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "与扎龙湿地相邻可联游；东北冬季往返注意路滑"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-齐齐哈尔-736",
+      "name": "扎龙生态旅游区",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": "参考价约65元（含观光车），未联网核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约07:30-18:00（夏季提早）；放飞场次以当日公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月观鹤放飞、9-10月",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "齐齐哈尔站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "丹顶鹤放飞每天定时场次，提前确认时间占位；湿地木栈道请勿越栏投喂"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-齐齐哈尔-737",
+      "name": "水师森林温泉度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉票种多样，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:00，21:00停止入场；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "齐齐哈尔站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-齐齐哈尔-738",
+      "name": "齐齐哈尔市龙沙公园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "公园免费开放，园内部分游乐设施另计",
+        "freePolicy": "免费开放",
+        "openHours": "约06:00-21:00（冬季收早）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-10月、冬季冰景",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "齐齐哈尔站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "百年老园，望江楼与劳动湖为核心景观；冬季冰灯活动为季节性项目"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-齐齐哈尔-739",
+      "name": "齐齐哈尔龙沙动植物园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00，16:30停止入园（夏季延长）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "齐齐哈尔站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "母婴室",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "请勿投喂动物；冬季部分室外展区关闭，先看公告再入园"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-齐齐哈尔-740",
+      "name": "明月岛景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；往返船票另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（冬季封江期以公告为准）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "齐齐哈尔三家子机场",
+        "nearestRail": "齐齐哈尔站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "江心岛屿须乘船登岛，末班船时间务必留意；冬季封江期航道停运改以景区公告为准"
+      },
+      "confidence": "low"
+    }
+  ]
+}

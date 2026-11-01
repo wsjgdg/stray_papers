@@ -63,7 +63,18 @@ describe("spot profiles", () => {
     expect(bad.slice(0, 8), `档案违规 ${bad.length} 条`).toEqual([]);
   });
 
-  it("覆盖率：5A 已全部有档案", () => {
+  it("覆盖率：5A / 4A 已全部有档案（收官口径）", () => {
+    const targets = LIBRARY_SPOTS.filter(
+      (s) => s.level === "5A" || s.level === "4A",
+    );
+    const missing = targets.filter((s) => !SPOT_PROFILES[s.id]);
+    expect(
+      missing.slice(0, 5).map((s) => `${s.level} ${s.id} ${s.name}`),
+      `5A/4A 缺档案 ${missing.length} 条（5A 应 336/336、4A 4417/4417）`,
+    ).toEqual([]);
+  });
+
+  it("覆盖率：5A 全部有档案", () => {
     const fiveA = LIBRARY_SPOTS.filter((s) => s.level === "5A");
     const missing = fiveA.filter((s) => !SPOT_PROFILES[s.id]);
     expect(

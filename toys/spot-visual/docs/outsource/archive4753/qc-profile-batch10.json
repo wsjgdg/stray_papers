@@ -1,0 +1,28 @@
+{
+  "batch": 10,
+  "count": 33,
+  "low": 27,
+  "missingRequired": 26,
+  "sample": [
+    "scenic-黑河-722",
+    "scenic-齐齐哈尔-737",
+    "scenic-鸡西-707",
+    "scenic-黔东南苗族侗族自治州-3343",
+    "scenic-鸡西-705",
+    "scenic-阿拉善盟-563",
+    "scenic-阿拉善盟-561",
+    "scenic-齐齐哈尔-736",
+    "scenic-齐齐哈尔-738",
+    "scenic-齐齐哈尔-733",
+    "scenic-阿拉善盟-560",
+    "scenic-鹤岗-769",
+    "scenic-齐齐哈尔-734",
+    "scenic-阿拉善盟-562",
+    "scenic-黑河-723",
+    "scenic-阿拉善盟-564",
+    "scenic-鹤岗-768",
+    "scenic-鸡西-708",
+    "scenic-黑河-724",
+    "scenic-阿拉善盟-565"
+  ]
+}

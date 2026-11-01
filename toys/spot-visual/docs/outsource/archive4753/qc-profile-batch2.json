@@ -1,0 +1,28 @@
+{
+  "batch": 2,
+  "count": 100,
+  "low": 79,
+  "missingRequired": 57,
+  "sample": [
+    "scenic-乌兰察布-550",
+    "scenic--284",
+    "scenic-乌兰察布-542",
+    "scenic-乌兰察布-546",
+    "scenic-乌兰察布-548",
+    "scenic-上海-806",
+    "scenic-上海-815",
+    "scenic-上海-783",
+    "scenic-上海-809",
+    "scenic-乌兰察布-543",
+    "scenic--289",
+    "scenic-上海-788",
+    "scenic-上海-800",
+    "scenic-上海-793",
+    "scenic-上海-790",
+    "scenic-上海-781",
+    "scenic-上海-813",
+    "scenic-临汾-405",
+    "scenic-临汾-403",
+    "scenic-上海-829"
+  ]
+}

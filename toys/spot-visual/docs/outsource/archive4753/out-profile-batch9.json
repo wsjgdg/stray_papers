@@ -1,0 +1,2629 @@
+{
+  "task": "景点档案结构化字段-批9",
+  "batch": 9,
+  "count": 100,
+  "authorship": "批9：主会话",
+  "items": [
+    {
+      "id": "scenic-邯郸-200",
+      "name": "丛台区丛台公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "公园免费开放，丛台登临部分时段收费以现场公告为准",
+        "freePolicy": "公园区域免费开放",
+        "openHours": "约06:00-21:00（冬季收早）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "武灵丛台为赵国历史地标，晨练时段人流密集"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-邯郸-201",
+      "name": "涉县八路军129师司令部旧址",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放，讲解服务另计",
+        "freePolicy": "免费开放，凭有效证件入馆",
+        "openHours": "约09:00-17:00，16:30停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "团队参观与讲解需提前预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "红色教育基地，旧址与陈列馆分区参观保持肃穆"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-邯郸-202",
+      "name": "武安市朝阳沟",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "豫剧《朝阳沟》原型村落，山村民居与溪谷步道结合"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-203",
+      "name": "武安市京娘湖风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；游船与观光车另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00，17:30停止入园；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "环湖游览以船行为主，班次受天气影响；贞义岛步道较长量力而行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-204",
+      "name": "武安市东山文化博艺园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-205",
+      "name": "峰峰矿区响堂山风景名胜区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；石窟区与山区分票，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，17:00停止入园；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "北齐石窟为重要遗存，窟内禁止触摸与闪光灯拍摄；山路弯多慢行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-206",
+      "name": "丛台区赵苑公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "公园免费开放，内部体验项目另计",
+        "freePolicy": "免费开放",
+        "openHours": "约06:00-21:00；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "赵文化主题公园，成语典故雕塑散布园内"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-邯郸-207",
+      "name": "武安市长寿村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月避暑",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山村海拔较高夏季凉爽，盘山公路会车注意安全；住宿提前联系"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-208",
+      "name": "涉县太行山五指山旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30，17:00停止入园；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "登山步道台阶多，山顶视野开阔；山区天气多变备外套"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-209",
+      "name": "邯山区晋冀鲁豫革命纪念园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": "免费开放，凭有效证件入园",
+        "openHours": "约09:00-17:00，16:30停止入园；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "烈士陵园庄严肃穆，请勿喧哗嬉闹；团体祭扫提前预约"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-邯郸-210",
+      "name": "武安市七步沟",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；滑雪等季节项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00，17:30停止入园；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5-10月、冬季滑雪",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沟谷步道较长，季节性项目开放情况以公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-211",
+      "name": "涉县韩王九寨旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-212",
+      "name": "馆陶县粮画小镇旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "小镇街区免费进入，粮画制作体验另计",
+        "freePolicy": "街区免费开放",
+        "openHours": "街区全天开放，体验馆约09:00-17:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "粮食画制作体验按场次进行，成品可带走需另付费"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-邯郸-213",
+      "name": "武安市东太行旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；索道与玻璃栈道另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约07:30-17:30，16:30停止入园；以景区公告为准",
+        "suggestedHours": 5.5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "崖壁栈道与玻璃廊桥高差大，恐高者量力；山顶风大备防风衣"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-214",
+      "name": "肥乡区丛台酒苑景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "工业旅游参观票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-16:30，16:00停止入场；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "工业参观需提前预约，以景区公告为准",
+        "officialSite": null,
+        "tel": null,
+        "notices": "酿造车间参观走指定通道；品鉴环节未成年人不可参与"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-215",
+      "name": "武安市古武当山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；索道另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30，17:00停止入园；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "道教名山，金顶台阶陡峭；雷雨天气停止索道运营"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-邯郸-216",
+      "name": "广平县赵王印象城景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "邯郸机场",
+        "nearestRail": "邯郸东站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-456",
+      "name": "蒙根花万通生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；温泉与农事体验分票种，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-457",
+      "name": "银肯塔拉沙漠绿洲自然生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；索道与沙漠项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约07:30-19:00；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沙漠活动注意防晒补水；索道排队旺季较长建议早到"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-458",
+      "name": "恩格贝旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沙漠生态治理示范区，远公纪念林与鸵鸟养殖区为特色看点"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-459",
+      "name": "布龙湖温泉度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉票种多样，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:00，21:00停止入场；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "泳衣泳帽自备；高原地区泡汤注意补水"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-460",
+      "name": "鄂尔多斯草原旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；骑马、演出等项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月草原季",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "草原昼夜温差大备外套；骑马项目听从马倌指挥并佩戴护具"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-461",
+      "name": "三盛公水利风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黄河水利枢纽主题，拦河闸泄洪时段观景请站在安全区；风大时河堤风大注意保暖"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-462",
+      "name": "七星湖旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；沙漠湖泊项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约07:30-19:00；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沙漠中七个湖泊相连，区间距离长建议乘观光车；注意防晒防风沙"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-463",
+      "name": "萨拉乌苏旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "萨拉乌苏遗址为旧石器时代重要地点，河谷步道注意防滑"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-464",
+      "name": "康巴什旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "城市景观区免费开放，部分场馆与游船另计",
+        "freePolicy": "免费开放",
+        "openHours": "全天开放（场馆约09:00-17:30）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以城市建筑群与乌兰木伦湖为核心，夜间灯光秀为季节性项目"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-鄂尔多斯-465",
+      "name": "苏泊罕草原旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；骑马与游牧体验另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月草原季",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "草原昼夜温差大备外套；演艺场次以当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-466",
+      "name": "鄂尔多斯文化产业园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:30；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-467",
+      "name": "颐和生态文化博览园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-468",
+      "name": "准格尔召旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "召庙宗教场所，殿内勿拍照，请尊重信仰习俗；农历庙会人流集中"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-469",
+      "name": "油松王旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "千年古油松为核心景观；清单区县信息缺失，交通按鄂尔多斯市区推算"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-470",
+      "name": "水镜湖休闲度假旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；水上项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-471",
+      "name": "准格尔黄河大峡谷旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；游船另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00，17:30停止入园；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黄河峡谷观景台风大注意安全；山路弯多自驾慢行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-472",
+      "name": "大沙头生态文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；沙漠游乐项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约07:30-19:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沙漠活动注意防晒补水；越野项目系好安全带听从指挥"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-473",
+      "name": "城川红色文化旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "纪念馆免费开放",
+        "freePolicy": "免费开放，凭有效证件入馆",
+        "openHours": "约09:00-17:00，16:30停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "团队参观与讲解需提前预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "民族干部摇篮主题纪念馆，参观保持肃穆"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-鄂尔多斯-474",
+      "name": "马兰花草原旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-6月马兰花期",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "花期集中5-6月，其余季节水草景观为主；草原风大备外套"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-475",
+      "name": "九城宫草原漫瀚文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；滑雪等季节项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月、冬季滑雪",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "季节性项目开放差异大，出行前电话确认；窑洞餐饮为特色"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-476",
+      "name": "东联动漫城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "亲子主题园区，部分场馆场次制开放"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-477",
+      "name": "鄂尔多斯野生动物园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；观光车另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00，17:00停止入园；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "母婴室",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区面积大建议乘观光车分区分段游览；猛兽区勿开窗投喂"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-478",
+      "name": "万家惠欢乐世界游乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "室内乐园分票种，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:30-20:00；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "室内恒温四季可玩，节假日高峰项目排队久建议早到"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-479",
+      "name": "鄂尔多斯羊绒工业旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "工业旅游参观票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00，16:30停止入场；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "生产线参观需提前预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "羊绒制品展示厅可选购，生产线参观走指定通道"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-480",
+      "name": "鄂尔多斯草原丝路文化景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:30；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-481",
+      "name": "鄂尔多斯赛车小镇文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；卡丁车等体验项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "赛道体验项目须佩戴护具并签署告知书；观赛日周边交通管制"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-482",
+      "name": "黄河三盛公国家水利风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "拦河闸与黄河工程景观为核心看点；堤岸风大注意保暖防滑"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鄂尔多斯-483",
+      "name": "河套酒业工业旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "工业旅游参观票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-16:30，16:00停止入场；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "鄂尔多斯伊金霍洛机场",
+        "nearestRail": "鄂尔多斯站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": true,
+        "reservationNote": "生产线参观需提前预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒窖气味浓烈备薄外套；品鉴环节未成年人不可参与"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-银川-3888",
+      "name": "西夏陵",
+      "profile": {
+        "ticketPeak": 75,
+        "ticketOff": null,
+        "ticketNote": "参考价75元（含西夏博物馆），区间车另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:30，17:30停止入园（冬季收早）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "银川河东国际机场",
+        "nearestRail": "银川站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "实名购票，旺季建议提前线上预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "世界文化遗产（2025年列入），陵区风大日照强注意防晒；请勿攀爬陵塔遗址"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-529",
+      "name": "贝子庙旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "锡林浩特站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "额尔敦敖包与贝子庙依山相连，顺时针参观；殿内勿拍照"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-530",
+      "name": "蒙古汗城旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；骑马、演出与住宿另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月草原季",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "锡林浩特站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "草原昼夜温差大备外套；那达慕表演场次以当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-531",
+      "name": "御马苑旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；马术体验另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "宝昌站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "马文化主题园区，马术表演按场次进行；与马匹互动听从工作人员指引"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-532",
+      "name": "乌兰五台旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "锡林浩特站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宗教与草原景观结合，山顶风大注意保暖；请尊重信仰习俗"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-533",
+      "name": "中国马都核心区文化生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；马术赛事与体验另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:30；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月赛事季",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "锡林浩特站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "马术赛事期间人流集中；与马匹互动听从工作人员指引"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-534",
+      "name": "锡林郭勒盟元上都遗址旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；遗址区与博物馆联票以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00，17:30停止入园；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "正蓝旗站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "世界文化遗产元上都遗址，草原上风大日照强注意防晒；请勿越出参观步道"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-535",
+      "name": "乌拉盖九曲弯景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:30；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "锡林浩特站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "乌拉盖草原深处距离城镇远，加满油备饮水；观景台风大注意保暖"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-536",
+      "name": "多伦湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；环湖观光车另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:30；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "多伦站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "环湖公路弯多自驾慢行；湖边垂钓须遵守景区规定"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-537",
+      "name": "乌拉盖布林泉景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "锡林浩特站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-538",
+      "name": "乌拉盖野狼谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "锡林浩特机场",
+        "nearestRail": "锡林浩特站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "观赏野生动物勿投喂勿拍打围栏；投喂表演场次以当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-539",
+      "name": "二连浩特市国门旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00，17:30停止入园；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "二连浩特赛乌素机场",
+        "nearestRail": "二连站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "边境管理区需携带有效身份证件登记；勿越境拍照界碑另一侧"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-540",
+      "name": "二连浩特市国家地质公园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "二连浩特赛乌素机场",
+        "nearestRail": "二连站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "恐龙化石主题地质公园，伊林恐龙遗址区为核心看点"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-578",
+      "name": "御龙温泉度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉票种多样，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:00，21:00停止入场；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "泳衣泳帽自备；东北冬季往返注意路面积雪结冰"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-579",
+      "name": "孔子文化园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "文化园免费开放，部分展馆与活动另计",
+        "freePolicy": "免费开放",
+        "openHours": "约09:00-17:00，16:30停止入园；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-580",
+      "name": "关东文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；温泉与演艺分票种，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-21:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "关东民俗与温泉组合园区，演艺场次以当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-581",
+      "name": "北湖国家湿地公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "公园免费开放，游船与部分园中园另计",
+        "freePolicy": "免费开放",
+        "openHours": "约07:00-19:00（冬季收早）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月、冬季冰雪活动",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区面积大建议电瓶车代步；冬季冰雪项目开放以当年公告为准"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长春-582",
+      "name": "庙香山休闲旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "雪票与索道按雪季分档，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "雪季约08:30-16:30；非雪季山地项目以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "12-2月滑雪季",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "滑雪须佩戴头盔，初学者请教练陪同；雪季末索道运营时间缩短"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-583",
+      "name": "农业博览园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "平时票价未核实；农博会期间按展会票务执行",
+        "freePolicy": null,
+        "openHours": "约09:00-16:30，16:00停止入园；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "四季皆宜、8月农博会",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "农博会期间人流极大建议公共交通前往；温室区夏季注意补水"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-584",
+      "name": "吉林省酒文化博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": "免费开放，凭有效证件入馆",
+        "openHours": "约09:00-16:30，16:00停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆藏名酒陈列丰富，展品勿触摸；馆内严禁烟火"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长春-585",
+      "name": "东北民族民俗馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": "免费开放，凭有效证件入馆",
+        "openHours": "约09:00-16:30，16:00停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 1.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "东北少数民族民俗展陈为主，团队讲解提前预约"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长春-586",
+      "name": "动植物公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00，16:30停止入园（夏季延长）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "市区老牌公园，夏季傍晚人流集中；请勿投喂动物"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-587",
+      "name": "天怡温泉度假山庄",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉与住宿分票种，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:00，21:00停止入场；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-588",
+      "name": "长影旧址博物馆",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketOff": null,
+        "ticketNote": "参考价90元（含讲解），以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00，16:30停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "建议提前线上购票或预约讲解，以馆方公告为准",
+        "officialSite": null,
+        "tel": null,
+        "notices": "新中国电影摇篮原址，摄影棚与洗印车间为核心展区；馆内部分区域禁用闪光灯"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长春-589",
+      "name": "长春凯撒森林温泉旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉票种多样，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:00，21:00停止入场；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "森林环境泡汤注意防蚊；泳衣泳帽自备"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-590",
+      "name": "莲花岛影视休闲文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "影视拍摄场景地，能否看到剧组随缘；园内湖边注意儿童安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-591",
+      "name": "辽金时代文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-592",
+      "name": "榆树钱酒文化庄园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；品鉴环节另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-16:30；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "榆树站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": true,
+        "reservationNote": "生产线参观需提前预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒窖温度低备外套；品鉴环节未成年人不可参与"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-593",
+      "name": "长春天定山旅游度假小镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；滑雪与温泉分票种，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-21:00；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "12-2月滑雪、四季温泉",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "莲花山区域冬季滑雪为主，雪道开放情况以当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-594",
+      "name": "长春国信南山温泉旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉与客房分票种，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:30，21:30停止入场；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "度假区规模大，室内外汤池分区；节假日建议提前订场"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-595",
+      "name": "清泉湖文化与旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-366",
+      "name": "太行山大峡谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "八泉峡、红豆峡等分景区售票与通票并行，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30，16:30停止入园；以景区公告为准",
+        "suggestedHours": 7,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "长治东站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷群范围大，一日游建议主攻八泉峡并预留排队时间；游船与索道受天气影响"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-367",
+      "name": "洗耳河景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "长治东站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-368",
+      "name": "欢乐太行谷",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "游乐项目通票或分票种，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "夏季水上、四季部分场馆",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "长治东站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "母婴室",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "季节性项目差异大，出行前电话确认当日开放清单"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-369",
+      "name": "太行水乡",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；竹筏漂流等项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "长治东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "浊漳河谷沿线景点分散，自驾串游更顺；水上项目穿好救生衣"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-370",
+      "name": "振兴小镇",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "长治东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "乡村休闲主题小镇，节庆活动期间项目更丰富"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-371",
+      "name": "通天峡景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；索道、游船与玻璃观景台另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30，16:30停止入园；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "长治东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷纵深大，游船+索道组合线路省力；玻璃观景台恐高者慎选"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-372",
+      "name": "天脊山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30，17:00停止入园；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "长治东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "瀑布与崖壁栈道为主要看点，雨后水量大但部分步道封闭；穿防滑鞋"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-373",
+      "name": "黄崖洞文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；观光车另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30，17:00停止入园；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "黎城站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "抗战兵工旧址与峡谷地貌结合，核心区步行段较长；穿运动鞋备饮水"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-374",
+      "name": "八路军太行纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": "免费开放，凭有效证件入馆",
+        "openHours": "约09:00-17:00，16:30停止入馆；周一闭馆（法定节假日除外）",
+        "suggestedHours": 2.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "武乡站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "团队参观与讲解需提前预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "全国唯一全面反映八路军抗战史的大型纪念馆，参观保持肃穆；馆内勿用闪光灯"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长治-375",
+      "name": "八路军文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；演艺场次另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-18:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "武乡站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "与八路军太行纪念馆相邻可联游，实景演出场次以当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-376",
+      "name": "太行龙洞",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30，17:00停止入园；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "武乡站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "溶洞内恒温较低备薄外套；台阶湿滑穿防滑鞋"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长治-377",
+      "name": "仙堂山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；索道另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30，17:00停止入园；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "襄垣站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古建与宗教遗存依山分布，登顶段台阶陡峭量力而行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阳泉-349",
+      "name": "藏山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30，17:00停止入园；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "阳泉东站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "赵氏孤儿故事发生地，祠庙群依山而建；登山段台阶多穿运动鞋"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阳泉-350",
+      "name": "大汖温泉",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉票种多样，票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-22:00，21:00停止入场；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季、四季皆宜",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "阳泉东站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区冬季路滑注意行车；泳衣泳帽自备"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阳泉-351",
+      "name": "娘子关",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；关城与瀑布分区售票，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00，17:30停止入园；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "娘子关站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "万里长城著名关隘，关城台阶与水帘洞段湿滑；娘子关瀑布雨季最壮观"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阳泉-352",
+      "name": "桃林沟",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村景区免费进入，节庆与游乐项目另计",
+        "freePolicy": "免费开放",
+        "openHours": "全天开放（项目约09:00-18:00）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月桃花节、5-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "阳泉东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "桃花节期间人流集中建议早到；其余季节以乡村休闲为主"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阳泉-353",
+      "name": "翠枫山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "9-10月红叶、5-6月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "阳泉东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-551",
+      "name": "纳林湖生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；游船与渔事体验另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沙漠湖泊生态区，风大日照强注意防晒；游船受大风停航"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-553",
+      "name": "阿拉善左旗贺兰山广宗寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；观光车另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00，17:30停止入园；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "贺兰山南寺藏传佛教名刹，殿内勿拍照；山林防火期严禁烟火"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-554",
+      "name": "腾格里沙漠月亮湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；进出湖区越野车接驳为必选项，费用以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": true,
+        "reservationNote": "沙漠腹地行程建议提前预约接驳与向导",
+        "officialSite": null,
+        "tel": null,
+        "notices": "沙漠腹地手机信号弱，务必结伴并告知行程；越野颠簸晕车者提前备药"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-555",
+      "name": "腾格里沙漠天鹅湖旅游风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；越野接驳另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-19:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-6月、9-10月观候鸟",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沙漠边缘湖泊候鸟栖息，观鸟保持距离勿惊扰；日照强注意防晒补水"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-556",
+      "name": "福因寺（北寺）旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "贺兰山北寺宗教景区，请尊重信仰习俗殿内勿拍照；山林防火期严禁烟火"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-557",
+      "name": "梦想沙漠汽车航天乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "票价未核实；越野体验项目另计，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-19:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "越野与航天主题结合，大型赛事期间周边交通管制；沙漠项目听从指挥"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-阿拉善盟-558",
+      "name": "阿拉善左旗定远营古城景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古城街区免费开放，部分展馆与王府另计",
+        "freePolicy": "街区免费开放",
+        "openHours": "街区全天开放，场馆约09:00-17:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "四季皆宜",
+        "nearestAirport": "阿拉善左旗机场",
+        "nearestRail": null,
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "塞外小北京古建街区，夜景灯光为季节性项目；展馆闭馆时间各异留意告示"
+      },
+      "confidence": "high"
+    }
+  ]
+}

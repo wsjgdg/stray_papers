@@ -1,0 +1,28 @@
+{
+  "batch": 6,
+  "count": 100,
+  "low": 74,
+  "missingRequired": 74,
+  "sample": [
+    "scenic-晋中-339",
+    "scenic-晋中-337",
+    "scenic-承德-128",
+    "scenic-延边朝鲜族自治州-663",
+    "scenic-延边朝鲜族自治州-658",
+    "scenic-晋城-382",
+    "scenic-晋城-385",
+    "scenic-张家口-217",
+    "scenic-太原-300",
+    "scenic-太原-304",
+    "scenic-张家口-220",
+    "scenic-延边朝鲜族自治州-662",
+    "scenic-承德-136",
+    "scenic-晋中-348",
+    "scenic-延边朝鲜族自治州-661",
+    "scenic-忻州-330",
+    "scenic-太原-296",
+    "scenic-巴彦淖尔-568",
+    "scenic-延边朝鲜族自治州-653",
+    "scenic-张家口-225"
+  ]
+}
