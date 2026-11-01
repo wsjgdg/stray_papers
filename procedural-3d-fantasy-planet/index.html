@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="plates-24">
+  <meta name="aetheris-build" content="province-flora-25">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'plates-24';
+    const BUILD_ID = 'province-flora-25';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -2530,6 +2530,102 @@
         return join(parts);
       }
 
+      // Frost cushion: the tundra's entire flora in one clump — low moss domes ringed by pale sedge.
+      function cushionGeometry(detailed) {
+        const parts = [], rng = seeded(2777);
+        const domes = detailed ? 5 : 3;
+        for (let d = 0; d < domes; d++) {
+          const a = d * 2.399 + rng() * .4, reach = .012 + rng() * .026, radius = .013 + rng() * .012;
+          const dome = new THREE.SphereGeometry(radius, detailed ? 10 : 7, detailed ? 6 : 4, 0, TAU, 0, Math.PI * .5);
+          dome.scale(1, .40 + rng() * .2, 1);
+          dome.rotateY(rng() * TAU);
+          dome.translate(Math.cos(a) * reach, -.004, Math.sin(a) * reach);
+          parts.push(bakeColor(dome, d % 3 === 0 ? '#7d9a6d' : d % 3 === 1 ? '#95a98a' : '#6b886f', .16));
+        }
+        const sedges = detailed ? 16 : 9;
+        for (let b = 0; b < sedges; b++) {
+          const a = b * 2.399 + rng() * .3, reach = .004 + rng() * .028, height = .020 + rng() * .026;
+          const blade = new THREE.ConeGeometry(.0016, height, 3);
+          blade.rotateZ((rng() - .5) * .8); blade.rotateY(a);
+          blade.translate(Math.cos(a) * reach, height * .44, Math.sin(a) * reach);
+          parts.push(bakeColor(blade, b % 4 ? '#b7c0a2' : '#d8dabd', .1));
+        }
+        return join(parts);
+      }
+
+      // Thorn scrub: the desert's second plant — dry branching twigs, dusty leaf clusters, pale thorns.
+      function scrubGeometry(detailed) {
+        const parts = [], rng = seeded(3390);
+        const branches = detailed ? 12 : 8;
+        for (let b = 0; b < branches; b++) {
+          const a = b * 2.399 + rng() * .5, lean = .016 + rng() * .03, rise = .065 + rng() * .07;
+          const points = [
+            new THREE.Vector3(0, -.008, 0),
+            new THREE.Vector3(Math.cos(a) * lean * .55, rise * .45, Math.sin(a) * lean * .55),
+            new THREE.Vector3(Math.cos(a) * lean, rise * .8, Math.sin(a) * lean),
+            new THREE.Vector3(Math.cos(a) * (lean + .012), rise, Math.sin(a) * (lean + .012))
+          ];
+          parts.push(curvedLimb(points, .0044, .0014, detailed ? 6 : 4, detailed ? 7 : 5, b % 3 ? '#6a5a44' : '#7c6b4d', 0));
+          for (let k = 0; k < (detailed ? 4 : 3); k++) {
+            const leaf = new THREE.IcosahedronGeometry(.0055 + rng() * .0035, 0);
+            leaf.scale(1.35, .58, 1.35);
+            leaf.translate(Math.cos(a) * (lean + .010) + (rng() - .5) * .014, rise + (rng() - .5) * .014, Math.sin(a) * (lean + .010) + (rng() - .5) * .014);
+            parts.push(bakeColor(leaf, k % 2 ? '#87975f' : '#9ba86f', .16));
+          }
+        }
+        for (let f = 0; f < (detailed ? 7 : 4); f++) {
+          const a = f * 2.399 + .7, lean = .03 + rng() * .03, rise = .1 + rng() * .05;
+          parts.push(curvedLimb([
+            new THREE.Vector3(0, rise * .55, 0),
+            new THREE.Vector3(Math.cos(a) * lean * .5, rise * .82, Math.sin(a) * lean * .5),
+            new THREE.Vector3(Math.cos(a) * lean, rise * 1.05, Math.sin(a) * lean)
+          ], .0022, .0009, 4, 4, '#7c6b4d', 0));
+        }
+        for (let i = 0; i < (detailed ? 12 : 6); i++) {
+          const a = i * 2.1, thorn = new THREE.ConeGeometry(.0018, .014, 3);
+          thorn.rotateZ(.9); thorn.rotateY(a);
+          thorn.translate(Math.cos(a) * .020, .018 + (i % 5) * .012, Math.sin(a) * .020);
+          parts.push(bakeColor(thorn, '#c9bd96', .1));
+        }
+        return join(parts);
+      }
+
+      // Giant fern: short trunk, then a crown of arching rachises with leaflets along both sides.
+      function fernTreeGeometry(detailed) {
+        const parts = [], rng = seeded(6421);
+        parts.push(curvedLimb([
+          new THREE.Vector3(0, -.012, 0), new THREE.Vector3(.008, .058, -.006),
+          new THREE.Vector3(-.005, .118, .007), new THREE.Vector3(.004, .168, 0)
+        ], .0125, .0082, detailed ? 8 : 6, detailed ? 7 : 5, '#4b4436', .22));
+        const fronds = detailed ? 9 : 6, rows = detailed ? 9 : 6;
+        const up = new THREE.Vector3(0, 1, 0), tangent = new THREE.Vector3(), side = new THREE.Vector3();
+        for (let f = 0; f < fronds; f++) {
+          const a = f * TAU / fronds + rng() * .34, ca = Math.cos(a), sa = Math.sin(a);
+          const reach = .115 + rng() * .055, lift = .085 + rng() * .045;
+          const at = t => new THREE.Vector3(ca * reach * t, .168 + lift * Math.sin(Math.PI * t * .78) - .075 * t * t * t, sa * reach * t);
+          parts.push(curvedLimb([at(0), at(.4), at(.75), at(1)], .0042, .0015, 5, detailed ? 5 : 4, '#4c6a44', 0));
+          for (let r = 1; r <= rows; r++) {
+            const t = r / (rows + .45), p = at(t), shrink = 1 - t * .5;
+            tangent.copy(at(Math.min(1, t + .04))).sub(at(Math.max(0, t - .04))).normalize();
+            side.crossVectors(tangent, up).normalize();
+            for (const sign of [-1, 1]) {
+              const length = .040 * shrink, width = .012 * shrink;
+              const tip = p.clone().addScaledVector(side, sign * length).addScaledVector(tangent, -length * .5).addScaledVector(up, -length * .22);
+              const base = p.clone().addScaledVector(side, sign * .0015);
+              const quad = new THREE.BufferGeometry();
+              const v = [base.x, base.y, base.z, tip.x, tip.y, tip.z,
+                tip.x + side.x * sign * width * .4, tip.y + width, tip.z + side.z * sign * width * .4,
+                base.x + side.x * sign * width * .4, base.y + width, base.z + side.z * sign * width * .4];
+              quad.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+              quad.setIndex([0, 1, 2, 0, 2, 3]);
+              quad.computeVertexNormals();
+              parts.push(bakeColor(quad, r % 3 ? '#3d7549' : '#4f8a52', .12));
+            }
+          }
+        }
+        return join(parts);
+      }
+
       function crystalGeometry() {
         const parts = [], rng = seeded(6319);
         for (let i = 0; i < 5; i++) {
@@ -3020,9 +3116,15 @@
         mat.customProgramCacheKey = () => key + '-' + BUILD_ID;
       }
       const palmMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .82, metalness: .02, side: THREE.DoubleSide, dithering: true });
+      const cushionMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .93, metalness: .02, dithering: true });
+      const scrubMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .80, metalness: .02, dithering: true });
+      const fernTreeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .84, metalness: .02, side: THREE.DoubleSide, dithering: true });
       const cactusMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .76, metalness: .02, dithering: true });
       attachBiomeFloraGlow(palmMaterial, 'aetheris-palm-glow', '0.19', 'vec3(.18, .92, .72)');
       attachBiomeFloraGlow(cactusMaterial, 'aetheris-cactus-glow', '0.215', 'vec3(1.05, .82, .30)');
+      attachBiomeFloraGlow(cushionMaterial, 'aetheris-cushion-glow', '0.028', 'vec3(.52, .92, .80)');
+      attachBiomeFloraGlow(scrubMaterial, 'aetheris-scrub-glow', '0.075', 'vec3(1.0, .84, .42)');
+      attachBiomeFloraGlow(fernTreeMaterial, 'aetheris-ferntree-glow', '0.135', 'vec3(.20, .94, .70)');
       const prototypes = [
         { low: treeGeometry(0, false), high: treeGeometry(0, true), material: treeMaterial, cardsLow: coniferCardsLow, cardsHigh: coniferCards, cardsMaterial: coniferCardMaterial },
         { low: treeGeometry(1, false), high: treeGeometry(1, true), material: treeMaterial, cardsLow: broadleafCardsLow, cardsHigh: broadleafCards, cardsMaterial: broadleafCardMaterial },
@@ -3031,22 +3133,47 @@
         { low: crystalGeometry(), material: crystalMaterial },
         { low: cragGeometry(false), high: cragGeometry(true), material: rockMaterial },
         { low: palmGeometry(false), high: palmGeometry(true), material: palmMaterial },
-        { low: cactusGeometry(false), high: cactusGeometry(true), material: cactusMaterial }
+        { low: cactusGeometry(false), high: cactusGeometry(true), material: cactusMaterial },
+        { low: cushionGeometry(false), high: cushionGeometry(true), material: cushionMaterial },
+        { low: scrubGeometry(false), high: scrubGeometry(true), material: scrubMaterial },
+        { low: fernTreeGeometry(false), high: fernTreeGeometry(true), material: fernTreeMaterial }
       ];
       prototypes[4].high = prototypes[4].low;
-      const ROCK = 3, CRYSTAL = 4, CRAG = 5, PALM = 6, CACTUS = 7;
+      const ROCK = 3, CRYSTAL = 4, CRAG = 5, PALM = 6, CACTUS = 7, CUSHION = 8, SCRUB = 9, FERN = 10;
+      const SPECIES = { fir: 0, oak: 1, willow: 2, palm: PALM, cactus: CACTUS, cushion: CUSHION, scrub: SCRUB, fern: FERN };
       const cells = Array.from({ length: prototypes.length }, () => new Map());
-      // Per-species habitat: firs & oaks on forested slopes, willows by water, boulders, crystals, and 3D alpine crags on mountain ridges.
+      // Per-species habitat: firs & oaks on forested slopes, willows by water, boulders, crystals, and
+      // 3D alpine crags on mountain ridges. `count` is only used by the three geology prototypes —
+      // how many plants of a species exist is a per-province decision (PROVINCE_FLORA below).
+      // Inside a province the climate is already decided, so what separates the species there is
+      // altitude and moisture (a fir takes the dry slopes, an oak the groves, a willow the damp
+      // hollows) rather than the biome test the old global rules used.
       const speciesRules = [
-        { count: compact ? 620 : 1380, min: .049, max: .30, near: 20, grove: true, biomes: ['temperate', 'alpine', 'tundra'], size: [.58, 1.16] },
-        { count: compact ? 280 : 600, min: .049, max: .30, near: 16, grove: true, biomes: ['temperate', 'tropical'], size: [.60, 1.22] },
-        { count: compact ? 170 : 380, min: .016, max: .14, near: 14, damp: true, biomes: ['temperate', 'tropical'], size: [.78, 1.42] },
+        { min: .052, max: .30, near: 20, grove: true, size: [.58, 1.16] },
+        { min: .040, max: .26, near: 16, grove: true, size: [.60, 1.22] },
+        { min: .016, max: .13, near: 14, damp: true, size: [.78, 1.42] },
         { count: compact ? 140 : 400, min: .09, max: .54, near: 10, size: [.62, 1.5] },
         { count: compact ? 150 : 340, min: .024, max: .48, near: 16, size: [.72, 1.72] },
         { count: compact ? 34 : 90, min: .25, max: .66, near: 0, crag: true, biomes: ['alpine', 'volcanic'], size: [.8, 1.65] },
-        { count: compact ? 120 : 280, min: .012, max: .13, near: 8, biomes: ['tropical'], size: [.72, 1.25] },
-        { count: compact ? 130 : 300, min: .04, max: .34, near: 0, biomes: ['desert'], size: [.55, 1.15] }
+        { min: .014, max: .15, near: 8, size: [.72, 1.25] },
+        { min: .045, max: .30, near: 0, size: [.55, 1.15] },
+        { min: .022, max: .34, near: 0, size: [.70, 1.55] },
+        { min: .020, max: .28, near: 0, size: [.62, 1.32] },
+        { min: .016, max: .20, near: 0, damp: true, size: [.72, 1.30] }
       ];
+      // ---- Climate decides the vegetation ------------------------------------------------------
+      // Each province grows exactly what its climate can carry, in its own proportions, and a plant
+      // missing from a province's list cannot appear there at all. Vessper is missing from every
+      // list on purpose: under the domes the ice carries crystal and nothing else. Caelth is moss and
+      // a few wind-bent firs, Sennar cactus and thorn scrub, Vaelmar the temperate mix, and Mirella
+      // the only province that gets palms, giant ferns and jungle oaks at once.
+      const PROVINCE_FLORA = {
+        vaelmar: { fir: compact ? 190 : 430, oak: compact ? 80 : 195, willow: compact ? 45 : 95 },
+        sennar: { cactus: compact ? 95 : 235, scrub: compact ? 120 : 305 },
+        caelth: { cushion: compact ? 210 : 530, fir: compact ? 30 : 72 },
+        mirella: { fern: compact ? 100 : 220, palm: compact ? 110 : 240, oak: compact ? 38 : 92 },
+        vessper: {}
+      };
       assertStartup(prototypes.length === speciesRules.length, 'all flora and mountain prototypes have habitat rules');
       for (const [index, prototype] of prototypes.entries()) {
         assertStartup(Boolean(prototype.low && prototype.high && prototype.low.attributes.normal &&
@@ -3091,8 +3218,26 @@
           spores.push(glow.x, glow.y, glow.z); sporePhases.push(rng() * TAU);
         }
       }
-      const forestRandom = seeded(51377);
-      for (let type = 0; type < prototypes.length; type++) {
+      const forestRandom = seeded(51377), landingProvince = provinceAt(landing);
+      // A pool of land sites per province, sampled once. Each species then draws its candidates from
+      // its own province's pool: no planet-wide rejection sampling, and a province that cannot grow
+      // a plant never offers a candidate for it in the first place.
+      const landPool = {};
+      {
+        const samples = compact ? 18000 : 36000;
+        for (let i = 0; i < samples; i++) {
+          const y = 1 - (i + .5) / samples * 2, angle = i * Math.PI * (3 - Math.sqrt(5)), r = Math.sqrt(1 - y * y);
+          const n = new THREE.Vector3(Math.cos(angle) * r, y, Math.sin(angle) * r);
+          const h = heightAt(n);
+          if (h < SEA + .004 || h > .52) continue;
+          const id = provinceAt(n);
+          if (!PROVINCE_FLORA[id]) continue;
+          (landPool[id] || (landPool[id] = [])).push({ n, h });
+        }
+      }
+      const poolUsed = {};
+      // 1. Ground: boulders, crystals and crags follow geology, not climate — they are everywhere.
+      for (const type of [ROCK, CRYSTAL, CRAG]) {
         const rule = speciesRules[type];
         let placed = 0;
         for (let attempts = 0; placed < rule.count && attempts < rule.count * 45; attempts++) {
@@ -3102,14 +3247,44 @@
           if (h < rule.min || h > rule.max) continue;
           if (n.dot(landing) > .99955) continue;
           if (rule.biomes && !rule.biomes.includes(biomeAt(n, h))) continue;
-          if (rule.grove && noise(n.x * 10 + 23, n.y * 10 - 7, n.z * 10) < -.28) continue;
-          if (rule.damp && noise(n.x * 5.5 - 4, n.y * 5.5 + 12, n.z * 5.5 + 3) < .05) continue;
           // Concentrate 3D alpine crags along rugged mountain spines and cliff shoulders.
           if (rule.crag && Math.abs(noise(n.x * 8.5 + 17, n.y * 8.5 - 9, n.z * 8.5 + 4)) > .36) continue;
           const size = rule.size[0] + forestRandom() * (rule.size[1] - rule.size[0]);
           plant(type, n, h, size, forestRandom); placed++;
         }
         await yieldFrame();
+      }
+      // 2. Flora: province by province, species by species. The province test comes first, so a
+      //    plant is only ever sampled where its climate can carry it.
+      for (const [province, mix] of Object.entries(PROVINCE_FLORA)) {
+        const pool = landPool[province] || [];
+        const used = poolUsed[province] = new Uint8Array(pool.length);
+        for (const [name, count] of Object.entries(mix)) {
+          const type = SPECIES[name], rule = speciesRules[type];
+          let placed = 0;
+          // The handful nearest the landing site first, so the first view is dressed.
+          for (let attempt = 0; province === landingProvince && placed < rule.near && attempt < 60; attempt++) {
+            const n = nearDirection(landing, forestRandom() * TAU, .035 + Math.sqrt(forestRandom()) * .16);
+            if (n.dot(landing) > .99955 || provinceAt(n) !== province) continue;
+            const h = heightAt(n);
+            if (h < rule.min || h > rule.max) continue;
+            plant(type, n, h, rule.size[0] + forestRandom() * (rule.size[1] - rule.size[0]), forestRandom);
+            placed++;
+          }
+          // Then the province's own pool, shuffled once per species and never reused across species.
+          const order = pool.map((_, i) => i);
+          for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(forestRandom() * (i + 1)); const swap = order[i]; order[i] = order[j]; order[j] = swap; }
+          for (let c = 0; c < order.length && placed < count; c++) {
+            const index = order[c], site = pool[index];
+            if (used[index]) continue;
+            if (site.h < rule.min || site.h > rule.max) continue;
+            if (rule.grove && noise(site.n.x * 10 + 23, site.n.y * 10 - 7, site.n.z * 10) < -.28) continue;
+            if (rule.damp && noise(site.n.x * 5.5 - 4, site.n.y * 5.5 + 12, site.n.z * 5.5 + 3) < .05) continue;
+            plant(type, site.n, site.h, rule.size[0] + forestRandom() * (rule.size[1] - rule.size[0]), forestRandom);
+            used[index] = 1; placed++;
+          }
+          await yieldFrame();
+        }
       }
       const floraChunks = [];
       for (let type = 0; type < prototypes.length; type++) for (const entries of cells[type].values()) {
@@ -3297,6 +3472,18 @@
       const underCapacity = fern.count;
       for (const detail of [fern, flowers, groundStones]) { detail.visible = false; detail.castShadow = true; detail.receiveShadow = true; scene.add(detail); }
       const flowerCapacity = flowers.count, stoneCapacity = groundStones.count;
+      // What the ground itself is allowed to wear, province by province. Vessper wears nothing at
+      // all, Caelth a thin frost-green fuzz, Sennar dry straw with a few dust-coloured flowers,
+      // Mirella the full lush mix. The hue/sat/light offsets are what make one province's grass read
+      // as straw, frost or jungle without a second geometry.
+      const PROVINCE_GROUND = {
+        vaelmar: { grass: 1, fern: .75, flower: .70, hue: 0, sat: 0, light: 0 },
+        sennar: { grass: .42, fern: .04, flower: .12, hue: -.085, sat: .04, light: .05 },
+        caelth: { grass: .24, fern: 0, flower: 0, hue: .02, sat: -.16, light: .13 },
+        mirella: { grass: 1, fern: 1, flower: 1, hue: .055, sat: .12, light: -.02 },
+        vessper: { grass: 0, fern: 0, flower: 0, hue: 0, sat: -.22, light: .10 }
+      };
+      const groundStyle = n => PROVINCE_GROUND[provinceAt(n)] || PROVINCE_GROUND.vaelmar;
       // Ground dressing is split into four independent passes (grass, ferns, flowers, stones).
       // Startup runs them all at once; walking re-runs one pass per frame from the resumable job.
       function dressGrass(center, rng) {
@@ -3304,10 +3491,12 @@
         for (let attempt = 0; placed < grassCapacity && attempt < grassCapacity * 8; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .21), h = heightAt(n);
           if (h < .035 || h > .33) continue;
+          const style = groundStyle(n);
+          if (style.grass <= 0 || rng() > style.grass) continue;
           transform.position.copy(n).multiplyScalar(R + h - .001);
           transform.quaternion.setFromUnitVectors(UP, n); transform.rotateY(rng() * TAU); transform.scale.setScalar(.6 + rng() * .8); transform.updateMatrix();
           const dryness = 1 - smooth(.04, .09, h) + smooth(.24, .33, h);
-          instanceTint.setHSL(.2 - dryness * .06 + rng() * .03, .25 + rng() * .15 - dryness * .1, .78 + rng() * .2 + dryness * .1);
+          instanceTint.setHSL(clamp(.2 - dryness * .06 + rng() * .03 + style.hue, 0, 1), clamp(.25 + rng() * .15 - dryness * .1 + style.sat, 0, 1), clamp(.78 + rng() * .2 + dryness * .1 + style.light, 0, 1));
           grass.setColorAt(placed, instanceTint);
           grass.setMatrixAt(placed++, transform.matrix);
         }
@@ -3320,10 +3509,12 @@
         for (let attempt = 0; fernCount < underCapacity && attempt < underCapacity * 12; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .2), h = heightAt(n);
           if (h < .032 || h > .29) continue;
+          const style = groundStyle(n);
+          if (style.fern <= 0 || rng() > style.fern) continue;
           transform.position.copy(n).multiplyScalar(R + h - .002);
           transform.quaternion.setFromUnitVectors(UP, n); transform.rotateY(rng() * TAU); transform.rotateX((rng() - .5) * .15);
           transform.scale.setScalar(.52 + rng() * .55); transform.updateMatrix();
-          fern.setColorAt(fernCount, instanceTint.setHSL(.28 + rng() * .04, .3, .72 + rng() * .24));
+          fern.setColorAt(fernCount, instanceTint.setHSL(clamp(.28 + rng() * .04 + style.hue, 0, 1), clamp(.3 + style.sat, 0, 1), clamp(.72 + rng() * .24 + style.light, 0, 1)));
           fern.setMatrixAt(fernCount++, transform.matrix);
         }
         fern.count = fernCount; fern.instanceMatrix.needsUpdate = true;
@@ -3335,10 +3526,12 @@
         for (let attempt = 0; flowerCount < flowerCapacity && attempt < flowerCapacity * 14; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .16), h = heightAt(n);
           if (h < .045 || h > .2) continue;
+          const style = groundStyle(n);
+          if (style.flower <= 0 || rng() > style.flower) continue;
           transform.position.copy(n).multiplyScalar(R + h - .001);
           transform.quaternion.setFromUnitVectors(UP, n); transform.rotateY(rng() * TAU);
           transform.scale.setScalar(.5 + rng() * .5); transform.updateMatrix();
-          flowers.setColorAt(flowerCount, instanceTint.setHSL(.1 + rng() * .12, .18 + rng() * .3, .82 + rng() * .16));
+          flowers.setColorAt(flowerCount, instanceTint.setHSL(clamp(.1 + rng() * .12 + style.hue, 0, 1), clamp(.18 + rng() * .3 + style.sat, 0, 1), clamp(.82 + rng() * .16 + style.light, 0, 1)));
           flowers.setMatrixAt(flowerCount++, transform.matrix);
         }
         flowers.count = flowerCount; flowers.instanceMatrix.needsUpdate = true;
