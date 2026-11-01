@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="town-terrain-30">
+  <meta name="aetheris-build" content="town-life-31">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'town-terrain-30';
+    const BUILD_ID = 'town-life-31';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4243,6 +4243,9 @@
         window: partTint(new THREE.BoxGeometry(1, 1, .30), '#ffffff', .05),
         lamp: partTint(new THREE.OctahedronGeometry(1, 0), '#ffffff', .05)
       };
+      // Smoke and lamplight outlive the generator that places them: two uniforms the frame loop
+      // drives, and the lists the towns fill while they are being built.
+      let smokeUniforms = null, lampPoolUniforms = null, smokePoints = null, lampPools = null;
       function provinceDressing() {
         const rng = seeded(52033);
         const quota = { vaelmar: 24, sennar: 22, caelth: 22, mirella: 22, vessper: 18 };
@@ -4294,6 +4297,27 @@
           trySite(randomDirection(rng), .9 + rng() * .5, id => quota[id]);
         }
         // Keep the town list for the survey map; it is the only consumer that needs plain directions.
+        // A handful of places where the land falls away faster than a terrace can be cut. These
+        // are found by search rather than drawn: the town has to be somewhere the drop is real.
+        const cliffSites = [];
+        for (const id of Object.keys(sites)) {
+          // Best of many draws rather than a threshold: the planet has only a few real cliff edges,
+          // so ask every province for its steepest available one and take it if it is steep enough.
+          let best = null;
+          for (let i = 0; i < 900; i++) {
+            const dir = randomDirection(rng), h = heightAt(dir);
+            if (h < .052 || h > .225 || provinceAt(dir, h) !== id) continue;
+            if (taken.some(other => other.distanceTo(dir) < .24)) continue;
+            let drop = 0;
+            for (let a = 0; a < 8; a++) drop = Math.max(drop, h - heightAt(nearDirection(dir, a * TAU / 8, .10)));
+            if (!best || drop > best.drop) best = { dir, h, drop };
+          }
+          if (!best || best.drop < .030) continue;
+          taken.push(best.dir);
+          const site = { dir: best.dir, h: best.h, bulk: 1.35, cliff: true, drop: best.drop };
+          sites[id].push(site);
+          cliffSites.push(site);
+        }
         settlementDirs.length = 0;
         for (const id of Object.keys(sites)) for (const site of sites[id]) settlementDirs.push(site);
 
@@ -4352,6 +4376,7 @@
           for (const [value, weight] of pool) { t -= weight; if (t <= 0) return value; }
           return pool[pool.length - 1][0];
         };
+        const lampPoints = [], chimneyPoints = [];
         for (const id of Object.keys(sites)) {
           for (const site of sites[id]) {
             const k = site.bulk, yaw0 = rng() * TAU, s = STYLE[id];
@@ -4359,10 +4384,16 @@
             const qBase = new THREE.Quaternion().setFromUnitVectors(UP, site.dir);
             const ax = new THREE.Vector3(1, 0, 0).applyQuaternion(qBase);
             const az = new THREE.Vector3(0, 0, 1).applyQuaternion(qBase);
-            const put = (geo, mat, lx, lz, up, yaw, sx, sy, sz) => push(geo, mat,
-              origin.clone().addScaledVector(ax, lx * TOWN_SCALE).addScaledVector(az, lz * TOWN_SCALE).addScaledVector(site.dir, up * TOWN_SCALE),
-              qBase.clone().multiply(yawQuat.setFromAxisAngle(UP, yaw)),
-              new THREE.Vector3(sx * TOWN_SCALE, sy * TOWN_SCALE, sz * TOWN_SCALE));
+            const put = (geo, mat, lx, lz, up, yaw, sx, sy, sz) => {
+              const at = origin.clone().addScaledVector(ax, lx * TOWN_SCALE).addScaledVector(az, lz * TOWN_SCALE)
+                .addScaledVector(site.dir, up * TOWN_SCALE);
+              // Two things keep a town alive after the generator is done with it: the pool of light
+              // a lamp leaves on the ground, and the smoke a chimney leaves in the air.
+              if (geo === 'lamp') lampPoints.push(at.clone());
+              if (geo === 'chimney') chimneyPoints.push(at.clone().addScaledVector(site.dir, sy * TOWN_SCALE * .55));
+              push(geo, mat, at, qBase.clone().multiply(yawQuat.setFromAxisAngle(UP, yaw)),
+                new THREE.Vector3(sx * TOWN_SCALE, sy * TOWN_SCALE, sz * TOWN_SCALE));
+            };
             // Local offset inside a rotated piece, expressed in the site's own frame.
             const local = (yaw, px, pz) => {
               const c = Math.cos(yaw), s2 = Math.sin(yaw);
@@ -4518,6 +4549,10 @@
                 litUp(lx, lz, yaw, w, d * .5, h * .34, h * .24, 1);
                 stepsUp(lx, lz, yaw, w, d * .5, s.roofMat);
               } else if (kind === 'longhouse') {
+                if (rng() < .30) {
+                  const [cx, cz] = local(yaw, w * .3, d * .2);
+                  putUp('chimney', s.roofMat, lx + cx, lz + cz, .004 + h * .86, yaw, w * .10, h * .52, w * .10);
+                }
                 const lw = w * 1.55, ld = d * .92, lh = h * .88;
                 putUp('wall', s.wall, lx, lz, .004, yaw, lw, lh, ld);
                 putUp(s.roof, s.roofMat, lx, lz, .004 + lh * .955, yaw + Math.PI / 2,
@@ -4529,6 +4564,7 @@
                   putUp('chimney', s.roofMat, lx + cx, lz + cz, .004 + lh * .955, yaw, w * .10, lh * .55, w * .10);
                 }
               } else if (kind === 'tower') {
+                if (rng() < .40) putUp('chimney', s.roofMat, lx, lz, .004 + h * 1.02, yaw, w * .09, h * .30, w * .09);
                 const h1 = h * .62, h2 = h * .46, w2 = w * .78, d2 = d * .78;
                 putUp('wall', s.wall, lx, lz, .004, yaw, w, h1, d);
                 putUp('ledge', s.roofMat, lx, lz, .004 + h1 * .95, yaw, w * 1.06, .10, d * 1.06);
@@ -4538,6 +4574,10 @@
                 litUp(lx, lz, yaw, w, d * .5, h1 * .34, h1 * .26, 1);
                 litUp(lx, lz, yaw, w2, d2 * .5, h1 * .99 + h2 * .34, h2 * .26, 1);
               } else if (kind === 'round') {
+                if (rng() < .45) {
+                  const [cx, cz] = local(yaw, w * .22, 0);
+                  putUp('chimney', s.roofMat, lx + cx, lz + cz, .004 + h * .86, yaw, w * .09, h * .34, w * .09);
+                }
                 const rh = h * .95;
                 putUp('drum', s.wall, lx, lz, .004, yaw, w, rh, w);
                 putUp(rng() < .5 ? 'dome' : (s.roof === 'dome' ? 'dome' : 'spire'), s.roofMat,
@@ -4599,6 +4639,53 @@
               (site.kinds = site.kinds || new Set()).add(kind);
               house(lx, lz, yaw, kind === 'tower' ? w * .86 : w, d, h, kind, floor, low);
             };
+            // ---- cliff colony ------------------------------------------------------------------
+            // Where the land falls away faster than a terrace can be cut, the town goes *out*: three
+            // decks hung off the face, joined by steps, tied back into the rock above with beams.
+            if (site.cliff) {
+              const glen = Math.hypot(gradX, gradZ) || 1;
+              const dfx = -gradX / glen, dfz = -gradZ / glen;
+              const dsx = -dfz, dsz = dfx;
+              const faceYaw = Math.atan2(-dfz, dfx);
+              const climb = Math.atan2(dfx, dfz);
+              const kindPool = HOUSES[id].length ? HOUSES[id] : [['flat', 1]];
+              const deckMat = id === 'caelth' ? 'pale' : (id === 'vaelmar' || id === 'mirella') ? 'timber' : 'basalt';
+              site.plan = 'cliff';
+              const decks = 3;
+              let prevY = 0, prevD = 0;
+              for (let i = 0; i < decks; i++) {
+                const d = (.050 + i * .052) * k, off = (rng() - .5) * .022 * k;
+                const lx = dfx * d + dsx * off, lz = dfz * d + dsz * off;
+                const gy = standing(lx, lz);
+                const dw = (.092 - i * .014) * k, dd = (.066 - i * .008) * k;
+                put('block', deckMat, lx, lz, gy - .006, faceYaw, dw, .022, dd);
+                // struts from the deck's outer edge back under it into the rock
+                for (const side of [-1, 1]) {
+                  const [bx, bz] = local(faceYaw, side * dw * .42, dd * .46);
+                  put('beam', s.wall, lx + bx, lz + bz, gy - .014, faceYaw + Math.PI / 2, .010, .058, .010);
+                }
+                // the house on the deck: floor and footing both on the deck, not on the air
+                const kind = pick(kindPool);
+                (site.kinds = site.kinds || new Set()).add(kind);
+                house(lx, lz, faceYaw + (rng() - .5) * .5, dw * .46, dd * .52, (.050 + rng() * .014) * k,
+                  kind, gy + .006, gy + .006);
+                if (i > 0) {
+                  // steps down to the deck above
+                  const mx = dfx * (d - .030) + dsx * off, mz = dfz * (d - .030) + dsz * off;
+                  put('steps', s.roofMat, mx, mz, Math.max(gy, prevY) - .020, climb, .052 * k, .42, .046 * k);
+                }
+                prevY = gy; prevD = d;
+              }
+              // the anchor: two beams running back into the cliff from the top deck
+              for (const side of [-1, 1]) {
+                const ax0 = dfx * .048 * k + dsx * side * .030 * k, az0 = dfz * .048 * k + dsz * side * .030 * k;
+                put('beam', s.wall, ax0, az0, prevY + .040 * k, faceYaw + Math.PI / 2, .15 * k, .026, .022);
+              }
+              // a mast on the lowest deck, so the colony is visible from the water below
+              put('mast', s.wall, dfx * prevD, dfz * prevD, prevY - .004, faceYaw, .018 * k, .16 * k, .018 * k);
+              put('lamp', 'lamp', dfx * prevD, dfz * prevD, prevY + .15 * k, 0, .006, .008, .006);
+              continue;
+            }
             // ---- ground ------------------------------------------------------------------------
             // The footprint follows the plan: a ring of houses needs a wider base than a lane.
             const platMat = id === 'caelth' ? 'pale' : (id === 'vaelmar' || id === 'mirella') ? 'timber' : 'basalt';
@@ -4939,6 +5026,81 @@
               }
               if (rng() < .5) put('ring', 'pale', 0, 0, .004, rng() * TAU, .15 * k, .15 * k, .15 * k);
             }
+            // ---- contact with the ground -------------------------------------------------------
+            // A town that is merely *placed* on a hill still reads as a model on a table. So the
+            // ground is worn into it: a track walks out of the town on the fall line, a gate stands
+            // where the track leaves, the terrace gets a retaining wall where it stands proud, and
+            // steps where it stands tall enough to need them.
+            const gradLen = Math.hypot(gradX, gradZ) || 1;
+            const fx = -gradX / gradLen, fz = -gradZ / gradLen;      // downhill, in the site frame
+            const sxv = -fz, szv = fx;                               // across the fall line
+            const pathYaw = Math.atan2(-fz, fx);                     // local +x points downhill
+            const acrossYaw = Math.atan2(-fx, -fz);                  // local +x points across
+            const climbYaw = Math.atan2(fx, fz);                     // local +z points across the track
+            const atFwd = (d, side) => [fx * d + sxv * side, fz * d + szv * side];
+            const groundMat = platMat;
+            // Slabs that lie *in* the slope rather than level on it: half a slab hanging over the
+            // fall line is the difference between a worn track and a row of floating stones.
+            const nTilt = site.dir.clone().addScaledVector(ax, -gradX).addScaledVector(az, -gradZ).normalize();
+            const qTilt = new THREE.Quaternion().setFromUnitVectors(UP, nTilt).multiply(qBase);
+            const putSlope = (geo, mat, lx, lz, up, yaw, sx, sy, sz) => push(geo, mat,
+              origin.clone().addScaledVector(ax, lx * TOWN_SCALE).addScaledVector(az, lz * TOWN_SCALE)
+                .addScaledVector(site.dir, up * TOWN_SCALE),
+              qTilt.clone().multiply(yawQuat.setFromAxisAngle(UP, yaw)),
+              new THREE.Vector3(sx * TOWN_SCALE, sy * TOWN_SCALE, sz * TOWN_SCALE));
+            // 1. the track: slabs laid in the slope, overlapping, so it reads as one worn path
+            for (let i = 0; i < 7; i++) {
+              const d = (.072 + i * .027) * k, side = (rng() - .5) * .008 * k;
+              const [tx, tz] = atFwd(d, side);
+              const wobble = (rng() - .5) * .12;
+              putSlope('block', groundMat, tx, tz, standing(tx, tz) + .001, pathYaw + wobble,
+                .046 * k, .012, .032 * k);
+            }
+            // 2. the gate, where the track leaves the town
+            {
+              const span = .070 * k, d = .070 * k, postH = (id === 'caelth' ? .066 : .056) * k;
+              const [gx, gz] = atFwd(d, 0), gy = standing(gx, gz);
+              for (const side of [-1, 1]) {
+                const [px, pz] = atFwd(d, side * span * .5);
+                put('column', s.wall, px, pz, standing(px, pz) + .004, acrossYaw, .019 * k, postH, .019 * k);
+              }
+              if (id === 'caelth' || id === 'mirella') {
+                put('ring', id === 'mirella' ? 'glass' : 'pale', gx, gz, gy + postH * .95,
+                  acrossYaw, .058 * k, .058 * k, .042);
+              } else {
+                put('beam', s.roofMat, gx, gz, gy + postH * .93, acrossYaw, span * 1.10, .11, .014);
+              }
+              if (id === 'sennar') put('awning', s.roofMat, gx, gz, gy + postH * .88, acrossYaw, span * .86, .40, .05 * k);
+              if (id === 'vaelmar' && rng() < .5) {
+                put('lamp', 'lamp', gx, gz, gy + postH * 1.02, 0, .005, .007, .005);
+              }
+            }
+            // 3. the terrace edge: a retaining wall wherever the plate stands above the ground
+            if (footLow < -.010 && plateFoot) {
+              const R = plateFoot.r != null ? plateFoot.r : Math.min(plateFoot.hx, plateFoot.hz);
+              for (let i = 0; i < 5; i++) {
+                const a = i * TAU / 5 + rng() * .12;
+                const px = Math.cos(a) * R, pz = Math.sin(a) * R;
+                const gy = standing(px, pz);
+                if (gy > -.008) continue;                            // only where the hill falls away
+                const h = Math.min(.062, -gy + .012);
+                put('block', groundMat, px, pz, gy + h * .5, a + Math.PI / 2, .095 * k, h, .018 * k);
+              }
+            }
+            // 4. what a lived-in place collects: crates stacked by the track
+            if (tier >= 1) {
+              for (let i = 0; i < 2; i++) {
+                const [cx, cz] = atFwd((.052 + rng() * .042) * k, (rng() - .5) * .080 * k);
+                const gy = standing(cx, cz);
+                put('block', s.roofMat, cx, cz, gy + .010 + rng() * .005, rng() * TAU,
+                  (.020 + rng() * .014) * k, (.018 + rng() * .012) * k, (.018 + rng() * .012) * k);
+              }
+            }
+            // 5. steps up to the terrace where it is tall enough to need them
+            if (footLow < -.020) {
+              const [px, pz] = atFwd(.048 * k, 0);
+              put('steps', s.roofMat, px, pz, standing(px, pz) + .004, climbYaw, .074 * k, .38, .052 * k);
+            }
           }
         }
         for (const [key, list] of buckets) {
@@ -4954,6 +5116,100 @@
           inst.receiveShadow = true;
           inst.boundingSphere = new THREE.Sphere(new THREE.Vector3(), R + 1.2);
           scene.add(inst);
+        }
+        // ---- smoke ---------------------------------------------------------------------------
+        // Three puffs per chimney, all of them computed in the vertex shader: the cloud costs one
+        // draw call and no per-frame CPU work, which is the only reason it can exist on a planet.
+        if (chimneyPoints.length) {
+          const per = 3, n = chimneyPoints.length * per;
+          const origin = new Float32Array(n * 3), phase = new Float32Array(n), seed = new Float32Array(n);
+          chimneyPoints.forEach((pt, i) => {
+            for (let k = 0; k < per; k++) {
+              const j = i * per + k;
+              origin[j * 3] = pt.x; origin[j * 3 + 1] = pt.y; origin[j * 3 + 2] = pt.z;
+              phase[j] = k / per + rng() * .10;
+              seed[j] = rng();
+            }
+          });
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute('position', new THREE.BufferAttribute(origin, 3));
+          geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+          geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+          smokeUniforms = {
+            uTime: { value: 0 }, uPixel: { value: 900 }, uOpacity: { value: .30 },
+            uColor: { value: new THREE.Color(0xb9b4ab) }
+          };
+          const mat = new THREE.ShaderMaterial({
+            uniforms: smokeUniforms, transparent: true, depthWrite: false,
+            vertexShader: `
+              uniform float uTime, uPixel;
+              attribute float aPhase, aSeed;
+              varying float vFade;
+              void main() {
+                float life = fract(uTime * (.040 + aSeed * .022) + aPhase);
+                vec3 up = normalize(position);
+                vec3 side = normalize(cross(up, vec3(0.0, 1.0, 0.0)) + vec3(0.0001, 0.0, 0.0));
+                vec3 drift = side * (aSeed - 0.5) * 0.07 * life;
+                vec3 p = position + up * (life * 0.085) + drift;
+                vFade = smoothstep(0.0, 0.18, life) * (1.0 - smoothstep(0.30, 1.0, life));
+                vec4 mv = modelViewMatrix * vec4(p, 1.0);
+                gl_Position = projectionMatrix * mv;
+                gl_PointSize = uPixel * (0.004 + life * 0.016) / max(0.05, -mv.z);
+              }`,
+            fragmentShader: `
+              uniform vec3 uColor; uniform float uOpacity;
+              varying float vFade;
+              void main() {
+                vec2 c = gl_PointCoord - 0.5;
+                float d2 = dot(c, c);
+                if (d2 > 0.25) discard;
+                float a = (1.0 - smoothstep(0.01, 0.25, d2)) * vFade * uOpacity;
+                if (a < 0.004) discard;
+                gl_FragColor = vec4(uColor, a);
+              }`
+          });
+          smokePoints = new THREE.Points(geo, mat);
+          smokePoints.frustumCulled = false;
+          scene.add(smokePoints);
+        }
+        // ---- lamplight on the ground ----------------------------------------------------------
+        // One quad per lamp, merged, additive, and only switched on after dark.
+        if (lampPoints.length) {
+          const parts = [], basis = new THREE.Matrix4(), spin = new THREE.Quaternion();
+          const pool = new THREE.PlaneGeometry(1, 1);
+          pool.rotateX(-Math.PI / 2);
+          for (const pt of lampPoints) {
+            const up = pt.clone().normalize();
+            const ground = up.clone().multiplyScalar(R + heightAt(up));
+            spin.setFromUnitVectors(UP, up);
+            basis.compose(ground.clone().addScaledVector(up, .0025), spin,
+              new THREE.Vector3(.070 + rng() * .020, 1, .070 + rng() * .020));
+            const g = pool.clone().applyMatrix4(basis);
+            parts.push(g);
+          }
+          const merged = mergeGeometries(parts);
+          parts.forEach(g => g.dispose());
+          lampPoolUniforms = { uNight: { value: 0 }, uColor: { value: new THREE.Color(0xffc281) } };
+          const mat = new THREE.ShaderMaterial({
+            uniforms: lampPoolUniforms, transparent: true, depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            vertexShader: `
+              varying vec2 vUv;
+              void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+            fragmentShader: `
+              uniform float uNight; uniform vec3 uColor;
+              varying vec2 vUv;
+              void main() {
+                float d = length(vUv - 0.5) * 2.0;
+                float a = smoothstep(1.0, 0.05, d) * uNight * 0.42;
+                if (a < 0.002) discard;
+                gl_FragColor = vec4(uColor, a);
+              }`
+          });
+          lampPools = new THREE.Mesh(merged, mat);
+          lampPools.frustumCulled = false;
+          lampPools.renderOrder = 7;
+          scene.add(lampPools);
         }
       }
 
@@ -6741,6 +6997,9 @@
         if(frame%shadowStride===0)renderer.shadowMap.needsUpdate=true;
         clearBubble.value.copy(camera.position);
         pulseTime.value=waterUniforms.uTime.value=sporeUniforms.uTime.value=elapsed;
+        // Smoke drifts on its own clock and lamplight only exists after dark.
+        if(smokeUniforms){smokeUniforms.uTime.value=elapsed;smokeUniforms.uPixel.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360));}
+        if(lampPoolUniforms)lampPoolUniforms.uNight.value=clamp(1-dayAmount*1.7,0,1)*.9;
         forestTime.value=elapsed*(.72+weatherNow.wind*.52);
         clouds[0].rotation.y=elapsed*(.0035+weatherNow.wind*.004);clouds[1].rotation.y=1.7-elapsed*(.0028+weatherNow.wind*.002);
         cloudShadow.rotation.value=clouds[0].rotation.y;
