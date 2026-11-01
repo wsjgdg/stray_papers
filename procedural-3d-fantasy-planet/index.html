@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="shrine-weather-33">
+  <meta name="aetheris-build" content="shrine-weather-34">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'shrine-weather-33';
+    const BUILD_ID = 'shrine-weather-34';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4034,7 +4034,10 @@
         lamp: new THREE.MeshStandardMaterial({ color: 0x2a1c10, vertexColors: true, roughness: .55, metalness: .08, emissive: 0xffb35e, emissiveIntensity: 1.7 }),
         // Damp earth for the tracks leading into every town and up to every altar: darker and
         // softer than the paving, and the one surface that answers rain hardest.
-        road: new THREE.MeshStandardMaterial({ color: 0x6b6152, vertexColors: true, roughness: .96, metalness: 0, dithering: true })
+        road: new THREE.MeshStandardMaterial({ color: 0x6b6152, vertexColors: true, roughness: .96, metalness: 0, dithering: true }),
+        // The shrines under the altars are sanctuary masonry, not provincial carpentry: the same
+        // weathered stone the islands are cut from, so they read as the altars' own footing.
+        shrine: new THREE.MeshStandardMaterial({ color: 0x9a927c, vertexColors: true, roughness: .88, metalness: .04, dithering: true })
       };
       // Built surfaces remember their dry state so weather can soak them and dry them again.
       provinceWet = Object.entries(provinceMat).map(([key, m]) => ({
@@ -5121,12 +5124,15 @@
           }
         }
         // ---- the ground beneath the sanctuaries ------------------------------------------------
-        // Every altar hangs above a town — the generator guarantees it two settlements at its
-        // foot — yet until now nothing on the ground said so. So each altar gets a shrine on the
-        // exact ground point it hovers over: a paved circle with a kerb, a gate to pass through,
-        // offerings left at the rim, a stair that climbs toward the altar and stops in the air
-        // where the rest of it fell away, and a lane out to the fields behind the gate.
-        const PLACE_MAT = { vaelmar: 'timber', sennar: 'basalt', caelth: 'pale', mirella: 'timber', vessper: 'basalt' };
+        // An altar hangs over a town: the generator puts two settlements at its foot, and the
+        // island's rock reaches down toward the ground between them. So the footing is built in two
+        // parts — a pair of slim way-stones on the altar's own ground point, and, where the town
+        // leaves a clear court, a paved shrine with a gate and a stair. The stones are what you see
+        // from a distance; the court is what you walk into.
+        const GROUND_PART = { platform: 1, disc: 1, ledge: 1, steps: 1, ring: 1 };
+        // platformPart() is a half-width-1 dais, disc and ring are radius-1: footprints differ.
+        const footprint = item => (item.geo === 'disc' || item.geo === 'ring')
+          ? Math.max(item.scale.x, item.scale.z) : .5 * Math.max(item.scale.x, item.scale.z);
         const solveNormal = n => {
           const eps = .02, east = new THREE.Vector3(1, 0, 0).cross(n).normalize();
           const north = new THREE.Vector3().crossVectors(n, east).normalize();
@@ -5135,8 +5141,7 @@
           const hz = heightAt(n.clone().addScaledVector(north, eps).normalize());
           return { h, east, north, normal: n.clone().addScaledVector(east, -(hx - h) / eps).addScaledVector(north, -(hz - h) / eps).normalize() };
         };
-        // A shrine is cut level into the hillside, not laid along it, so its up axis is only part
-        // way toward the slope's own normal.
+        // A shrine is cut level into the hillside, not laid along it.
         const putGround = (geo, mat, n, lift, yaw, sx, sy, sz) => {
           const { normal, h } = solveNormal(n);
           const up = normal.clone().lerp(n, .45).normalize();
@@ -5144,7 +5149,6 @@
             new THREE.Quaternion().setFromUnitVectors(UP, up).multiply(new THREE.Quaternion().setFromAxisAngle(UP, yaw)),
             new THREE.Vector3(sx, sy, sz));
         };
-        // Step `chord` away from `from` along the great circle toward `toward`.
         const along = (from, toward, chord, out) => {
           const theta = from.angleTo(toward);
           if (theta < 1e-4) return out.copy(toward);
@@ -5154,7 +5158,10 @@
         };
         const probe = new THREE.Vector3(), bearing = (n, d) => { const { east, north } = solveNormal(n); return Math.atan2(d.dot(north), d.dot(east)); };
         const dry = n => heightAt(n) > SEA + .004;             // paving never crosses open water
-        // Which way is there ground to build on? Tried twelve ways round, biased away from the town.
+        // Directions are on the unit sphere and pieces are on the ground: measure angles, not raw
+        // distances, or every comparison is off by the ground's own altitude.
+        const chordTo = (item, dir) => 2 * Math.sin(item.origin.angleTo(dir) / 2);
+        const partTop = (item, ground) => item.origin.length() + .06 * item.scale.y - (R + ground);
         const openBearing = (n, awayFromDir) => {
           const { east, north } = solveNormal(n);
           const bias = awayFromDir ? awayFromDir.clone().sub(n).normalize() : null;
@@ -5169,64 +5176,193 @@
           return pick || east;
         };
         for (const landmark of landmarks) {
-          const n = landmark.direction.clone().normalize();
-          if (!dry(n)) continue;                               // an altar over open water has no shore
-          const mat = PLACE_MAT[provinceAt(n, heightAt(n))] || 'basalt';
-          let nearest = null, best = 9;
-          for (const site of settlementDirs) {
-            const d = site.dir.distanceTo(n);
-            if (d < best) { best = d; nearest = site; }
+          const altar = landmark.direction.clone().normalize();
+          if (!dry(altar)) continue;                           // an altar over open water has no shore
+          const mat = 'shrine';
+          let nearestTown = null, nearestGap = 9;
+          for (const site of settlementDirs) { const d = site.dir.distanceTo(altar); if (d < nearestGap) { nearestGap = d; nearestTown = site; } }
+          // Everything standing near this altar. The town's own paving is not an obstacle — a shrine
+          // is built on paving — only walls, roofs, towers, lamps and masts are.
+          const local = [], paving = [];
+          for (const list of buckets.values()) for (const item of list) {
+            if (chordTo(item, altar) > .70) continue;         // a wide roof reaches further than its centre
+            (GROUND_PART[item.geo] ? paving : local).push(item);
           }
-          // Prefer the side away from the town, but only where there is dry ground to lay a lane.
-          let away = openBearing(n, nearest ? nearest.dir : null);
-          if (!dry(along(n, away, .178, probe))) away = openBearing(n, null);
-          const yaw = bearing(n, away);
-          // The paved circle and its kerb.
-          putGround('disc', mat, n, .030, yaw, .112, .30, .112);
-          putGround('ring', mat, n, .043, yaw, .112, .26, .112);
-          // Two steps up from the town side onto the circle.
-          for (let i = 0; i < 2; i++) {
-            const sd = along(n, nearest ? nearest.dir : away, .128 - i * .017, probe).clone();
-            if (dry(sd)) putGround('steps', mat, sd, .008 + i * .012, bearing(sd, n), .095, .26, .050);
-          }
-          // The gate straddles the lane where it leaves the circle.
-          const gd = along(n, away, .150, probe).clone();
-          if (dry(gd)) {
-            const across = new THREE.Vector3().crossVectors(gd, n).normalize();
-            for (const side of [-1, 1]) {
-              const pd = along(gd, across, side * .040, new THREE.Vector3()).clone();
-              if (dry(pd)) putGround('column', mat, pd, .034, rng() * TAU, .024, .062, .024);
+          // Height above the local ground that a flat thing has to sit at to clear the paving.
+          const pavingTopAt = dir => {
+            const ground = Math.max(heightAt(dir), SEA);
+            let lift = .012;
+            for (const item of paving) if (footprint(item) > chordTo(item, dir)) lift = Math.max(lift, partTop(item, ground) + .010);
+            return Math.min(lift, .16);   // a terrace is a floor; a balcony would be too high to reach
+          };
+          // The surface you would actually stand on: the terrain, or a town's paving where it is
+          // higher. Sanctuaries sit on the town's own floor as often as on bare ground.
+          const surfaceAt = dir => Math.max(heightAt(dir), SEA) + pavingTopAt(dir);
+          // How far a point stands from the nearest building. Footprints are taken as circles —
+          // cheap, and pessimistic, which is the right way round for a footing that must not end up
+          // inside a wall.
+          const clearanceAt = dir => {
+            let clear = .9;
+            for (const item of local) {
+              if (item.scale.y < .04) continue;                // a floor tile is not a wall
+              const d = chordTo(item, dir) - footprint(item);
+              if (d < clear) clear = d;
             }
-            putGround('beam', mat, gd, .100, bearing(gd, across), .124, .10, .014);
-            // A lamp hangs from the gate at night, the way town gates carry one.
-            putGround('lamp', 'lamp', gd, .085, rng() * TAU, .016, .016, .016);
+            return clear;
+          };
+          const { east, north } = solveNormal(altar);
+          const candidates = [];
+          for (let k = 0; k < 24; k++) {
+            const a = k * TAU / 24;
+            const side = east.clone().multiplyScalar(Math.cos(a)).addScaledVector(north, Math.sin(a)).normalize();
+            for (let chord = .16; chord <= .52; chord += .04) candidates.push({ chord, dir: altar.clone().addScaledVector(side, chord).normalize() });
           }
-          // The lane behind the gate runs out toward the fields — or, when the only dry way out is
-          // the town's way, it becomes a short spur that lands on the town's own paving.
-          const towardTown = nearest && away.dot(nearest.dir.clone().sub(n)) > 0;
-          for (let k = 0; k < (towardTown ? 3 : 10); k++) {
-            const d = along(n, away, .178 + k * .024, probe).clone();
-            if (!dry(d)) break;
-            putGround('block', 'road', d, .010, bearing(d, away), .048, .007, .046);
+          // 1. The way-stones, always. These are what you see from a distance: two slim shafts
+          //    standing on the altar's own ground, just outside the hanging rock, carrying lamps.
+          //    They are narrow enough to stand between buildings, so no town can swallow them.
+          // First look for open ground at the edge of the town; only if there is none, squeeze the
+          // gate into the street. A sanctuary prefers the field to the gutter.
+          let gate = null, gateAway = null, flank = null, lone = false, gateClear = 0;
+          for (const [near, far] of [[.30, .52], [.16, .30]]) {
+            let gape = -9;
+            for (const needClear of [.015, .005, -.012, -.025, -.05, -.09]) {
+              for (const { chord, dir } of candidates) {
+                if (chord < near || chord > far || !dry(dir)) continue;
+                const away = openBearing(dir, altar);
+                const across = new THREE.Vector3().crossVectors(dir, away).normalize();
+                for (const side of [across, across.clone().negate()]) {
+                  const feet = [-1, 1].map(k => dir.clone().addScaledVector(side, k * .035).normalize());
+                  if (!feet.every(dry)) continue;
+                  // Two sanctuaries may stand close enough to share a horizon: keep each gate its own.
+                  if (landmarks.some(other => other !== landmark && other.direction.angleTo(dir) < altar.angleTo(dir) - .02)) continue;
+                  // Each shaft is anchored to whatever it stands on, so a step between them is a
+                  // gate on a hillside, not a floating one — but a big step would look wrong.
+                  const levels = [surfaceAt(dir), ...feet.map(surfaceAt)];
+                  const drop = Math.max(...levels) - Math.min(...levels);
+                  if (drop > .25) continue;
+                  const clear = Math.min(...feet.map(clearanceAt));
+                  if (clear < needClear) continue;             // never stand a shaft inside a wall
+                  const score = clear - drop * .5 - Math.abs(chord - .34) * .12;
+                  if (score > gape) { gape = score; gate = dir; gateAway = away; flank = side; gateClear = clear; }
+                }
+              }
+              if (gate) break;
+            }
+            if (gate) break;
           }
-          // Offerings left on the circle's rim.
-          for (let i = 0; i < 3; i++) {
-            const { east, north } = solveNormal(n);
+          // A gate whose own two feet cannot stand clear is worse than a single stone: a lone
+          // way-stone fits where a pair cannot, and reads as the last marker of a lost shrine.
+          if (gate && gateClear < -.03) { gate = null; lone = true; }
+          if (!gate) {
+            // No room for a gate: one stone, standing where the street leaves the most space.
+            let best = null, bestClear = -.09;
+            for (const { dir } of candidates) {
+              if (!dry(dir)) continue;
+              if (landmarks.some(other => other !== landmark && other.direction.angleTo(dir) < altar.angleTo(dir) - .02)) continue;
+              const clear = clearanceAt(dir);
+              if (clear > bestClear) { bestClear = clear; best = dir; }
+            }
+            if (!best) continue;                               // walled in on every side
+            gate = best;
+            gateAway = openBearing(best, altar);
+            flank = new THREE.Vector3().crossVectors(best, gateAway).normalize();
+            lone = true;
+          }
+          const gBase = pavingTopAt(gate);
+          const stoneH = .34, stoneW = .018;   // twice a house: a sanctuary is meant to be seen
+          const seats = [];
+          for (const side of lone ? [0] : [-1, 1]) {
+            const sd = side ? gate.clone().addScaledVector(flank, side * .035).normalize() : gate;
+            if (!dry(sd)) continue;
+            const b = pavingTopAt(sd);
+            putGround('column', mat, sd, b, 0, stoneW, stoneH, stoneW);
+            putGround('lamp', 'lamp', sd, b + stoneH, 0, .020, .020, .020);
+            seats.push(b);
+          }
+          // The lintel only goes up when the two shafts are close enough in height to carry it.
+          if (seats.length === 2 && Math.max(...seats) - Math.min(...seats) < .03)
+            putGround('beam', mat, gate, Math.max(...seats) + stoneH, bearing(gate, flank), .085, .070, .016);
+          // The apron: paving laid over whatever the town put here, sunk to the local ground. It
+          // grows until its rim starts to bite into a wall, so the precinct is as wide as the
+          // street corner allows and never wider.
+          let apron = .018;
+          for (const size of [.056, .048, .040, .032, .026, .018]) {
+            let fits = 0;
+            for (let j = 0; j < 6; j++) {
+              const ang = j * TAU / 6 + .35;
+              const q = gate.clone().addScaledVector(east, Math.cos(ang) * size).addScaledVector(north, Math.sin(ang) * size).normalize();
+              if (dry(q) && clearanceAt(q) > -.014) fits++;
+            }
+            if (fits >= 4) { apron = size; break; }
+          }
+          putGround('disc', mat, gate, gBase - .010, bearing(gate, gateAway), apron, .34, apron);
+          if (apron > .030) putGround('ring', mat, gate, gBase + .013, bearing(gate, gateAway), apron, .22, apron);
+          for (let i = 0; i < 3; i++) {                        // offerings stacked on the rim
             for (let tries = 0; tries < 6; tries++) {
-              const a = rng() * TAU, chord = .070 + rng() * .028;
-              const sd = n.clone().addScaledVector(east, Math.cos(a) * chord).addScaledVector(north, Math.sin(a) * chord).normalize();
-              if (!dry(sd)) continue;
-              putGround('block', mat, sd, .044, rng() * TAU, .019, .018, .017);
+              const ang = rng() * TAU, chord = apron * (.62 + rng() * .22);
+              const sd = gate.clone().addScaledVector(east, Math.cos(ang) * chord).addScaledVector(north, Math.sin(ang) * chord).normalize();
+              if (!dry(sd) || clearanceAt(sd) < -.012) continue;
+              putGround('block', mat, sd, gBase + .010, rng() * TAU, .020, .019, .018);
               break;
             }
           }
-          // The stair climbs toward the hanging altar and ends in the air.
-          {
-            const side = openBearing(n, nearest ? nearest.dir : away);
+          // 2. A court, where the town happens to leave one: a paved precinct big enough to walk
+          //    into, with a true gate and a stair. Rare — these sanctuaries mostly stand in streets.
+          let spot = null, room = -9, s = 0;
+          for (const { chord, dir } of candidates) {
+            if (!dry(dir) || chord < .20) continue;
+            let size = clamp(clearanceAt(dir) * .9, .040, .130);
+            for (let it = 0; it < 3; it++) {
+              let rim = 9;
+              for (let j = 0; j < 6; j++) {
+                const ang = j * TAU / 6 + .5;
+                const q = dir.clone().addScaledVector(east, Math.cos(ang) * size).addScaledVector(north, Math.sin(ang) * size).normalize();
+                rim = Math.min(rim, dry(q) ? clearanceAt(q) : -.02);
+              }
+              if (rim >= 0) break;
+              size *= .80;
+            }
+            if (size < .055) continue;
+            let lo = 9, hi = -9;
+            for (let j = 0; j < 4; j++) {
+              const ang = j * TAU / 4 + .4;
+              const q = dir.clone().addScaledVector(east, Math.cos(ang) * size).addScaledVector(north, Math.sin(ang) * size).normalize();
+              const h = heightAt(q); lo = Math.min(lo, h); hi = Math.max(hi, h);
+            }
+            if (hi - lo > .07) continue;                       // a court on a slope is not a court
+            const score = size - (hi - lo) * .8 - chord * .2;
+            if (score > room) { room = score; spot = dir; s = size; }
+          }
+          if (spot) {
+            const base = pavingTopAt(spot), away = openBearing(spot, altar), top = base + .023;
+            putGround('disc', mat, spot, base - .012, bearing(spot, away), s, .40, s);
+            putGround('ring', mat, spot, base + .015, bearing(spot, away), s, .24, s);
+            for (let i = 0; i < 2; i++) {                      // two steps up from the town side
+              const sd = along(spot, nearestTown ? nearestTown.dir : altar, 1.06 * s - i * .13 * s, probe).clone();
+              if (dry(sd)) putGround('steps', mat, sd, base - .008 + i * .008, bearing(sd, spot), .80 * s, .26, .38 * s);
+            }
+            for (let i = 0; i < 3; i++) {                      // offerings on the rim
+              for (let tries = 0; tries < 6; tries++) {
+                const ang = rng() * TAU, chord = (.52 + rng() * .22) * s;
+                const sd = spot.clone().addScaledVector(east, Math.cos(ang) * chord).addScaledVector(north, Math.sin(ang) * chord).normalize();
+                if (!dry(sd)) continue;
+                putGround('block', mat, sd, top, rng() * TAU, .17 * s, .16 * s, .15 * s);
+                break;
+              }
+            }
+            // The stair climbs toward the hanging altar and ends in the air.
+            const toAltar = along(spot, altar, .001, probe).clone().sub(spot).normalize();
+            const perp = new THREE.Vector3().crossVectors(spot, toAltar).normalize();
+            const stairDir = dry(spot.clone().addScaledVector(perp, 1.4 * s).normalize()) ? perp : perp.clone().negate();
             for (let i = 0; i < 5; i++) {
-              const chord = .098 - i * .017;
-              const sd = n.clone().addScaledVector(side, chord).normalize();
-              if (dry(sd)) putGround('steps', mat, sd, .040 + i * .012, bearing(sd, n), .058, .20, .044);
+              const sd = spot.clone().addScaledVector(stairDir, (.96 - i * .17) * s).normalize();
+              if (!dry(sd)) continue;
+              putGround('steps', mat, sd, top + i * .013, bearing(sd, spot), .50 * s, .20, .38 * s);
+            }
+            for (let k = 0; k < 8; k++) {                      // the lane out to the fields
+              const d = along(spot, away, (1.32 + k * .21) * s, probe).clone();
+              if (!dry(d)) break;
+              putGround('block', 'road', d, top - .026, bearing(d, away), .38 * s, .007, .36 * s);
             }
           }
         }
