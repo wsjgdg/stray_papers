@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="named-coasts-16">
+  <meta name="aetheris-build" content="deep-water-17">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -216,6 +216,7 @@
     .world-error-detail { margin-top: 12px; padding: 10px 12px; max-height: min(52dvh, 430px); overflow: auto; pointer-events: auto; user-select: text; border: 1px solid rgba(232, 167, 154, .25); background: rgba(20, 8, 8, .85); color: #e8b0a4; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; letter-spacing: .04em; line-height: 1.7; text-align: left; overflow-wrap: anywhere; white-space: pre-wrap; }
     .world-error-detail[hidden] { display: none; }
     body.loading .descend-button, body.loading .switch-button { opacity: .4; pointer-events: none; }
+    body.loading .archive-chip { opacity: 0; pointer-events: none; }
 
     .sound-button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #8fb4ab; cursor: pointer; transition: color .25s, border-color .25s; }
     .sound-button:hover { color: var(--aqua); }
@@ -234,6 +235,51 @@
     .marker:hover .marker-chip { border-color: var(--aqua); background: rgba(8, 26, 34, .78); }
     .marker-dot { width: 7px; height: 7px; border: 1px solid var(--aqua); border-radius: 50%; background: rgba(165, 238, 225, .35); box-shadow: 0 0 10px rgba(120, 230, 205, .55); }
     .marker-stem { width: 1px; height: 14px; background: linear-gradient(180deg, rgba(165,238,225,.6), transparent); }
+
+    .archive-chip { position: absolute; z-index: 6; right: clamp(26px, 5.8vw, 105px); bottom: 118px; display: inline-flex; align-items: center; gap: 9px;
+      padding: 8px 13px; border: 1px solid rgba(165, 238, 225, .26); border-radius: 999px; background: rgba(7, 22, 30, .5);
+      color: #cfe7de; font: inherit; font-size: 9px; font-weight: 700; letter-spacing: .24em; cursor: pointer;
+      backdrop-filter: blur(6px); transition: border-color .35s ease, color .35s ease, background .35s ease; }
+    .archive-chip:hover { border-color: rgba(165, 238, 225, .55); color: #eafaf3; background: rgba(10, 32, 42, .62); }
+    body.archive-open .archive-chip { border-color: rgba(165, 238, 225, .6); color: #eafaf3; }
+    .archive { position: absolute; top: 0; right: 0; bottom: 0; width: min(432px, 100%); z-index: 9; display: flex; flex-direction: column;
+      transform: translateX(102%); transition: transform .55s cubic-bezier(.2, .8, .2, 1); pointer-events: auto;
+      background: linear-gradient(270deg, rgba(4, 13, 19, .95), rgba(7, 21, 29, .86));
+      border-left: 1px solid rgba(165, 238, 225, .16); box-shadow: -30px 0 70px rgba(2, 8, 12, .45); }
+    body.archive-open .archive { transform: none; }
+    .archive-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 22px 14px;
+      border-bottom: 1px solid rgba(165, 238, 225, .14); }
+    .archive-kicker { display: block; font-size: 8px; letter-spacing: .42em; color: #7f9c95; font-weight: 700; }
+    .archive-title { display: block; margin-top: 7px; font-size: 15px; letter-spacing: .2em; color: #eafaf3; font-weight: 700; }
+    .archive-close { width: 28px; height: 28px; border: 1px solid rgba(165, 238, 225, .26); border-radius: 50%; background: transparent;
+      color: #a8cfc2; font-size: 11px; line-height: 1; cursor: pointer; }
+    .archive-close:hover { color: #eafaf3; border-color: rgba(165, 238, 225, .6); }
+    .archive-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 22px 34px; -webkit-overflow-scrolling: touch; }
+    .archive-section { margin-top: 26px; }
+    .archive-section > h3 { margin: 0 0 4px; font-size: 8px; letter-spacing: .36em; color: #86c3b4; font-weight: 700; }
+    .archive-section > p { margin: 0 0 8px; font-size: 10px; line-height: 1.6; color: #7f9c95; letter-spacing: .06em; }
+    .archive-entry { padding: 13px 0 14px; border-top: 1px solid rgba(165, 238, 225, .10); }
+    .archive-entry:first-of-type { border-top: 0; }
+    .archive-code { font-size: 11.5px; letter-spacing: .17em; color: #eafaf3; font-weight: 700; }
+    .archive-zh { margin-left: 9px; font-size: 10px; letter-spacing: .1em; color: #8fb6ab; }
+    .archive-row { display: grid; grid-template-columns: 58px 1fr; gap: 10px; margin-top: 8px; font-size: 11px; line-height: 1.62; color: #b9d2ca; }
+    .archive-row > span:first-child { font-size: 7.5px; letter-spacing: .2em; color: #6f8b84; font-weight: 700; padding-top: 4px; }
+    .archive-row.truth > span:last-child { color: #eafaf3; }
+    .archive-row.tell > span:last-child { color: #f0dfae; }
+    .archive-tag { display: inline-block; margin-top: 9px; padding: 2px 7px; border: 1px solid rgba(165, 238, 225, .22); border-radius: 999px;
+      font-size: 7.5px; letter-spacing: .18em; color: #86c3b4; }
+    @media (max-width: 760px), (pointer: coarse) {
+      .archive-chip { right: 20px; bottom: auto; top: 124px; padding: 6px 10px; font-size: 8px; }
+      .archive-head { padding: 18px 18px 12px; }
+      .archive-body { padding: 4px 18px 28px; }
+    }
+
+    #diveVeil { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .9s ease;
+      background: radial-gradient(125% 95% at 50% 38%, rgba(38,128,138,.06), rgba(3,26,36,.58) 74%, rgba(2,18,26,.78) 100%); }
+    body.submerged #diveVeil { opacity: 1; }
+    .hint-swim { display: none; }
+    body.in-water .hint-jump { display: none; }
+    body.in-water .hint-swim { display: inline; }
 
     #siteReadout { position: absolute; z-index: 5; left: clamp(26px, 5.8vw, 105px); bottom: 137px; display: none; align-items: center; flex-wrap: wrap; row-gap: 6px; max-width: calc(100vw - 52px); gap: 12px; color: #a8cfc2; font-size: 9px; font-weight: 700; letter-spacing: .22em; pointer-events: none; text-shadow: 0 1px 10px rgba(3, 10, 18, .8); }
     body[data-mode="ground"]:not(.transitioning) #siteReadout { display: flex; }
@@ -301,12 +347,14 @@
       body.touch[data-mode="ground"] .mobile-hint .orbit-mobile-hint { display: none; }
       body.touch[data-mode="ground"] .mobile-hint .ground-mobile-hint { display: inline; }
       .mobile-zoom { position: absolute; right: 25px; bottom: calc(109px + env(safe-area-inset-bottom)); display: flex; gap: 9px; }
-      .mobile-zoom button, .jump-button { border: 1px solid rgba(213, 239, 230, .45); background: rgba(8, 28, 39, .45); backdrop-filter: blur(8px); color: #ecf6eb; cursor: pointer; }
+      .mobile-zoom button, .jump-button, .dive-button { border: 1px solid rgba(213, 239, 230, .45); background: rgba(8, 28, 39, .45); backdrop-filter: blur(8px); color: #ecf6eb; cursor: pointer; }
       .mobile-zoom button { width: 41px; height: 41px; border-radius: 50%; font-size: 24px; font-weight: 400; line-height: 1; }
       .joystick { display: none; position: absolute; left: 25px; bottom: calc(120px + env(safe-area-inset-bottom)); width: 108px; height: 108px; border: 1px solid rgba(211, 238, 230, .33); border-radius: 50%; background: rgba(12, 34, 46, .23); backdrop-filter: blur(3px); }
       .joystick::before { content: ""; position: absolute; inset: 25px; border: 1px solid rgba(211, 238, 230, .19); border-radius: 50%; }
       .stick { position: absolute; top: 50%; left: 50%; width: 38px; height: 38px; margin: -19px; border-radius: 50%; background: rgba(165, 238, 225, .35); border: 1px solid rgba(216, 255, 241, .69); box-shadow: 0 0 23px rgba(78, 221, 192, .18); }
       .jump-button { display: none; position: absolute; right: 29px; bottom: calc(137px + env(safe-area-inset-bottom)); width: 75px; height: 75px; border-radius: 50%; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
+      .dive-button { display: none; position: absolute; right: 30px; bottom: calc(137px + 84px + env(safe-area-inset-bottom)); width: 62px; height: 46px; border-radius: 23px; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
+      body.touch[data-mode="ground"].in-water .dive-button { display: block; }
       body.touch[data-mode="ground"] .joystick, body.touch[data-mode="ground"] .jump-button { display: block; }
       body[data-mode="ground"] .mobile-zoom { display: none; }
       @keyframes appear-mobile { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -399,6 +447,7 @@
 
     <div id="pointerPrompt" class="pointer-prompt">CLICK THE WORLD TO LOOK AROUND &nbsp; / &nbsp; ESC TO RELEASE</div>
     <div class="mobile-hint"><span class="orbit-mobile-hint">DRAG TO ORBIT / PINCH TO ZOOM</span><span class="ground-mobile-hint">DRAG TO LOOK / PAD TO WALK</span></div>
+    <div id="diveVeil" aria-hidden="true"></div>
     <div id="markers" aria-label="Nearby sanctuaries"></div>
     <div id="siteReadout" aria-live="off"><span class="readout-region" id="regionLabel">VAELMAR</span><span class="readout-sep"></span><span class="readout-biome" id="biomeLabel">LUMINOUS GROVE</span><span class="readout-sep"></span><span id="coordLabel">0.0°N 0.0°E</span></div>
 
@@ -416,7 +465,8 @@
       <div class="control-hints ground-hints" aria-label="Ground controls">
         <span><b>WASD</b> WALK</span><span class="hint-separator"></span>
         <span><b>MOUSE / IJKL</b> LOOK</span><span class="hint-separator"></span>
-        <span><b>SPACE</b> JUMP</span><span class="hint-separator"></span>
+        <span class="hint-jump"><b>SPACE</b> JUMP</span><span class="hint-separator hint-jump"></span>
+        <span class="hint-swim"><b>C</b> DIVE · <b>SPACE</b> RISE</span><span class="hint-separator hint-swim"></span>
         <span><b>R</b> WEATHER</span><span class="hint-separator"></span><span><b>E</b> EVENT</span>
       </div>
       <button id="switchButton" class="switch-button" type="button" aria-label="Switch between orbit and ground perspective">
@@ -425,15 +475,25 @@
       </button>
     </footer>
 
+    <button id="archiveChip" class="archive-chip" type="button" aria-controls="archive" aria-expanded="false"><span class="keycap">O</span>ARCHIVE</button>
+    <aside id="archive" class="archive" aria-label="Field archive" aria-hidden="true">
+      <div class="archive-head">
+        <div><span class="archive-kicker">FIELD ARCHIVE</span><strong class="archive-title">野档 · 非官方</strong></div>
+        <button id="archiveClose" class="archive-close" type="button" aria-label="Close archive">✕</button>
+      </div>
+      <div class="archive-body" id="archiveBody"></div>
+    </aside>
+
     <div class="mobile-controls" aria-label="Touch controls">
       <div class="mobile-zoom"><button id="zoomIn" type="button" aria-label="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out">-</button></div>
       <div id="joystick" class="joystick" aria-label="Move around"><div id="stick" class="stick"></div></div>
       <button id="jumpButton" class="jump-button" type="button">JUMP</button>
+      <button id="diveButton" class="dive-button" type="button">DIVE</button>
     </div>
   </div>
 
   <script type="module">
-    const BUILD_ID = 'named-coasts-16';
+    const BUILD_ID = 'deep-water-17';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3587,6 +3647,200 @@
       mantas.boundingSphere = new THREE.Sphere(new THREE.Vector3(), R + 3.6);
       mantas.castShadow = true;
       scene.add(mantas);
+
+      // ---- Provincial architecture -------------------------------------------------------
+      // The nine sanctuaries are the shared, imperial language. Everything else is what each
+      // province builds out of its own weather: tree towers in Vaelmar, wind towers and mirror
+      // wells in Sennar, observatory domes on Caelth, stilt rings in Mirella, crystal shards on
+      // Vessper. Clusters are static and instanced, so crossing a border changes the skyline.
+      const provinceMat = {
+        timber: new THREE.MeshStandardMaterial({ color: 0x6a6049, roughness: .93, metalness: 0 }),
+        basalt: new THREE.MeshStandardMaterial({ color: 0x4b4741, roughness: .88, metalness: .05 }),
+        pale: new THREE.MeshStandardMaterial({ color: 0xbab6a5, roughness: .82, metalness: .02 }),
+        glass: new THREE.MeshStandardMaterial({ color: 0xa8cfc6, roughness: .32, metalness: .32, emissive: 0x2b6d63, emissiveIntensity: .55 }),
+        crystal: new THREE.MeshStandardMaterial({ color: 0xa9c6d8, roughness: .22, metalness: .12, emissive: 0x497ea0, emissiveIntensity: .40 })
+      };
+      const provinceGeo = {
+        tower: new THREE.CylinderGeometry(.006, .011, 1, 6, 1),
+        block: new THREE.BoxGeometry(1, 1, 1, 1, 1, 1),
+        dome: new THREE.SphereGeometry(1, 10, 6, 0, TAU, 0, Math.PI / 2),
+        disc: new THREE.CylinderGeometry(1, 1, .08, 12, 1),
+        ring: new THREE.TorusGeometry(1, .05, 4, 16),
+        shard: new THREE.OctahedronGeometry(1, 0),
+        cone: new THREE.ConeGeometry(.5, 1, 5, 1)
+      };
+      function provinceDressing() {
+        const rng = seeded(52033), wanted = { vaelmar: 8, sennar: 7, caelth: 7, mirella: 7, vessper: 6 };
+        const sites = { vaelmar: [], sennar: [], caelth: [], mirella: [], vessper: [] };
+        for (let i = 0; i < 2200 && Object.keys(wanted).some(k => sites[k].length < wanted[k]); i++) {
+          const dir = randomDirection(rng), h = heightAt(dir);
+          if (h < .035 || h > .22) continue;
+          const id = provinceAt(dir, h);
+          if (sites[id].length < wanted[id]) sites[id].push({ dir, h });
+        }
+        // Settlements also grow at the foot of the sanctuaries: guaranteed encounters, and each
+        // town is built in the province it actually stands in.
+        const landmarkEast = new THREE.Vector3(), landmarkNorth = new THREE.Vector3();
+        landmarks.forEach(landmark => {
+          const base = landmark.direction;
+          landmarkEast.crossVectors(Math.abs(base.y) > .95 ? new THREE.Vector3(1, 0, 0) : UP, base).normalize();
+          landmarkNorth.crossVectors(base, landmarkEast).normalize();
+          for (const [e, n] of [[.14, .05], [-.11, .10]]) {
+            const dir = base.clone().addScaledVector(landmarkEast, e).addScaledVector(landmarkNorth, n).normalize();
+            const h = heightAt(dir);
+            if (h < .03 || h > .24) continue;
+            sites[provinceAt(dir, h)].push({ dir, h });
+          }
+        });
+        const buckets = new Map();
+        const push = (geo, mat, dirHigh, quat, offset, scale) => {
+          const key = geo + '|' + mat;
+          if (!buckets.has(key)) buckets.set(key, []);
+          buckets.get(key).push({ origin: dirHigh, quat: quat.clone(), offset, scale });
+        };
+        const mesh = new THREE.Matrix4(), q = new THREE.Quaternion(), localQ = new THREE.Quaternion();
+        const origin = new THREE.Vector3(), east = new THREE.Vector3(), north = new THREE.Vector3(), pos = new THREE.Vector3();
+        const euler = new THREE.Euler();
+        for (const id of Object.keys(sites)) {
+          for (const site of sites[id]) {
+            origin.copy(site.dir).multiplyScalar(R + site.h);
+            east.crossVectors(Math.abs(site.dir.y) > .94 ? new THREE.Vector3(1, 0, 0) : UP, site.dir).normalize();
+            north.crossVectors(site.dir, east).normalize();
+            q.setFromUnitVectors(UP, site.dir);
+            const at = (e, n, up) => pos.copy(origin).addScaledVector(east, e).addScaledVector(north, n).addScaledVector(site.dir, up).clone();
+            const spin = () => localQ.setFromEuler(euler.set(0, rng() * TAU, 0));
+            if (id === 'vaelmar') {
+              // Trunk towers with moss-lit crowns and hornbeam footbridges.
+              for (let i = 0, n = 5 + Math.floor(rng() * 4); i < n; i++) {
+                const e = (rng() - .5) * .07, nn = (rng() - .5) * .07, height = .022 + rng() * .05;
+                push('tower', 'timber', at(e, nn, height * .5), q, new THREE.Vector3(), new THREE.Vector3(.7 + rng() * .7, height, .7 + rng() * .7));
+                spin();
+                push('dome', 'glass', at(e, nn, height * .96), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(.016 + rng() * .01, .014 + rng() * .012, .016 + rng() * .01));
+              }
+              for (let i = 0; i < 2; i++) {
+                const a = rng() * TAU, len = .05 + rng() * .04;
+                push('block', 'timber', at(Math.cos(a) * len, Math.sin(a) * len, .02 + rng() * .03), q, new THREE.Vector3(), new THREE.Vector3(len * 1.7, .0022, .0032));
+              }
+            } else if (id === 'sennar') {
+              // Wind towers, mirror wells, and a low basalt wall against the sand.
+              for (let i = 0, n = 4 + Math.floor(rng() * 3); i < n; i++) {
+                const e = (rng() - .5) * .06, nn = (rng() - .5) * .06, height = .04 + rng() * .055;
+                push('block', 'basalt', at(e, nn, height * .5), q, new THREE.Vector3(), new THREE.Vector3(.008 + rng() * .006, height, .008 + rng() * .006));
+              }
+              for (let i = 0; i < 3; i++) {
+                spin(); localQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.5 - rng() * .45));
+                push('disc', 'glass', at((rng() - .5) * .07, (rng() - .5) * .07, .006 + rng() * .02), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(.012 + rng() * .012, 1, .012 + rng() * .012));
+              }
+              for (let i = 0; i < 2; i++) {
+                const a = rng() * TAU, len = .04 + rng() * .04;
+                push('block', 'basalt', at(Math.cos(a) * len, Math.sin(a) * len, .004), q, new THREE.Vector3(), new THREE.Vector3(len * 1.6, .008, .0035));
+              }
+            } else if (id === 'caelth') {
+              // Observatory domes, slit windows, and watch spires.
+              for (let i = 0, n = 2 + Math.floor(rng() * 2); i < n; i++) {
+                const e = (rng() - .5) * .05, nn = (rng() - .5) * .05, r = .014 + rng() * .018;
+                push('dome', 'pale', at(e, nn, .002), q, new THREE.Vector3(), new THREE.Vector3(r, r * (.72 + rng() * .2), r));
+                spin();
+                push('block', 'pale', at(e, nn, r * .55), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(r * 1.9, r * 1.1, r * 1.9));
+              }
+              for (let i = 0; i < 4; i++) {
+                const height = .045 + rng() * .05;
+                push('tower', 'pale', at((rng() - .5) * .06, (rng() - .5) * .06, height * .5), q, new THREE.Vector3(), new THREE.Vector3(.55, height, .55));
+              }
+            } else if (id === 'mirella') {
+              // Stilt houses over the shallows, each with a singing ring on top.
+              for (let i = 0, n = 3 + Math.floor(rng() * 3); i < n; i++) {
+                const e = (rng() - .5) * .07, nn = (rng() - .5) * .07, lift = .012 + rng() * .02;
+                push('block', 'timber', at(e, nn, lift + .006), q, new THREE.Vector3(), new THREE.Vector3(.012, .009, .012));
+                for (let k = 0; k < 4; k++) {
+                  const a = k * TAU / 4 + .78;
+                  push('tower', 'timber', at(e + Math.cos(a) * .005, nn + Math.sin(a) * .005, lift * .5), q, new THREE.Vector3(), new THREE.Vector3(.22, lift, .22));
+                }
+                spin();
+                push('ring', 'glass', at(e, nn, lift + .016), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(.012 + rng() * .006, .012 + rng() * .006, .012 + rng() * .006));
+              }
+              push('ring', 'glass', at(0, 0, .03), q, new THREE.Vector3(), new THREE.Vector3(.05, .05, .012));
+            } else {
+              // Vessper: a launch basin of crystal shards, half of them knocked over.
+              for (let i = 0, n = 6 + Math.floor(rng() * 4); i < n; i++) {
+                const a = rng() * TAU, d = rng() * .07, tilt = rng() * .5;
+                const height = .018 + rng() * .05;
+                spin(); localQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(Math.cos(a), 0, Math.sin(a)), tilt));
+                push('shard', 'crystal', at(Math.cos(a) * d, Math.sin(a) * d, height * .55), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(.006 + rng() * .006, height, .006 + rng() * .006));
+              }
+              push('ring', 'crystal', at(0, 0, .004), q, new THREE.Vector3(), new THREE.Vector3(.055, .055, .03));
+            }
+          }
+        }
+        for (const [key, list] of buckets) {
+          const [geoKey, matKey] = key.split('|');
+          const inst = new THREE.InstancedMesh(provinceGeo[geoKey], provinceMat[matKey], list.length);
+          inst.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+          list.forEach((item, i) => {
+            q.copy(item.quat);
+            mesh.compose(item.origin, q, item.scale);
+            inst.setMatrixAt(i, mesh);
+          });
+          inst.instanceMatrix.needsUpdate = true;
+          inst.castShadow = matKey !== 'glass' && matKey !== 'crystal';
+          inst.receiveShadow = true;
+          inst.boundingSphere = new THREE.Sphere(new THREE.Vector3(), R + .6);
+          scene.add(inst);
+        }
+      }
+
+      provinceDressing();
+
+      // ---- Water column ------------------------------------------------------------------
+      // Jellyfish and marine snow live under the surface. Both stay hidden until the camera is
+      // actually submerged, so the ocean costs nothing while you are walking on land.
+      const seaRandom = seeded(60421);
+      function seaField(count, size, color, opacity, depthMin, depthMax) {
+        const geo = new THREE.BufferGeometry(), pos = new Float32Array(count * 3), seedPhase = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
+          const n = randomDirection(seaRandom), depth = depthMin + seaRandom() * (depthMax - depthMin);
+          const radius = R + SEA - depth;
+          pos[i * 3] = n.x * radius; pos[i * 3 + 1] = n.y * radius; pos[i * 3 + 2] = n.z * radius;
+          seedPhase[i] = seaRandom() * TAU;
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const mat = new THREE.PointsMaterial({ map: softGlow, color, size, transparent: true, opacity,
+          depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+        const points = new THREE.Points(geo, mat);
+        points.visible = false;
+        points.frustumCulled = false;
+        return { points, seedPhase, base: pos.slice(), count };
+      }
+      const jellies = seaField(compact ? 260 : 520, .085, 0x8ef0e4, .55, .012, .26);
+      const marineSnow = seaField(compact ? 700 : 1500, .016, 0xc6e8f0, .34, .006, .30);
+      scene.add(jellies.points); scene.add(marineSnow.points);
+
+      // ---- Provincial fauna ---------------------------------------------------------------
+      // Firemoths over Vaelmar, glass bees in Sennar, frost feathers on Caelth, tide-motes in
+      // Mirella, crystal dust on Vessper. Ambient life rather than creatures you can touch —
+      // the manta flocks remain the only large fauna.
+      const FAUNA = {
+        vaelmar: { color: 0xffd6a0, size: .026, speed: .55, lift: .045, opacity: .55 },
+        sennar: { color: 0xd8f4ff, size: .016, speed: 1.55, lift: .012, opacity: .50 },
+        caelth: { color: 0xdfeaf4, size: .020, speed: .34, lift: -.014, opacity: .45 },
+        mirella: { color: 0x8ff0dc, size: .024, speed: .78, lift: .050, opacity: .60 },
+        vessper: { color: 0xcbb8ff, size: .018, speed: .95, lift: .020, opacity: .55 }
+      };
+      const moteRand = seeded(9341), MOTE_COUNT = compact ? 70 : 130;
+      const moteBase = new Float32Array(MOTE_COUNT * 3), motePhase = new Float32Array(MOTE_COUNT);
+      for (let i = 0; i < MOTE_COUNT; i++) {
+        const n = randomDirection(moteRand), r = .10 + moteRand() * .26;
+        moteBase[i * 3] = n.x * r; moteBase[i * 3 + 1] = (moteRand() - .5) * .16 + .05; moteBase[i * 3 + 2] = n.z * r;
+        motePhase[i] = moteRand() * TAU;
+      }
+      const moteGeo = new THREE.BufferGeometry();
+      moteGeo.setAttribute('position', new THREE.BufferAttribute(moteBase.slice(), 3));
+      const moteMat = new THREE.PointsMaterial({ map: softGlow, color: 0xffd6a0, size: .026, transparent: true,
+        opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+      const motes = new THREE.Points(moteGeo, moteMat);
+      motes.frustumCulled = false; motes.visible = false;
+      scene.add(motes);
+      let motesProvince = '';
       const mantaPos = new THREE.Vector3(), mantaAhead = new THREE.Vector3();
       for (const flock of flocks) flock.angle = flock.phase;
 
@@ -3973,6 +4227,8 @@
       // Ground-controller tuning. Acceleration is deliberately slower than braking so stops feel
       // planted, air control is weak, and jumping uses a two-stage (tap = short hop) impulse.
       const WALK_SPEED = .34, SPRINT_SPEED = .66, SWIM_SPEED = .2;
+      // Swimming: dive with C, rise with SPACE, float up slowly when you let go.
+      const DIVE_SPEED = .055, RISE_SPEED = .085, BUOYANCY = .016, MAX_DIVE = .30, SUBMERGE_EYE = .038;
       const GROUND_ACCEL = 7.5, GROUND_BRAKE = 11, AIR_ACCEL = 2.6;
       const GRAVITY = 3.15, JUMP_SPEED = .78, COYOTE_TIME = .1, JUMP_BUFFER_TIME = .14;
       const PITCH_LIMIT = 1.48;
@@ -3986,12 +4242,13 @@
         mode: 'orbit', yaw: initialYaw, polar: initialPolar, distance: fitDistance(),
         composition: compact ? 0 : 1, compositionTarget: compact ? 0 : 1,
         direction: landing.clone(), radius: groundRadius(landing) + EYE,
-        heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false,
+        heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false, depth: 0, submerged: false,
         transition: null, solarOffset: 0, solarTarget: 0, walkPhase: 0,
         moveVelocity: new THREE.Vector3(), speed: 0, slope: 1,
         coyote: 0, jumpBuffer: 0, landDip: 0, roll: 0
       };
       const keys = new Set(), pointers = new Map(), joystick = { x: 0, y: 0, id: null };
+      let touchDive = false, touchRise = false;
       const targetPosition = new THREE.Vector3(), targetRotation = new THREE.Quaternion(), lookMatrix = new THREE.Matrix4();
       const aim = new THREE.Vector3(), right = new THREE.Vector3(), move = new THREE.Vector3(), orbitNormal = new THREE.Vector3();
       const moveTarget = new THREE.Vector3(), slopeProbe = new THREE.Vector3();
@@ -4126,7 +4383,8 @@
 
         // Weighted acceleration: reaching walk speed takes ~0.3 s, stopping is quicker.
         const wantsInput=inputLength>.01;
-        const accel=state.grounded ? (wantsInput ? GROUND_ACCEL : GROUND_BRAKE) : (wantsInput ? AIR_ACCEL : 0);
+        const accel=state.water ? (wantsInput ? 5.4 : 1.7)
+          : state.grounded ? (wantsInput ? GROUND_ACCEL : GROUND_BRAKE) : (wantsInput ? AIR_ACCEL : 0);
         if (accel>0) {
           const blend=1-Math.exp(-accel*dt), targetSpeed=moveTarget.length();
           state.moveVelocity.lerp(moveTarget,blend);
@@ -4156,16 +4414,31 @@
           state.coyote=0;
           state.jumpBuffer=0;
         }
-        state.velocity-=GRAVITY*dt;
-        state.radius+=state.velocity*dt;
         const footRadius=R+Math.max(elevation,SEA), eyeHeight=state.water ? .033 : EYE;
-        const floor=footRadius+eyeHeight;
-        if (state.radius<=floor) {
-          if (!state.grounded&&state.velocity<-.22) state.landDip=Math.min(.006,-state.velocity*.007);
-          state.radius=floor; state.velocity=0; state.grounded=true; state.coyote=COYOTE_TIME;
+        if (state.water) {
+          // Swimming keeps its own vertical axis: the sea floor is the only hard limit.
+          const seabed=Math.max(0,SEA-elevation-.008);
+          const diving=keys.has('KeyC')||touchDive;
+          const rising=keys.has('Space')||touchRise;
+          const drift=diving?DIVE_SPEED:rising?-RISE_SPEED:-BUOYANCY;
+          state.depth=clamp(state.depth+drift*dt,0,Math.min(seabed,MAX_DIVE));
+          state.radius=footRadius+eyeHeight-state.depth;
+          state.velocity=0;
+          state.grounded=state.depth<.004;
+          state.coyote=state.grounded?COYOTE_TIME:0;
+          state.submerged=state.depth>SUBMERGE_EYE;
         } else {
-          state.grounded=false;
-          state.coyote=Math.max(0,state.coyote-dt);
+          state.depth=0; state.submerged=false;
+          state.velocity-=GRAVITY*dt;
+          state.radius+=state.velocity*dt;
+          const floor=footRadius+eyeHeight;
+          if (state.radius<=floor) {
+            if (!state.grounded&&state.velocity<-.22) state.landDip=Math.min(.006,-state.velocity*.007);
+            state.radius=floor; state.velocity=0; state.grounded=true; state.coyote=COYOTE_TIME;
+          } else {
+            state.grounded=false;
+            state.coyote=Math.max(0,state.coyote-dt);
+          }
         }
       }
       function updateCamera(dt) {
@@ -4390,7 +4663,9 @@
       function buildAudio(){
         const Ctx=window.AudioContext||window.webkitAudioContext;
         if(!Ctx)return null;
-        const ctx=new Ctx(),master=ctx.createGain();master.gain.value=0;master.connect(ctx.destination);
+        const ctx=new Ctx(),master=ctx.createGain();master.gain.value=0;
+        const muffle=ctx.createBiquadFilter();muffle.type='lowpass';muffle.frequency.value=18000;muffle.Q.value=.35;
+        master.connect(muffle).connect(ctx.destination);
         const length=ctx.sampleRate*2,buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);
         let last=0;for(let i=0;i<length;i++){const white=Math.random()*2-1;last=(last+.02*white)/1.02;data[i]=last*3.2;}
         const wind=ctx.createBufferSource();wind.buffer=buffer;wind.loop=true;
@@ -4408,7 +4683,7 @@
         shimmer.connect(shimmerGain).connect(master);shimmer.start();
         const trem=ctx.createOscillator(),tremGain=ctx.createGain();trem.frequency.value=5.2;tremGain.gain.value=.004;
         trem.connect(tremGain).connect(shimmerGain.gain);trem.start();
-        return {ctx,master,windGain,windFilter,shimmerGain};
+        return {ctx,master,muffle,windGain,windFilter,shimmerGain};
       }
       function toggleSound(){
         try{
@@ -4445,9 +4720,12 @@
         if(!audio||!soundOn)return;
         const t=audio.ctx.currentTime,night=1-smooth(-.2,.3,daylight);
         const wx=weather.now;
-        audio.windGain.gain.setTargetAtTime((surface?.2:.11)*(1+wx.rain*1.25),t,.8);
+        // Underwater the whole mix loses its top end: wind softens into a pressure hiss.
+        const dive=state.submerged?clamp(state.depth/.14,0,1):0;
+        audio.windGain.gain.setTargetAtTime((surface?.2:.11)*(1+wx.rain*1.25)*(1-.4*dive),t,.8);
         audio.windFilter.frequency.setTargetAtTime((surface?400:240)+wx.rain*420,t,.8);
         audio.shimmerGain.gain.setTargetAtTime(night*(surface?.012:.005)*(1-wx.rain*.7)*(1+eventFx.glow*1.8),t,1.2);
+        audio.muffle.frequency.setTargetAtTime(18000-dive*16600,t,.35);
       }
       document.getElementById('descendButton').addEventListener('click',switchMode);
       document.getElementById('switchButton').addEventListener('click',switchMode);
@@ -4458,9 +4736,142 @@
       weatherLabel.textContent = weather.def.label;
       document.getElementById('zoomIn').addEventListener('click',()=>zoom(.82));
       document.getElementById('zoomOut').addEventListener('click',()=>zoom(1.22));
-      const jumpButton=document.getElementById('jumpButton');
-      jumpButton.addEventListener('pointerdown',event=>{event.preventDefault();jump();});
-      for(const event of ['pointerup','pointercancel','pointerleave'])jumpButton.addEventListener(event,cutJump);
+      const jumpButton=document.getElementById('jumpButton'),diveButton=document.getElementById('diveButton');
+      jumpButton.addEventListener('pointerdown',event=>{event.preventDefault();if(state.water)touchRise=true;else jump();});
+      for(const event of ['pointerup','pointercancel','pointerleave'])jumpButton.addEventListener(event,()=>{touchRise=false;cutJump();});
+      diveButton.addEventListener('pointerdown',event=>{event.preventDefault();touchDive=true;});
+      for(const event of ['pointerup','pointercancel','pointerleave'])diveButton.addEventListener(event,()=>{touchDive=false;});
+
+      // ---- Field archive (O) ---------------------------------------------------------------
+      // Everything the ground is not allowed to know, written down once. The panel never pauses
+      // the world and never locks the camera: you can read it while an operation runs overhead.
+      const ARCHIVE_DATA = {
+        operations: [
+          { code: 'LEY SURGE', zh: '灵脉涌动', official: 'THE SANCTUARIES ANSWER EACH OTHER',
+            truth: '全网硬同步：给浮晶格充电，同时读取每个节点的负载——谁在偷电、谁在囤光，一清二楚。',
+            tell: '同步期间插一个错音，读取就会算错。代价是某个街区的灯再也亮不回来。' },
+          { code: 'STARFALL', zh: '星陨雨', official: 'THE SKY IS FALLING, SLOWLY',
+            truth: '清轨作业：把「冠」的碎片剪进大气，清出一条走廊，顺便把不申报的载荷丢下来。',
+            tell: '每一场流星雨里都有一颗不会烧完的东西，他们会去捡——包括你的船。' },
+          { code: 'SOLAR VEIL', zh: '暗日之蚀', official: 'A DARK MOON CROSSES THE SUN',
+            truth: '遮光示威：让整个半球同时抬头看天。24 秒足够让所有人记起，光是谁的。',
+            tell: '真正的日食不会正好 24 秒。那台计时器就是喊话。' },
+          { code: 'BLOOM TIDE', zh: '荧光潮', official: 'EVERY LEAF REMEMBERS THE LIGHT',
+            truth: '强制生长期：把生长频率灌进灵脉，逼生物圈超额产出药材、纤维与孢子。溢出的光就是「荧光」。',
+            tell: '这是唯一的窗口——到处都在发光时，人和货可以不被看见地移动。' },
+          { code: 'ZENITH MIGRATION', zh: '天穹迁徙', official: 'THE FLOCKS CLIMB THE THERMALS',
+            truth: '驱赶作业：用浮晶格脉冲把蝠鲼赶出镜阵航线，同时取走它们体内的磁记忆。',
+            tell: '蝠鲼是唯一能飞越环洋的邮差，走音者会在它们身上绑东西。' }
+        ],
+        provinces: [
+          { name: 'VAELMAR', zh: '苍苔行省', seat: '苔庭联邦 Tilin｜树居城邦联盟',
+            build: '活树塔、根系桥、树冠间的苔织回廊；温带丘陵与苔原台地。',
+            life: '三眼鹿、苔背兽、萤蛾（黄昏后成片浮在苔面上）。',
+            note: '母圣所 VAEL 在此，所有灵脉读数以它的钟为准。树即是档案：菌丝脉络越密，记录越重大。' },
+          { name: 'SENNAR', zh: '森纳荒原', seat: '灰烬商团 Ash Concord｜商队城邦',
+            build: '风塔、镜井、玄武岩采石城；琥珀沙丘与盐碱台地。',
+            life: '甲壳沙蜥、玻璃蜂（蜂巢是天然棱镜）、熔脉蠕虫。',
+            note: '垄断镜子：日镜坯料只有这里的玻璃窑烧得出来。SENNAR GATE 是最大的陆路关隘。' },
+          { name: 'CAELTH', zh: '凯尔高地', seat: '守夜人｜天文台城邦',
+            build: '天文台穹顶、石砌观测井、风蚀的瞭望尖塔；冰原与高山。',
+            life: '霜羽鸟、冰下鳃虫；冬季整片高地会安静得像一张纸。',
+            note: '冰下藏着共鸣腔。他们记的不是历史，是光的时刻表。' },
+          { name: 'MIRELLA', zh: '米瑞拉环礁', seat: '歌者｜群岛聚落',
+            build: '高脚屋、歌环、潮汐钟楼；浅滩上全是木桩与绳桥。',
+            life: '珊瑚鲸、发光水母、蝠鲼幼群。',
+            note: '用声音控制潮汐；他们说潮水听得懂调子，所以从不把歌记在纸上。' },
+          { name: 'VESSPER', zh: '维斯珀孤陆', seat: '（无主）｜遗弃的发射场',
+            build: '晶柱、环形基座、一半被掀倒的塔架；结晶盆地。',
+            life: '晶屑蛾；除此之外几乎没有活物。',
+            note: '陨击形成的晶化地，曾经是发射场。穹顶从这里上去，也从这里把东西丢下来。' }
+        ],
+        waters: [
+          { name: 'MIRROR SEA', zh: '镜海', band: '0–50 m', who: '歌者的养殖场、浅滩遗迹、发光浮游生物',
+            note: '内海，无风，近乎镜面。浅到你能看见自己的影子铺在珊瑚上。' },
+          { name: 'CIRCLING OCEAN', zh: '环洋', band: '50–170 m', who: '蝠鲼迁徙走廊、远洋商船、浮岛',
+            note: '环绕全球的风暴带，把五块大陆隔开。正因横渡成本极高，各大陆才保住了自己的样子。' },
+          { name: 'VANE TRENCH', zh: '无光沟', band: '> 170 m', who: '沉默者的柱群、异形生物圈',
+            note: '光照与灵脉都到不了，靠热液维持。整条沟是一个活的处理器。' }
+        ],
+        omissions: [
+          { code: 'THE INQUEST', zh: '穹顶追捕',
+            body: '镜务院迟早要来清点「未申报的坠落物」。一旦有追捕，就必须有失败、重置与惩罚——那会把这个观景器变成另一种东西，所以暂时不做。' },
+          { code: 'THE DROWNED', zh: '沉默者苏醒',
+            body: '每一次错音都在给沟底发信号。二十次、五十次、一百次，各有一阶段。它需要跨会话记忆，也就需要存档——与「刷新即重置」相冲突。' },
+          { code: 'THIS PANEL', zh: '这份档案',
+            body: '地表人没有文字，穹顶不需要档案，所以写下这些的人只能是走音者。你手里的东西，是有人塞给你的。' }
+        ]
+      };
+      const archiveChip = document.getElementById('archiveChip'), archivePanel = document.getElementById('archive');
+      const archiveBody = document.getElementById('archiveBody'), archiveClose = document.getElementById('archiveClose');
+      let archiveOpen = false, archiveBuilt = false;
+      const archiveRow = (label, text, cls = '') => `<div class="archive-row ${cls}"><span>${label}</span><span>${text}</span></div>`;
+      function buildArchive() {
+        if (archiveBuilt) return;
+        archiveBuilt = true;
+        const operations = ARCHIVE_DATA.operations.map(op => `
+          <article class="archive-entry">
+            <div><span class="archive-code">${op.code}</span><span class="archive-zh">${op.zh}</span></div>
+            ${archiveRow('OFFICIAL', op.official)}
+            ${archiveRow('TRUTH', op.truth, 'truth')}
+            ${archiveRow('THE TELL', op.tell, 'tell')}
+          </article>`).join('');
+        const provinces = ARCHIVE_DATA.provinces.map(p => `
+          <article class="archive-entry">
+            <div><span class="archive-code">${p.name}</span><span class="archive-zh">${p.zh}</span></div>
+            ${archiveRow('POLITY', p.seat)}
+            ${archiveRow('BUILT', p.build)}
+            ${archiveRow('LIFE', p.life)}
+            ${archiveRow('CANON', p.note, 'truth')}
+          </article>`).join('');
+        const waters = ARCHIVE_DATA.waters.map(w => `
+          <article class="archive-entry">
+            <div><span class="archive-code">${w.name}</span><span class="archive-zh">${w.zh}</span><span class="archive-tag">${w.band}</span></div>
+            ${archiveRow('WHO', w.who)}
+            ${archiveRow('CANON', w.note, 'truth')}
+          </article>`).join('');
+        const omissions = ARCHIVE_DATA.omissions.map(o => `
+          <article class="archive-entry">
+            <div><span class="archive-code">${o.code}</span><span class="archive-zh">${o.zh}</span></div>
+            ${archiveRow('UNFILED', o.body, 'tell')}
+          </article>`).join('');
+        archiveBody.innerHTML = `
+          <section class="archive-section">
+            <h3>FIVE OPERATIONS</h3>
+            <p>地表人管它们叫异象。穹顶管它们叫作业。这里写的是两者之间被省掉的那段。</p>
+            ${operations}
+          </section>
+          <section class="archive-section">
+            <h3>FIVE PROVINCES</h3>
+            <p>你脚下的读数条用的是同一套名字。跨过边界时，房子、虫子和风都会换一种做法。</p>
+            ${provinces}
+          </section>
+          <section class="archive-section">
+            <h3>THREE WATERS</h3>
+            <p>镜海负责美，环洋负责隔阂，无光沟负责深度。读数条上的米数就是这一节的三档。</p>
+            ${waters}
+          </section>
+          <section class="archive-section">
+            <h3>DELIBERATELY UNFILED</h3>
+            <p>写下来会被找到的东西，所以只留标题。</p>
+            ${omissions}
+          </section>`;
+      }
+      function setArchive(open) {
+        archiveOpen = open;
+        if (open) {
+          buildArchive();
+          keys.clear();
+          if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
+          document.body.classList.add('archive-open');
+        } else {
+          document.body.classList.remove('archive-open');
+        }
+        archivePanel.setAttribute('aria-hidden', String(!open));
+        archiveChip.setAttribute('aria-expanded', String(open));
+      }
+      archiveChip.addEventListener('click', () => setArchive(!archiveOpen));
+      archiveClose.addEventListener('click', () => setArchive(false));
       window.addEventListener('keydown',event=>{
         if(!startup.ready)return;
         if(event.ctrlKey||event.metaKey||event.altKey||event.target instanceof Element && event.target.matches('input,textarea,select'))return;
@@ -4472,6 +4883,8 @@
         if(event.code==='KeyR'&&!event.repeat){cycleWeather();return;}
         if(event.code==='KeyE'&&!event.repeat){triggerEvent();return;}
         if(event.code==='KeyM'&&!event.repeat){toggleSound();return;}
+        if(event.code==='KeyO'&&!event.repeat){setArchive(!archiveOpen);return;}
+        if(event.code==='Escape'&&archiveOpen){setArchive(false);return;}
         if(event.code==='Space'&&!event.repeat)jump();
         keys.add(event.code);
         if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.code))explore();
@@ -4590,6 +5003,18 @@
           scene.fog.color.lerp(costTint.setRGB(.055,.095,.120), .10 * costState.extraction);
           waterUniforms.uFogColor.value.copy(scene.fog.color);
         }
+        if (state.submerged) {
+          // Below the surface the world becomes a short-sighted teal: fog closes in fast and the
+          // sun is swallowed within a couple of metres, so depth reads as darkness, not as distance.
+          const dive=clamp(state.depth/.09,0,1);
+          scene.fog.color.lerp(costTint.setRGB(.016,.082,.098), .55+.30*dive);
+          scene.fog.density=mix(scene.fog.density,.92,dive);
+          waterUniforms.uFogColor.value.copy(scene.fog.color);
+          waterUniforms.uFogDensity.value=scene.fog.density;
+          sunlight.intensity*=1-.78*dive;
+          hemi.intensity*=1-.55*dive;
+          renderer.toneMappingExposure*=1-.20*dive;
+        }
         if (debt.sky > 0) {
           // The mirror arrays leave the light cooler and the fill flatter for two minutes.
           sunlight.color.lerp(costTint.setRGB(.80,.88,1.0), .35 * debt.sky);
@@ -4706,8 +5131,50 @@
             }
           }
           lightLabel.textContent=daylight>.3?'DAYLIGHT CYCLE':daylight>-.18?'GOLDEN TWILIGHT':'NIGHTFALL CYCLE';
-          const mode=surface?(state.water?'SURFACE / SWIMMING':'SURFACE / WALKING'):'ORBIT / FLYING';
+          const inWater=surface&&state.water;
+          if(document.body.classList.contains('in-water')!==inWater){
+            document.body.classList.toggle('in-water',inWater);
+            jumpButton.textContent=inWater?'RISE':'JUMP';
+          }
+          document.body.classList.toggle('submerged',surface&&state.submerged);
+          const mode=surface?(state.submerged?'SURFACE / DIVING':state.water?'SURFACE / SWIMMING':'SURFACE / WALKING'):'ORBIT / FLYING';
           if(modeLabel.textContent!==mode)modeLabel.textContent=mode;
+          // Sea life only exists while you are under it.
+          const underwater=surface&&state.submerged;
+          if(jellies.points.visible!==underwater){jellies.points.visible=underwater;marineSnow.points.visible=underwater;}
+          if(underwater){
+            const jp=jellies.points.geometry.attributes.position, jb=jellies.base, jt=jellies.seedPhase;
+            for(let i=0;i<jellies.count;i++){
+              const sway=Math.sin(elapsed*.55+jt[i])*.0016, rise=Math.sin(elapsed*.16+jt[i])*.02;
+              const k=i*3, r=Math.hypot(jb[k],jb[k+1],jb[k+2]);
+              const scale=(r-rise)/r;
+              jp.array[k]=jb[k]*scale+sway; jp.array[k+1]=jb[k+1]*scale+sway*.4; jp.array[k+2]=jb[k+2]*scale;
+            }
+            jp.needsUpdate=true;
+            jellies.points.material.size=.085*(.84+.16*Math.sin(elapsed*1.7));
+            jellies.points.rotation.y=elapsed*.0016;
+            marineSnow.points.rotation.y=-elapsed*.0022;
+          }
+          // Provincial fauna: one field, retuned to whatever province you are standing in.
+          const provinceNow=surface&&!state.submerged?provinceAt(state.direction,heightAt(state.direction)):'';
+          const fauna=FAUNA[provinceNow];
+          motes.visible=!!fauna;
+          if(fauna){
+            if(motesProvince!==provinceNow){
+              motesProvince=provinceNow;
+              moteMat.color.setHex(fauna.color);moteMat.size=fauna.size;moteMat.opacity=fauna.opacity;
+            }
+            motes.position.copy(camera.position);
+            motes.quaternion.setFromUnitVectors(UP,state.direction);
+            const mp=moteGeo.attributes.position,mt=elapsed*fauna.speed;
+            for(let i=0;i<MOTE_COUNT;i++){
+              const k=i*3,ph=motePhase[i];
+              mp.array[k]=moteBase[k]+Math.sin(mt+ph)*.05;
+              mp.array[k+1]=moteBase[k+1]+Math.sin(mt*.63+ph*1.7)*fauna.lift*3;
+              mp.array[k+2]=moteBase[k+2]+Math.cos(mt*.8+ph*.6)*.05;
+            }
+            mp.needsUpdate=true;
+          }
           if(surface)updateReadout();
           updateAudioMix(daylight,surface);
         }
@@ -4758,7 +5225,7 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,
