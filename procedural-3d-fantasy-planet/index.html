@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="town-traits-29">
+  <meta name="aetheris-build" content="town-terrain-30">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'town-traits-29';
+    const BUILD_ID = 'town-terrain-30';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4211,10 +4211,13 @@
         return join([partBox(.84, .07, .84, '#c8c1b0', 0), partTint(shaft, '#ffffff', .07), partBox(.76, .09, .76, '#ece5d4', .91)]);
       }
       function awningPart() {
+        // A stretched cloth on two legs. The canopy used to sit on the ground with its posts
+        // floating above it, which read as a plank hanging in the air over Sennar.
         return join([
-          partBox(1, .036, .62, '#ffffff', .10),
-          partBox(.05, .11, .05, '#c8c1b0', 0, -.42, .24, .05),
-          partBox(.05, .11, .05, '#c8c1b0', 0, .42, .24, .05)
+          partBox(1, .028, .62, '#ffffff', .10, 0, .125, 0),
+          partBox(1, .020, .66, '#c8c1b0', .04, 0, .100, 0),
+          partBox(.045, .120, .045, '#c8c1b0', 0, -.43, .060, 0),
+          partBox(.045, .120, .045, '#c8c1b0', 0, .43, .060, 0)
         ]);
       }
       const provinceGeo = {
@@ -4393,8 +4396,27 @@
             const sizeScore = hearth * .75 + rng() * .55;
             const tier = sizeScore > .86 ? 2 : (sizeScore < .36 ? 0 : 1);
             site.slope = slope; site.coastal = coastal; site.tier = tier; site.water = waterLow;
-            // Houses on a slope stand on posts that get longer as the ground falls away.
-            const liftAt = (lx, lz) => steep ? clamp(-(gradX * lx + gradZ * lz) * 1.15, 0, .028) : 0;
+            // Where the ground really is under a point of the town, in town units and relative to
+            // the site origin. A linear gradient is enough to choose a plan, but not to stand a
+            // house on: over a town's footprint the terrain bends, and up is scaled by TOWN_SCALE.
+            const gAt = (lx, lz) => {
+              const x = lx * TOWN_SCALE, z = lz * TOWN_SCALE, t2 = x * x + z * z;
+              const rr = R + site.h, d = dirAt(x, z);
+              // The town is laid out on a flat tangent plane, but the ground is a sphere: a point
+              // t units out from the centre hangs t²/2r above the surface even on level terrain.
+              // Both that and the height field have to come out of the number, or the rim of every
+              // town floats.
+              return ((R + heightAt(d)) * rr / Math.sqrt(rr * rr + t2) - rr) / TOWN_SCALE;
+            };
+            // The base plate is a flat floor at zero; outside its rim a house stands on raw ground.
+            let plateFoot = null;
+            const standing = (lx, lz) => {
+              if (!plateFoot) return gAt(lx, lz);
+              if (plateFoot.r != null) return Math.hypot(lx, lz) <= plateFoot.r ? 0 : gAt(lx, lz);
+              const c = Math.cos(plateFoot.yaw), s2 = Math.sin(plateFoot.yaw);
+              const px = lx * c - lz * s2, pz = lx * s2 + lz * c;
+              return (Math.abs(px) <= plateFoot.hx && Math.abs(pz) <= plateFoot.hz) ? 0 : gAt(lx, lz);
+            };
             // The plan is a reading of the ground, so it is decided with the traits, before
             // anything is built: a slope wants a row along the contour, flat ground wants a ring,
             // and a town on the water is a shore line with a landing, full stop.
@@ -4427,12 +4449,19 @@
               put('steps', mat, lx + dx, lz + dz, .004 + lift, yaw, width * .34, .20, .05);
             };
             // ---- house archetypes --------------------------------------------------------------
-            const house = (lx, lz, yaw, w, d, h, kind, lift = 0) => {
+            const house = (lx, lz, yaw, w, d, h, kind, lift = 0, low = 0) => {
               // Everything inside a house sits on the same foundation, so the whole body moves as
               // one when the ground falls away underneath it.
               const putUp = (geo, mat, x, z, up, yw, sx, sy, sz) => put(geo, mat, x, z, up + lift, yw, sx, sy, sz);
               const litUp = (x, z, yw, width, halfDepth, base, pane, count) => lit(x, z, yw, width, halfDepth, base, pane, count, lift);
               const stepsUp = (x, z, yw, width, halfDepth, mat) => doorSteps(x, z, yw, width, halfDepth, mat, lift);
+              // A stone footing from the lowest corner of the plot up to the floor. Flat ground
+              // gives a course above the mud; a slope gives the wall you see on the downhill side.
+              // Stilt and tree houses carry their own legs instead (see below).
+              if (kind !== 'stilt' && kind !== 'treehouse') {
+                const footTop = lift + .004, footLow = Math.min(low - .006, footTop - .012);
+                put('block', s.wall, lx, lz, (footTop + footLow) / 2, yaw, w * .92, footTop - footLow, d * .92);
+              }
               if (kind === 'ruin') {
                 // A house the town walked away from: walls shorn off at chest height, no roof,
                 // a fallen beam and a heap of what used to be the upper floor.
@@ -4443,8 +4472,8 @@
                 putUp('block', s.wall, lx + rx, lz + rz, .004, rng() * TAU, w * .42, .016, d * .38);
               } else if (kind === 'treehouse') {
                 // Trunk, deck, cabin: the crown-level house Vaelmar builds where the ground is wet.
-                const trunk = h * .95;
-                putUp('column', s.wall, lx, lz, .004, yaw, w * .48, trunk, w * .48);
+                const trunk = h * .95 + Math.max(0, .004 - low + lift);
+                putUp('column', s.wall, lx, lz, Math.min(.004, low - lift), yaw, w * .48, trunk, w * .48);
                 putUp('block', s.roofMat, lx, lz, .004 + trunk * .95, yaw, w * 1.5, .016, d * 1.4);
                 putUp('wall', s.wall, lx, lz, .004 + trunk, yaw, w * .92, h * .70, d * .86);
                 putUp(s.roof, s.roofMat, lx, lz, .004 + trunk + h * .67, yaw, w * s.spread, h * .46, d * s.spread * .95);
@@ -4531,17 +4560,20 @@
                   putUp('chimney', s.roofMat, lx + cx, lz + cz, .004 + bh * .955, yaw, w * .11, bh * .50, w * .11);
                 }
               } else if (kind === 'stilt') {
-                const lift = h * .34, bodyH = h * .70;
+                // The legs run to the ground, not to the site plane: on a slope the downhill pair
+                // grows until it finds dirt.
+                const deckH = h * .34, bodyH = h * .70;
+                const legLow = Math.min(0, low - lift - .004), legH = deckH - legLow;
                 for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
                   const [px, pz] = local(yaw, sx * w * .34, sz * d * .34);
-                  putUp('beam', s.wall, lx + px, lz + pz, 0, yaw, .009, lift, .009);
+                  putUp('beam', s.wall, lx + px, lz + pz, legLow, yaw, .009, legH, .009);
                 }
-                putUp('block', s.roofMat, lx, lz, lift - .006, yaw, w * 1.08, .014, d * 1.08);
-                putUp('wall', s.wall, lx, lz, lift, yaw, w, bodyH, d);
-                putUp(s.roof, s.roofMat, lx, lz, lift + bodyH * .955, yaw, w * s.spread, bodyH * s.rise, d * s.spread);
-                litUp(lx, lz, yaw, w, d * .5, lift + bodyH * .30, bodyH * .26, 1);
+                putUp('block', s.roofMat, lx, lz, deckH - .006, yaw, w * 1.08, .014, d * 1.08);
+                putUp('wall', s.wall, lx, lz, deckH, yaw, w, bodyH, d);
+                putUp(s.roof, s.roofMat, lx, lz, deckH + bodyH * .955, yaw, w * s.spread, bodyH * s.rise, d * s.spread);
+                litUp(lx, lz, yaw, w, d * .5, deckH + bodyH * .30, bodyH * .26, 1);
                 const [bx, bz] = local(yaw, 0, -(d * .5 + .030));
-                putUp('beam', s.wall, lx + bx, lz + bz, lift - .010, yaw, w * .22, .12, .012);
+                putUp('beam', s.wall, lx + bx, lz + bz, deckH - .010, yaw, w * .22, .12, .012);
               } else {
                 const sh = h * .52;
                 putUp('wall', s.wall, lx, lz, .004, yaw, w * .82, sh, d * .9);
@@ -4552,17 +4584,20 @@
               const w = (.044 + rng() * .014) * k * scale;
               const d = (.036 + rng() * .010) * k * scale;
               const h = (.044 + rng() * .020) * k * scale;
-              // On a slope the house stands on posts that grow as the ground falls away; stilt
-              // and tree houses already own their foundations.
-              const lift = (kind === 'stilt' || kind === 'treehouse') ? 0 : liftAt(lx, lz);
-              (site.kinds = site.kinds || new Set()).add(kind);
-              house(lx, lz, yaw, kind === 'tower' ? w * .86 : w, d, h, kind, lift);
-              if (lift > .006) {
-                for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-                  const [px, pz] = local(yaw, sx * w * .36, sz * d * .36);
-                  put('beam', s.wall, lx + px, lz + pz, 0, yaw, .009, lift, .009);
-                }
+              // The floor sits on the highest corner of the plot and the footing reaches down to
+              // the lowest one: nothing hangs in the air, nothing is buried to the windows.
+              let floor = standing(lx, lz), low = floor;
+              for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+                const [px, pz] = local(yaw, sx * w * .5, sz * d * .5);
+                const gy = standing(lx + px, lz + pz);
+                floor = Math.max(floor, gy); low = Math.min(low, gy);
               }
+              // A plot on a fall line gets a tall enough footing to reach the ground, but no
+              // taller: past this the house reads as standing on a leg, so the uphill corner is
+              // allowed to cut into the slope by a few centimetres instead.
+              floor = Math.min(floor, low + .020);
+              (site.kinds = site.kinds || new Set()).add(kind);
+              house(lx, lz, yaw, kind === 'tower' ? w * .86 : w, d, h, kind, floor, low);
             };
             // ---- ground ------------------------------------------------------------------------
             // The footprint follows the plan: a ring of houses needs a wider base than a lane.
@@ -4578,10 +4613,55 @@
             // long plans use the rectangular slab.
             const round = plan === 'hollow' || plan === 'fallen' || id === 'caelth';
             const groundKind = round ? (rng() < .72 ? rng() * .46 : .80 + rng() * .18) : rng();
+            // A flat floor on a slope hangs in the air on one side, so the base is cut as a
+            // podium: its top stays at the town floor, its underside reaches the lowest ground it
+            // covers, and the hill buries the rest. The plate is also what makes the town level.
+            const sampleRing = (R, n = 10) => {
+              const pts = [];
+              for (const f of [.55, 1]) for (let i = 0; i < n; i++) {
+                const a = i * TAU / n; pts.push([Math.cos(a) * R * f, Math.sin(a) * R * f]);
+              }
+              return pts;
+            };
+            const lowOf = pts => pts.reduce((m, [x, z]) => Math.min(m, standing(x, z)), 0);
+            // On a real slope a levelled plate would be a drum half a person tall and every town
+            // would sit on the same cake. Instead the plate shrinks to the square in front of the
+            // landmark and the houses step up the hill on their own footings.
+            const stepless = steep && plan !== 'shore';
+            let footLow = 0;
+            if (stepless) {
+              // The civic core keeps a level floor — a landmark on stilts is worse than a town on
+              // a podium — and the dwellings step down around it.
+              const R = .108 * k;
+              footLow = lowOf(sampleRing(R, 8));
+              plateFoot = { r: R * .96 };
+            } else if (groundKind < .46 || groundKind >= .74) {
+              const R = groundKind < .46 ? groundW * .5 : groundR * k;
+              footLow = lowOf(sampleRing(R));
+              plateFoot = { r: R * .96 };
+            } else {
+              const hx = groundW * .5, hz = groundD * .5, pts = [];
+              for (const u of [-1, 0, 1]) for (const v of [-1, 0, 1]) if (u || v) pts.push(local(groundYaw, u * hx, v * hz));
+              footLow = lowOf(pts);
+              plateFoot = { hx: hx * .96, hz: hz * .96, yaw: groundYaw };
+            }
+            site.plate = plateFoot;
             // platMat geometry radii differ (platform/disc are r=1, block is 1 wide), hence the numbers.
-            if (groundKind < .46) put('platform', platMat, 0, 0, 0, groundYaw, groundW, .34, groundW);
-            else if (groundKind < .74) put('block', platMat, 0, 0, 0, groundYaw, groundW, .012, groundD);
-            else put('disc', platMat, 0, 0, 0, groundYaw, groundR * k, .16, groundR * k);
+            if (stepless) {
+              // The square: the core the landmark stands on, cut into the hill as a podium.
+              const sq = .108 * k * 2;
+              put('platform', platMat, 0, 0, Math.min(0, footLow) - .012, groundYaw, sq, Math.max(.34, (-footLow + .012) / .06), sq);
+            } else if (groundKind < .46) {
+              // platform: base-anchored, .06 tall per unit of sy.
+              put('platform', platMat, 0, 0, Math.min(0, footLow) - .012, groundYaw, groundW, Math.max(.34, (-footLow + .012) / .06), groundW);
+            } else if (groundKind < .74) {
+              const bh = Math.max(.018, -footLow + .012);
+              put('block', platMat, 0, 0, footLow - .006 + bh * .5, groundYaw, groundW, bh, groundD);
+            } else {
+              // disc: centred, .08 tall per unit of sy.
+              const bh = Math.max(.020, -footLow + .012);
+              put('disc', platMat, 0, 0, footLow - .006 + bh * .5, groundYaw, groundR * k, bh / .08, groundR * k);
+            }
             // ---- landmark ----------------------------------------------------------------------
             const landmark = pick(LANDMARKS[id]);
             site.landmark = landmark;
@@ -4826,33 +4906,36 @@
             if (tier === 2) {
               const a = rng() * TAU, dist = (.085 + rng() * .03) * k;
               const [sx, sz] = local(0, Math.cos(a) * dist, Math.sin(a) * dist);
+              const sy0 = standing(sx, sz);
               if (id === 'caelth') {
-                put('column', 'pale', sx, sz, .004, a, .020 * k, (.045 + rng() * .02) * k, .020 * k);
-                put('ring', 'pale', sx, sz, .004, 0, .028 * k, .028 * k, .028 * k);
+                put('column', 'pale', sx, sz, sy0 + .004, a, .020 * k, (.045 + rng() * .02) * k, .020 * k);
+                put('ring', 'pale', sx, sz, sy0 + .004, 0, .028 * k, .028 * k, .028 * k);
               } else {
                 const r = .026 * k;
-                put('ring', id === 'mirella' ? 'glass' : s.roofMat, sx, sz, .006, a, r, r, r);
-                put('column', s.wall, sx, sz, .004, a, .016 * k, (.040 + rng() * .02) * k, .016 * k);
+                put('ring', id === 'mirella' ? 'glass' : s.roofMat, sx, sz, sy0 + .006, a, r, r, r);
+                put('column', s.wall, sx, sz, sy0 + .004, a, .016 * k, (.040 + rng() * .02) * k, .016 * k);
               }
-              put('lamp', 'lamp', sx, sz, .034 * k, 0, .005, .007, .005);
+              put('lamp', 'lamp', sx, sz, sy0 + .034 * k, 0, .005, .007, .005);
             }
             // Small street furniture that differs by province.
             if (id === 'vaelmar' || id === 'mirella') {
               for (let i = 0; i < 2; i++) {
                 const [bx, bz] = local(yaw0, (rng() - .5) * .10, (rng() - .5) * .10);
-                put('beam', 'timber', bx, bz, (.016 + rng() * .020) * k, yaw0 + rng() * TAU, (.05 + rng() * .04) * k, .10, .012);
+                put('beam', 'timber', bx, bz, standing(bx, bz) + (.016 + rng() * .020) * k, yaw0 + rng() * TAU, (.05 + rng() * .04) * k, .10, .012);
               }
-              if (rng() < .7) put('lamp', 'lamp', -.07 * k, .05 * k, .022 * k, 0, .005, .007, .005);
+              if (rng() < .7) put('lamp', 'lamp', -.07 * k, .05 * k, standing(-.07 * k, .05 * k) + .022 * k, 0, .005, .007, .005);
             } else if (id === 'sennar') {
               for (let i = 0; i < 2; i++) {
                 const a = rng() * TAU, len = (.055 + rng() * .035) * k;
-                put('ledge', 'basalt', Math.cos(a) * len, Math.sin(a) * len, .006, a + Math.PI / 2, .04 * k, .012, .010);
+                const px = Math.cos(a) * len, pz = Math.sin(a) * len;
+                put('ledge', 'basalt', px, pz, standing(px, pz) + .006, a + Math.PI / 2, .04 * k, .012, .010);
               }
-              if (rng() < .6) put('awning', 'basalt', .04 * k, .05 * k, .014, rng() * TAU, .05 * k, .45, .04 * k);
+              if (rng() < .6) put('awning', 'basalt', .04 * k, .05 * k, standing(.04 * k, .05 * k) + .014, rng() * TAU, .05 * k, .45, .04 * k);
             } else if (id === 'caelth') {
               for (let i = 0; i < 2; i++) {
                 const a = rng() * TAU, len = (.06 + rng() * .03) * k;
-                put('column', 'pale', Math.cos(a) * len, Math.sin(a) * len, .004, a, .016 * k, (.038 + rng() * .016) * k, .016 * k);
+                const px = Math.cos(a) * len, pz = Math.sin(a) * len;
+                put('column', 'pale', px, pz, standing(px, pz) + .004, a, .016 * k, (.038 + rng() * .016) * k, .016 * k);
               }
               if (rng() < .5) put('ring', 'pale', 0, 0, .004, rng() * TAU, .15 * k, .15 * k, .15 * k);
             }
