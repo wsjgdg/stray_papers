@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="town-life-31">
+  <meta name="aetheris-build" content="shrine-weather-32">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'town-life-31';
+    const BUILD_ID = 'shrine-weather-32';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4025,8 +4025,19 @@
         pale: new THREE.MeshStandardMaterial({ color: 0xd2ccb8, vertexColors: true, roughness: .78, metalness: .02, dithering: true }),
         glass: new THREE.MeshStandardMaterial({ color: 0xb6ded4, vertexColors: true, roughness: .30, metalness: .34, emissive: 0x2f7a6f, emissiveIntensity: .40 }),
         crystal: new THREE.MeshStandardMaterial({ color: 0xb4cfe0, vertexColors: true, roughness: .20, metalness: .10, emissive: 0x5a8db2, emissiveIntensity: .26 }),
-        lamp: new THREE.MeshStandardMaterial({ color: 0x2a1c10, vertexColors: true, roughness: .55, metalness: .08, emissive: 0xffb35e, emissiveIntensity: 1.7 })
+        lamp: new THREE.MeshStandardMaterial({ color: 0x2a1c10, vertexColors: true, roughness: .55, metalness: .08, emissive: 0xffb35e, emissiveIntensity: 1.7 }),
+        // Damp earth for the tracks leading into every town and up to every altar: darker and
+        // softer than the paving, and the one surface that answers rain hardest.
+        road: new THREE.MeshStandardMaterial({ color: 0x6b6152, vertexColors: true, roughness: .96, metalness: 0, dithering: true })
       };
+      // Built surfaces remember their dry state so weather can soak them and dry them again.
+      provinceWet = Object.entries(provinceMat).map(([key, m]) => ({
+        m,
+        roughness: m.roughness,
+        dry: m.color.clone(),
+        soak: key === 'road' ? .95 : key === 'basalt' || key === 'pale' ? .50 : key === 'timber' ? .44 : .22,
+        dark: key === 'road' ? .38 : key === 'timber' ? .22 : .17
+      }));
       // ---- Provincial building parts ----------------------------------------------------------
       // A part is one unit: 1 wide, 1 deep, 1 tall, origin at its base, centred in x/z. An instance
       // is then simply "how wide, how tall, how deep". Every part bakes its own vertex tint, which
@@ -4246,6 +4257,10 @@
       // Smoke and lamplight outlive the generator that places them: two uniforms the frame loop
       // drives, and the lists the towns fill while they are being built.
       let smokeUniforms = null, lampPoolUniforms = null, smokePoints = null, lampPools = null;
+      // Filled by the dressing pass, read by the frame loop: which built surfaces soak, and
+      // which way the wind leans the smoke today.
+      let provinceWet = [];
+      const smokeWind = new THREE.Vector3();
       function provinceDressing() {
         const rng = seeded(52033);
         const quota = { vaelmar: 24, sennar: 22, caelth: 22, mirella: 22, vessper: 18 };
@@ -5103,6 +5118,116 @@
             }
           }
         }
+        // ---- the ground beneath the sanctuaries ------------------------------------------------
+        // Every altar hangs above a town — the generator guarantees it two settlements at its
+        // foot — yet until now nothing on the ground said so. So each altar gets a shrine on the
+        // exact ground point it hovers over: a paved circle with a kerb, a gate to pass through,
+        // offerings left at the rim, a stair that climbs toward the altar and stops in the air
+        // where the rest of it fell away, and a lane out to the fields behind the gate.
+        const PLACE_MAT = { vaelmar: 'timber', sennar: 'basalt', caelth: 'pale', mirella: 'timber', vessper: 'basalt' };
+        const solveNormal = n => {
+          const eps = .02, east = new THREE.Vector3(1, 0, 0).cross(n).normalize();
+          const north = new THREE.Vector3().crossVectors(n, east).normalize();
+          const h = heightAt(n);
+          const hx = heightAt(n.clone().addScaledVector(east, eps).normalize());
+          const hz = heightAt(n.clone().addScaledVector(north, eps).normalize());
+          return { h, east, north, normal: n.clone().addScaledVector(east, -(hx - h) / eps).addScaledVector(north, -(hz - h) / eps).normalize() };
+        };
+        // A shrine is cut level into the hillside, not laid along it, so its up axis is only part
+        // way toward the slope's own normal.
+        const putGround = (geo, mat, n, lift, yaw, sx, sy, sz) => {
+          const { normal, h } = solveNormal(n);
+          const up = normal.clone().lerp(n, .45).normalize();
+          push(geo, mat, n.clone().multiplyScalar(R + Math.max(h, SEA) + lift),
+            new THREE.Quaternion().setFromUnitVectors(UP, up).multiply(new THREE.Quaternion().setFromAxisAngle(UP, yaw)),
+            new THREE.Vector3(sx, sy, sz));
+        };
+        // Step `chord` away from `from` along the great circle toward `toward`.
+        const along = (from, toward, chord, out) => {
+          const theta = from.angleTo(toward);
+          if (theta < 1e-4) return out.copy(toward);
+          const turn = new THREE.Quaternion().setFromUnitVectors(from, toward);
+          const partial = new THREE.Quaternion().slerpQuaternions(new THREE.Quaternion(), turn, Math.min(1, 2 * Math.asin(Math.min(1, chord / 2)) / theta));
+          return out.copy(from).applyQuaternion(partial).normalize();
+        };
+        const probe = new THREE.Vector3(), bearing = (n, d) => { const { east, north } = solveNormal(n); return Math.atan2(d.dot(north), d.dot(east)); };
+        const dry = n => heightAt(n) > SEA + .004;             // paving never crosses open water
+        // Which way is there ground to build on? Tried twelve ways round, biased away from the town.
+        const openBearing = (n, awayFromDir) => {
+          const { east, north } = solveNormal(n);
+          const bias = awayFromDir ? awayFromDir.clone().sub(n).normalize() : null;
+          let pick = null, best = -9;
+          for (let k = 0; k < 12; k++) {
+            const a = k * TAU / 12, dir = east.clone().multiplyScalar(Math.cos(a)).addScaledVector(north, Math.sin(a)).normalize();
+            let score = 0;
+            for (const chord of [.05, .09, .15, .24]) if (dry(n.clone().addScaledVector(dir, chord).normalize())) score += 1;
+            if (bias) score += -dir.dot(bias) * 1.6;
+            if (score > best) { best = score; pick = dir; }
+          }
+          return pick || east;
+        };
+        for (const landmark of landmarks) {
+          const n = landmark.direction.clone().normalize();
+          if (!dry(n)) continue;                               // an altar over open water has no shore
+          const mat = PLACE_MAT[provinceAt(n, heightAt(n))] || 'basalt';
+          let nearest = null, best = 9;
+          for (const site of settlementDirs) {
+            const d = site.dir.distanceTo(n);
+            if (d < best) { best = d; nearest = site; }
+          }
+          // Prefer the side away from the town, but only where there is dry ground to lay a lane.
+          let away = openBearing(n, nearest ? nearest.dir : null);
+          if (!dry(along(n, away, .178, probe))) away = openBearing(n, null);
+          const yaw = bearing(n, away);
+          // The paved circle and its kerb.
+          putGround('disc', mat, n, .030, yaw, .112, .30, .112);
+          putGround('ring', mat, n, .043, yaw, .112, .26, .112);
+          // Two steps up from the town side onto the circle.
+          for (let i = 0; i < 2; i++) {
+            const sd = along(n, nearest ? nearest.dir : away, .128 - i * .017, probe).clone();
+            if (dry(sd)) putGround('steps', mat, sd, .008 + i * .012, bearing(sd, n), .095, .26, .050);
+          }
+          // The gate straddles the lane where it leaves the circle.
+          const gd = along(n, away, .150, probe).clone();
+          if (dry(gd)) {
+            const across = new THREE.Vector3().crossVectors(gd, n).normalize();
+            for (const side of [-1, 1]) {
+              const pd = along(gd, across, side * .040, new THREE.Vector3()).clone();
+              if (dry(pd)) putGround('column', mat, pd, .034, rng() * TAU, .024, .062, .024);
+            }
+            putGround('beam', mat, gd, .100, bearing(gd, across), .124, .10, .014);
+            // A lamp hangs from the gate at night, the way town gates carry one.
+            putGround('lamp', 'lamp', gd, .085, rng() * TAU, .016, .016, .016);
+          }
+          // The lane behind the gate runs out toward the fields — or, when the only dry way out is
+          // the town's way, it becomes a short spur that lands on the town's own paving.
+          const towardTown = nearest && away.dot(nearest.dir.clone().sub(n)) > 0;
+          for (let k = 0; k < (towardTown ? 3 : 10); k++) {
+            const d = along(n, away, .178 + k * .024, probe).clone();
+            if (!dry(d)) break;
+            putGround('block', 'road', d, .010, bearing(d, away), .048, .007, .046);
+          }
+          // Offerings left on the circle's rim.
+          for (let i = 0; i < 3; i++) {
+            const { east, north } = solveNormal(n);
+            for (let tries = 0; tries < 6; tries++) {
+              const a = rng() * TAU, chord = .070 + rng() * .028;
+              const sd = n.clone().addScaledVector(east, Math.cos(a) * chord).addScaledVector(north, Math.sin(a) * chord).normalize();
+              if (!dry(sd)) continue;
+              putGround('block', mat, sd, .044, rng() * TAU, .019, .018, .017);
+              break;
+            }
+          }
+          // The stair climbs toward the hanging altar and ends in the air.
+          {
+            const side = openBearing(n, nearest ? nearest.dir : away);
+            for (let i = 0; i < 5; i++) {
+              const chord = .098 - i * .017;
+              const sd = n.clone().addScaledVector(side, chord).normalize();
+              if (dry(sd)) putGround('steps', mat, sd, .040 + i * .012, bearing(sd, n), .058, .20, .044);
+            }
+          }
+        }
         for (const [key, list] of buckets) {
           const [geoKey, matKey] = key.split('|');
           const inst = new THREE.InstancedMesh(provinceGeo[geoKey], provinceMat[matKey], list.length);
@@ -5137,21 +5262,26 @@
           geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
           smokeUniforms = {
             uTime: { value: 0 }, uPixel: { value: 900 }, uOpacity: { value: .30 },
+            uWind: { value: new THREE.Vector3() }, uDamp: { value: 0 },
             uColor: { value: new THREE.Color(0xb9b4ab) }
           };
           const mat = new THREE.ShaderMaterial({
             uniforms: smokeUniforms, transparent: true, depthWrite: false,
             vertexShader: `
-              uniform float uTime, uPixel;
+              uniform float uTime, uPixel, uDamp;
+              uniform vec3 uWind;
               attribute float aPhase, aSeed;
               varying float vFade;
               void main() {
                 float life = fract(uTime * (.040 + aSeed * .022) + aPhase);
                 vec3 up = normalize(position);
+                // Wind blows along the ground, so only its tangent part bends the plume; the
+                // bend grows with the square of the puff's age, which is how smoke actually leans.
+                vec3 tang = uWind - up * dot(uWind, up);
                 vec3 side = normalize(cross(up, vec3(0.0, 1.0, 0.0)) + vec3(0.0001, 0.0, 0.0));
                 vec3 drift = side * (aSeed - 0.5) * 0.07 * life;
-                vec3 p = position + up * (life * 0.085) + drift;
-                vFade = smoothstep(0.0, 0.18, life) * (1.0 - smoothstep(0.30, 1.0, life));
+                vec3 p = position + up * (life * 0.085) + drift + tang * (life * life);
+                vFade = smoothstep(0.0, 0.18, life) * (1.0 - smoothstep(0.30, 1.0, life)) * (1.0 - uDamp * 0.45);
                 vec4 mv = modelViewMatrix * vec4(p, 1.0);
                 gl_Position = projectionMatrix * mv;
                 gl_PointSize = uPixel * (0.004 + life * 0.016) / max(0.05, -mv.z);
@@ -6998,8 +7128,23 @@
         clearBubble.value.copy(camera.position);
         pulseTime.value=waterUniforms.uTime.value=sporeUniforms.uTime.value=elapsed;
         // Smoke drifts on its own clock and lamplight only exists after dark.
-        if(smokeUniforms){smokeUniforms.uTime.value=elapsed;smokeUniforms.uPixel.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360));}
-        if(lampPoolUniforms)lampPoolUniforms.uNight.value=clamp(1-dayAmount*1.7,0,1)*.9;
+        // Weather reaches the built world too: rain darkens and polishes stone, timber and the
+        // earth tracks, and it leans every plume of smoke downwind.
+        const wet = clamp(weatherNow.rain * 1.3, 0, 1);
+        for (const layer of provinceWet) {
+          const soak = wet * layer.soak;
+          layer.m.roughness = layer.roughness * (1 - soak * .62);
+          layer.m.color.copy(layer.dry).multiplyScalar(1 - soak * layer.dark);
+        }
+        smokeWind.set(Math.cos(.31 + elapsed * .013), 0, Math.sin(.31 + elapsed * .013));
+        smokeWind.addScaledVector(viewNormal, -smokeWind.dot(viewNormal)).normalize();
+        if(smokeUniforms){
+          smokeUniforms.uTime.value=elapsed;
+          smokeUniforms.uPixel.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360));
+          smokeUniforms.uWind.value.copy(smokeWind).multiplyScalar(.035 + weatherNow.wind * .048);
+          smokeUniforms.uDamp.value=wet;
+        }
+        if(lampPoolUniforms)lampPoolUniforms.uNight.value=clamp(1-dayAmount*1.7,0,1)*.9*(1+wet*.25);
         forestTime.value=elapsed*(.72+weatherNow.wind*.52);
         clouds[0].rotation.y=elapsed*(.0035+weatherNow.wind*.004);clouds[1].rotation.y=1.7-elapsed*(.0028+weatherNow.wind*.002);
         cloudShadow.rotation.value=clouds[0].rotation.y;
