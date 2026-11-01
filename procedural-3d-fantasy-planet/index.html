@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="town-traits-28">
+  <meta name="aetheris-build" content="town-traits-29">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'town-traits-28';
+    const BUILD_ID = 'town-traits-29';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4320,10 +4320,12 @@
         };
         // Same province, different street: these pools are what stops every town looking alike.
         const HOUSES = {
-          vaelmar: [['cottage', 3], ['longhouse', 3], ['tower', 1.4], ['barn', 1.4], ['shed', 1], ['treehouse', 1.1], ['ruin', .5]],
-          sennar: [['flat', 3], ['cottage', 2.4], ['tower', 2], ['shed', 1.4], ['round', 1], ['ruin', .6]],
-          caelth: [['round', 3], ['cottage', 2.4], ['tower', 1.4], ['longhouse', 1], ['shed', 1], ['ruin', .5]],
-          mirella: [['stilt', 4], ['round', 2], ['cottage', 1.6], ['shed', 1], ['treehouse', .9], ['ruin', .4]],
+          // Each province keeps one form nobody else builds — its edge archetype — on top of the
+          // ordinary dwellings. `ruin` is the exception: a house anyone can walk away from.
+          vaelmar: [['cottage', 3], ['longhouse', 3], ['tower', 1.4], ['barn', 1.4], ['shed', 1], ['treehouse', 1.2], ['ruin', .5]],
+          sennar: [['flat', 3], ['cottage', 2.4], ['tower', 2], ['shed', 1.4], ['round', 1], ['windcatcher', 1.3], ['ruin', .6]],
+          caelth: [['round', 3], ['cottage', 2.4], ['tower', 1.4], ['longhouse', 1], ['shed', 1], ['needle', 1.2], ['ruin', .5]],
+          mirella: [['stilt', 4], ['round', 2], ['cottage', 1.6], ['shed', 1], ['chanter', 1.4], ['ruin', .4]],
           vessper: []
         };
         const PLANS = {
@@ -4449,6 +4451,38 @@
                 litUp(lx, lz, yaw, w * .92, d * .43, trunk + h * .24, h * .18, 1);
                 const [bx, bz] = local(yaw, 0, -(d * .43 + .022));
                 putUp('beam', s.wall, lx + bx, lz + bz, .004, yaw, w * .10, trunk + .03, .010);
+              } else if (kind === 'windcatcher') {
+                // Sennar's answer to the wind: a tall shaft with a scoop at the head, which drags
+                // the desert air down into the room beneath it.
+                const th = h * 1.50, tw = w * .52, roomH = h * .62;
+                const [tx, tz] = local(yaw, w * .34, 0);
+                putUp('wall', s.wall, lx, lz, .004, yaw, w, roomH, d);
+                putUp(s.roof, s.roofMat, lx, lz, .004 + roomH * .955, yaw, w * s.spread, roomH * s.rise, d * s.spread);
+                litUp(lx, lz, yaw, w, d * .5, roomH * .34, roomH * .24, 1);
+                putUp('wall', s.wall, lx + tx, lz + tz, .004, yaw, tw, th, tw);
+                putUp('ledge', s.roofMat, lx + tx, lz + tz, .004 + th * .95, yaw, tw * 1.30, .10, tw * 1.30);
+                putUp('awning', s.roofMat, lx + tx, lz + tz, .004 + th * .99, yaw, tw * 1.75, .55, tw * 1.75);
+              } else if (kind === 'needle') {
+                // Caelth keeps its watch in a needle: a low round room with a blade of ice
+                // growing out of the roof.
+                const rh = h * .48;
+                putUp('drum', s.wall, lx, lz, .004, yaw, w * 1.05, rh, w * 1.05);
+                putUp('dome', s.roofMat, lx, lz, .004 + rh * .95, yaw, w * 1.07, rh * .62, w * 1.07);
+                putUp('spire', 'glass', lx, lz, .004 + rh * 1.42, yaw, w * .30, h * 1.05, w * .30);
+                litUp(lx, lz, yaw, w * .92, w * .5, rh * .40, rh * .26, 1);
+              } else if (kind === 'chanter') {
+                // Mirella hangs a round room inside a ring of posts and rings a chime above it:
+                // the house is an instrument.
+                const lift0 = h * .30, bodyH = h * .72, ring = w * .58;
+                for (let i = 0; i < 6; i++) {
+                  const a = i * TAU / 6 + rng() * .12;
+                  putUp('beam', s.wall, lx + Math.cos(a) * ring, lz + Math.sin(a) * ring, 0, a, .009, lift0 + .010, .009);
+                }
+                putUp('block', s.roofMat, lx, lz, lift0 - .008, yaw, w * 1.20, .014, w * 1.20);
+                putUp('drum', s.wall, lx, lz, lift0, yaw, w * .92, bodyH, w * .92);
+                putUp(s.roof === 'dome' ? 'dome' : 'spire', s.roofMat, lx, lz, lift0 + bodyH * .95, yaw, w * .96, bodyH * .55, w * .96);
+                putUp('ring', 'glass', lx, lz, lift0 + bodyH * 1.30, yaw, w * .85, w * .85, .045);
+                litUp(lx, lz, yaw, w * .84, w * .46, lift0 + bodyH * .30, bodyH * .24, 1);
               } else if (kind === 'cottage') {
                 putUp('wall', s.wall, lx, lz, .004, yaw, w, h, d);
                 putUp(s.roof, s.roofMat, lx, lz, .004 + h * .955, yaw, w * s.spread, h * s.rise, d * s.spread);
