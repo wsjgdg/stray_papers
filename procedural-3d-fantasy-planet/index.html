@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="solid-towns-19">
+  <meta name="aetheris-build" content="sea-glass-20">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -236,12 +236,13 @@
     .marker-dot { width: 7px; height: 7px; border: 1px solid var(--aqua); border-radius: 50%; background: rgba(165, 238, 225, .35); box-shadow: 0 0 10px rgba(120, 230, 205, .55); }
     .marker-stem { width: 1px; height: 14px; background: linear-gradient(180deg, rgba(165,238,225,.6), transparent); }
 
-    .archive-chip { position: absolute; z-index: 6; right: clamp(26px, 5.8vw, 105px); bottom: 118px; display: inline-flex; align-items: center; gap: 9px;
-      padding: 8px 13px; border: 1px solid rgba(165, 238, 225, .26); border-radius: 999px; background: rgba(7, 22, 30, .5);
-      color: #cfe7de; font: inherit; font-size: 9px; font-weight: 700; letter-spacing: .24em; cursor: pointer;
-      backdrop-filter: blur(6px); transition: border-color .35s ease, color .35s ease, background .35s ease; }
-    .archive-chip:hover { border-color: rgba(165, 238, 225, .55); color: #eafaf3; background: rgba(10, 32, 42, .62); }
-    body.archive-open .archive-chip { border-color: rgba(165, 238, 225, .6); color: #eafaf3; }
+    .archive-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px; border: 1px solid rgba(174, 224, 216, .24);
+      border-radius: 3px; background: rgba(12, 34, 41, .34); color: #cfe7de; font: inherit; cursor: pointer;
+      transition: border-color .25s ease, color .25s ease, background .25s ease; }
+    .archive-chip:hover { border-color: var(--aqua); color: #fff; background: rgba(18, 50, 56, .55); }
+    .archive-chip svg { width: 14px; height: 14px; color: #a8ded2; flex: none; }
+    .archive-chip .archive-key { font-size: 8px; font-weight: 700; letter-spacing: .06em; color: #8fb6ab; }
+    body.archive-open .archive-chip { border-color: var(--aqua); color: #eafaf3; }
     .archive { position: absolute; top: 0; right: 0; bottom: 0; width: min(432px, 100%); z-index: 9; display: flex; flex-direction: column;
       transform: translateX(102%); transition: transform .55s cubic-bezier(.2, .8, .2, 1); pointer-events: auto;
       background: linear-gradient(270deg, rgba(4, 13, 19, .95), rgba(7, 21, 29, .86));
@@ -269,10 +270,17 @@
     .archive-tag { display: inline-block; margin-top: 9px; padding: 2px 7px; border: 1px solid rgba(165, 238, 225, .22); border-radius: 999px;
       font-size: 7.5px; letter-spacing: .18em; color: #86c3b4; }
     @media (max-width: 760px), (pointer: coarse) {
-      .archive-chip { right: 20px; bottom: auto; top: 124px; padding: 6px 10px; font-size: 8px; }
       .archive-head { padding: 18px 18px 12px; }
       .archive-body { padding: 4px 18px 28px; }
     }
+
+    #minimapFrame { position: absolute; z-index: 5; left: clamp(26px, 5.8vw, 105px); top: 122px; width: 146px; height: 146px; display: none;
+      border-radius: 50%; border: 1px solid rgba(165, 238, 225, .24); background: radial-gradient(circle at 50% 50%, rgba(6, 20, 26, .58), rgba(3, 11, 16, .84));
+      box-shadow: 0 12px 34px rgba(2, 8, 12, .38), inset 0 0 26px rgba(0, 0, 0, .55); pointer-events: none; backdrop-filter: blur(2px); }
+    body[data-mode="ground"]:not(.transitioning) #minimapFrame { display: block; }
+    #minimap { width: 100%; height: 100%; display: block; border-radius: 50%; }
+    .minimap-fwd { position: absolute; left: 50%; top: -2px; width: 0; height: 0; transform: translateX(-50%);
+      border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid rgba(198, 246, 232, .85); }
 
     #diveVeil { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .9s ease;
       background: radial-gradient(125% 95% at 50% 38%, rgba(38,128,138,.06), rgba(3,26,36,.58) 74%, rgba(2,18,26,.78) 100%); }
@@ -289,7 +297,8 @@
     #siteReadout .readout-biome { color: #e9f4ea; font-size: 11px; letter-spacing: .24em; }
     #siteReadout .readout-sep { width: 22px; height: 1px; background: rgba(165, 238, 225, .45); }
     @media (max-width: 760px), (pointer: coarse) {
-      #siteReadout { left: 20px; right: 20px; top: 84px; bottom: auto; font-size: 8px; gap: 8px; max-width: none; row-gap: 4px; }
+      #minimapFrame { left: 20px; top: 84px; width: 104px; height: 104px; }
+      #siteReadout { left: 20px; right: 20px; top: 200px; bottom: auto; font-size: 8px; gap: 8px; max-width: none; row-gap: 4px; }
       #siteReadout .readout-sep { width: 12px; }
       #coordLabel { letter-spacing: .14em; }
       #siteReadout .readout-region { font-size: 8px; }
@@ -425,6 +434,10 @@
           <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>
           <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
         </button>
+        <button id="archiveChip" class="archive-chip" type="button" aria-controls="archive" aria-expanded="false" aria-label="Open the field archive (O)" title="Field archive · O">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.2 3.4h8.9L16.8 7v9.6H4.2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M13 3.5V7h3.7M6.9 10.4h6.9M6.9 13.1h4.8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+          <span class="archive-key">O</span>
+        </button>
         <span class="top-divider"></span>
         <button class="weather-chip" id="weatherButton" type="button" title="Cycle weather · R" aria-label="Cycle weather">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15.5h9.2a3.3 3.3 0 0 0 .4-6.6A5.4 5.4 0 0 0 6.2 10 2.8 2.8 0 0 0 7 15.5Z"/><path d="M8 18.5l-1 2M12 18.5l-1 2M16 18.5l-1 2"/></svg>
@@ -448,6 +461,10 @@
     <div id="pointerPrompt" class="pointer-prompt">CLICK THE WORLD TO LOOK AROUND &nbsp; / &nbsp; ESC TO RELEASE</div>
     <div class="mobile-hint"><span class="orbit-mobile-hint">DRAG TO ORBIT / PINCH TO ZOOM</span><span class="ground-mobile-hint">DRAG TO LOOK / PAD TO WALK</span></div>
     <div id="diveVeil" aria-hidden="true"></div>
+    <div id="minimapFrame" aria-hidden="true">
+      <canvas id="minimap" width="256" height="256"></canvas>
+      <span class="minimap-fwd"></span>
+    </div>
     <div id="markers" aria-label="Nearby sanctuaries"></div>
     <div id="siteReadout" aria-live="off"><span class="readout-region" id="regionLabel">VAELMAR</span><span class="readout-sep"></span><span class="readout-biome" id="biomeLabel">LUMINOUS GROVE</span><span class="readout-sep"></span><span id="coordLabel">0.0°N 0.0°E</span></div>
 
@@ -475,7 +492,6 @@
       </button>
     </footer>
 
-    <button id="archiveChip" class="archive-chip" type="button" aria-controls="archive" aria-expanded="false"><span class="keycap">O</span>ARCHIVE</button>
     <aside id="archive" class="archive" aria-label="Field archive" aria-hidden="true">
       <div class="archive-head">
         <div><span class="archive-kicker">FIELD ARCHIVE</span><strong class="archive-title">野档 · 非官方</strong></div>
@@ -493,7 +509,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'solid-towns-19';
+    const BUILD_ID = 'sea-glass-20';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -1671,6 +1687,11 @@
         uFogColor: { value: new THREE.Color(.013, .026, .042) }, uFogDensity: { value: 0 }
       };
       const waterMaterial = new THREE.ShaderMaterial({
+        // The sea is a window, not a lid: shallow water transmits the real seabed and only turns
+        // opaque as depth absorbs it. (True screen-space bending would need a second scene render
+        // target; this is Beer-Lambert transmission plus the refracted caustics above.)
+        transparent: true,
+        depthWrite: false,
         uniforms: waterUniforms,
         vertexShader: `
           uniform float uTime; uniform sampler2D uDepth;
@@ -1777,19 +1798,21 @@
             float twilight = 1.0 - smoothstep(0.0, .38, abs(sunHeight));
             vec3 skyColor = mix(skyNight, skyDay, day) + vec3(.66,.30,.10) * twilight * smoothstep(-.18, .08, sunHeight) * .64;
 
-            // Physical Beer-Lambert depth extinction + clear moonlight penetration in crystal shallows.
-            vec3 sandFloor = vec3(.42, .39, .28) * (.82 + wnA.b * .28);
+            // The bed is no longer painted in here: it is transmitted through the surface (see the
+            // alpha at the end), so the surface only carries its own in-scatter, lit by the same
+            // Beer-Lambert extinction it applies to whatever lies below.
             vec3 transmittance = exp(-depth * vec3(22.0, 5.8, 4.1));
-            vec3 scatterColor = mix(vec3(.022, .178, .162), vec3(.004, .020, .046), smoothstep(.02, .28, depth));
-            vec3 body = (sandFloor * transmittance + scatterColor * (1.0 - transmittance)) * (.30 + day * .88);
+            vec3 scatterColor = mix(vec3(.078, .340, .322), vec3(.006, .028, .058), smoothstep(.02, .26, depth));
+            vec3 body = scatterColor * (.30 + day * 1.05);
 
-            // Refracted Voronoi optical caustics dancing across shallow seabeds.
+            // Refracted optical caustics: the sample point is pushed along the refracted ray, so
+            // the pattern breaks up and slides over the bed exactly as a bent image would.
             vec3 refractPos = vWorld + (n - radial) * (.045 + depth * .22);
             float causR = sampleWaterTriplanar(uWaterNormal, refractPos, radial, 9.2, vec2(uTime * .032, uTime * .021)).b;
             float causB = sampleWaterTriplanar(uWaterNormal, refractPos * 1.012, radial, 9.2, vec2(-uTime * .027, uTime * .029)).b;
             vec3 causticLight = vec3(causR * .85, (causR + causB) * .62, causB * .95);
             float causticFade = smoothstep(.18, .003, depth) * near * day;
-            body += causticLight * causticFade * (1.15 - length(depthGrad) * 0.0);
+            body += causticLight * causticFade * 1.15;
 
             // Subsurface emerald glow through backlit wave crests & shoaling rollers.
             float sss = pow(clamp(dot(view, -uSun) * .5 + .5, 0.0, 1.0), 3.8) * smoothstep(-.1, .65, crest) * day * near;
@@ -1841,14 +1864,29 @@
             color = mix(wetEdgeSand, color, smoothstep(0.0, .0036, depth));
             color *= 1.0 - uStorm * .12;
 
-            color = mix(color, uFogColor, 1.0 - exp(-uFogDensity * uFogDensity * distanceToEye * distanceToEye));
-            gl_FragColor = vec4(color, 1.0);
+            float fogAmount = 1.0 - exp(-uFogDensity * uFogDensity * distanceToEye * distanceToEye);
+            color = mix(color, uFogColor, fogAmount);
+            // Snell refraction sets the optical path, not the vertical depth: the ray bends toward
+            // the normal entering the water, so a slant view looks through more water than a
+            // straight-down one and the same lagoon reads denser from the beach than from mid-swim.
+            float cosI = clamp(dot(view, n), .02, 1.0);
+            float cosT = sqrt(max(1.0 - .5625 * (1.0 - cosI * cosI), .12));
+            float pathLength = depth / max(cosT, .34);
+            // Transmission: clear knee-deep water, teal at swimming depth, opaque beyond that,
+            // a mirror at grazing angles, and fog closing the last of it.
+            float waterAlpha = 1.0 - exp(-pathLength * 46.0);
+            waterAlpha = max(waterAlpha, fresnel * .94);
+            waterAlpha = max(waterAlpha, totalFoam * .92);
+            waterAlpha = max(waterAlpha, clamp(length(causticLight) * causticFade * .26, 0.0, .48));
+            waterAlpha = mix(waterAlpha, 1.0, fogAmount);
+            gl_FragColor = vec4(color, clamp(waterAlpha, .05, 1.0));
             #include <tonemapping_fragment>
             #include <colorspace_fragment>
           }
         `
       });
       const ocean = staticMesh(new THREE.SphereGeometry(WATER, compact ? 168 : 288, compact ? 108 : 184), waterMaterial);
+      ocean.renderOrder = 8;
       ocean.castShadow = false;
 
       async function makeCloudMap(width, seed) {
@@ -3359,6 +3397,7 @@
       const bannerGeometry = new THREE.PlaneGeometry(.062, .12, 3, 8);
       bannerGeometry.translate(0, -.06, 0);
       const landmarks = [];
+      const settlementDirs = [];   // towns in draw order, for the survey map
       function createSanctuary(direction, size, seed, elevated = false) {
         const group = new THREE.Group(), rng = seeded(seed);
         group.quaternion.setFromUnitVectors(UP, direction); group.scale.setScalar(size);
@@ -3656,6 +3695,7 @@
           scale: .55 + creatureRandom() * .5
         });
       });
+      const flockWorld = new Float32Array(flocks.length * 3);   // for the survey map
       const mantas = new THREE.InstancedMesh(mantaGeo, mantaMaterial, flocks.length);
       mantas.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       mantas.boundingSphere = new THREE.Sphere(new THREE.Vector3(), R + 3.6);
@@ -3717,6 +3757,9 @@
         // 3. Scattered provincial towns until each province is furnished.
         const done = () => Object.keys(quota).every(id => sites[id].length >= quota[id]);
         for (let i = 0; i < 26000 && !done(); i++) trySite(randomDirection(rng), .9 + rng() * .5, id => quota[id]);
+        // Keep the town list for the survey map; it is the only consumer that needs plain directions.
+        settlementDirs.length = 0;
+        for (const id of Object.keys(sites)) for (const site of sites[id]) settlementDirs.push(site);
 
         const buckets = new Map();
         const push = (geo, mat, position, quat, scale) => {
@@ -4743,6 +4786,158 @@
         coordLabel.textContent=`${Math.abs(lat).toFixed(1)}°${lat>=0?'N':'S'} ${Math.abs(lon).toFixed(1)}°${lon>=0?'E':'W'}`;
       }
 
+      // ---- Local survey map ----------------------------------------------------------------
+      // A disc drawn around the walker, not a world atlas: the eight rings are scanned a sector
+      // at a time from real heightAt/provinceAt samples, so the coastline it shows is the one you
+      // can actually reach. Positions are projected into the walker's own basis, which makes it
+      // a heading-up map with no rotation bookkeeping, and all of it is skipped in orbit mode.
+      const MAP_SECTORS = 32, MAP_RINGS = 10, MAP_RANGE = .40, MAP_TAU = Math.PI * 2;
+      const MAP_PROVINCES = ['vaelmar', 'sennar', 'caelth', 'mirella', 'vessper'];
+      const MAP_FILL = ['#5d8c68', '#9b7d4c', '#8ca4b6', '#4e9c8f', '#7d78b4'];
+      const mapCanvas = document.getElementById('minimap');
+      const mapCtx = mapCanvas ? mapCanvas.getContext('2d') : null;
+      const mapCell = new Uint8Array(MAP_SECTORS * MAP_RINGS);
+      const mapBasis = { up: new THREE.Vector3(1, 0, 0), right: new THREE.Vector3(0, 0, 1), fwd: new THREE.Vector3(0, 1, 0) };
+      const mapSample = new THREE.Vector3(), mapOffset = new THREE.Vector3(), mapPoint = { x: 0, y: 0 };
+      let mapRing = 0, mapFrames = 0, mapTick = 0, mapNeedsDraw = true;
+
+      function mapBasisUpdate() {
+        mapBasis.up.copy(state.direction).normalize();
+        mapBasis.fwd.copy(state.heading).addScaledVector(mapBasis.up, -state.heading.dot(mapBasis.up));
+        if (mapBasis.fwd.lengthSq() < 1e-6) mapBasis.fwd.crossVectors(mapBasis.up, UP);
+        mapBasis.fwd.normalize();
+        mapBasis.right.crossVectors(mapBasis.fwd, mapBasis.up).normalize();
+      }
+      // World -> disc offset. +x is the walker's right, +y is straight ahead.
+      function mapProject(dir) {
+        mapOffset.copy(dir).sub(mapBasis.up).multiplyScalar(R);
+        mapPoint.x = mapOffset.dot(mapBasis.right);
+        mapPoint.y = mapOffset.dot(mapBasis.fwd);
+        return mapPoint;
+      }
+      function mapScanRing(ring) {
+        const r = (ring + .5) / MAP_RINGS * MAP_RANGE / R;
+        for (let s = 0; s < MAP_SECTORS; s++) {
+          const a = (s + .5) / MAP_SECTORS * MAP_TAU;
+          mapSample.copy(mapBasis.up).addScaledVector(mapBasis.right, Math.cos(a) * r).addScaledVector(mapBasis.fwd, Math.sin(a) * r).normalize();
+          const h = heightAt(mapSample);
+          let value = 1;
+          if (h >= SEA - .004) value = 2 + Math.max(0, MAP_PROVINCES.indexOf(provinceAt(mapSample, h)));
+          mapCell[ring * MAP_SECTORS + s] = value;
+        }
+      }
+      function mapDraw() {
+        if (!mapCtx) return;
+        const ctx = mapCtx, size = mapCanvas.width, c = size / 2, rad = c - 4, step = rad / MAP_RINGS;
+        ctx.clearRect(0, 0, size, size);
+        ctx.save();
+        ctx.beginPath(); ctx.arc(c, c, rad, 0, MAP_TAU); ctx.clip();
+        ctx.fillStyle = 'rgba(9, 33, 44, .95)'; ctx.fillRect(0, 0, size, size);
+        // Land: one annular sector per cell, coloured by the province that owns it. Cells are
+        // grown by half a pixel so neighbouring fills meet instead of leaving hairline seams.
+        const padA = .7 / rad, padR = .7;
+        for (let ring = 0; ring < MAP_RINGS; ring++) {
+          const r0 = ring * step, r1 = r0 + step + padR;
+          for (let s = 0; s < MAP_SECTORS; s++) {
+            const value = mapCell[ring * MAP_SECTORS + s];
+            if (value < 2) continue;
+            const a0 = s / MAP_SECTORS * MAP_TAU - padA, a1 = (s + 1) / MAP_SECTORS * MAP_TAU + padA;
+            ctx.beginPath();
+            ctx.arc(c, c, r1, -a1, -a0);
+            ctx.arc(c, c, r0, -a0, -a1, true);
+            ctx.closePath();
+            ctx.fillStyle = MAP_FILL[value - 2];
+            ctx.fill();
+          }
+        }
+        // Coast and province lines, traced at the radius where the sample class flips.
+        const coast = new Float32Array(MAP_SECTORS).fill(-1), border = new Float32Array(MAP_SECTORS).fill(-1);
+        for (let s = 0; s < MAP_SECTORS; s++) {
+          let prev = mapCell[s];
+          for (let ring = 1; ring < MAP_RINGS; ring++) {
+            const cur = mapCell[ring * MAP_SECTORS + s];
+            if (prev > 0 && cur > 0) {
+              if (coast[s] < 0 && (prev === 1) !== (cur === 1)) coast[s] = ring * step;
+              else if (border[s] < 0 && prev > 1 && cur > 1 && prev !== cur) border[s] = ring * step;
+            }
+            prev = cur;
+          }
+        }
+        const traceEdges = (edges, color, width, dash) => {
+          ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []);
+          ctx.beginPath();
+          for (let s = 0; s < MAP_SECTORS; s++) {
+            const r = edges[s], rn = edges[(s + 1) % MAP_SECTORS];
+            if (r < 0 || rn < 0) continue;
+            const a = (s + .5) / MAP_SECTORS * MAP_TAU, an = (s + 1.5) / MAP_SECTORS * MAP_TAU;
+            ctx.moveTo(c + Math.cos(a) * r, c - Math.sin(a) * r);
+            ctx.lineTo(c + Math.cos(an) * rn, c - Math.sin(an) * rn);
+          }
+          ctx.stroke(); ctx.setLineDash([]);
+        };
+        traceEdges(border, 'rgba(238, 226, 190, .46)', 1, [3, 3]);
+        traceEdges(coast, 'rgba(196, 246, 236, .82)', 1.6);
+        // Towns, then sanctuaries with the ley lines that tie them together.
+        const toDisc = (dir, limit) => {
+          const p = mapProject(dir), d = Math.hypot(p.x, p.y) / MAP_RANGE;
+          if (d > limit) return null;
+          return { x: c + p.x / MAP_RANGE * rad, y: c - p.y / MAP_RANGE * rad };
+        };
+        ctx.fillStyle = 'rgba(226, 244, 232, .66)';
+        for (const site of settlementDirs) {
+          const q = toDisc(site.dir, .98); if (!q) continue;
+          ctx.fillRect(q.x - 1.1, q.y - 1.1, 2.2, 2.2);
+        }
+        const anchors = [];
+        for (const landmark of landmarks) {
+          const q = toDisc(landmark.direction, 1); if (!q) continue;
+          anchors.push(q);
+        }
+        ctx.strokeStyle = 'rgba(150, 234, 214, .34)'; ctx.lineWidth = .9;
+        ctx.beginPath();
+        for (let i = 0; i < anchors.length; i++) for (let j = i + 1; j < anchors.length; j++) {
+          if (Math.hypot(anchors[i].x - anchors[j].x, anchors[i].y - anchors[j].y) > rad * 1.05) continue;
+          ctx.moveTo(anchors[i].x, anchors[i].y); ctx.lineTo(anchors[j].x, anchors[j].y);
+        }
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255, 206, 130, .95)';
+        for (const q of anchors) {
+          ctx.beginPath();
+          ctx.moveTo(q.x, q.y - 3.4); ctx.lineTo(q.x + 3.4, q.y); ctx.lineTo(q.x, q.y + 3.4); ctx.lineTo(q.x - 3.4, q.y);
+          ctx.closePath(); ctx.fill();
+        }
+        // Living fauna: each flock is one drifting mote, so clusters read as a herd.
+        ctx.fillStyle = 'rgba(214, 236, 255, .8)';
+        for (let i = 0; i < flocks.length; i++) {
+          const len = Math.hypot(flockWorld[i * 3], flockWorld[i * 3 + 1], flockWorld[i * 3 + 2]);
+          if (len < .001) continue;
+          mapOffset.set(flockWorld[i * 3] / len, flockWorld[i * 3 + 1] / len, flockWorld[i * 3 + 2] / len);
+          const q = toDisc(mapOffset, .97); if (!q) continue;
+          ctx.fillRect(q.x - .9, q.y - .9, 1.8, 1.8);
+        }
+        // Range rings and the walker.
+        ctx.strokeStyle = 'rgba(150, 214, 201, .13)'; ctx.lineWidth = 1;
+        for (let i = 1; i <= 2; i++) { ctx.beginPath(); ctx.arc(c, c, rad * i / 3, 0, MAP_TAU); ctx.stroke(); }
+        ctx.beginPath();
+        ctx.moveTo(c, c - 6); ctx.lineTo(c - 4.2, c + 4.4); ctx.lineTo(c, c + 2.4); ctx.lineTo(c + 4.2, c + 4.4);
+        ctx.closePath(); ctx.fillStyle = 'rgba(232, 255, 246, .95)'; ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(165, 238, 225, .2)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(c, c, rad, 0, MAP_TAU); ctx.stroke();
+      }
+      function minimapUpdate() {
+        if (!mapCtx) return;
+        mapBasisUpdate();
+        // One ring per frame is a full refresh in a sixth of a second; the compact tier scans
+        // every other frame (~0.3 s) to keep its heightAt budget intact.
+        if (!compact || (++mapTick & 1) === 0) {
+          mapScanRing(mapRing);
+          mapRing = (mapRing + 1) % MAP_RINGS;
+        }
+        // Redraw at 15 Hz on full detail, 7.5 Hz on compact: the scan barely moves per frame.
+        if (mapNeedsDraw || (++mapFrames % (compact ? 8 : 4)) === 0) { mapDraw(); mapNeedsDraw = false; }
+      }
+
       // Optional generated soundscape: wind, a low pad, and a night shimmer.
       let audio=null,soundOn=false;
       const soundButton=document.getElementById('soundButton');
@@ -5147,6 +5342,7 @@
             .addScaledVector(f.landmark.direction,f.height+migration*.6+Math.sin(elapsed*.7+f.phase)*.05);
           const spin=f.speed>0?1:-1;
           mantaAhead.copy(mantaPos).addScaledVector(f.east,-sa*spin).addScaledVector(f.north,ca*spin);
+          flockWorld[i*3]=mantaPos.x;flockWorld[i*3+1]=mantaPos.y;flockWorld[i*3+2]=mantaPos.z;
           transform.position.copy(mantaPos);transform.up.copy(f.landmark.direction);transform.lookAt(mantaAhead);
           transform.scale.setScalar(f.scale);transform.updateMatrix();
           mantas.setMatrixAt(i,transform.matrix);
@@ -5285,7 +5481,7 @@
             }
             mp.needsUpdate=true;
           }
-          if(surface)updateReadout();
+          if(surface){updateReadout();minimapUpdate();}
           updateAudioMix(daylight,surface);
         }
       }
