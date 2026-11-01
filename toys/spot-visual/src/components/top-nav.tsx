@@ -56,9 +56,12 @@ function warm(target: string) {
 export function TopNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  // 保留分享链接的 ?sharecode=... ，避免子路由跳转/刷新时丢失访问参数
-  const qs = searchParams?.toString() ?? "";
-  const withQuery = (path: string) => (qs ? `${path}?${qs}` : path);
+  // 只保留分享链接的 ?sharecode=...，不要整串 searchParams 往下带。
+  // 以前带着全部参数走：在 /food?prov=广东 点「志愿探索」会变成
+  // /gaokao?prov=广东 —— 省名跟着串到跟它没关系的页面上（脏参数会传染）。
+  const sharecode = searchParams?.get("sharecode") ?? "";
+  const withQuery = (path: string) =>
+    sharecode ? `${path}?sharecode=${encodeURIComponent(sharecode)}` : path;
   return (
     <header className="sticky top-0 z-50 h-[var(--nav-h,52px)] flex items-center gap-3 px-4 border-b border-gray-200/80 bg-white/85 backdrop-blur-md">
       <Link href={withQuery("/")} className="flex items-center gap-2 shrink-0">

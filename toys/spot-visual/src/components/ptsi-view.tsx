@@ -301,6 +301,7 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
     // 这里不再估算客流（旧实现用「评分−4.0」反推排队分钟，既没数据来源，
     // 又让高分名景区因为「越热门越挤」被排到榜尾，方向是反的）。
     const enriched = pool.map((s) => ({
+      id: s.id,
       name: s.name,
       rating: s.rating,
       level: s.level,
@@ -325,6 +326,9 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
     const meta = new Map(enriched.map((s) => [s.name, s]));
     return results.map((r) => ({
       ...r,
+      // 带 id 出去：以前点击排行行是按**名字**去库里 find，同名景区（多个「古城」）
+      // 会跳到错的那个详情页。名字只用于展示与 tiebreak，身份用 id。
+      id: meta.get(r.name)?.id ?? null,
       rating: meta.get(r.name)?.rating ?? null,
       level: meta.get(r.name)?.level ?? null,
     }));
@@ -369,9 +373,9 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
       <div className="space-y-2">
         {ranking.slice(0, 10).map((item, i) => {
           const vs = VERDICT_STYLE[item.ptsi.verdict];
-          const hit = useAppStore
-            .getState()
-            .spots.find((s) => s.name === item.name);
+          const hit = item.id
+            ? useAppStore.getState().spots.find((s) => s.id === item.id)
+            : undefined;
           return (
             <div
               key={item.name}
