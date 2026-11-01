@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="borrowed-light-15">
+  <meta name="aetheris-build" content="named-coasts-16">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -235,12 +235,18 @@
     .marker-dot { width: 7px; height: 7px; border: 1px solid var(--aqua); border-radius: 50%; background: rgba(165, 238, 225, .35); box-shadow: 0 0 10px rgba(120, 230, 205, .55); }
     .marker-stem { width: 1px; height: 14px; background: linear-gradient(180deg, rgba(165,238,225,.6), transparent); }
 
-    #siteReadout { position: absolute; z-index: 5; left: clamp(26px, 5.8vw, 105px); bottom: 137px; display: none; align-items: center; gap: 12px; color: #a8cfc2; font-size: 9px; font-weight: 700; letter-spacing: .22em; pointer-events: none; text-shadow: 0 1px 10px rgba(3, 10, 18, .8); }
+    #siteReadout { position: absolute; z-index: 5; left: clamp(26px, 5.8vw, 105px); bottom: 137px; display: none; align-items: center; flex-wrap: wrap; row-gap: 6px; max-width: calc(100vw - 52px); gap: 12px; color: #a8cfc2; font-size: 9px; font-weight: 700; letter-spacing: .22em; pointer-events: none; text-shadow: 0 1px 10px rgba(3, 10, 18, .8); }
     body[data-mode="ground"]:not(.transitioning) #siteReadout { display: flex; }
+    #siteReadout .readout-region { color: #86c3b4; font-size: 10px; letter-spacing: .26em; transition: color .8s ease; }
+    #siteReadout .readout-region.pulse { animation: zonePulse 1.6s cubic-bezier(.2,.7,.2,1); }
+    @keyframes zonePulse { 0% { color: #cdf6e6; letter-spacing: .5em; } 100% { color: #86c3b4; letter-spacing: .26em; } }
     #siteReadout .readout-biome { color: #e9f4ea; font-size: 11px; letter-spacing: .24em; }
     #siteReadout .readout-sep { width: 22px; height: 1px; background: rgba(165, 238, 225, .45); }
     @media (max-width: 760px), (pointer: coarse) {
-      #siteReadout { left: 23px; top: 84px; bottom: auto; font-size: 8px; gap: 8px; }
+      #siteReadout { left: 20px; right: 20px; top: 84px; bottom: auto; font-size: 8px; gap: 8px; max-width: none; row-gap: 4px; }
+      #siteReadout .readout-sep { width: 12px; }
+      #coordLabel { letter-spacing: .14em; }
+      #siteReadout .readout-region { font-size: 8px; }
       #siteReadout .readout-biome { font-size: 9px; }
       .marker-chip { font-size: 8px; padding: 4px 8px; }
     }
@@ -394,7 +400,7 @@
     <div id="pointerPrompt" class="pointer-prompt">CLICK THE WORLD TO LOOK AROUND &nbsp; / &nbsp; ESC TO RELEASE</div>
     <div class="mobile-hint"><span class="orbit-mobile-hint">DRAG TO ORBIT / PINCH TO ZOOM</span><span class="ground-mobile-hint">DRAG TO LOOK / PAD TO WALK</span></div>
     <div id="markers" aria-label="Nearby sanctuaries"></div>
-    <div id="siteReadout" aria-live="off"><span class="readout-biome" id="biomeLabel">LUMINOUS GROVE</span><span class="readout-sep"></span><span id="coordLabel">0.0°N 0.0°E</span></div>
+    <div id="siteReadout" aria-live="off"><span class="readout-region" id="regionLabel">VAELMAR</span><span class="readout-sep"></span><span class="readout-biome" id="biomeLabel">LUMINOUS GROVE</span><span class="readout-sep"></span><span id="coordLabel">0.0°N 0.0°E</span></div>
 
     <footer class="hud" aria-label="Exploration controls">
       <div class="mode-block">
@@ -427,7 +433,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'borrowed-light-15';
+    const BUILD_ID = 'named-coasts-16';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -1274,6 +1280,34 @@
         if (temperature > .62 && humidity < .43) return 'desert';
         if (temperature > .54 && humidity > .57) return 'tropical';
         return 'temperate';
+      }
+
+      // ---- Named geography -------------------------------------------------------------
+      // The terrain is procedural, so the five provinces are read off two things that already
+      // exist: latitude/longitude and the biome the climate model returns. Desert and basalt
+      // belong to Sennar, jungle to Mirella, ice and southern highlands to Caelth, the polar
+      // crystal basins to Vessper, everything temperate-north to Vaelmar. The result is stable
+      // for the whole session and never contradicts the biome label next to it.
+      const PROVINCE_NAMES = { vaelmar: 'VAELMAR', sennar: 'SENNAR', caelth: 'CAELTH', mirella: 'MIRELLA', vessper: 'VESSPER' };
+      function provinceAt(n, h) {
+        const lat = Math.asin(clamp(n.y, -1, 1)) * 180 / Math.PI;
+        const lon = Math.atan2(n.x, n.z) * 180 / Math.PI;
+        const biome = biomeAt(n, Math.max(h, SEA));
+        if (Math.abs(lat) >= 62) return 'vessper';
+        if (biome === 'tundra') return 'caelth';
+        if (biome === 'alpine') return lat < 0 ? 'caelth' : (Math.abs(lat) > 48 ? 'vessper' : 'vaelmar');
+        if (biome === 'desert' || biome === 'volcanic') return 'sennar';
+        if (biome === 'tropical') return 'mirella';
+        if (lat >= 16) return 'vaelmar';
+        return lon < 0 ? 'sennar' : 'mirella';
+      }
+      // Depth is arbitrary world units; this is a presentation scale only (≈ 4–350 m).
+      function depthMeters(depth) { return Math.round(4 + depth * 760); }
+      function waterAt(h) {
+        const depth = SEA - h;
+        if (depth < .06) return { id: 'mirror', name: 'MIRROR SEA' };
+        if (depth > .22) return { id: 'trench', name: 'VANE TRENCH' };
+        return { id: 'circling', name: 'CIRCLING OCEAN' };
       }
       const terrainTint = new THREE.Color();
       function colorTerrain(n, h) {
@@ -4326,15 +4360,25 @@
           }else entry.el.classList.remove('visible');
         }
       }
-      const biomeLabel=document.getElementById('biomeLabel'),coordLabel=document.getElementById('coordLabel');
+      const regionLabel=document.getElementById('regionLabel'),biomeLabel=document.getElementById('biomeLabel'),coordLabel=document.getElementById('coordLabel');
+      let readoutZone='';
       function updateReadout(){
         const n=state.direction,h=heightAt(n);
         const grove=noise(n.x*10+23,n.y*10-7,n.z*10)>-.28;
         const damp=noise(n.x*5.5-4,n.y*5.5+12,n.z*5.5+3)>.05;
         const biomeNow=biomeAt(n,h);
-        const biome=h<SEA-.006?'OPEN WATER':h<.034?'SHORELINE':h<.14&&damp&&(biomeNow==='temperate'||biomeNow==='tropical')?'WILLOW MARSH':
+        const inWater=h<SEA-.006,coast=!inWater&&h<.034;
+        const sea=inWater?waterAt(h):null;
+        const province=provinceAt(n,h);
+        const biome=inWater?`${depthMeters(SEA-h)} M DEEP`:coast?'SHORELINE':h<.14&&damp&&(biomeNow==='temperate'||biomeNow==='tropical')?'WILLOW MARSH':
           biomeNow==='desert'?'AMBER DUNES':biomeNow==='tropical'?'LUMINOUS JUNGLE':biomeNow==='tundra'?'FROST PLAIN':
           biomeNow==='volcanic'?'BASALT PROVINCE':biomeNow==='alpine'?'ALPINE RIDGE':h<.1?(grove?'LUMINOUS GROVE':'MEADOW TERRACE'):'HIGHLAND FOREST';
+        const region=sea?sea.name:PROVINCE_NAMES[province];
+        if(region!==readoutZone){
+          readoutZone=region;
+          regionLabel.textContent=region;
+          regionLabel.classList.remove('pulse');void regionLabel.offsetWidth;regionLabel.classList.add('pulse');
+        }
         biomeLabel.textContent=biome;
         const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
         coordLabel.textContent=`${Math.abs(lat).toFixed(1)}°${lat>=0?'N':'S'} ${Math.abs(lon).toFixed(1)}°${lon>=0?'E':'W'}`;
@@ -4716,6 +4760,9 @@
       window.aetheris={
         diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
+        where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
+          return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,
+            lat:Number(lat.toFixed(2)),lon:Number(lon.toFixed(2))};},
         costs:()=>({extraction:Number(costState.extraction.toFixed(3)),paid:Number(costState.paid.toFixed(2)),
           debt:Object.fromEntries(Object.entries(costState.debt).map(([k,v])=>[k,Number(v.toFixed(3))])),
           bio:Number(bioDebt.value.toFixed(3)),mantas:mantas.count})

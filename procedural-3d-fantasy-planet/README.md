@@ -48,6 +48,21 @@ python3 -m http.server 8080
 | 点击三座圣所路标 | 视角自动转向该遗迹（带一段平滑转身；按任意视角键会打断） |
 | `F` | 返回轨道，镜头沿地表弧线飞出 |
 
+#### 地表读数：这是哪一块大陆
+
+站在地表时，左下角（窄屏在左上角）那行小字现在是三段：**大陆 · 本地形态 · 坐标**。
+
+- 十进制坐标是**真值**：`23.6°N 42.1°E` 就是玩家当前的方向向量换算出来的。
+- 大陆名来自 `provinceAt()`，只用两样已有的东西推断：**纬度**与**气候模型给出的 biome**。因此它永远和旁边的形态标签自洽——
+  - 沙漠、玄武岩 → **SENNAR** 森纳荒原
+  - 热带 → **MIRELLA** 米瑞拉环礁
+  - 苔原、南半球高山 → **CAELTH** 凯尔高地
+  - |纬度| ≥ 62° → **VESSPER** 维斯珀孤陆
+  - 其余温带（含北半球高地） → **VAELMAR** 苍苔行省
+- 下水后名字换成水域，第二段变成**水深**：`MIRROR SEA`（< 50 m，浅、无风）、`CIRCLING OCEAN`（50–170 m，风暴带）、`VANE TRENCH`（> 170 m，光照与灵脉都到不了的深沟）。
+- 读数一旦跨区，会有一瞬间的**字距展开**动画（1.6 s），像盖了一次章；只是 HUD，不打扰视角。
+- 控制台：`aetheris.where()` → `{ province, water, depth, lat, lon }`。
+
 左下角的圆形方向盘与 `JUMP` 按钮**只在触屏设备上出现**（`(pointer: coarse)` 或无悬停的触摸屏），桌面端一律隐藏——电脑用 `WASD` + `Space` + 鼠标，窄窗口也不会再冒出手机控件。
 
 #### 地表移动手感
@@ -192,6 +207,7 @@ window.aetheris.events              // 全部事件 id
 window.aetheris.jump()              // 等同按 Space（仅地表模式生效）
 window.aetheris.detune()            // 手动触发一次"走音"（灯光抖动 + 双音失谐）
 window.aetheris.costs()             // { extraction, paid, debt:{light,air,sky,growth,fauna}, bio, mantas }
+window.aetheris.where()             // { province, water, depth, lat, lon }
 window.aetherisStartup              // 启动阶段、自检结果、错误详情
 ```
 
