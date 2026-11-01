@@ -11,6 +11,11 @@ const __dirname = path.dirname(__filename);
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), viteSingleFile()],
+  css: {
+    // Inline (empty) PostCSS config prevents Vite from resolving a stray
+    // postcss.config.mjs in a parent directory (e.g. Downloads).
+    postcss: {},
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
