@@ -5220,39 +5220,46 @@
           // 1. The way-stones, always. These are what you see from a distance: two slim shafts
           //    standing on the altar's own ground, just outside the hanging rock, carrying lamps.
           //    They are narrow enough to stand between buildings, so no town can swallow them.
-          // First look for open ground at the edge of the town; only if there is none, squeeze the
-          // gate into the street. A sanctuary prefers the field to the gutter.
-          let gate = null, gateAway = null, flank = null, lone = false, gateClear = 0;
-          for (const [near, far] of [[.30, .52], [.16, .30]]) {
-            let gape = -9;
-            for (const needClear of [.015, .005, -.012, -.025, -.05, -.09]) {
-              for (const { chord, dir } of candidates) {
-                if (chord < near || chord > far || !dry(dir)) continue;
-                const away = openBearing(dir, altar);
-                const across = new THREE.Vector3().crossVectors(dir, away).normalize();
-                for (const side of [across, across.clone().negate()]) {
-                  const feet = [-1, 1].map(k => dir.clone().addScaledVector(side, k * .035).normalize());
-                  if (!feet.every(dry)) continue;
-                  // Two sanctuaries may stand close enough to share a horizon: keep each gate its own.
-                  if (landmarks.some(other => other !== landmark && other.direction.angleTo(dir) < altar.angleTo(dir) - .02)) continue;
-                  // Each shaft is anchored to whatever it stands on, so a step between them is a
-                  // gate on a hillside, not a floating one — but a big step would look wrong.
-                  const levels = [surfaceAt(dir), ...feet.map(surfaceAt)];
-                  const drop = Math.max(...levels) - Math.min(...levels);
-                  if (drop > .25) continue;
-                  const clear = Math.min(...feet.map(clearanceAt));
-                  if (clear < needClear) continue;             // never stand a shaft inside a wall
-                  const score = clear - drop * .5 - Math.abs(chord - .34) * .12;
-                  if (score > gape) { gape = score; gate = dir; gateAway = away; flank = side; gateClear = clear; }
-                }
-              }
-              if (gate) break;
+          // Score every place a gate could stand, once: dry ground, both feet on one level, as far
+          // from the town's walls as the street allows. The open ring outside the town wins ties —
+          // a sanctuary prefers the field to the gutter.
+          const spots = [];
+          for (const { chord, dir } of candidates) {
+            if (!dry(dir)) continue;
+            // Two sanctuaries may stand close enough to share a horizon: keep each gate its own.
+            if (landmarks.some(other => other !== landmark && other.direction.angleTo(dir) < altar.angleTo(dir) - .02)) continue;
+            // The gate faces its altar: you walk through it on the way in.
+            const across = new THREE.Vector3().crossVectors(dir, altar).normalize();
+            for (const side of [across, across.clone().negate()]) {
+              const feet = [-1, 1].map(k => dir.clone().addScaledVector(side, k * .035).normalize());
+              if (!feet.every(dry)) continue;
+              // Each shaft is anchored to whatever it stands on, so a step between them is a gate
+              // on a hillside, not a floating one — but a big step would look wrong.
+              const clear = Math.min(...feet.map(clearanceAt));
+              if (clear < -.09) continue;                  // too buried to be worth costing out
+              spots.push({ chord, dir, side, feet, clear });
             }
-            if (gate) break;
+          }
+          // Only the roomiest few are worth the cost of measuring the ground under them.
+          spots.sort((a, b) => b.clear - a.clear);
+          spots.length = Math.min(spots.length, 24);
+          for (const spot of spots) {
+            // Each shaft is anchored to whatever it stands on, so a step between them is a gate on
+            // a hillside, not a floating one — but a big step would look wrong.
+            const levels = [surfaceAt(spot.dir), ...spot.feet.map(surfaceAt)];
+            spot.drop = Math.max(...levels) - Math.min(...levels);
+            spot.score = spot.drop > .25 ? -99
+              : spot.clear - spot.drop * .5 + (spot.chord > .29 ? .03 : 0) - Math.abs(spot.chord - .40) * .10;
+          }
+          spots.sort((a, b) => b.score - a.score);
+          let gate = null, gateAway = null, flank = null, lone = false, gateClear = 0;
+          if (spots.length) {
+            const pick = spots[0];
+            gate = pick.dir; gateAway = openBearing(pick.dir, altar); flank = pick.side; gateClear = pick.clear;
           }
           // A gate whose own two feet cannot stand clear is worse than a single stone: a lone
           // way-stone fits where a pair cannot, and reads as the last marker of a lost shrine.
-          if (gate && gateClear < -.03) { gate = null; lone = true; }
+          if (gate && gateClear < -.085) { gate = null; lone = true; }
           if (!gate) {
             // No room for a gate: one stone, standing where the street leaves the most space.
             let best = null, bestClear = -.09;
@@ -5272,7 +5279,7 @@
           const stoneH = .34, stoneW = .018;   // twice a house: a sanctuary is meant to be seen
           const seats = [];
           for (const side of lone ? [0] : [-1, 1]) {
-            const sd = side ? gate.clone().addScaledVector(flank, side * .035).normalize() : gate;
+            const sd = side ? gate.clone().addScaledVector(flank, side * .030).normalize() : gate;
             if (!dry(sd)) continue;
             const b = pavingTopAt(sd);
             putGround('column', mat, sd, b, 0, stoneW, stoneH, stoneW);
@@ -5281,7 +5288,7 @@
           }
           // The lintel only goes up when the two shafts are close enough in height to carry it.
           if (seats.length === 2 && Math.max(...seats) - Math.min(...seats) < .03)
-            putGround('beam', mat, gate, Math.max(...seats) + stoneH, bearing(gate, flank), .085, .070, .016);
+            putGround('beam', mat, gate, Math.max(...seats) + stoneH, bearing(gate, flank), .075, .068, .016);
           // The apron: paving laid over whatever the town put here, sunk to the local ground. It
           // grows until its rim starts to bite into a wall, so the precinct is as wide as the
           // street corner allows and never wider.
