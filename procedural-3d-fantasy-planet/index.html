@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="tall-eye-18">
+  <meta name="aetheris-build" content="solid-towns-19">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -493,7 +493,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'tall-eye-18';
+    const BUILD_ID = 'solid-towns-19';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -757,6 +757,9 @@
       // Global multiplier on every bioluminescent term: 1 = healthy, lower = the Concordat has
       // been taking more than the biosphere can give. Driven by the operation-cost ledger below.
       const bioDebt = { value: 1 };
+      // Ground cover is flattened inside a small bubble around the camera: you walk through ferns
+      // instead of into them. GPU-side, so it costs nothing and works on instanced geometry.
+      const clearBubble = { value: new THREE.Vector3(0, 1e6, 0) };
       const eventTint = new THREE.Color(0x2ad8c0);
       const eventFx = { glow: 0, ley: 0, chill: 0, meteor: 0, migration: 0, tint: 0 };
       const eventRandom = seeded(20260214);
@@ -3122,18 +3125,26 @@
         shader.uniforms.uUnderSun = { value: sun };
         shader.uniforms.uEventGlow = eventGlow;
         shader.uniforms.uBioDebt = bioDebt;
+        shader.uniforms.uClearBubble = clearBubble;
         shader.vertexShader = shader.vertexShader
-          .replace('#include <common>', '#include <common>\nuniform float uForestTime;\nvarying vec3 vUnderWorld;\nvarying float vUnderY;')
+          .replace('#include <common>', '#include <common>\nuniform float uForestTime;\nuniform vec3 uClearBubble;\nvarying vec3 vUnderWorld;\nvarying float vUnderY;')
           .replace('#include <begin_vertex>', `
           #include <begin_vertex>
           vUnderY = position.y;
           float underPhase = 0.0;
+          vec3 underOrigin;
           #ifdef USE_INSTANCING
             underPhase = instanceMatrix[3].x*9.0 + instanceMatrix[3].z*7.0;
+            underOrigin = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
             vUnderWorld = (modelMatrix * instanceMatrix * vec4(position, 1.0)).xyz;
           #else
+            underOrigin = (modelMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
             vUnderWorld = (modelMatrix * vec4(position, 1.0)).xyz;
           #endif
+          // Shrink the plant toward its own base as the camera approaches: the clearance bubble is
+          // 0.06 units at the centre and gone by 0.20, so nothing ever sits in your face.
+          float clearK = smoothstep(0.06, 0.20, distance(underOrigin, uClearBubble));
+          transformed *= mix(0.06, 1.0, clearK);
           float underBend = position.y*position.y*6.0;
           transformed.x += sin(uForestTime*2.3+underPhase)*underBend*.12;
           transformed.z += cos(uForestTime*1.9+underPhase*1.3)*underBend*.09;
@@ -3181,7 +3192,7 @@
           if (h < .032 || h > .29) continue;
           transform.position.copy(n).multiplyScalar(R + h - .002);
           transform.quaternion.setFromUnitVectors(UP, n); transform.rotateY(rng() * TAU); transform.rotateX((rng() - .5) * .15);
-          transform.scale.setScalar(.65 + rng() * .7); transform.updateMatrix();
+          transform.scale.setScalar(.52 + rng() * .55); transform.updateMatrix();
           fern.setColorAt(fernCount, instanceTint.setHSL(.28 + rng() * .04, .3, .72 + rng() * .24));
           fern.setMatrixAt(fernCount++, transform.matrix);
         }
@@ -3196,7 +3207,7 @@
           if (h < .045 || h > .2) continue;
           transform.position.copy(n).multiplyScalar(R + h - .001);
           transform.quaternion.setFromUnitVectors(UP, n); transform.rotateY(rng() * TAU);
-          transform.scale.setScalar(.6 + rng() * .65); transform.updateMatrix();
+          transform.scale.setScalar(.5 + rng() * .5); transform.updateMatrix();
           flowers.setColorAt(flowerCount, instanceTint.setHSL(.1 + rng() * .12, .18 + rng() * .3, .82 + rng() * .16));
           flowers.setMatrixAt(flowerCount++, transform.matrix);
         }
@@ -3657,20 +3668,24 @@
       // wells in Sennar, observatory domes on Caelth, stilt rings in Mirella, crystal shards on
       // Vessper. Clusters are static and instanced, so crossing a border changes the skyline.
       const provinceMat = {
-        timber: new THREE.MeshStandardMaterial({ color: 0x6a6049, roughness: .93, metalness: 0 }),
-        basalt: new THREE.MeshStandardMaterial({ color: 0x4b4741, roughness: .88, metalness: .05 }),
-        pale: new THREE.MeshStandardMaterial({ color: 0xbab6a5, roughness: .82, metalness: .02 }),
-        glass: new THREE.MeshStandardMaterial({ color: 0xa8cfc6, roughness: .32, metalness: .32, emissive: 0x2b6d63, emissiveIntensity: .55 }),
-        crystal: new THREE.MeshStandardMaterial({ color: 0xa9c6d8, roughness: .22, metalness: .12, emissive: 0x497ea0, emissiveIntensity: .40 })
+        // Provincial materials are mid-tone on purpose: the old near-black basalt read as sticks
+        // against the terrain, not as built mass.
+        timber: new THREE.MeshStandardMaterial({ color: 0x8b7a5d, roughness: .92, metalness: 0 }),
+        basalt: new THREE.MeshStandardMaterial({ color: 0x7d7468, roughness: .84, metalness: .06 }),
+        pale: new THREE.MeshStandardMaterial({ color: 0xc6c1ad, roughness: .78, metalness: .02 }),
+        glass: new THREE.MeshStandardMaterial({ color: 0xb6ded4, roughness: .30, metalness: .34, emissive: 0x2f7a6f, emissiveIntensity: .60 }),
+        crystal: new THREE.MeshStandardMaterial({ color: 0xb4cfe0, roughness: .20, metalness: .10, emissive: 0x5a8db2, emissiveIntensity: .42 }),
+        lamp: new THREE.MeshStandardMaterial({ color: 0x2a1c10, roughness: .55, metalness: .08, emissive: 0xffb35e, emissiveIntensity: 1.7 })
       };
       const provinceGeo = {
-        tower: new THREE.CylinderGeometry(.006, .011, 1, 6, 1),
+        tower: new THREE.CylinderGeometry(.012, .020, 1, 8, 1),
         block: new THREE.BoxGeometry(1, 1, 1, 1, 1, 1),
         dome: new THREE.SphereGeometry(1, 10, 6, 0, TAU, 0, Math.PI / 2),
         disc: new THREE.CylinderGeometry(1, 1, .08, 12, 1),
-        ring: new THREE.TorusGeometry(1, .05, 4, 16),
+        ring: new THREE.TorusGeometry(1, .07, 5, 18),
         shard: new THREE.OctahedronGeometry(1, 0),
-        cone: new THREE.ConeGeometry(.5, 1, 5, 1)
+        cone: new THREE.ConeGeometry(.5, 1, 6, 1),
+        lamp: new THREE.OctahedronGeometry(1, 0)
       };
       function provinceDressing() {
         const rng = seeded(52033);
@@ -3725,86 +3740,87 @@
             const face = () => spin.setFromAxisAngle(UP, rng() * TAU);
             const lean = angle => tiltQ.setFromAxisAngle(axis.set(Math.cos(angle), 0, Math.sin(angle)).normalize(), rng() * .5);
             if (id === 'vaelmar') {
-              // Signature: one archive tree far taller than anything else in the town.
-              const spire = .20 + rng() * .10;
-              push('tower', 'timber', at(.012, -.008, spire * .5), q, new THREE.Vector3(.9, spire, .9));
-              push('dome', 'glass', at(.012, -.008, spire * .99), q, new THREE.Vector3(.032, .026, .032));
-              for (let i = 0, n = 5 + Math.floor(rng() * 4); i < n; i++) {
-                const e = (rng() - .5) * .13, nn = (rng() - .5) * .13, height = (.06 + rng() * .09) * k;
-                face();
-                push('tower', 'timber', at(e, nn, height * .5), q.clone().multiply(spin), new THREE.Vector3(.8 + rng() * .8, height, .8 + rng() * .8));
-                push('dome', 'glass', at(e, nn, height * .97), q, new THREE.Vector3(.022 + rng() * .014, .018 + rng() * .014, .022 + rng() * .014));
-              }
-              for (let i = 0; i < 3; i++) {
-                const a = rng() * TAU, len = (.09 + rng() * .08) * k;
-                face();
-                push('block', 'timber', at(Math.cos(a) * len, Math.sin(a) * len, .05 + rng() * .05), q.clone().multiply(spin), new THREE.Vector3(len * 1.8, .004, .006));
-              }
-            } else if (id === 'sennar') {
-              // Signature: a wind tower with its mirror well tilted toward the sun.
-              const tower = .18 + rng() * .09;
-              push('block', 'basalt', at(0, 0, tower * .5), q, new THREE.Vector3(.016, tower, .016));
-              lean(rng() * TAU); tiltQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.62));
-              push('disc', 'glass', at(.03, .02, .012), q.clone().multiply(tiltQ), new THREE.Vector3(.045, 1, .045));
+              // A raised moss platform, one archive tower, and timber houses with lit crowns.
+              push('block', 'timber', at(0, 0, .004), q, new THREE.Vector3(.20 * k, .010, .20 * k));
+              const spire = (.16 + rng() * .12) * k;
+              push('tower', 'timber', at(.02, -.01, spire * .5), q, new THREE.Vector3(2.1, spire, 2.1));
+              push('dome', 'glass', at(.02, -.01, spire * .98), q, new THREE.Vector3(.036, .030, .036));
               for (let i = 0, n = 4 + Math.floor(rng() * 3); i < n; i++) {
-                const e = (rng() - .5) * .11, nn = (rng() - .5) * .11, height = (.07 + rng() * .09) * k;
-                push('block', 'basalt', at(e, nn, height * .5), q, new THREE.Vector3(.012 + rng() * .008, height, .012 + rng() * .008));
-              }
-              for (let i = 0; i < 3; i++) {
-                lean(rng() * TAU); tiltQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.5 - rng() * .4));
-                push('disc', 'glass', at((rng() - .5) * .12, (rng() - .5) * .12, .008 + rng() * .022), q.clone().multiply(tiltQ), new THREE.Vector3(.022 + rng() * .02, 1, .022 + rng() * .02));
+                const e = (rng() - .5) * .13, nn = (rng() - .5) * .13, height = (.05 + rng() * .06) * k;
+                face();
+                push('block', 'timber', at(e, nn, height * .5), q.clone().multiply(spin), new THREE.Vector3(.042, height, .042));
+                push('cone', 'timber', at(e, nn, height + .008), q, new THREE.Vector3(.062, .026, .062));
+                push('lamp', 'lamp', at(e, nn, height * .68), q, new THREE.Vector3(.006, .008, .006));
               }
               for (let i = 0; i < 2; i++) {
-                const a = rng() * TAU, len = (.08 + rng() * .07) * k;
-                push('block', 'basalt', at(Math.cos(a) * len, Math.sin(a) * len, .006), q, new THREE.Vector3(len * 1.7, .014, .006));
+                const a = rng() * TAU, len = (.09 + rng() * .08) * k;
+                face();
+                push('block', 'timber', at(Math.cos(a) * len, Math.sin(a) * len, .05 + rng() * .05), q.clone().multiply(spin), new THREE.Vector3(len * 1.8, .006, .007));
+              }
+            } else if (id === 'sennar') {
+              // Plinth, one fat wind tower with a cap, a mirror well, and flat-roofed houses.
+              push('block', 'basalt', at(0, 0, .005), q, new THREE.Vector3(.22 * k, .010, .19 * k));
+              const tower = (.13 + rng() * .09) * k;
+              push('tower', 'basalt', at(-.03, .01, tower * .5), q, new THREE.Vector3(2.4, tower, 2.4));
+              push('cone', 'basalt', at(-.03, .01, tower + .012), q, new THREE.Vector3(.075, .05, .075));
+              push('block', 'basalt', at(-.03, .01, tower * .62), q, new THREE.Vector3(.070, .010, .070));
+              lean(rng() * TAU); tiltQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.58));
+              push('disc', 'glass', at(.055, .045, .020), q.clone().multiply(tiltQ), new THREE.Vector3(.062, 1, .062));
+              for (let i = 0, n = 3 + Math.floor(rng() * 3); i < n; i++) {
+                const e = (rng() - .5) * .14, nn = (rng() - .5) * .14, height = (.04 + rng() * .06) * k;
+                face();
+                push('block', 'basalt', at(e, nn, height * .5), q.clone().multiply(spin), new THREE.Vector3(.046, height, .040));
+                push('block', 'basalt', at(e, nn, height + .006), q, new THREE.Vector3(.052, .010, .046));
+                push('lamp', 'lamp', at(e, nn, height * .55), q, new THREE.Vector3(.005, .007, .005));
+              }
+              for (let i = 0; i < 2; i++) {
+                const a = rng() * TAU, len = (.07 + rng() * .06) * k;
+                push('block', 'basalt', at(Math.cos(a) * len, Math.sin(a) * len, .008), q, new THREE.Vector3(len * 1.7, .018, .012));
               }
             } else if (id === 'caelth') {
-              // Signature: one observatory dome with a spire that clears the snow.
-              const domeR = (.05 + rng() * .02) * k, spire = .20 + rng() * .10;
-              push('dome', 'pale', at(0, 0, .002), q, new THREE.Vector3(domeR, domeR * .78, domeR));
-              push('block', 'pale', at(0, 0, domeR * .52), q, new THREE.Vector3(domeR * 2.1, domeR * 1.05, domeR * 2.1));
-              push('tower', 'pale', at(domeR * 1.2, domeR * .9, spire * .5), q, new THREE.Vector3(.5, spire, .5));
+              // A heavy base drum, one dome, a slit window, and a watch spire beside it.
+              const R0 = (.05 + rng() * .025) * k;
+              push('block', 'pale', at(0, 0, R0 * .30), q, new THREE.Vector3(R0 * 2.2, R0 * .62, R0 * 2.2));
+              push('dome', 'pale', at(0, 0, R0 * .60), q, new THREE.Vector3(R0, R0 * .82, R0));
+              push('lamp', 'lamp', at(R0 * .55, R0 * .3, R0 * 1.02), q, new THREE.Vector3(.006, .007, .006));
+              const spire = (.16 + rng() * .10) * k;
+              push('tower', 'pale', at(-R0 * 1.7, R0 * .9, spire * .5), q, new THREE.Vector3(1.5, spire, 1.5));
+              push('cone', 'pale', at(-R0 * 1.7, R0 * .9, spire + .01), q, new THREE.Vector3(.045, .034, .045));
               for (let i = 0, n = 2 + Math.floor(rng() * 2); i < n; i++) {
-                const e = (rng() - .5) * .12, nn = (rng() - .5) * .12, r = (.026 + rng() * .026) * k;
+                const e = (rng() - .5) * .13, nn = (rng() - .5) * .13, r = (.025 + rng() * .022) * k;
                 face();
-                push('dome', 'pale', at(e, nn, .002), q.clone().multiply(spin), new THREE.Vector3(r, r * (.7 + rng() * .2), r));
-                push('block', 'pale', at(e, nn, r * .5), q, new THREE.Vector3(r * 1.9, r * 1.05, r * 1.9));
-              }
-              for (let i = 0; i < 4; i++) {
-                const height = (.09 + rng() * .10) * k;
-                push('tower', 'pale', at((rng() - .5) * .12, (rng() - .5) * .12, height * .5), q, new THREE.Vector3(.45, height, .45));
+                push('block', 'pale', at(e, nn, r * .34), q.clone().multiply(spin), new THREE.Vector3(r * 2.3, r * .68, r * 2.3));
+                push('dome', 'pale', at(e, nn, r * .62), q, new THREE.Vector3(r, r * .80, r));
+                push('lamp', 'lamp', at(e, nn, r * .62), q, new THREE.Vector3(.005, .006, .005));
               }
             } else if (id === 'mirella') {
-              // Signature: a stilt watchtower wearing a singing ring.
-              const lift = .06 + rng() * .05;
-              push('block', 'timber', at(0, 0, lift + .012), q, new THREE.Vector3(.022, .016, .022));
-              for (let k4 = 0; k4 < 4; k4++) {
-                const a = k4 * TAU / 4 + .78;
-                push('tower', 'timber', at(Math.cos(a) * .009, Math.sin(a) * .009, lift * .5), q, new THREE.Vector3(.3, lift, .3));
-              }
-              push('ring', 'glass', at(0, 0, lift + .032), q, new THREE.Vector3(.075, .075, .016));
-              for (let i = 0, n = 3 + Math.floor(rng() * 3); i < n; i++) {
-                const e = (rng() - .5) * .13, nn = (rng() - .5) * .13, h2 = (.03 + rng() * .05) * k;
-                face();
-                push('block', 'timber', at(e, nn, h2 + .01), q.clone().multiply(spin), new THREE.Vector3(.02, .014, .02));
+              // A ring of stilt houses over a shallow platform, each under a singing ring.
+              push('disc', 'timber', at(0, 0, .006), q, new THREE.Vector3(.17 * k, 1, .17 * k));
+              for (let i = 0, n = 4 + Math.floor(rng() * 2); i < n; i++) {
+                const a = i * TAU / n + rng() * .3, d = .07 + rng() * .05, h2 = (.045 + rng() * .04) * k;
+                const e = Math.cos(a) * d, nn = Math.sin(a) * d;
                 for (let k4 = 0; k4 < 4; k4++) {
-                  const a = k4 * TAU / 4 + .78;
-                  push('tower', 'timber', at(e + Math.cos(a) * .008, nn + Math.sin(a) * .008, h2 * .5), q, new THREE.Vector3(.24, h2, .24));
+                  const b = k4 * TAU / 4 + .78;
+                  push('tower', 'timber', at(e + Math.cos(b) * .012, nn + Math.sin(b) * .012, h2 * .5), q, new THREE.Vector3(.5, h2, .5));
                 }
-                push('ring', 'glass', at(e, nn, h2 + .026), q.clone().multiply(spin), new THREE.Vector3(.02 + rng() * .012, .02 + rng() * .012, .012));
+                push('block', 'timber', at(e, nn, h2 + .012), q, new THREE.Vector3(.048, .016, .048));
+                push('cone', 'timber', at(e, nn, h2 + .035), q, new THREE.Vector3(.066, .024, .066));
+                push('ring', 'glass', at(e, nn, h2 + .052), q, new THREE.Vector3(.036, .036, .010));
+                push('lamp', 'lamp', at(e, nn, h2 + .022), q, new THREE.Vector3(.006, .007, .006));
               }
-              push('ring', 'glass', at(0, 0, .014), q, new THREE.Vector3(.09, .09, .022));
+              push('ring', 'glass', at(0, 0, .020), q, new THREE.Vector3(.10, .10, .024));
             } else {
-              // Signature: a launch crystal, half again taller than the shard field around it.
-              const big = .24 + rng() * .10;
+              // A launch basin: a wide base ring, one tall crystal, and a field of shards.
+              push('ring', 'crystal', at(0, 0, .008), q, new THREE.Vector3(.10, .10, .05));
+              const big = (.20 + rng() * .10) * k;
               lean(rng() * TAU);
-              push('shard', 'crystal', at(0, 0, big * .5), q.clone().multiply(tiltQ), new THREE.Vector3(.014, big * .5, .014));
-              for (let i = 0, n = 6 + Math.floor(rng() * 4); i < n; i++) {
-                const a = rng() * TAU, d = rng() * .14, height = (.05 + rng() * .10) * k, t = rng() * .5;
+              push('shard', 'crystal', at(0, 0, big * .5), q.clone().multiply(tiltQ), new THREE.Vector3(.022, big * .5, .022));
+              push('lamp', 'lamp', at(0, 0, big * .9), q, new THREE.Vector3(.007, .009, .007));
+              for (let i = 0, n = 5 + Math.floor(rng() * 4); i < n; i++) {
+                const a = rng() * TAU, d = rng() * .13, height = (.05 + rng() * .09) * k, t = rng() * .45;
                 face(); tiltQ.setFromAxisAngle(axis.set(Math.cos(a), 0, Math.sin(a)).normalize(), t);
-                push('shard', 'crystal', at(Math.cos(a) * d, Math.sin(a) * d, height * .5), q.clone().multiply(tiltQ), new THREE.Vector3(.008 + rng() * .008, height * .5, .008 + rng() * .008));
+                push('shard', 'crystal', at(Math.cos(a) * d, Math.sin(a) * d, height * .5), q.clone().multiply(tiltQ), new THREE.Vector3(.010 + rng() * .008, height * .5, .010 + rng() * .008));
               }
-              push('ring', 'crystal', at(0, 0, .006), q, new THREE.Vector3(.09, .09, .04));
             }
           }
         }
@@ -3855,26 +3871,37 @@
       // Mirella, crystal dust on Vessper. Ambient life rather than creatures you can touch —
       // the manta flocks remain the only large fauna.
       const FAUNA = {
-        vaelmar: { color: 0xffd6a0, size: .040, speed: .55, lift: .045, opacity: .80 },
-        sennar: { color: 0xd8f4ff, size: .028, speed: 1.55, lift: .012, opacity: .72 },
-        caelth: { color: 0xe6f0fa, size: .034, speed: .34, lift: -.014, opacity: .68 },
-        mirella: { color: 0x8ff0dc, size: .038, speed: .78, lift: .050, opacity: .82 },
-        vessper: { color: 0xcbb8ff, size: .030, speed: .95, lift: .020, opacity: .75 }
+        vaelmar: { color: 0xffd6a0, size: .040, speed: 1.0, lift: .010, opacity: .80 },
+        sennar: { color: 0xd8f4ff, size: .028, speed: 1.7, lift: .004, opacity: .72 },
+        caelth: { color: 0xe6f0fa, size: .034, speed: .8, lift: -.014, opacity: .68 },
+        mirella: { color: 0x8ff0dc, size: .038, speed: 1.2, lift: .014, opacity: .82 },
+        vessper: { color: 0xcbb8ff, size: .030, speed: 1.4, lift: .006, opacity: .75 }
       };
+      // Motes live in world space and drift on their own velocities, then wrap inside a box
+      // around the player. Rebuilding them from the camera every frame (the first version) glued
+      // them to the lens and made every head turn read as a stutter.
       const moteRand = seeded(9341), MOTE_COUNT = compact ? 110 : 190;
-      const moteBase = new Float32Array(MOTE_COUNT * 3), motePhase = new Float32Array(MOTE_COUNT);
+      const MOTE_BOX = .36, MOTE_UP = .14, MOTE_DOWN = .10;
+      const motePos = new Float32Array(MOTE_COUNT * 3), moteVel = new Float32Array(MOTE_COUNT * 3), motePhase = new Float32Array(MOTE_COUNT);
+      let moteSeeded = false;
       for (let i = 0; i < MOTE_COUNT; i++) {
-        const n = randomDirection(moteRand), r = .05 + moteRand() * .22;
-        moteBase[i * 3] = n.x * r; moteBase[i * 3 + 1] = (moteRand() - .5) * .12 - .02; moteBase[i * 3 + 2] = n.z * r;
+        const a = moteRand() * TAU, r = Math.sqrt(moteRand()) * MOTE_BOX, va = moteRand() * TAU;
+        motePos[i * 3] = Math.cos(a) * r;
+        motePos[i * 3 + 1] = (moteRand() - .5) * (MOTE_UP + MOTE_DOWN);
+        motePos[i * 3 + 2] = Math.sin(a) * r;
+        moteVel[i * 3] = Math.cos(va) * (.005 + moteRand() * .009);
+        moteVel[i * 3 + 1] = (moteRand() - .5) * .005;
+        moteVel[i * 3 + 2] = Math.sin(va) * (.005 + moteRand() * .009);
         motePhase[i] = moteRand() * TAU;
       }
       const moteGeo = new THREE.BufferGeometry();
-      moteGeo.setAttribute('position', new THREE.BufferAttribute(moteBase.slice(), 3));
-      const moteMat = new THREE.PointsMaterial({ map: softGlow, color: 0xffd6a0, size: .026, transparent: true,
-        opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+      moteGeo.setAttribute('position', new THREE.BufferAttribute(motePos, 3));
+      const moteMat = new THREE.PointsMaterial({ map: softGlow, color: 0xffd6a0, size: .030, transparent: true,
+        opacity: .7, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true });
       const motes = new THREE.Points(moteGeo, moteMat);
       motes.frustumCulled = false; motes.visible = false;
       scene.add(motes);
+      const moteEast = new THREE.Vector3(), moteNorth = new THREE.Vector3(), moteRef = new THREE.Vector3();
       let motesProvince = '';
       const mantaPos = new THREE.Vector3(), mantaAhead = new THREE.Vector3();
       for (const flock of flocks) flock.angle = flock.phase;
@@ -4263,7 +4290,7 @@
       // planted, air control is weak, and jumping uses a two-stage (tap = short hop) impulse.
       const WALK_SPEED = .34, SPRINT_SPEED = .66, SWIM_SPEED = .2;
       // Swimming: dive with C, rise with SPACE, float up slowly when you let go.
-      const DIVE_SPEED = .055, RISE_SPEED = .085, BUOYANCY = .016, MAX_DIVE = .30, SUBMERGE_EYE = .038;
+      const DIVE_SPEED = .055, RISE_SPEED = .085, BUOYANCY = .016, MAX_DIVE = .30, SWIM_EYE = .033;
       const GROUND_ACCEL = 7.5, GROUND_BRAKE = 11, AIR_ACCEL = 2.6;
       const GRAVITY = 3.15, JUMP_SPEED = .78, COYOTE_TIME = .1, JUMP_BUFFER_TIME = .14;
       const PITCH_LIMIT = 1.48;
@@ -4452,19 +4479,40 @@
         // C is context-sensitive: dive under water, crouch on land.
         const wantCrouch=!state.water&&(keys.has('KeyC')||touchDive);
         state.crouch+=((wantCrouch?1:0)-state.crouch)*(1-Math.exp(-dt*16));
-        const footRadius=R+Math.max(elevation,SEA), eyeHeight=state.water ? .033 : mix(EYE,CROUCH_EYE,state.crouch);
+        const standEye=mix(EYE,CROUCH_EYE,state.crouch);
+        // The floor is the actual terrain, not the water plane: clamping it to SEA used to make
+        // the camera jump by exactly the water depth the moment the flag flipped.
+        const footRadius=R+elevation, eyeHeight=state.water ? SWIM_EYE : standEye;
         if (state.water) {
-          // Swimming keeps its own vertical axis: the sea floor is the only hard limit.
-          const seabed=Math.max(0,SEA-elevation-.008);
-          const diving=keys.has('KeyC')||touchDive;
-          const rising=keys.has('Space')||touchRise;
-          const drift=diving?DIVE_SPEED:rising?-RISE_SPEED:-BUOYANCY;
-          state.depth=clamp(state.depth+drift*dt,0,Math.min(seabed,MAX_DIVE));
-          state.radius=footRadius+eyeHeight-state.depth;
-          state.velocity=0;
-          state.grounded=state.depth<.004;
-          state.coyote=state.grounded?COYOTE_TIME:0;
-          state.submerged=state.depth>SUBMERGE_EYE;
+          // Wading and swimming are two ends of one curve. Standing on the seabed puts the eye at
+          // ground+standEye; floating puts it at the waterline+SWIM_EYE. Those two meet exactly at
+          // waterDepth = standEye - SWIM_EYE, so as the floor drops away there is no step in the
+          // camera — it only changes slope, which is what stepping into deep water should feel like.
+          const waterDepth=SEA-elevation;
+          const wadeDepth=Math.max(.02,standEye-SWIM_EYE);
+          const floating=smooth(wadeDepth*.9,wadeDepth*1.3,waterDepth);
+          const standR=R+elevation+standEye;
+          const floatR=R+SEA+SWIM_EYE-state.depth;
+          const restR=Math.max(standR,floatR);
+          if (state.radius>restR+.008) {
+            // Still falling toward the sea (jumped from a ledge): keep the fall, break the surface once.
+            state.velocity-=GRAVITY*dt;
+            state.radius+=state.velocity*dt;
+            if (state.radius<=restR) { state.radius=restR; state.velocity=0; state.landDip=.006; state.depth=0; }
+            state.grounded=false;
+            state.coyote=0;
+          } else {
+            const seabed=Math.max(0,waterDepth-.008);
+            const diving=keys.has('KeyC')||touchDive;
+            const rising=keys.has('Space')||touchRise;
+            const drift=diving?DIVE_SPEED:rising?-RISE_SPEED:-BUOYANCY;
+            state.depth=floating<=0?0:clamp(state.depth+drift*dt,0,Math.min(seabed,MAX_DIVE));
+            state.radius=mix(standR,floatR,floating);
+            state.velocity=0;
+            state.grounded=floating<.5;
+            state.coyote=state.grounded?COYOTE_TIME:0;
+          }
+          state.submerged=state.radius<R+SEA-.004;
         } else {
           state.depth=0; state.submerged=false;
           state.velocity-=GRAVITY*dt;
@@ -5081,6 +5129,7 @@
         // is not moving through the shadow volume, so the same refresh cadence as walking is waste.
         const shadowStride=surface?[3,5,8][quality.tier]:[10,14,20][quality.tier];
         if(frame%shadowStride===0)renderer.shadowMap.needsUpdate=true;
+        clearBubble.value.copy(camera.position);
         pulseTime.value=waterUniforms.uTime.value=sporeUniforms.uTime.value=elapsed;
         forestTime.value=elapsed*(.72+weatherNow.wind*.52);
         clouds[0].rotation.y=elapsed*(.0035+weatherNow.wind*.004);clouds[1].rotation.y=1.7-elapsed*(.0028+weatherNow.wind*.002);
@@ -5203,14 +5252,36 @@
               motesProvince=provinceNow;
               moteMat.color.setHex(fauna.color);moteMat.size=fauna.size;moteMat.opacity=fauna.opacity;
             }
-            motes.position.copy(camera.position);
-            motes.quaternion.setFromUnitVectors(UP,state.direction);
-            const mp=moteGeo.attributes.position,mt=elapsed*fauna.speed;
+            if(!moteSeeded){
+              moteSeeded=true;
+              for(let i=0;i<MOTE_COUNT;i++){motePos[i*3]+=camera.position.x;motePos[i*3+1]+=camera.position.y;motePos[i*3+2]+=camera.position.z;}
+            }
+            // Tangent frame: east/north on the player's local horizon, so wrapping happens in the
+            // plane you are standing in rather than in world axes.
+            moteRef.set(0,1,0);
+            if(Math.abs(state.direction.y)>.94)moteRef.set(1,0,0);
+            moteEast.crossVectors(moteRef,state.direction).normalize();
+            moteNorth.crossVectors(state.direction,moteEast).normalize();
+            const cam=camera.position,dxDir=state.direction.x,dyDir=state.direction.y,dzDir=state.direction.z;
+            const ex=moteEast.x,ey=moteEast.y,ez=moteEast.z,nx=moteNorth.x,ny=moteNorth.y,nz=moteNorth.z;
+            const mp=moteGeo.attributes.position;
             for(let i=0;i<MOTE_COUNT;i++){
-              const k=i*3,ph=motePhase[i];
-              mp.array[k]=moteBase[k]+Math.sin(mt+ph)*.05;
-              mp.array[k+1]=moteBase[k+1]+Math.sin(mt*.63+ph*1.7)*fauna.lift*3;
-              mp.array[k+2]=moteBase[k+2]+Math.cos(mt*.8+ph*.6)*.05;
+              const k=i*3,ph=motePhase[i],fl=Math.sin(elapsed*1.7+ph);
+              motePos[k]  +=(moteVel[k]  *fauna.speed+fl*.010)*dt;
+              motePos[k+1]+=(moteVel[k+1]*fauna.speed+fauna.lift)*dt;
+              motePos[k+2]+=(moteVel[k+2]*fauna.speed+Math.cos(elapsed*1.9+ph)*.010)*dt;
+              let dx=motePos[k]-cam.x,dy=motePos[k+1]-cam.y,dz=motePos[k+2]-cam.z;
+              const lx=dx*ex+dy*ey+dz*ez, ly=dx*dxDir+dy*dyDir+dz*dzDir, lz=dx*nx+dy*ny+dz*nz;
+              if(lx>MOTE_BOX){dx-=ex*2*MOTE_BOX;dy-=ey*2*MOTE_BOX;dz-=ez*2*MOTE_BOX;}
+              else if(lx<-MOTE_BOX){dx+=ex*2*MOTE_BOX;dy+=ey*2*MOTE_BOX;dz+=ez*2*MOTE_BOX;}
+              if(lz>MOTE_BOX){dx-=nx*2*MOTE_BOX;dy-=ny*2*MOTE_BOX;dz-=nz*2*MOTE_BOX;}
+              else if(lz<-MOTE_BOX){dx+=nx*2*MOTE_BOX;dy+=ny*2*MOTE_BOX;dz+=nz*2*MOTE_BOX;}
+              // The vertical box is asymmetric (more room above the eye than below), so the wrap
+              // shifts by the full span instead of twice one side: otherwise a mote pushed down
+              // from the top lands straight through the bottom and wraps again next frame.
+              if(ly>MOTE_UP){const w=(MOTE_UP+MOTE_DOWN);dx-=dxDir*w;dy-=dyDir*w;dz-=dzDir*w;}
+              else if(ly<-MOTE_DOWN){const w=(MOTE_UP+MOTE_DOWN);dx+=dxDir*w;dy+=dyDir*w;dz+=dzDir*w;}
+              motePos[k]=dx+cam.x;motePos[k+1]=dy+cam.y;motePos[k+2]=dz+cam.z;
             }
             mp.needsUpdate=true;
           }
