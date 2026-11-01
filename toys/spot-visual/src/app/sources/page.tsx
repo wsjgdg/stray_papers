@@ -10,6 +10,7 @@ import { OUTSOURCE_DESCRIPTIONS } from "@/lib/scenic-desc-outsource.generated";
 import { SCENIC_DETAILS } from "@/lib/scenic-details.generated";
 import { SCENIC_SERVICES } from "@/lib/scenic-services.generated";
 import { SPOT_TERRAIN } from "@/lib/spot-terrain.generated";
+import { SPOT_PROFILES } from "@/lib/spot-profiles.generated";
 
 // 条数动态读取，避免硬编码过期（同 LIBRARY_STATS 的做法）。
 // 这些模块已随 spot-data/视图进入本页 bundle，直接取键数不增加体积。
@@ -26,6 +27,25 @@ const SERVICES_TOILET = Object.values(SCENIC_SERVICES).filter(
   (s) => s.nearestToiletM >= 0,
 ).length;
 const TERRAIN_COUNT = Object.keys(SPOT_TERRAIN).length;
+// 景点档案（外包结构化字段）条数与各列填充率：动态算，避免硬编码过期
+const PROFILE_ENTRIES = Object.values(SPOT_PROFILES);
+const PROFILE_COUNT = PROFILE_ENTRIES.length;
+const PROFILE_TICKET = PROFILE_ENTRIES.filter(
+  (p) => typeof p.ticketPeak === "number",
+).length;
+const PROFILE_FREE = PROFILE_ENTRIES.filter((p) => p.ticketPeak === 0).length;
+const PROFILE_HOURS = PROFILE_ENTRIES.filter((p) => !!p.openHours).length;
+const PROFILE_SUGGEST = PROFILE_ENTRIES.filter(
+  (p) => typeof p.suggestedHours === "number",
+).length;
+const PROFILE_RAIL = PROFILE_ENTRIES.filter((p) => !!p.nearestRail).length;
+const PROFILE_ACCESS = PROFILE_ENTRIES.filter(
+  (p) => Array.isArray(p.accessibility) && p.accessibility.length > 0,
+).length;
+const PROFILE_RESERVE = PROFILE_ENTRIES.filter(
+  (p) => p.needReservation === true,
+).length;
+const PROFILE_LOW = PROFILE_ENTRIES.filter((p) => p.low === true).length;
 
 const ROWS = [
   {
@@ -116,7 +136,15 @@ const ROWS = [
       "高德地图：城市 POI 深度字段（biz_ext.opentime2，构建时随 POI 包抓取）+ 5A/4A 名录条目周边搜索烘焙（SCENIC_DETAILS）",
     license: "高德开放平台，仅供演示",
     fields: `开放时段文本（城市 POI 约 95% 填充；名录条目 ${DETAILS_OPENTIME}/${DETAILS_COUNT}）；景区电话（名录条目 ${DETAILS_TEL}/${DETAILS_COUNT}）`,
-    note: "详情页已标注「出行前请再核实」；门票价与预约标记高德不提供（cost 填充 0.3%），见下方人工标注。构建用的 key 只在本机环境，绝不进发布产物；名录条目的评分字段当前无填充、官方图片仅个别条目有值（运行时不可达即降级），基本不参与展示。",
+    note: "详情页已标注「出行前请再核实」；门票价与预约标记高德不提供（cost 填充 0.3%），改由下方「景点档案」层补齐。构建用的 key 只在本机环境，绝不进发布产物；名录条目的评分字段当前无填充、官方图片仅个别条目有值（运行时不可达即降级），基本不参与展示。",
+  },
+  {
+    layer: "景点档案（票价 / 开放时段 / 建议时长 / 交通 / 无障碍 / 预约）",
+    source:
+      "外包结构化补写（任务书约束）+ 官方合并器整批验收；行政区与交通按名录 province/city/district 推算",
+    license: "本项目自有内容（事实性经编辑抽检核对）",
+    fields: `覆盖 ${PROFILE_COUNT} 条 5A/4A（覆盖率 100%）：票价 ${PROFILE_TICKET} 条（其中免费 ${PROFILE_FREE}）、开放时段 ${PROFILE_HOURS} 条、建议时长 ${PROFILE_SUGGEST} 条、最近高铁站 ${PROFILE_RAIL} 条、无障碍/便民设施 ${PROFILE_ACCESS} 条、需预约 ${PROFILE_RESERVE} 条`,
+    note: `只做「可核实才写」：查不到的字段一律留空并标 low（当前 ${PROFILE_LOW}/${PROFILE_COUNT} 条被标 low，意味着该条至少有一项没把握），绝不编价；票价为人均全价、不含索道/观光车/园中园（另记 ticketNote）。开放时段带「约 / 以景区公告为准」的属参考时段，精确条目会写明停止入园与闭馆日。验收链：外部按 id 交付 → 规则校验（必填三件套、区间、12 词无障碍闭集、null 必 low）→ 人工抽检 30 条核票价与时段 → 按 id 幂等合入。`,
   },
   {
     layer: "景区服务设施（厕所 / 出入口）",
@@ -144,10 +172,10 @@ const ROWS = [
   },
   {
     layer: "是否需预约",
-    source: "人工标注（40 条，无自动数据源）",
+    source: "人工标注（40 条）+ 景点档案 needReservation 字段",
     license: "—",
-    fields: "预约渠道与时限提示",
-    note: "只标注确定有预约制/实名限流的景点（故宫、莫高窟、布达拉宫、兵马俑等）；普通线上购票不标注，避免稀释警示。",
+    fields: `预约渠道与时限提示；档案层对 ${PROFILE_COUNT} 条给出布尔标记（${PROFILE_RESERVE} 条为「需预约」）`,
+    note: "本层只标注确定有预约制/实名限流的景点（故宫、莫高窟、布达拉宫、兵马俑等）并给出渠道；普通线上购票不标注，避免稀释警示。档案层的 false 表示「未查到强制预约」，不等于无需实名，出行前请核实。",
   },
   {
     layer: "登山账本（真实山径高程）",
