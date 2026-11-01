@@ -142,7 +142,21 @@ python3 -m http.server 8080
 
 设定上这是走音者在往穹顶的读数里塞假数据；副作用是它同时也在唤醒沟底的沉默者（见 [`WORLD.md`](WORLD.md) §6.5、[`worklog.md`](worklog.md) §三）。
 
-> 作业的**代价系统**（借走光/空气/生长/动物之后的偿付）已设计但尚未实装，方案在 [`WORLD.md`](WORLD.md) §6.6，等四个选择点定下来再开工。
+#### 作业的代价（v3 新增）
+
+穹顶不是"取能"，是**从五条循环里借**：地脉、空气、天光、生长、动物。作业结束后，账单以天气和光的形式出现，几分钟后自愈：
+
+| 作业 | 借走 | 你看到什么 | 恢复 |
+| --- | --- | --- | --- |
+| LEY SURGE | 地脉余量 | 夜里圣所、符文、灯笼、祭坛光环暗约 28%，之后末尾轻微过亮 | 180 s |
+| STARFALL | 大气清洁度 | 雾密度 +8%、雾色偏暖尘、星星略暗 | 240 s |
+| SOLAR VEIL | 天空的"温度" | 日光偏冷、半球光与曝光略降（镜阵留下的痕迹） | 120 s |
+| BLOOM TIDE | 生物圈储光 | 孢子/草/树冠/卡片荧光整体降到约 55%，之后回弹到最多 +15% | 120 s |
+| ZENITH MIGRATION | 蝠鲼磁记忆 | 天空里蝠鲼减少约 40%，然后恢复 | 180 s |
+
+- **错音是解药**：作业期间每触发一次走音，这一轮的账单 `×0.5`（最低 `1/8`）——反抗因此是一个**可操作的选择**，不是一个氛围词。
+- **透支值 Extraction**：每次（折后）作业 `+0.06`、每秒 `−1/6000`（约 1.7 小时清空），只把夜里的荧光再压最多 12%、雾色像结霜一样发冷、星星略少；**没有 HUD 数字**，刷新即重置。
+- 控制台：`aetheris.costs()` 查看 `extraction / 各项 debt / bio 倍率 / 剩余蝠鲼数`。
 
 ---
 
@@ -177,6 +191,7 @@ window.aetheris.triggerEvent('veil')// 'ley' | 'starfall' | 'veil' | 'bloom' | '
 window.aetheris.events              // 全部事件 id
 window.aetheris.jump()              // 等同按 Space（仅地表模式生效）
 window.aetheris.detune()            // 手动触发一次"走音"（灯光抖动 + 双音失谐）
+window.aetheris.costs()             // { extraction, paid, debt:{light,air,sky,growth,fauna}, bio, mantas }
 window.aetherisStartup              // 启动阶段、自检结果、错误详情
 ```
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="still-water-14">
+  <meta name="aetheris-build" content="borrowed-light-15">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -427,7 +427,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'still-water-14';
+    const BUILD_ID = 'borrowed-light-15';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -685,12 +685,26 @@
       // `eventFx` holds 0..1 weights consumed by the shaders and the lighting pass, so every
       // effect fades in and out with the event instead of snapping on.
       const eventGlow = { value: 0 };
+      // Global multiplier on every bioluminescent term: 1 = healthy, lower = the Concordat has
+      // been taking more than the biosphere can give. Driven by the operation-cost ledger below.
+      const bioDebt = { value: 1 };
       const eventTint = new THREE.Color(0x2ad8c0);
       const eventFx = { glow: 0, ley: 0, chill: 0, meteor: 0, migration: 0, tint: 0 };
       const eventRandom = seeded(20260214);
       // The Detuned's signature: while an operation runs, the ley grid occasionally slips a
       // fraction of a semitone. One pulse = a light flicker + (if sound is on) a wrong note.
       const detune = { next: 0, pulse: 0, count: 0, notes: 0 };
+      // ---- Operation costs -------------------------------------------------------------
+      // Nothing here is a punishment: each operation borrows from one cycle (light, air, sky,
+      // growth, fauna) and the debt shows up afterwards as weather, then heals. A detune pulse
+      // halves the bill for the operation it interrupts, so the resistance is a real choice.
+      const COST_DOMAIN = { ley: 'light', starfall: 'air', veil: 'sky', bloom: 'growth', migration: 'fauna' };
+      const COST_RECOVER = { light: 180, air: 240, sky: 120, growth: 120, fauna: 180 };
+      const costState = {
+        debt: { light: 0, air: 0, sky: 0, growth: 0, fauna: 0 },
+        pending: 1, extraction: 0, paid: 0
+      };
+      const costTint = new THREE.Color();
 
       // Cinematic bloom on capable desktops; the loop falls back to direct rendering.
       let composer = null, bloomPass = null, bloomOn = false;
@@ -2549,6 +2563,7 @@
           shader.uniforms.uForestSun = { value: sun };
           shader.uniforms.uLeafMap = { value: barkMap };
           shader.uniforms.uLeafSurface = { value: maps.surface };
+          shader.uniforms.uBioDebt = bioDebt;
           shader.vertexShader = shader.vertexShader
             .replace('#include <common>', `#include <common>
               uniform float uForestTime;
@@ -2578,6 +2593,7 @@
               uniform sampler2D uLeafSurface;
               uniform vec3 uForestSun;
               uniform float uForestTime;
+              uniform float uBioDebt;
               varying vec3 vCardPosition;
               varying vec3 vCardNormal;
               varying vec3 vCardTreeUp;
@@ -2608,7 +2624,7 @@
               float cardNight = 1.0 - smoothstep(-.18, .32, dot(normalize(vCardTreeUp), uForestSun));
               float cardPulse = .82 + .18 * sin(uForestTime * 1.05 + vCardPosition.y * 22.0 + vCardPosition.x * 15.0);
               vec3 bioTint = mix(vec3(.05, .44, .38), vec3(.13, .55, .33), smoothstep(.08, .25, vCardPosition.y));
-              totalEmissiveRadiance += (diffuseColor.rgb * .13 + bioTint * cardFoliage * ${(glowStrength * .52).toFixed(2)}) * cardNight * cardPulse;
+              totalEmissiveRadiance += (diffuseColor.rgb * .13 + bioTint * cardFoliage * ${(glowStrength * .52).toFixed(2)}) * cardNight * cardPulse * max(uBioDebt,0.0);
             `);
         };
         material.customProgramCacheKey = () => cacheKey + '-' + BUILD_ID;
@@ -2627,6 +2643,7 @@
       treeMaterial.onBeforeCompile = shader => {
         shader.uniforms.uForestSun = { value: sun };
         shader.uniforms.uForestTime = forestTime;
+        shader.uniforms.uBioDebt = bioDebt;
         shader.uniforms.uDetailMap = { value: detailMaps.bark };
         shader.uniforms.uBarkNormalMap = { value: normalMaps.bark };
         shader.vertexShader = shader.vertexShader
@@ -2668,6 +2685,7 @@
             varying vec3 vTreeUp;
             uniform vec3 uForestSun;
             uniform float uForestTime;
+            uniform float uBioDebt;
             uniform sampler2D uDetailMap;
             uniform sampler2D uBarkNormalMap;
             ${triplanarGLSL}`)
@@ -2709,7 +2727,7 @@
           float veins = mix(.28,pow(.5+.5*sin(vLeafPosition.y*520.0+sin(vLeafPosition.x*260.0)*2.0+vLeafPosition.z*210.0),8.0),1.0-smoothstep(.0008,.0045,leafPixel));
           float barkMycelium = smoothstep(.62, .88, 1.0 - barkHeight) * barkMask;
           float pulse = .90 + .10 * sin(uForestTime * .95 + vLeafPosition.y * 16.0);
-          totalEmissiveRadiance += (diffuseColor.rgb * .10 + vec3(.030,.185,.158)*canopyMask*veins + vec3(.048,.255,.235)*barkMycelium*.22) * night * pulse;
+          totalEmissiveRadiance += (diffuseColor.rgb * .10 + vec3(.030,.185,.158)*canopyMask*veins + vec3(.048,.255,.235)*barkMycelium*.22) * night * pulse * max(uBioDebt,0.0);
         `);
       };
       treeMaterial.customProgramCacheKey = () => 'aetheris-living-canopy-' + BUILD_ID;
@@ -2895,15 +2913,15 @@
       const sporeGeo = new THREE.BufferGeometry();
       sporeGeo.setAttribute('position', new THREE.Float32BufferAttribute(spores, 3));
       sporeGeo.setAttribute('aPhase', new THREE.Float32BufferAttribute(sporePhases, 1));
-      const sporeUniforms = { uTime: forestTime, uSun: { value: sun }, uRatio: { value: renderer.getPixelRatio() }, uEventGlow: eventGlow };
+      const sporeUniforms = { uTime: forestTime, uSun: { value: sun }, uRatio: { value: renderer.getPixelRatio() }, uEventGlow: eventGlow, uBioDebt: bioDebt };
       const sporeMaterial = new THREE.ShaderMaterial({
         uniforms: sporeUniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
         vertexShader: `
-          uniform vec3 uSun; uniform float uTime; uniform float uRatio; uniform float uEventGlow; attribute float aPhase; varying float vGlow; varying float vHue;
+          uniform vec3 uSun; uniform float uTime; uniform float uRatio; uniform float uEventGlow; uniform float uBioDebt; attribute float aPhase; varying float vGlow; varying float vHue;
           void main(){
             vec3 drift = position + vec3(sin(uTime*.55+aPhase), sin(uTime*.38+aPhase*1.7), cos(uTime*.46+aPhase))*.028;
             float night=1.0-smoothstep(-.18,.36,dot(normalize(drift),uSun));
-            vGlow=(.04+night*.58)*(.68+.32*sin(uTime*1.15+aPhase))*(1.0+uEventGlow*2.4);
+            vGlow=(.04+night*.58)*(.68+.32*sin(uTime*1.15+aPhase))*(1.0+uEventGlow*2.4)*max(uBioDebt,0.0);
             vHue=fract(aPhase * .3183);
             vec4 p=modelViewMatrix*vec4(drift,1.0);
             gl_PointSize=clamp(26.0*uRatio/max(.28,-p.z),1.4,24.0*uRatio);
@@ -3006,6 +3024,7 @@
         shader.uniforms.uForestTime = forestTime;
         shader.uniforms.uUnderSun = { value: sun };
         shader.uniforms.uEventGlow = eventGlow;
+        shader.uniforms.uBioDebt = bioDebt;
         shader.vertexShader = shader.vertexShader
           .replace('#include <common>', '#include <common>\nuniform float uForestTime;\nvarying vec3 vUnderWorld;\nvarying float vUnderY;')
           .replace('#include <begin_vertex>', `
@@ -3023,14 +3042,14 @@
           transformed.z += cos(uForestTime*1.9+underPhase*1.3)*underBend*.09;
         `);
         shader.fragmentShader = shader.fragmentShader
-          .replace('#include <common>', '#include <common>\nvarying vec3 vUnderWorld;\nvarying float vUnderY;\nuniform vec3 uUnderSun;\nuniform float uForestTime;\nuniform float uEventGlow;')
+          .replace('#include <common>', '#include <common>\nvarying vec3 vUnderWorld;\nvarying float vUnderY;\nuniform vec3 uUnderSun;\nuniform float uForestTime;\nuniform float uEventGlow;\nuniform float uBioDebt;')
           .replace('#include <emissivemap_fragment>', `
             #include <emissivemap_fragment>
             float night = 1.0 - smoothstep(-.2, .3, dot(normalize(vUnderWorld), uUnderSun));
             float tip = smoothstep(.035, .078, vUnderY);
             float pulse = .8 + .2 * sin(uForestTime * 1.3 + vUnderWorld.x * 16.0);
             vec3 floraGlow = mix(vec3(.08, .85, .66), vec3(1.05, .82, .36), smoothstep(.45, .75, diffuseColor.r));
-            totalEmissiveRadiance += (diffuseColor.rgb * .28 + floraGlow * tip * .88) * night * pulse * (1.0 + uEventGlow * 2.2);
+            totalEmissiveRadiance += (diffuseColor.rgb * .28 + floraGlow * tip * .88) * night * pulse * (1.0 + uEventGlow * 2.2) * max(uBioDebt,0.0);
           `);
       };
       understoryMaterial.customProgramCacheKey = () => 'aetheris-understory-glow-' + BUILD_ID;
@@ -3362,6 +3381,7 @@
         shader.uniforms.uForestTime = forestTime;
         shader.uniforms.uGrassSun = { value: sun };
         shader.uniforms.uEventGlow = eventGlow;
+        shader.uniforms.uBioDebt = bioDebt;
         shader.vertexShader = shader.vertexShader
           .replace('#include <common>', '#include <common>\nuniform float uForestTime;\nvarying vec3 vGrassWorld;\nvarying float vBladeY;')
           .replace('#include <begin_vertex>', `
@@ -3377,13 +3397,13 @@
           #endif
         `);
         shader.fragmentShader = shader.fragmentShader
-          .replace('#include <common>', '#include <common>\nvarying vec3 vGrassWorld;\nvarying float vBladeY;\nuniform vec3 uGrassSun;\nuniform float uForestTime;\nuniform float uEventGlow;')
+          .replace('#include <common>', '#include <common>\nvarying vec3 vGrassWorld;\nvarying float vBladeY;\nuniform vec3 uGrassSun;\nuniform float uForestTime;\nuniform float uEventGlow;\nuniform float uBioDebt;')
           .replace('#include <emissivemap_fragment>', `
             #include <emissivemap_fragment>
             float night = 1.0 - smoothstep(-.2, .3, dot(normalize(vGrassWorld), uGrassSun));
             float bladeTip = smoothstep(.016, .035, vBladeY);
             float wave = .72 + .28 * sin(uForestTime * 1.4 + dot(vGrassWorld, vec3(18.0, 12.0, 16.0)));
-            totalEmissiveRadiance += (diffuseColor.rgb * .28 + vec3(.07, .68, .54) * bladeTip * .55) * night * wave * (1.0 + uEventGlow * 2.2);
+            totalEmissiveRadiance += (diffuseColor.rgb * .28 + vec3(.07, .68, .54) * bladeTip * .55) * night * wave * (1.0 + uEventGlow * 2.2) * max(uBioDebt,0.0);
           `);
       };
       grass.material.customProgramCacheKey = () => 'aetheris-grass-glow-' + BUILD_ID;
@@ -3813,6 +3833,7 @@
         eventState.seen++;
         detune.next = 2.6 + eventRandom() * 2.4;
         detune.pulse = 0;
+        costState.pending = 1;
         eventTint.set(def.tint);
         if (announce) {
           eventTitle.textContent = def.label;
@@ -3823,6 +3844,13 @@
         return true;
       }
       function finishEvent() {
+        const domain = COST_DOMAIN[eventState.id];
+        if (domain) {
+          const bill = costState.pending;
+          costState.debt[domain] = Math.min(1, costState.debt[domain] + bill);
+          costState.extraction = Math.min(1, costState.extraction + .06 * bill);
+          costState.paid += bill;
+        }
         eventState.id = null;
         eventState.def = null;
         eventState.intensity = 0;
@@ -3835,6 +3863,11 @@
       let eventBarFrame = 0;
       function updateEvents(dt, daylight) {
         eventState.daylight = daylight;
+        // Debts heal on their own clock, whether or not another operation is running;
+        // the extraction meter is much slower (~1.7 hours of play).
+        const debts = costState.debt;
+        for (const key in debts) debts[key] = Math.max(0, debts[key] - dt / COST_RECOVER[key]);
+        costState.extraction = Math.max(0, costState.extraction - dt / 6000);
         const def = eventState.def;
         if (def) {
           eventState.time += dt;
@@ -3847,6 +3880,8 @@
             detune.next -= dt;
             if (detune.next <= 0) {
               detune.pulse = 1; detune.count++; detune.notes++;
+              // Interfering with the operation also halves what it will cost the world.
+              costState.pending = Math.max(.125, costState.pending * .5);
               playDetune();
               detune.next = 3.2 + eventRandom() * 3.4;
             }
@@ -4497,7 +4532,32 @@
         clouds[1].material.color.setRGB(.46+dayAmount*.54,.54+dayAmount*.46,.62+dayAmount*.38);
         clouds[0].material.opacity = .40 + weatherNow.cloud * .38;
         clouds[1].material.opacity = .18 + weatherNow.cloud * .28;
-        stars.material.opacity=clamp(.9*(1-skyUniforms.uGround.value*dayAmount*.94)*(1-weatherNow.cloud*.22) + eventChill*.55, 0, 1);
+        // ---- Operation costs: what was borrowed returns as weather ----
+        const debt=costState.debt;
+        if (debt.air > 0) {
+          // Starfall dust: thicker, warmer air that settles out over four minutes.
+          scene.fog.density *= 1 + .08 * debt.air;
+          scene.fog.color.lerp(costTint.setRGB(.16,.115,.075), .22 * debt.air);
+          waterUniforms.uFogColor.value.copy(scene.fog.color);
+          waterUniforms.uFogDensity.value=scene.fog.density;
+        }
+        if (costState.extraction > 0) {
+          // Long-run extraction: the air goes a little colder and the warm stars thin out.
+          scene.fog.color.lerp(costTint.setRGB(.055,.095,.120), .10 * costState.extraction);
+          waterUniforms.uFogColor.value.copy(scene.fog.color);
+        }
+        if (debt.sky > 0) {
+          // The mirror arrays leave the light cooler and the fill flatter for two minutes.
+          sunlight.color.lerp(costTint.setRGB(.80,.88,1.0), .35 * debt.sky);
+          hemi.intensity *= 1 - .20 * debt.sky;
+          renderer.toneMappingExposure *= 1 - .04 * debt.sky;
+        }
+        const growthDebt=debt.growth;
+        const growthRebound=growthDebt>0?Math.max(0,(.09-growthDebt)/.09)*.15:0;
+        bioDebt.value=clamp(1-.45*growthDebt-.12*costState.extraction+growthRebound,.25,1.15);
+        const faunaCount=Math.max(4,Math.round(flocks.length*(1-.40*debt.fauna)));
+        if(mantas.count!==faunaCount)mantas.count=faunaCount;
+        stars.material.opacity=clamp(.9*(1-skyUniforms.uGround.value*dayAmount*.94)*(1-weatherNow.cloud*.22) + eventChill*.55, 0, 1) * (1 - .15*debt.air) * (1 - .10*costState.extraction);
         sunSprite.material.opacity=.9 * weatherNow.light * (1 - eventChill*.72);
         sunSprite.position.copy(sun).multiplyScalar(55);
         moon.position.set(Math.cos(elapsed*.007+2.1)*29,12,Math.sin(elapsed*.007+2.1)*29);
@@ -4563,15 +4623,19 @@
         if(frame%2===0)updateMarkers();
         // A slip in the grid: sanctuaries dim and stutter for a moment, then recover.
         const detuneDim=detune.pulse>0?1-detune.pulse*(.45+.55*Math.sin(elapsed*47))*.55:1;
+        // Borrowed light: sanctuaries dim for a few minutes, then over-return briefly.
+        const lightDebt=costState.debt.light;
+        const lightRebound=lightDebt>0?Math.max(0,(.12-lightDebt)/.12)*.10:0;
+        const lightDim=(1-.28*lightDebt+lightRebound)*detuneDim;
         for(const landmark of landmarks){
           landmark.group.position.copy(landmark.direction).multiplyScalar(landmark.base+Math.sin(elapsed*.6+landmark.phase)*.018);
           landmark.halo.rotation.y=elapsed*.13;landmark.crystal.rotation.y=elapsed*.32;
           const siteNight=1-smooth(-.2,.28,landmark.direction.dot(sun));
           const sitePulse=.85+.15*Math.sin(elapsed*1.6+landmark.phase);
-          landmark.sanctuaryLight.intensity=(.15+siteNight*1.65)*sitePulse*(1+eventFx.ley*.9)*detuneDim;
+          landmark.sanctuaryLight.intensity=(.15+siteNight*1.65)*sitePulse*(1+eventFx.ley*.9)*lightDim;
           landmark.beacon.visible=siteNight>.04;
-          landmark.glow.material.opacity=(.24+siteNight*.32)*detuneDim;
-          landmark.altarGlow.material.opacity=(.18+siteNight*.34)*detuneDim;
+          landmark.glow.material.opacity=(.24+siteNight*.32)*lightDim;
+          landmark.altarGlow.material.opacity=(.18+siteNight*.34)*lightDim;
           for(let i=0;i<6;i++){
             const a=i*TAU/6+elapsed*.09+landmark.phase;
             transform.position.set(Math.cos(a)*(.36+i*.014),-.1+Math.sin(a*2+elapsed*.4)*.08,Math.sin(a)*(.36+i*.014));
@@ -4582,8 +4646,8 @@
         }
         const leyBoost=eventFx.ley;
         beaconMaterial.opacity=(.08+nightAmount*.18)*(1+leyBoost*1.6);
-        runeMaterial.emissiveIntensity=(1.6+nightAmount*1.35)*(1+leyBoost*1.45)*detuneDim;
-        lanternMaterial.emissiveIntensity=(1.8+nightAmount*1.55)*(1+leyBoost*1.1)*detuneDim;
+        runeMaterial.emissiveIntensity=(1.6+nightAmount*1.35)*(1+leyBoost*1.45)*lightDim;
+        lanternMaterial.emissiveIntensity=(1.8+nightAmount*1.55)*(1+leyBoost*1.1)*lightDim;
         updateLeyRing();
         updateVeilDisc();
         if(frame%12===0){
@@ -4650,8 +4714,11 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
-        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();}
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
+        costs:()=>({extraction:Number(costState.extraction.toFixed(3)),paid:Number(costState.paid.toFixed(2)),
+          debt:Object.fromEntries(Object.entries(costState.debt).map(([k,v])=>[k,Number(v.toFixed(3))])),
+          bio:Number(bioDebt.value.toFixed(3)),mantas:mantas.count})
       };
       window.addEventListener('pagehide',event=>{
         if(event.persisted)return;
