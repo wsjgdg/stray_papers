@@ -4,16 +4,9 @@
 // D2.2: PTSI 主视图
 // Personal Travel Suitability Index
 
-import { useState, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Thermometer,
-  Sun,
-  Heart,
-  Users,
-  TrendingUp,
-  Clock,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Thermometer, Sun, Heart, TrendingUp, Clock } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import {
   calcPTSI,
@@ -21,7 +14,7 @@ import {
   getUVByHour,
   calcPTSIForSpots,
 } from "@/lib/ptsi-calculator";
-import type { PTSIResult } from "@/lib/spot-data";
+import { getStaminaCost, type PTSIResult } from "@/lib/spot-data";
 import { SPOT_PROFILES } from "@/lib/spot-profiles.generated";
 import SevenDayWindow from "./ptsi-seven-day";
 
@@ -68,17 +61,11 @@ const VERDICT_STYLE: Record<
 };
 
 /* ═══ 当前时刻PTSI ═══ */
-function CurrentPTSI({
-  conditions,
-  crowdMinutes = 0,
-}: {
-  conditions: string[];
-  crowdMinutes?: number;
-}) {
+function CurrentPTSI({ conditions }: { conditions: string[] }) {
   const now = new Date();
   const hour = now.getHours();
   const uv = getUVByHour(hour);
-  const ptsi = calcPTSI(uv, conditions, crowdMinutes);
+  const ptsi = calcPTSI(uv, conditions);
   const vs = VERDICT_STYLE[ptsi.verdict];
 
   return (
@@ -112,7 +99,8 @@ function CurrentPTSI({
               : "不宜出行"}
         </span>
       </div>
-      {/* 三分项扣分明细：让 100 = 无扣分 一目了然 */}
+      {/* 分项扣分明细：让 100 = 无扣分 一目了然。这里只算「人」的维度（UV + 身体条件），
+          景点维度（体力消耗 / 游玩时长）在下方排行榜里逐景点计入。 */}
       <div className="text-left text-xs bg-gray-50 dark:bg-gray-900 rounded-xl p-3 mb-3 space-y-1">
         <div className="flex justify-between">
           <span className="text-gray-500 dark:text-gray-400">
@@ -126,14 +114,6 @@ function CurrentPTSI({
           <span className="text-gray-500 dark:text-gray-400">身体条件扣分</span>
           <span className="font-bold text-gray-700 dark:text-gray-200">
             -{ptsi.bodyScore}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500 dark:text-gray-400">
-            拥挤扣分（排队约 {crowdMinutes} 分钟）
-          </span>
-          <span className="font-bold text-gray-700 dark:text-gray-200">
-            -{ptsi.crowdScore}
           </span>
         </div>
         <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
@@ -153,9 +133,9 @@ function CurrentPTSI({
         </div>
       )}
       <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
-        UV
-        为按时段估算曲线（非实时预报）；身体条件来自你的勾选；拥挤度来自下方滑杆。
-        想看真实预报，用下方「7 日出行窗口」（Open-Meteo 实况 API）。
+        UV 为按时段估算曲线（非实时预报）；身体条件来自你的勾选。
+        所有分项都来自库内真实字段或你的勾选，<b>不含客流估算</b>
+        （本项目没有实时客流数据源）。想看真实天气，用下方「7 日出行窗口」。
       </p>
     </div>
   );
@@ -304,47 +284,88 @@ function HourlyChart({ conditions }: { conditions: string[] }) {
 /* ═══ 景点排行榜 ═══ */
 function SpotRanking({ conditions }: { conditions: string[] }) {
   const { spots } = useAppStore();
+  const [sortBy, setSortBy] = useState<"rating" | "ptsi">("rating");
   const ranking = useMemo(() => {
-    // 只排「有评分 + 有 A 级等级」的池：
-    //  - 无评分的 1637 条会把 top10 变成随机抽样
-    //  - 只有评分不限等级时，顶端会变成「人少不累的社区公园」（评分低→拥挤 0），
-    //    对出行决策没意义；A 级等级把范围收回到真正的景区。
-    // 评分门槛 4.4：把「有评分但评分一般」的长尾挡在外面，否则榜首会是一堆
-    // 4.2 分、几乎没人去的小园子（分高只是因为不挤，对出行决策没帮助）。
+    // 池 = 「真热门景区」：有评分 + A 级 + 评分≥4.6。
+    //  - 无评分的 1600+ 条会把 top10 变成随机抽样
+    //  - 不限 A 级会混进社区小园子，对出行决策没意义
+    //  - 评分门槛 4.6：库里 4.4/4.5 的只有 10 条，卡在 4.6 才是真正「大概率会去」的地方
     const pool = spots.filter(
       (s) =>
         typeof s.rating === "number" &&
-        s.rating >= 4.4 &&
+        s.rating >= 4.6 &&
         (s.level === "5A" || s.level === "4A"),
     );
     const ratingOf = new Map(pool.map((s) => [s.name, s.rating]));
-    // 逐景点差异因子：评分/等级 → 拥挤预估，档案建议时长 → 暴露时长
-    // （以前这里对每个景点传同一个 UV 和 0 拥挤，全表同分，看起来「所有项都是一个值」）
+    // 逐景点代入**真实字段**：档案建议游玩时长 → 暴露时长，体力消耗值 → 体力扣分。
+    // 这里不再估算客流（旧实现用「评分−4.0」反推排队分钟，既没数据来源，
+    // 又让高分名景区因为「越热门越挤」被排到榜尾，方向是反的）。
     const enriched = pool.map((s) => ({
       name: s.name,
       rating: s.rating,
       level: s.level,
       suggestedHours: SPOT_PROFILES[s.id]?.suggestedHours ?? null,
+      stamina: getStaminaCost(s),
     }));
     const results = calcPTSIForSpots(enriched, conditions);
-    return results.sort(
-      (a, b) =>
-        b.ptsi.score - a.ptsi.score ||
-        (ratingOf.get(b.name) ?? 0) - (ratingOf.get(a.name) ?? 0),
+    // 两种排序口径，用户自己切：
+    //  - rating：评分优先（默认）。「值得去的地方里，今天哪个最省力」
+    //  - ptsi：适宜度优先。「今天最省力的地方」，但榜首必然是一堆 0.5h 打卡位，
+    //    因为不存在客流维度后，越省力越靠前是数学必然，不是 bug。
+    results.sort(
+      sortBy === "rating"
+        ? (a, b) =>
+            (ratingOf.get(b.name) ?? 0) - (ratingOf.get(a.name) ?? 0) ||
+            b.ptsi.score - a.ptsi.score
+        : (a, b) =>
+            b.ptsi.score - a.ptsi.score ||
+            (ratingOf.get(b.name) ?? 0) - (ratingOf.get(a.name) ?? 0),
     );
-  }, [spots, conditions]);
+    // 把展示字段挂回结果（等级/评分是排序与展示用，不参与扣分）
+    const meta = new Map(enriched.map((s) => [s.name, s]));
+    return results.map((r) => ({
+      ...r,
+      rating: meta.get(r.name)?.rating ?? null,
+      level: meta.get(r.name)?.level ?? null,
+    }));
+  }, [spots, conditions, sortBy]);
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
-      <div className="flex items-center gap-1.5 mb-4">
+      <div className="flex items-center gap-1.5 mb-2">
         <TrendingUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-          景点适宜度排行
+          {sortBy === "rating" ? "热门景区排行" : "今日最省力排行"}
         </span>
-        <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
-          评分≥4.4 的 A 级 · 无实时客流，拥挤按评分估算
-        </span>
+        <div className="ml-auto flex items-center gap-1">
+          {(
+            [
+              ["rating", "按评分"],
+              ["ptsi", "按适宜度"],
+            ] as const
+          ).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setSortBy(k)}
+              aria-pressed={sortBy === k}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
+                sortBy === k
+                  ? "bg-gray-700 text-white border-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:border-gray-200"
+                  : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-3 leading-relaxed">
+        5A/4A 且评分≥4.6 · 分项只含体力消耗/建议时长，<b>不含客流</b>
+        （本项目没有实时客流数据）。
+        {sortBy === "ptsi"
+          ? "按适宜度排时，榜首必然是短时低强度的小点——这是没有客流维度后的必然结果。"
+          : "按评分排：值得去的地方里，谁今天更省力。"}
+      </p>
       <div className="space-y-2">
         {ranking.slice(0, 10).map((item, i) => {
           const vs = VERDICT_STYLE[item.ptsi.verdict];
@@ -363,26 +384,33 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
                   {item.name}
                 </div>
                 <div className="text-[10px] text-gray-400 dark:text-gray-500 truncate">
-                  拥挤≈{Math.round(item.crowdMinutes)}min · 建议玩{" "}
-                  {item.hours ?? "—"}h
+                  {item.level} · 建议玩 {item.hours ?? "—"}h · 体力{" "}
+                  {item.stamina ?? "—"}
+                  {sortBy === "rating"
+                    ? ` · 今日 ${item.ptsi.score} 分`
+                    : ` · 评分 ${item.rating ?? "—"}`}
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {/* 右侧大数字始终等于当前排序键：按评分排就显示评分，
+                    按适宜度排就显示 PTSI。避免「第 9 名的数字比第 1 名还高」的困惑。 */}
                 <motion.div
-                  key={item.ptsi.score}
+                  key={`${sortBy}-${item.ptsi.score}`}
                   initial={{ scale: 1.2 }}
                   animate={{ scale: 1 }}
                   className="text-sm font-bold"
                   style={{
                     color:
-                      item.ptsi.score >= 80
-                        ? "#10B981"
-                        : item.ptsi.score >= 50
-                          ? "#F59E0B"
-                          : "#EF4444",
+                      sortBy === "rating"
+                        ? "#6B7280"
+                        : item.ptsi.score >= 80
+                          ? "#10B981"
+                          : item.ptsi.score >= 50
+                            ? "#F59E0B"
+                            : "#EF4444",
                   }}
                 >
-                  {item.ptsi.score}
+                  {sortBy === "rating" ? item.rating : item.ptsi.score}
                 </motion.div>
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded-full ${vs.bg} ${vs.text}`}
@@ -404,8 +432,6 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
 export default function PTSIView() {
   const { bodyConditions: conditions, toggleBodyCondition: toggleCondition } =
     useAppStore();
-  // 拥挤度（预计排队分钟数）：三分项中唯一没有自动数据源的一项，交给用户估
-  const [crowdMinutes, setCrowdMinutes] = useState(0);
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50">
@@ -421,7 +447,7 @@ export default function PTSIView() {
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Personal Travel Suitability Index ·
-              综合紫外线、身体条件、拥挤度评分
+              综合紫外线、身体条件、体力消耗、降水与游玩时长
             </p>
           </div>
         </div>
@@ -453,33 +479,11 @@ export default function PTSIView() {
             ))}
           </div>
 
-          {/* 拥挤度滑杆：预计排队分钟数（0-180） */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
-                预计排队时长
-              </span>
-              <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
-                {crowdMinutes} 分钟
-              </span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={180}
-              step={10}
-              value={crowdMinutes}
-              onChange={(e) => setCrowdMinutes(Number(e.target.value))}
-              className="w-full accent-rose-500"
-            />
-            <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
-              <span>不用排</span>
-              <span>30</span>
-              <span>60</span>
-              <span>120</span>
-              <span>180+</span>
-            </div>
-          </div>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
+            分项口径：紫外线（按时段估算 UV）· 身体条件（你的勾选）· 体力消耗（景点体力值
+            0–100）· 降水概率（7 日窗口用 Open-Meteo 实况）· 建议游玩时长（景点档案）。
+            拥挤/排队维度已移除——本项目没有实时客流数据，不编造数值。
+          </p>
         </div>
 
         {/* 7 日出行窗口（真实天气预报 + PTSI 逐日评分） */}
@@ -488,7 +492,7 @@ export default function PTSIView() {
         {/* 当前PTSI + 24h曲线 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
           <div className="md:col-span-1">
-            <CurrentPTSI conditions={conditions} crowdMinutes={crowdMinutes} />
+            <CurrentPTSI conditions={conditions} />
           </div>
           <div className="md:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-1.5 mb-3">

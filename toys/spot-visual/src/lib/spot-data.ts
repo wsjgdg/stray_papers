@@ -160,7 +160,7 @@ export interface PTSIResult {
   score: number; // 0-100，越高越适宜出行
   uvScore: number; // 紫外线分项 (0-50)
   bodyScore: number; // 身体条件分项 (0-60)
-  crowdScore: number; // 拥挤分项 (0-30)
+  effortScore: number; // 体力分项 (0-30)，来自体力消耗值
   verdict: "go" | "caution" | "nogo";
   reasons: string[];
 }

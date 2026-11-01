@@ -76,8 +76,27 @@ const ws = new WebSocket(await targetWs());
 await new Promise((r) => (ws.onopen = r));
 let seq = 0;
 const pending = new Map();
+const logs = [];
 ws.onmessage = (e) => {
   const msg = JSON.parse(e.data);
+  if (msg.method === "Runtime.exceptionThrown") {
+    logs.push("EXCEPTION: " + (msg.params?.exceptionDetails?.exception?.description || msg.params?.exceptionDetails?.text));
+  }
+  if (msg.method === "Runtime.consoleAPICalled" && opt.log) {
+    logs.push(
+      "CONSOLE " + msg.params.type + ": " +
+        (msg.params.args || []).map((a) => a.value ?? a.description ?? "").join(" "),
+    );
+  }
+  if (msg.method === "Network.loadingFailed" && opt.net) {
+    logs.push(
+      "NET_FAIL " + msg.params?.type + " " + (msg.params?.errorText || ""),
+    );
+  }
+  if (msg.method === "Network.responseReceived" && opt.net) {
+    const r = msg.params?.response;
+    if (r && r.status >= 400) logs.push("HTTP " + r.status + " " + r.url);
+  }
   if (msg.id && pending.has(msg.id)) {
     pending.get(msg.id)(msg);
     pending.delete(msg.id);
@@ -93,8 +112,60 @@ const send = (method, params = {}) =>
 try {
   await send("Page.enable");
   await send("Runtime.enable");
+  if (opt.net) await send("Network.enable");
+  // --geo=lat,lng[,accuracy] → 模拟 GPS，用来验收「定位」这种必须真定位的交互
+  if (opt.geo) {
+    const [latitude, longitude, accuracy = 30] = opt.geo
+      .split(",")
+      .map(Number);
+    await send("Emulation.setGeolocationOverride", {
+      latitude,
+      longitude,
+      accuracy,
+    });
+    await send("Browser.grantPermissions", {
+      origin: new URL(url).origin,
+      permissions: ["geolocation"],
+    });
+    // 顺手把权限写成「允许」，否则 Chromium 默认 prompt 会直接走 error 回调
+    await send("Browser.setPermission", {
+      origin: new URL(url).origin,
+      permission: { name: "geolocation" },
+      setting: "granted",
+    }).catch(() => {});
+  }
   await send("Page.navigate", { url });
   await sleep(waitMs);
+
+  // --click=<按钮文字前缀>：用 CDP 派发**可信**鼠标事件。
+  // 为什么不用 el.click()：程序化 click 在未水合时会静默失败，容易误判。
+  // 注意：dev 模式（next dev + Turbopack）在无头 Edge 里**不会完成水合**，
+  // 必须对生产构建（server.mjs / npm run preview）做交互验收。
+  const doClick = async (text, byLabel = false) => {
+    const sel = byLabel
+      ? `document.querySelector('[aria-label=${JSON.stringify(text)}]')`
+      : `[...document.querySelectorAll('button,a,[role=button]')].find(b=>(b.textContent||'').trim().startsWith(${JSON.stringify(text)}))`;
+    const pos = await send("Runtime.evaluate", {
+      expression: `(()=>{const el=${sel};if(!el)return null;el.scrollIntoView({block:'center'});const r=el.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`,
+      returnByValue: true,
+    });
+    const p = pos.result.value;
+    if (!p) throw new Error("找不到要点击的元素: " + text);
+    for (const type of ["mouseMoved", "mousePressed", "mouseReleased"]) {
+      await send("Input.dispatchMouseEvent", {
+        type,
+        x: p.x,
+        y: p.y,
+        button: "left",
+        clickCount: 1,
+      });
+    }
+    await sleep(Number(opt.after || 1200));
+  };
+
+  if (opt.click) await doClick(opt.click);
+  if (opt["click-label"]) await doClick(opt["click-label"], true);
+  if (opt.click2) await doClick(opt.click2);
   const r = await send("Runtime.evaluate", {
     expression: expr,
     returnByValue: true,
@@ -111,6 +182,7 @@ try {
     fs.writeFileSync(opt.shot, Buffer.from(shot.data, "base64"));
     console.error("screenshot:", opt.shot);
   }
+  if (logs.length) console.error("--- page logs ---\n" + logs.join("\n"));
 } finally {
   ws.close();
   child.kill();

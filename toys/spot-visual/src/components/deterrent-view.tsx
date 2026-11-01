@@ -1031,7 +1031,7 @@ function ConclusionButton({
 
   // ═══ 使用 ptsi-calculator 计算 PTSI ═══
   const ptsiResult = useMemo<PTSIResult>(() => {
-    return calcPTSI(effectiveUv, Array.from(activeConditions), 0);
+    return calcPTSI(effectiveUv, Array.from(activeConditions));
   }, [effectiveUv, activeConditions]);
 
   // ═══ 体力预算评估 ═══

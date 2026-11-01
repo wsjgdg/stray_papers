@@ -2136,7 +2136,9 @@ function SpotsView() {
   const [importing, setImporting] = useState(false);
 
   // ═══ 城市探索：三级加载——构建时烘好的城市包（即时） → 库内筛选 → /api/osm 休眠兜底 ═══
-  const [city, setCity] = useState("北京");
+  // 初始值留空：以前默认填「北京」，定位到广州后这行还写着北京，
+  // 看起来像「定位错了」，实际是输入框没跟着更新（现在定位成功会回填）。
+  const [city, setCity] = useState("");
   const [osmLoading, setOsmLoading] = useState(false);
   const [osmMsg, setOsmMsg] = useState<{
     type: "ok" | "err";
@@ -2497,10 +2499,14 @@ function SpotsView() {
         const accTxt = Number.isFinite(accuracy)
           ? `（定位误差约 ±${Math.max(1, Math.round(accuracy / 1000))} 公里）`
           : "";
+        // 关键：把最近城市写回输入框。定位只改排序不改筛选，但输入框一直留着
+        // 默认的「北京」，用户就会以为「明明在广州，怎么显示北京」——定位是成功的，
+        // 是这行文字没更新。回填后输入框显示真实城市，回车即按该城市筛选。
+        if (nearestCity) setCity(nearestCity);
         setOsmMsg({
           type: accuracy > 5_000 ? "err" : "ok",
           text: nearestCity
-            ? `已定位到「${nearestCity}」附近${accTxt}：列表按距离从近到远排，不做城市过滤；只想看该城市可在输入框回车筛选。`
+            ? `已定位到「${nearestCity}」附近${accTxt}：列表按距离从近到远排，不做城市过滤；输入框已填上「${nearestCity}」，回车即只看该城市。`
             : "已定位，景点列表按离你最近的顺序排列（未做城市过滤）",
         });
       },
@@ -2611,6 +2617,27 @@ function SpotsView() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap gap-1.5 mb-2.5">
+            {/* 「全国」永远排在第一个：选了省份之后，这里是唯一显眼的回退入口
+                （以前只有「共 N 个景点」那行末尾一个很小的「清除」，基本找不到）。 */}
+            <button
+              onClick={() => {
+                setCityFilter(null);
+              }}
+              aria-pressed={cityFilter === null}
+              title="清除省份筛选，看全国景点"
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                cityFilter === null
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+              }`}
+            >
+              全国
+              <span
+                className={`ml-1 text-[10px] ${cityFilter === null ? "text-white/70" : "text-gray-400 dark:text-gray-500"}`}
+              >
+                {spots.length}
+              </span>
+            </button>
             {(citiesExpanded ? HOT_PROVINCES : HOT_PROVINCES.slice(0, 12)).map(
               (hc) => {
                 const n = cityCounts[hc] ?? 0;
@@ -2959,9 +2986,11 @@ function SpotsView() {
         {cityFilter && (
           <button
             onClick={() => setCityFilter(null)}
-            className="ml-1 text-emerald-600 dark:text-emerald-400 hover:underline"
+            className="ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 font-medium"
+            title="清除省份筛选，回到全国"
           >
-            清除
+            <ChevronLeft className="w-3 h-3" />
+            返回全国
           </button>
         )}
       </p>

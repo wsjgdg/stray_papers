@@ -97,7 +97,7 @@ export default function SevenDayWindow({
     const scored = days.map((d) => ({
       ...d,
       // 降水概率一并计入：只看紫外线时，连续几天 UV 峰值相同就会得到完全一样的分数
-      result: calcPTSI(d.uvMax, conditions, 0, { precipProb: d.precipProb }),
+      result: calcPTSI(d.uvMax, conditions, { precipProb: d.precipProb }),
     }));
     const best = Math.max(...scored.map((s) => s.result.score));
     return scored.map((s) => ({ ...s, isBest: s.result.score === best }));
@@ -208,7 +208,7 @@ export default function SevenDayWindow({
             })}
           </div>
           <p className="text-[10px] text-gray-400 mt-3 leading-relaxed">
-            按每日紫外线峰值 + 降水概率逐日评估（拥挤分按默认值 0 计）， 冠军 =
+            按每日紫外线峰值 + 降水概率逐日评估（不含客流维度）， 冠军 =
             本周相对最适合的一天；
             {activeSpot ? `「${activeSpot.name}」` : ""}
             数据源 Open-Meteo，仅供出行参考。
