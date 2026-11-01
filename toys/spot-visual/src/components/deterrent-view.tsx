@@ -240,19 +240,21 @@ function Dial({
   // 松手：定位到最近 slot 并通知上层，让 spring 弹回
   const handleRelease = () => {
     const raw = handleEnd() ?? 0;
-    let nearest = Math.round(raw / SLOT_WIDTH);
-    nearest = Math.max(-1, Math.min(1, nearest));
+    // 拖动格数（可多格）。原始实现两处错：
+    //  ① 方向反了：向右拖应该看「更早的时段」（index 变小），却写成 value + step；
+    //  ② 只允许 ±1 格，且落位后把 offset 停在 step*SLOT，content 又按新 value 排一次，
+    //     等于多偏了一格——所以松手后刻度是歪的。
+    const step = Math.round(raw / SLOT_WIDTH);
     const newIndex = Math.max(
       0,
-      Math.min(TIME_PERIODS.length - 1, value + nearest),
+      Math.min(TIME_PERIODS.length - 1, value - step),
     );
-    // 让 spring 弹到目标 slot（含过冲回弹）
-    snapTo(nearest);
+    // 无论切不切档，都让 offset 回 0（列表按新的 value 重新居中）
+    snapTo(0);
     if (newIndex !== value) {
       onChange(newIndex);
       vibrate(50);
     } else {
-      // 未切档，仍触发一次回弹震感
       vibrate(15);
     }
   };
@@ -847,7 +849,7 @@ function SpotPicker({
         )}
       </div>
       {open && (
-        <div className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+        <div className="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl">
           <button
             onClick={() => pick(null)}
             className="w-full text-left px-3 py-2 text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -1464,7 +1466,7 @@ export default function DeterrentView() {
 
         {/* ═══ 假想目的地 selector（D3.4 隐含前置） ═══ */}
         {/* 选定后结论球可显示"N 个和你身体条件相似的人在这里踩过坑" */}
-        <div className="bg-white dark:bg-gray-900/70 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/50 mb-4">
+        <div className="relative z-20 bg-white dark:bg-gray-900/70 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/50 mb-4">
           <div className="flex items-center gap-1.5 mb-2">
             <MapPinned className="w-4 h-4 text-rose-500" />
             <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">

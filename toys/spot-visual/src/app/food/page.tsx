@@ -240,32 +240,16 @@ export default function FoodPage() {
     [nameToCode],
   );
 
-  // 深链：?prov=海南 / ?prov=HI 直接进入该省下钻视图（便于分享与复现）
+  // 深链：?prov=海南 / ?prov=HI 直接进入该省下钻视图（便于分享与复现）。
+  // 注意：**不再自动恢复「上次浏览」**——那会让首屏永远停在上一次的省份
+  // （表现为「怎么还是默认重庆」），与「默认进全国页」的预期冲突。
   useEffect(() => {
     const p = new URLSearchParams(window.location.search).get("prov");
-    if (!p) {
-      // URL 没带参数时，回到上次浏览的位置
-      try {
-        const saved = JSON.parse(localStorage.getItem("food:last") ?? "null");
-        if (saved?.prov) {
-          pendingCity.current = saved.city ?? null;
-          enterProvince(saved.prov);
-        }
-      } catch {}
-      return;
-    }
+    if (!p) return;
     const hit = PROVINCE_FOODS.find(
       (x) => x.name === p || x.fullName === p || x.code === p.toUpperCase(),
     );
     if (hit) enterProvince(hit.name);
-    if (p) return;
-    try {
-      const saved = JSON.parse(localStorage.getItem("food:last") ?? "null");
-      if (saved?.prov) {
-        pendingCity.current = saved.city ?? null;
-        enterProvince(saved.prov);
-      }
-    } catch {}
   }, [enterProvince]);
 
   // 记住上次浏览位置（URL 有参数时优先 URL）
@@ -285,6 +269,9 @@ export default function FoodPage() {
     setHighlightProv(null);
     // 回到全国 = 不预选省份，面板展示全国概览（与首屏一致）
     setProvCode("");
+    try {
+      localStorage.removeItem("food:last");
+    } catch {}
   }, []);
 
   // ── 城市列表（含代表菜解析结果） ────────────────────────

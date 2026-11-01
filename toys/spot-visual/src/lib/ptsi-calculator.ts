@@ -76,28 +76,25 @@ export function calcPTSI(
   // 身体条件分数 (0-60)，每激活1个 +20
   const bodyScore = Math.min(60, conditions.length * 20);
 
-  // 拥挤分数 (0-30)
-  const crowdScore =
-    crowdMinutes > 120
-      ? 30
-      : crowdMinutes > 60
-        ? 20
-        : crowdMinutes > 30
-          ? 10
-          : 0;
+  // 拥挤分数 (0-30)：连续计分。旧版是 10/20/30 三档，景点之间大量同分，
+  // 排行榜看起来「所有项一个值」——分档越粗越只能靠评分 tiebreak。
+  const crowdScore = Math.min(30, (Math.max(0, crowdMinutes) / 150) * 30);
 
   // 降水与暴露时长（可选维度，只影响给定数据的场景）
   const rainScore = precipPenalty(extra.precipProb);
   const exposureScore = exposurePenalty(extra.exposureHours);
 
-  // PTSI = 100 - (负向分数汇总)
-  const score = Math.max(
-    0,
-    Math.min(
-      100,
-      100 - uvScore - bodyScore - crowdScore - rainScore - exposureScore,
-    ),
-  );
+  // PTSI = 100 - (负向分数汇总)；保留 1 位小数，让相邻景点之间能看出差别
+  const score =
+    Math.round(
+      Math.max(
+        0,
+        Math.min(
+          100,
+          100 - uvScore - bodyScore - crowdScore - rainScore - exposureScore,
+        ),
+      ) * 10,
+    ) / 10;
 
   // 适宜度判定
   const verdict: PTSIResult["verdict"] =
@@ -110,7 +107,7 @@ export function calcPTSI(
   if (conditions.includes("heat")) reasons.push("怕热中暑风险");
   if (conditions.includes("heart")) reasons.push("心脏负担大");
   if (conditions.includes("knee")) reasons.push("膝盖不适");
-  if (crowdScore >= 20) reasons.push("排队时间过长");
+  if (crowdScore >= 20) reasons.push("排队时间偏长（估算）");
   if (rainScore >= 8) reasons.push("降水概率偏高");
   if (exposureScore >= 6) reasons.push("游玩时长较长，暴露久");
 
@@ -145,7 +142,12 @@ export function calcPTSIForSpots(
   }[],
   conditions: string[],
   timeHour: number = new Date().getHours(),
-): { name: string; ptsi: PTSIResult; crowdMinutes: number }[] {
+): {
+  name: string;
+  ptsi: PTSIResult;
+  crowdMinutes: number;
+  hours: number | null;
+}[] {
   const uvIndex = getUVByHour(timeHour);
   return spots.map((s) => {
     // 旧实现给每个景点传同一个 UV 和 0 拥挤 → 全库同分，排行榜其实是按评分排的。
@@ -161,6 +163,7 @@ export function calcPTSIForSpots(
     return {
       name: s.name,
       crowdMinutes,
+      hours: s.suggestedHours ?? null,
       ptsi: calcPTSI(uvIndex, conditions, crowdMinutes, {
         exposureHours: s.suggestedHours ?? null,
       }),

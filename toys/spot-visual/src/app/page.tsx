@@ -87,6 +87,7 @@ import {
 import { loadPoiPhotos, peekPoiPhotos } from "@/lib/poi-photos";
 import { withSharecode } from "@/lib/share-link";
 import { PROVINCE_FOODS } from "@/lib/food-data";
+import { CITY_CENTERS } from "@/lib/city-centers.generated";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
@@ -2452,12 +2453,39 @@ function SpotsView() {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLoc(here);
         setSortMode("distance");
         setLocating(false);
+        // 把经纬度翻成「最近城市」再提示：否则用户只看到一屏北京景点，
+        // 会误以为「定位只显示北京」。定位只改排序，不过滤。
+        // city-centers 只收了地级市（直辖市下辖的是「东城区」这类区），
+        // 四个直辖市单独补中心点，否则在北京定位会被判成「廊坊」。
+        const MUNICIPAL: [string, [number, number]][] = [
+          ["北京", [116.4074, 39.9042]],
+          ["上海", [121.4737, 31.2304]],
+          ["天津", [117.201, 39.0842]],
+          ["重庆", [106.5516, 29.563]],
+        ];
+        let nearestCity = "";
+        let nearestKm = Infinity;
+        const consider = (name: string, lng: number, lat: number) => {
+          const km = haversineKm(here, { lat, lng });
+          if (km < nearestKm) {
+            nearestKm = km;
+            nearestCity = name;
+          }
+        };
+        for (const [name, [lng, lat]] of MUNICIPAL) consider(name, lng, lat);
+        for (const [name, [lng, lat]] of Object.entries(CITY_CENTERS)) {
+          if (/[区县旗]$/.test(name)) continue;
+          consider(name.replace(/(市|地区|自治州|盟)$/, ""), lng, lat);
+        }
         setOsmMsg({
           type: "ok",
-          text: "已定位，景点列表按离你最近的顺序排列",
+          text: nearestCity
+            ? `已定位到「${nearestCity}」附近（距市中心约 ${Math.round(nearestKm)} 公里）：列表按距离从近到远排，不做城市过滤；只想看该城市可在输入框回车筛选。`
+            : "已定位，景点列表按离你最近的顺序排列（未做城市过滤）",
         });
       },
       () => {

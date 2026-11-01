@@ -342,7 +342,7 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
           景点适宜度排行
         </span>
         <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
-          评分≥4.4 的 A 级景区 · 拥挤按时长/热度预估
+          评分≥4.4 的 A 级 · 无实时客流，拥挤按评分估算
         </span>
       </div>
       <div className="space-y-2">
@@ -358,9 +358,15 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
               >
                 {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
               </span>
-              <span className="flex-1 text-sm text-gray-700 dark:text-gray-200 truncate">
-                {item.name}
-              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-gray-700 dark:text-gray-200 truncate">
+                  {item.name}
+                </div>
+                <div className="text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                  拥挤≈{Math.round(item.crowdMinutes)}min · 建议玩{" "}
+                  {item.hours ?? "—"}h
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <motion.div
                   key={item.ptsi.score}
