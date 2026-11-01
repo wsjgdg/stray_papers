@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="deep-water-17">
+  <meta name="aetheris-build" content="tall-eye-18">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -354,7 +354,7 @@
       .stick { position: absolute; top: 50%; left: 50%; width: 38px; height: 38px; margin: -19px; border-radius: 50%; background: rgba(165, 238, 225, .35); border: 1px solid rgba(216, 255, 241, .69); box-shadow: 0 0 23px rgba(78, 221, 192, .18); }
       .jump-button { display: none; position: absolute; right: 29px; bottom: calc(137px + env(safe-area-inset-bottom)); width: 75px; height: 75px; border-radius: 50%; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
       .dive-button { display: none; position: absolute; right: 30px; bottom: calc(137px + 84px + env(safe-area-inset-bottom)); width: 62px; height: 46px; border-radius: 23px; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
-      body.touch[data-mode="ground"].in-water .dive-button { display: block; }
+      body.touch[data-mode="ground"] .dive-button { display: block; }
       body.touch[data-mode="ground"] .joystick, body.touch[data-mode="ground"] .jump-button { display: block; }
       body[data-mode="ground"] .mobile-zoom { display: none; }
       @keyframes appear-mobile { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -465,7 +465,7 @@
       <div class="control-hints ground-hints" aria-label="Ground controls">
         <span><b>WASD</b> WALK</span><span class="hint-separator"></span>
         <span><b>MOUSE / IJKL</b> LOOK</span><span class="hint-separator"></span>
-        <span class="hint-jump"><b>SPACE</b> JUMP</span><span class="hint-separator hint-jump"></span>
+        <span class="hint-jump"><b>SPACE</b> JUMP · <b>C</b> CROUCH</span><span class="hint-separator hint-jump"></span>
         <span class="hint-swim"><b>C</b> DIVE · <b>SPACE</b> RISE</span><span class="hint-separator hint-swim"></span>
         <span><b>R</b> WEATHER</span><span class="hint-separator"></span><span><b>E</b> EVENT</span>
       </div>
@@ -493,7 +493,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'deep-water-17';
+    const BUILD_ID = 'tall-eye-18';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -596,7 +596,10 @@
       const R = 4.2;
       const SEA = 0.012;
       const WATER = R + SEA;
-      const EYE = 0.055;
+      // Eye height is deliberately tall for the scale of the ground cover: at 0.10 the camera
+      // clears ferns, flower cards and most shrubs instead of staring into them. Crouching drops
+      // it back into the undergrowth when you want to hide or read the ground.
+      const EYE = 0.10, CROUCH_EYE = 0.05, CROUCH_SPEED = .5;
       const UP = new THREE.Vector3(0, 1, 0);
       const compact = matchMedia('(pointer: coarse)').matches || innerWidth < 760;
       const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -3670,105 +3673,138 @@
         cone: new THREE.ConeGeometry(.5, 1, 5, 1)
       };
       function provinceDressing() {
-        const rng = seeded(52033), wanted = { vaelmar: 8, sennar: 7, caelth: 7, mirella: 7, vessper: 6 };
+        const rng = seeded(52033);
+        const quota = { vaelmar: 24, sennar: 22, caelth: 22, mirella: 22, vessper: 18 };
         const sites = { vaelmar: [], sennar: [], caelth: [], mirella: [], vessper: [] };
-        for (let i = 0; i < 2200 && Object.keys(wanted).some(k => sites[k].length < wanted[k]); i++) {
-          const dir = randomDirection(rng), h = heightAt(dir);
-          if (h < .035 || h > .22) continue;
+        // A site is legal land at a believable altitude. `limit` keeps the scattered pass from
+        // exceeding each province's quota while still letting guaranteed towns through.
+        const trySite = (dir, bulk, limit) => {
+          const h = heightAt(dir);
+          if (h < .03 || h > .26) return false;
           const id = provinceAt(dir, h);
-          if (sites[id].length < wanted[id]) sites[id].push({ dir, h });
+          if (sites[id].length >= limit(id)) return false;
+          sites[id].push({ dir, h, bulk });
+          return true;
+        };
+        // 1. The town you land beside: something to walk into on the very first descent.
+        //    Offsets are retried because the first pick can land on a cliff or in the surf.
+        for (let i = 0; i < 14; i++) {
+          if (trySite(nearDirection(landing, rng() * TAU, .043 + rng() * .028), 1.3, () => 999)) break;
         }
-        // Settlements also grow at the foot of the sanctuaries: guaranteed encounters, and each
-        // town is built in the province it actually stands in.
-        const landmarkEast = new THREE.Vector3(), landmarkNorth = new THREE.Vector3();
+        // 2. Two settlements under every sanctuary: you always arrive somewhere inhabited.
         landmarks.forEach(landmark => {
-          const base = landmark.direction;
-          landmarkEast.crossVectors(Math.abs(base.y) > .95 ? new THREE.Vector3(1, 0, 0) : UP, base).normalize();
-          landmarkNorth.crossVectors(base, landmarkEast).normalize();
-          for (const [e, n] of [[.14, .05], [-.11, .10]]) {
-            const dir = base.clone().addScaledVector(landmarkEast, e).addScaledVector(landmarkNorth, n).normalize();
-            const h = heightAt(dir);
-            if (h < .03 || h > .24) continue;
-            sites[provinceAt(dir, h)].push({ dir, h });
+          // nearDirection takes an angle in radians, so ~0.11–0.17 rad = 0.46–0.70 world units,
+          // which clears the sanctuary's own island without walking out of sight of it.
+          for (const [angle, distance] of [[.6, .11], [3.5, .16]]) {
+            trySite(nearDirection(landmark.direction, angle, distance), 1.4, () => 999);
           }
         });
+        // 3. Scattered provincial towns until each province is furnished.
+        const done = () => Object.keys(quota).every(id => sites[id].length >= quota[id]);
+        for (let i = 0; i < 26000 && !done(); i++) trySite(randomDirection(rng), .9 + rng() * .5, id => quota[id]);
+
         const buckets = new Map();
-        const push = (geo, mat, dirHigh, quat, offset, scale) => {
+        const push = (geo, mat, position, quat, scale) => {
           const key = geo + '|' + mat;
           if (!buckets.has(key)) buckets.set(key, []);
-          buckets.get(key).push({ origin: dirHigh, quat: quat.clone(), offset, scale });
+          buckets.get(key).push({ origin: position, quat: quat.clone(), scale });
         };
-        const mesh = new THREE.Matrix4(), q = new THREE.Quaternion(), localQ = new THREE.Quaternion();
-        const origin = new THREE.Vector3(), east = new THREE.Vector3(), north = new THREE.Vector3(), pos = new THREE.Vector3();
-        const euler = new THREE.Euler();
+        const mesh = new THREE.Matrix4(), q = new THREE.Quaternion(), spin = new THREE.Quaternion(), tiltQ = new THREE.Quaternion();
+        const axis = new THREE.Vector3(), origin = new THREE.Vector3(), east = new THREE.Vector3(), north = new THREE.Vector3(), pos = new THREE.Vector3();
+        const makeAt = site => {
+          origin.copy(site.dir).multiplyScalar(R + site.h);
+          east.crossVectors(Math.abs(site.dir.y) > .94 ? new THREE.Vector3(1, 0, 0) : UP, site.dir).normalize();
+          north.crossVectors(site.dir, east).normalize();
+          q.setFromUnitVectors(UP, site.dir);
+          return (e, n, up) => pos.copy(origin).addScaledVector(east, e).addScaledVector(north, n).addScaledVector(site.dir, up).clone();
+        };
         for (const id of Object.keys(sites)) {
           for (const site of sites[id]) {
-            origin.copy(site.dir).multiplyScalar(R + site.h);
-            east.crossVectors(Math.abs(site.dir.y) > .94 ? new THREE.Vector3(1, 0, 0) : UP, site.dir).normalize();
-            north.crossVectors(site.dir, east).normalize();
-            q.setFromUnitVectors(UP, site.dir);
-            const at = (e, n, up) => pos.copy(origin).addScaledVector(east, e).addScaledVector(north, n).addScaledVector(site.dir, up).clone();
-            const spin = () => localQ.setFromEuler(euler.set(0, rng() * TAU, 0));
+            const at = makeAt(site), k = site.bulk;
+            // Faces are random per piece so a town never looks like a grid.
+            const face = () => spin.setFromAxisAngle(UP, rng() * TAU);
+            const lean = angle => tiltQ.setFromAxisAngle(axis.set(Math.cos(angle), 0, Math.sin(angle)).normalize(), rng() * .5);
             if (id === 'vaelmar') {
-              // Trunk towers with moss-lit crowns and hornbeam footbridges.
+              // Signature: one archive tree far taller than anything else in the town.
+              const spire = .20 + rng() * .10;
+              push('tower', 'timber', at(.012, -.008, spire * .5), q, new THREE.Vector3(.9, spire, .9));
+              push('dome', 'glass', at(.012, -.008, spire * .99), q, new THREE.Vector3(.032, .026, .032));
               for (let i = 0, n = 5 + Math.floor(rng() * 4); i < n; i++) {
-                const e = (rng() - .5) * .07, nn = (rng() - .5) * .07, height = .022 + rng() * .05;
-                push('tower', 'timber', at(e, nn, height * .5), q, new THREE.Vector3(), new THREE.Vector3(.7 + rng() * .7, height, .7 + rng() * .7));
-                spin();
-                push('dome', 'glass', at(e, nn, height * .96), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(.016 + rng() * .01, .014 + rng() * .012, .016 + rng() * .01));
-              }
-              for (let i = 0; i < 2; i++) {
-                const a = rng() * TAU, len = .05 + rng() * .04;
-                push('block', 'timber', at(Math.cos(a) * len, Math.sin(a) * len, .02 + rng() * .03), q, new THREE.Vector3(), new THREE.Vector3(len * 1.7, .0022, .0032));
-              }
-            } else if (id === 'sennar') {
-              // Wind towers, mirror wells, and a low basalt wall against the sand.
-              for (let i = 0, n = 4 + Math.floor(rng() * 3); i < n; i++) {
-                const e = (rng() - .5) * .06, nn = (rng() - .5) * .06, height = .04 + rng() * .055;
-                push('block', 'basalt', at(e, nn, height * .5), q, new THREE.Vector3(), new THREE.Vector3(.008 + rng() * .006, height, .008 + rng() * .006));
+                const e = (rng() - .5) * .13, nn = (rng() - .5) * .13, height = (.06 + rng() * .09) * k;
+                face();
+                push('tower', 'timber', at(e, nn, height * .5), q.clone().multiply(spin), new THREE.Vector3(.8 + rng() * .8, height, .8 + rng() * .8));
+                push('dome', 'glass', at(e, nn, height * .97), q, new THREE.Vector3(.022 + rng() * .014, .018 + rng() * .014, .022 + rng() * .014));
               }
               for (let i = 0; i < 3; i++) {
-                spin(); localQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.5 - rng() * .45));
-                push('disc', 'glass', at((rng() - .5) * .07, (rng() - .5) * .07, .006 + rng() * .02), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(.012 + rng() * .012, 1, .012 + rng() * .012));
+                const a = rng() * TAU, len = (.09 + rng() * .08) * k;
+                face();
+                push('block', 'timber', at(Math.cos(a) * len, Math.sin(a) * len, .05 + rng() * .05), q.clone().multiply(spin), new THREE.Vector3(len * 1.8, .004, .006));
+              }
+            } else if (id === 'sennar') {
+              // Signature: a wind tower with its mirror well tilted toward the sun.
+              const tower = .18 + rng() * .09;
+              push('block', 'basalt', at(0, 0, tower * .5), q, new THREE.Vector3(.016, tower, .016));
+              lean(rng() * TAU); tiltQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.62));
+              push('disc', 'glass', at(.03, .02, .012), q.clone().multiply(tiltQ), new THREE.Vector3(.045, 1, .045));
+              for (let i = 0, n = 4 + Math.floor(rng() * 3); i < n; i++) {
+                const e = (rng() - .5) * .11, nn = (rng() - .5) * .11, height = (.07 + rng() * .09) * k;
+                push('block', 'basalt', at(e, nn, height * .5), q, new THREE.Vector3(.012 + rng() * .008, height, .012 + rng() * .008));
+              }
+              for (let i = 0; i < 3; i++) {
+                lean(rng() * TAU); tiltQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.5 - rng() * .4));
+                push('disc', 'glass', at((rng() - .5) * .12, (rng() - .5) * .12, .008 + rng() * .022), q.clone().multiply(tiltQ), new THREE.Vector3(.022 + rng() * .02, 1, .022 + rng() * .02));
               }
               for (let i = 0; i < 2; i++) {
-                const a = rng() * TAU, len = .04 + rng() * .04;
-                push('block', 'basalt', at(Math.cos(a) * len, Math.sin(a) * len, .004), q, new THREE.Vector3(), new THREE.Vector3(len * 1.6, .008, .0035));
+                const a = rng() * TAU, len = (.08 + rng() * .07) * k;
+                push('block', 'basalt', at(Math.cos(a) * len, Math.sin(a) * len, .006), q, new THREE.Vector3(len * 1.7, .014, .006));
               }
             } else if (id === 'caelth') {
-              // Observatory domes, slit windows, and watch spires.
+              // Signature: one observatory dome with a spire that clears the snow.
+              const domeR = (.05 + rng() * .02) * k, spire = .20 + rng() * .10;
+              push('dome', 'pale', at(0, 0, .002), q, new THREE.Vector3(domeR, domeR * .78, domeR));
+              push('block', 'pale', at(0, 0, domeR * .52), q, new THREE.Vector3(domeR * 2.1, domeR * 1.05, domeR * 2.1));
+              push('tower', 'pale', at(domeR * 1.2, domeR * .9, spire * .5), q, new THREE.Vector3(.5, spire, .5));
               for (let i = 0, n = 2 + Math.floor(rng() * 2); i < n; i++) {
-                const e = (rng() - .5) * .05, nn = (rng() - .5) * .05, r = .014 + rng() * .018;
-                push('dome', 'pale', at(e, nn, .002), q, new THREE.Vector3(), new THREE.Vector3(r, r * (.72 + rng() * .2), r));
-                spin();
-                push('block', 'pale', at(e, nn, r * .55), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(r * 1.9, r * 1.1, r * 1.9));
+                const e = (rng() - .5) * .12, nn = (rng() - .5) * .12, r = (.026 + rng() * .026) * k;
+                face();
+                push('dome', 'pale', at(e, nn, .002), q.clone().multiply(spin), new THREE.Vector3(r, r * (.7 + rng() * .2), r));
+                push('block', 'pale', at(e, nn, r * .5), q, new THREE.Vector3(r * 1.9, r * 1.05, r * 1.9));
               }
               for (let i = 0; i < 4; i++) {
-                const height = .045 + rng() * .05;
-                push('tower', 'pale', at((rng() - .5) * .06, (rng() - .5) * .06, height * .5), q, new THREE.Vector3(), new THREE.Vector3(.55, height, .55));
+                const height = (.09 + rng() * .10) * k;
+                push('tower', 'pale', at((rng() - .5) * .12, (rng() - .5) * .12, height * .5), q, new THREE.Vector3(.45, height, .45));
               }
             } else if (id === 'mirella') {
-              // Stilt houses over the shallows, each with a singing ring on top.
+              // Signature: a stilt watchtower wearing a singing ring.
+              const lift = .06 + rng() * .05;
+              push('block', 'timber', at(0, 0, lift + .012), q, new THREE.Vector3(.022, .016, .022));
+              for (let k4 = 0; k4 < 4; k4++) {
+                const a = k4 * TAU / 4 + .78;
+                push('tower', 'timber', at(Math.cos(a) * .009, Math.sin(a) * .009, lift * .5), q, new THREE.Vector3(.3, lift, .3));
+              }
+              push('ring', 'glass', at(0, 0, lift + .032), q, new THREE.Vector3(.075, .075, .016));
               for (let i = 0, n = 3 + Math.floor(rng() * 3); i < n; i++) {
-                const e = (rng() - .5) * .07, nn = (rng() - .5) * .07, lift = .012 + rng() * .02;
-                push('block', 'timber', at(e, nn, lift + .006), q, new THREE.Vector3(), new THREE.Vector3(.012, .009, .012));
-                for (let k = 0; k < 4; k++) {
-                  const a = k * TAU / 4 + .78;
-                  push('tower', 'timber', at(e + Math.cos(a) * .005, nn + Math.sin(a) * .005, lift * .5), q, new THREE.Vector3(), new THREE.Vector3(.22, lift, .22));
+                const e = (rng() - .5) * .13, nn = (rng() - .5) * .13, h2 = (.03 + rng() * .05) * k;
+                face();
+                push('block', 'timber', at(e, nn, h2 + .01), q.clone().multiply(spin), new THREE.Vector3(.02, .014, .02));
+                for (let k4 = 0; k4 < 4; k4++) {
+                  const a = k4 * TAU / 4 + .78;
+                  push('tower', 'timber', at(e + Math.cos(a) * .008, nn + Math.sin(a) * .008, h2 * .5), q, new THREE.Vector3(.24, h2, .24));
                 }
-                spin();
-                push('ring', 'glass', at(e, nn, lift + .016), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(.012 + rng() * .006, .012 + rng() * .006, .012 + rng() * .006));
+                push('ring', 'glass', at(e, nn, h2 + .026), q.clone().multiply(spin), new THREE.Vector3(.02 + rng() * .012, .02 + rng() * .012, .012));
               }
-              push('ring', 'glass', at(0, 0, .03), q, new THREE.Vector3(), new THREE.Vector3(.05, .05, .012));
+              push('ring', 'glass', at(0, 0, .014), q, new THREE.Vector3(.09, .09, .022));
             } else {
-              // Vessper: a launch basin of crystal shards, half of them knocked over.
+              // Signature: a launch crystal, half again taller than the shard field around it.
+              const big = .24 + rng() * .10;
+              lean(rng() * TAU);
+              push('shard', 'crystal', at(0, 0, big * .5), q.clone().multiply(tiltQ), new THREE.Vector3(.014, big * .5, .014));
               for (let i = 0, n = 6 + Math.floor(rng() * 4); i < n; i++) {
-                const a = rng() * TAU, d = rng() * .07, tilt = rng() * .5;
-                const height = .018 + rng() * .05;
-                spin(); localQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(Math.cos(a), 0, Math.sin(a)), tilt));
-                push('shard', 'crystal', at(Math.cos(a) * d, Math.sin(a) * d, height * .55), q.clone().multiply(localQ), new THREE.Vector3(), new THREE.Vector3(.006 + rng() * .006, height, .006 + rng() * .006));
+                const a = rng() * TAU, d = rng() * .14, height = (.05 + rng() * .10) * k, t = rng() * .5;
+                face(); tiltQ.setFromAxisAngle(axis.set(Math.cos(a), 0, Math.sin(a)).normalize(), t);
+                push('shard', 'crystal', at(Math.cos(a) * d, Math.sin(a) * d, height * .5), q.clone().multiply(tiltQ), new THREE.Vector3(.008 + rng() * .008, height * .5, .008 + rng() * .008));
               }
-              push('ring', 'crystal', at(0, 0, .004), q, new THREE.Vector3(), new THREE.Vector3(.055, .055, .03));
+              push('ring', 'crystal', at(0, 0, .006), q, new THREE.Vector3(.09, .09, .04));
             }
           }
         }
@@ -3777,14 +3813,13 @@
           const inst = new THREE.InstancedMesh(provinceGeo[geoKey], provinceMat[matKey], list.length);
           inst.instanceMatrix.setUsage(THREE.StaticDrawUsage);
           list.forEach((item, i) => {
-            q.copy(item.quat);
-            mesh.compose(item.origin, q, item.scale);
+            mesh.compose(item.origin, item.quat, item.scale);
             inst.setMatrixAt(i, mesh);
           });
           inst.instanceMatrix.needsUpdate = true;
           inst.castShadow = matKey !== 'glass' && matKey !== 'crystal';
           inst.receiveShadow = true;
-          inst.boundingSphere = new THREE.Sphere(new THREE.Vector3(), R + .6);
+          inst.boundingSphere = new THREE.Sphere(new THREE.Vector3(), R + 1.2);
           scene.add(inst);
         }
       }
@@ -3820,17 +3855,17 @@
       // Mirella, crystal dust on Vessper. Ambient life rather than creatures you can touch —
       // the manta flocks remain the only large fauna.
       const FAUNA = {
-        vaelmar: { color: 0xffd6a0, size: .026, speed: .55, lift: .045, opacity: .55 },
-        sennar: { color: 0xd8f4ff, size: .016, speed: 1.55, lift: .012, opacity: .50 },
-        caelth: { color: 0xdfeaf4, size: .020, speed: .34, lift: -.014, opacity: .45 },
-        mirella: { color: 0x8ff0dc, size: .024, speed: .78, lift: .050, opacity: .60 },
-        vessper: { color: 0xcbb8ff, size: .018, speed: .95, lift: .020, opacity: .55 }
+        vaelmar: { color: 0xffd6a0, size: .040, speed: .55, lift: .045, opacity: .80 },
+        sennar: { color: 0xd8f4ff, size: .028, speed: 1.55, lift: .012, opacity: .72 },
+        caelth: { color: 0xe6f0fa, size: .034, speed: .34, lift: -.014, opacity: .68 },
+        mirella: { color: 0x8ff0dc, size: .038, speed: .78, lift: .050, opacity: .82 },
+        vessper: { color: 0xcbb8ff, size: .030, speed: .95, lift: .020, opacity: .75 }
       };
-      const moteRand = seeded(9341), MOTE_COUNT = compact ? 70 : 130;
+      const moteRand = seeded(9341), MOTE_COUNT = compact ? 110 : 190;
       const moteBase = new Float32Array(MOTE_COUNT * 3), motePhase = new Float32Array(MOTE_COUNT);
       for (let i = 0; i < MOTE_COUNT; i++) {
-        const n = randomDirection(moteRand), r = .10 + moteRand() * .26;
-        moteBase[i * 3] = n.x * r; moteBase[i * 3 + 1] = (moteRand() - .5) * .16 + .05; moteBase[i * 3 + 2] = n.z * r;
+        const n = randomDirection(moteRand), r = .05 + moteRand() * .22;
+        moteBase[i * 3] = n.x * r; moteBase[i * 3 + 1] = (moteRand() - .5) * .12 - .02; moteBase[i * 3 + 2] = n.z * r;
         motePhase[i] = moteRand() * TAU;
       }
       const moteGeo = new THREE.BufferGeometry();
@@ -4242,7 +4277,7 @@
         mode: 'orbit', yaw: initialYaw, polar: initialPolar, distance: fitDistance(),
         composition: compact ? 0 : 1, compositionTarget: compact ? 0 : 1,
         direction: landing.clone(), radius: groundRadius(landing) + EYE,
-        heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false, depth: 0, submerged: false,
+        heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false, depth: 0, submerged: false, crouch: 0,
         transition: null, solarOffset: 0, solarTarget: 0, walkPhase: 0,
         moveVelocity: new THREE.Vector3(), speed: 0, slope: 1,
         coyote: 0, jumpBuffer: 0, landDip: 0, roll: 0
@@ -4325,7 +4360,7 @@
       function jump() {
         if (state.mode !== 'ground' || state.transition || state.water) return;
         if (state.grounded || state.coyote > 0) {
-          state.velocity = JUMP_SPEED;
+          state.velocity = JUMP_SPEED * (1 - .4 * state.crouch);
           state.grounded = false;
           state.coyote = 0;
           state.jumpBuffer = 0;
@@ -4369,8 +4404,8 @@
         }
         state.slope+=(grade-state.slope)*(1-Math.exp(-dt*9));
 
-        const sprint=keys.has('ShiftLeft')||keys.has('ShiftRight');
-        const topSpeed=state.water ? SWIM_SPEED : sprint ? SPRINT_SPEED : WALK_SPEED;
+        const sprint=(keys.has('ShiftLeft')||keys.has('ShiftRight'))&&state.crouch<.35;
+        const topSpeed=state.water ? SWIM_SPEED : (sprint ? SPRINT_SPEED : WALK_SPEED)*mix(1,CROUCH_SPEED,state.crouch);
 
         // Air: keep whatever momentum the take-off had, steer it slowly, never bleed it. On the
         // ground the stick is analogue, so half a push walks at half speed.
@@ -4409,12 +4444,15 @@
         // Vertical: buffered jump, coyote time, gravity, landing impact.
         state.jumpBuffer=Math.max(0,state.jumpBuffer-dt);
         if (state.jumpBuffer>0&&!state.water&&(state.grounded||state.coyote>0)) {
-          state.velocity=JUMP_SPEED;
+          state.velocity=JUMP_SPEED*(1-.4*state.crouch);
           state.grounded=false;
           state.coyote=0;
           state.jumpBuffer=0;
         }
-        const footRadius=R+Math.max(elevation,SEA), eyeHeight=state.water ? .033 : EYE;
+        // C is context-sensitive: dive under water, crouch on land.
+        const wantCrouch=!state.water&&(keys.has('KeyC')||touchDive);
+        state.crouch+=((wantCrouch?1:0)-state.crouch)*(1-Math.exp(-dt*16));
+        const footRadius=R+Math.max(elevation,SEA), eyeHeight=state.water ? .033 : mix(EYE,CROUCH_EYE,state.crouch);
         if (state.water) {
           // Swimming keeps its own vertical axis: the sea floor is the only hard limit.
           const seabed=Math.max(0,SEA-elevation-.008);
@@ -5135,9 +5173,10 @@
           if(document.body.classList.contains('in-water')!==inWater){
             document.body.classList.toggle('in-water',inWater);
             jumpButton.textContent=inWater?'RISE':'JUMP';
+            diveButton.textContent=inWater?'DIVE':'CROUCH';
           }
           document.body.classList.toggle('submerged',surface&&state.submerged);
-          const mode=surface?(state.submerged?'SURFACE / DIVING':state.water?'SURFACE / SWIMMING':'SURFACE / WALKING'):'ORBIT / FLYING';
+          const mode=surface?(state.submerged?'SURFACE / DIVING':state.water?'SURFACE / SWIMMING':state.crouch>.5?'SURFACE / CROUCHING':'SURFACE / WALKING'):'ORBIT / FLYING';
           if(modeLabel.textContent!==mode)modeLabel.textContent=mode;
           // Sea life only exists while you are under it.
           const underwater=surface&&state.submerged;
