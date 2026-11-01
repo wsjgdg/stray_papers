@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="still-map-21">
+  <meta name="aetheris-build" content="chart-22">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -509,7 +509,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'still-map-21';
+    const BUILD_ID = 'chart-22';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4787,37 +4787,23 @@
       }
 
       // ---- Local survey map ----------------------------------------------------------------
-      // A disc of the ground under your feet, drawn from a *cached* patch of world: the patch is
-      // baked once into a bitmap in a stable east/north frame and afterwards only blitted, rotated.
-      // Nothing is resampled while the patch is fresh, so standing still reproduces the same
-      // picture frame after frame. (The first version rescanned one ring of camera-relative cells
-      // per frame: a coastline flickered between water and land because the two halves of the
-      // sweep disagreed, and 64 heightAt calls ran every single frame.)
-      const MAP_RANGE = .40;      // visible disc radius, world units
-      const MAP_PATCH = .58;      // cached half-extent; the .18 margin is the walk budget
-      const MAP_CELLS = 56;       // cells per side of the patch
-      const MAP_PX = 6;           // patch bitmap pixels per cell
-      const MAP_MARGIN = .085;    // re-anchor once the walker drifts this far from the centre
+      // The whole planet is charted ONCE, while the loader is up, and afterwards nothing is ever
+      // sampled: the disc is a single rotated, stretched drawImage of that chart. Walking and
+      // turning only change the transform, so the picture cannot flicker — it is the same static
+      // bitmap sliding under you. (Two earlier versions rescanned the ground at runtime and both
+      // showed it: the first in camera-relative rings, the second in a world-anchored patch that
+      // still had to be re-baked every three metres of walking.)
+      const MAP_RANGE = .40;                       // visible disc radius, world units
+      const MAP_W = compact ? 1024 : 2048, MAP_H = MAP_W / 2;
       const MAP_TAU = Math.PI * 2;
       const MAP_PROVINCES = ['vaelmar', 'sennar', 'caelth', 'mirella', 'vessper'];
-      const MAP_FILL = ['#5d8c68', '#9b7d4c', '#8ca4b6', '#4e9c8f', '#7d78b4'];
-      const MAP_WATER = '#0a2430';
+      const MAP_FILL = [[96, 142, 106], [158, 127, 77], [141, 165, 184], [79, 158, 145], [126, 121, 182]];
+      const MAP_WATER = [10, 36, 48], MAP_COAST = [219, 255, 246], MAP_BORDER = [242, 230, 198];
       const mapCanvas = document.getElementById('minimap');
       const mapCtx = mapCanvas ? mapCanvas.getContext('2d') : null;
-      const mapSide = MAP_CELLS * MAP_PX, mapStep = MAP_PATCH * 2 / MAP_CELLS;
-
-      function mapMakePatch() {
-        const canvas = document.createElement('canvas');
-        canvas.width = canvas.height = mapSide;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = MAP_WATER; ctx.fillRect(0, 0, mapSide, mapSide);
-        return { canvas, ctx, cls: new Uint8Array(MAP_CELLS * MAP_CELLS), center: new THREE.Vector3(1, 0, 0), east: new THREE.Vector3(0, 0, 1), north: new THREE.Vector3(0, 1, 0) };
-      }
-      const mapPatchA = mapMakePatch(), mapPatchB = mapMakePatch();
-      let mapActive = null, mapNeedsDraw = true, mapFrames = 0;
-      const mapJob = { active: false, cursor: 0, patch: mapPatchA };
       const mapBasis = { up: new THREE.Vector3(1, 0, 0), right: new THREE.Vector3(0, 0, 1), fwd: new THREE.Vector3(0, 1, 0) };
       const mapSample = new THREE.Vector3(), mapOffset = new THREE.Vector3(), mapPoint = { x: 0, y: 0 };
+      let mapChart = null, mapNeedsDraw = true;
 
       function mapBasisUpdate() {
         mapBasis.up.copy(state.direction).normalize();
@@ -4833,94 +4819,118 @@
         mapPoint.y = mapOffset.dot(mapBasis.fwd);
         return mapPoint;
       }
-      function mapRequestPatch(center) {
+
+      // One chart, baked once. The terrain mesh vertices are already an equirectangular grid, so
+      // land and water come straight out of `positions` — no heightAt, no noise, and the coastline
+      // is exactly the one the terrain mesh draws. Provinces need provinceAt (~0.2 us per land
+      // texel); the shoreline is feathered so the 3x magnification does not show a staircase, and
+      // coast and borders are written into the same bitmap.
+      async function mapBakeChart() {
         if (!mapCtx) return;
-        const patch = mapJob.patch === mapPatchA ? mapPatchB : mapPatchA;
-        patch.center.copy(center).normalize();
-        if (mapJob.active && patch.center.distanceToSquared(mapJob.patch.center) < 1e-9) return;
-        patch.east.crossVectors(Math.abs(patch.center.y) > .95 ? new THREE.Vector3(1, 0, 0) : UP, patch.center).normalize();
-        patch.north.crossVectors(patch.center, patch.east).normalize();
-        patch.cls.fill(0);
-        patch.ctx.fillStyle = MAP_WATER; patch.ctx.fillRect(0, 0, mapSide, mapSide);
-        mapJob.active = true; mapJob.cursor = 0; mapJob.patch = patch;
-      }
-      // One slice of the bake per frame, on a millisecond budget, like the ground patch itself.
-      // Cells come from the terrain mesh (baseMeshRadius, no fractal noise), so a cell costs a few
-      // microseconds instead of the ten heightAt would.
-      function mapAdvance(budgetMs) {
-        if (!mapJob.active) return false;
-        const patch = mapJob.patch, ctx = patch.ctx, deadline = performance.now() + Math.max(.5, budgetMs);
-        while (mapJob.cursor < MAP_CELLS * MAP_CELLS) {
-          const i = mapJob.cursor % MAP_CELLS, j = (mapJob.cursor / MAP_CELLS) | 0;
-          const offEast = -MAP_PATCH + (i + .5) * mapStep, offNorth = MAP_PATCH - (j + .5) * mapStep;
-          // Only the inscribed circle is ever visible (rotation stays inside it), so the four
-          // corners are not sampled at all — a fifth of the bake, free.
-          if (offEast * offEast + offNorth * offNorth <= MAP_PATCH * MAP_PATCH) {
-            mapSample.copy(patch.center).addScaledVector(patch.east, offEast / R).addScaledVector(patch.north, offNorth / R).normalize();
-            let cls = 1;
-            const h = baseMeshRadius(mapSample) - R;
-            if (h >= SEA - .002) cls = 2 + Math.max(0, MAP_PROVINCES.indexOf(provinceAt(mapSample, h)));
-            patch.cls[mapJob.cursor] = cls;
-            ctx.fillStyle = cls === 1 ? MAP_WATER : MAP_FILL[cls - 2];
-            ctx.fillRect(i * MAP_PX - .5, j * MAP_PX - .5, MAP_PX + 1, MAP_PX + 1);
-          }
-          if ((++mapJob.cursor & 31) === 0 && performance.now() >= deadline) return true;
+        const gw = terrainGeo.parameters.widthSegments, gh = terrainGeo.parameters.heightSegments;
+        const cols = gw + 1, rows = gh + 1;
+        const radius = new Float32Array(cols * rows);
+        for (let i = 0; i < cols * rows; i++) radius[i] = Math.hypot(positions.getX(i), positions.getY(i), positions.getZ(i));
+        // Chart pixel -> mesh grid is separable, so bake the two mappings once.
+        const colIndex = new Int32Array(MAP_W), colFrac = new Float32Array(MAP_W);
+        for (let x = 0; x < MAP_W; x++) {
+          const lon = ((x + .5) / MAP_W - .5) * MAP_TAU;
+          let u = (lon + Math.PI / 2) / MAP_TAU; u -= Math.floor(u);   // mesh u = atan2(z,-x)/TAU + .5
+          const f = u * gw, i = Math.min(gw - 1, f | 0);
+          colIndex[x] = i; colFrac[x] = f - i;
         }
-        mapBakeEdges(patch);
-        mapActive = patch;
-        mapJob.active = false;
-        mapNeedsDraw = true;
-        return false;
-      }
-      // Coast and province lines are baked into the bitmap too, so they cannot flicker either.
-      // Drawn as solid rects rather than strokes: at 6 px per cell a hairline is one pixel anyway,
-      // and rects composite in order with no line-width or dash state to get wrong.
-      function mapBakeEdges(patch) {
-        const ctx = patch.ctx, cls = patch.cls;
-        ctx.save();
-        for (let j = 0; j < MAP_CELLS; j++) for (let i = 0; i < MAP_CELLS; i++) {
-          const a = cls[j * MAP_CELLS + i];
-          if (!a) continue;
-          const x = i * MAP_PX, y = j * MAP_PX;
-          const paint = (edge, vertical) => {
-            const coast = (a === 1) !== (edge === 1);
-            if (!coast && !(a > 1 && edge > 1 && a !== edge)) return;
-            if (coast) {
-              ctx.globalAlpha = .95; ctx.fillStyle = '#d7fff5';
-              ctx.fillRect(vertical ? x + MAP_PX - 1.2 : x, vertical ? y : y + MAP_PX - 1.2, vertical ? 2.4 : MAP_PX, vertical ? MAP_PX : 2.4);
-            } else {
-              ctx.globalAlpha = .55; ctx.fillStyle = '#f2e6c4';
-              // Dashed province border: three dashes per cell edge.
-              for (let d = 0; d < 3; d++) {
-                const t = d / 3.4 * MAP_PX;
-                ctx.fillRect(vertical ? x + MAP_PX - .5 : x + t, vertical ? y + t : y + MAP_PX - .5, vertical ? 1.1 : MAP_PX / 3.6, vertical ? MAP_PX / 3.6 : 1.1);
-              }
+        const rowIndex = new Int32Array(MAP_H), rowFrac = new Float32Array(MAP_H);
+        for (let y = 0; y < MAP_H; y++) {
+          const lat = (.5 - (y + .5) / MAP_H) * Math.PI;
+          const v = .5 - lat / Math.PI, f = v * gh, i = Math.min(gh - 1, f | 0);
+          rowIndex[y] = i; rowFrac[y] = f - i;
+        }
+        const meshHeight = (x, y) => {
+          const i = colIndex[x], j = rowIndex[y], fx = colFrac[x], fy = rowFrac[y];
+          const a = j * cols + i, b = a + 1, c = a + cols, d = c + 1;
+          const top = radius[a] + (radius[b] - radius[a]) * fx, bottom = radius[c] + (radius[d] - radius[c]) * fx;
+          return top + (bottom - top) * fy - R;
+        };
+        // 1. class per chart pixel: land/water from the mesh field, province from provinceAt.
+        //    One row of longitudes is precomputed so the inner loop is multiply-adds and a lookup.
+        const lonSin = new Float32Array(MAP_W), lonCos = new Float32Array(MAP_W);
+        for (let x = 0; x < MAP_W; x++) {
+          const lon = ((x + .5) / MAP_W - .5) * MAP_TAU;
+          lonSin[x] = Math.sin(lon); lonCos[x] = Math.cos(lon);
+        }
+        const chart = document.createElement('canvas');
+        chart.width = MAP_W; chart.height = MAP_H;
+        const chartCtx = chart.getContext('2d'), image = chartCtx.createImageData(MAP_W, MAP_H), data = image.data;
+        const cls = new Uint8Array(MAP_W * MAP_H);
+        for (let y = 0; y < MAP_H; y++) {
+          const lat = (.5 - (y + .5) / MAP_H) * Math.PI, cosLat = Math.cos(lat), sinLat = Math.sin(lat);
+          for (let x = 0; x < MAP_W; x++) {
+            const p = y * MAP_W + x, h = meshHeight(x, y);
+            let c = 0;
+            if (h >= SEA - .002) {
+              mapSample.set(cosLat * lonSin[x], sinLat, cosLat * lonCos[x]);
+              c = 1 + Math.max(0, MAP_PROVINCES.indexOf(provinceAt(mapSample, h)));
             }
-          };
-          if (i + 1 < MAP_CELLS) { const b = cls[j * MAP_CELLS + i + 1]; if (b) paint(b, true); }
-          if (j + 1 < MAP_CELLS) { const b = cls[(j + 1) * MAP_CELLS + i]; if (b) paint(b, false); }
+            cls[p] = c;
+            // Feather the fill across the shoreline: a hard class boundary rasterised at chart
+            // resolution turns into a staircase once the disc magnifies it three times.
+            const t = clamp((h - (SEA - .0042)) / .0084, 0, 1);
+            const land = MAP_FILL[(c || 1) - 1], q = p * 4;
+            data[q] = MAP_WATER[0] + (land[0] - MAP_WATER[0]) * t;
+            data[q + 1] = MAP_WATER[1] + (land[1] - MAP_WATER[1]) * t;
+            data[q + 2] = MAP_WATER[2] + (land[2] - MAP_WATER[2]) * t;
+            data[q + 3] = 255;
+          }
+          if ((y & 63) === 63) await yieldFrame();
         }
-        ctx.restore();
+        // 2. coast and province borders, drawn from the finished class field.
+        const put = (p, rgb, alpha) => {
+          const q = p * 4;
+          data[q] = data[q] * (1 - alpha) + rgb[0] * alpha;
+          data[q + 1] = data[q + 1] * (1 - alpha) + rgb[1] * alpha;
+          data[q + 2] = data[q + 2] * (1 - alpha) + rgb[2] * alpha;
+        };
+        for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) {
+          const p = y * MAP_W + x, a = cls[p];
+          const right = x + 1 < MAP_W ? cls[p + 1] : a, below = y + 1 < MAP_H ? cls[p + MAP_W] : a;
+          if ((a === 0) !== (right === 0) || (a === 0) !== (below === 0)) { put(p, MAP_COAST, .9); continue; }
+          if (a && ((right && a !== right) || (below && a !== below)) && (x + y) % 5 < 3) put(p, MAP_BORDER, .5);
+        }
+        chartCtx.putImageData(image, 0, 0);
+        mapChart = chart;
+        mapNeedsDraw = true;
       }
+
       function mapDraw() {
         if (!mapCtx) return;
         const ctx = mapCtx, size = mapCanvas.width, c = size / 2, rad = c - 4, u = rad / MAP_RANGE;
         ctx.clearRect(0, 0, size, size);
         ctx.save();
         ctx.beginPath(); ctx.arc(c, c, rad, 0, MAP_TAU); ctx.clip();
-        ctx.fillStyle = MAP_WATER; ctx.fillRect(0, 0, size, size);
-        if (mapActive && mapActive.center.distanceTo(state.direction) * R < MAP_PATCH - MAP_RANGE + .02) {
-          // Walker position and facing inside the cached (east, south) bitmap frame, then one
-          // rotated blit: forward ends up pointing at the top of the disc.
-          mapOffset.copy(state.direction).sub(mapActive.center).multiplyScalar(R);
-          const pe = mapOffset.dot(mapActive.east), pn = mapOffset.dot(mapActive.north);
-          const fe = state.heading.dot(mapActive.east), fs = -state.heading.dot(mapActive.north);
-          const rot = -Math.PI / 2 - Math.atan2(fs, fe);
-          const k = u * mapStep / MAP_PX;
+        ctx.fillStyle = 'rgb(10, 36, 48)'; ctx.fillRect(0, 0, size, size);
+        if (mapChart) {
+          // Equirect chart -> tangent plane at the walker: an affine transform, nothing sampled.
+          const n = state.direction;
+          const lat = Math.asin(clamp(n.y, -1, 1)), lon = Math.atan2(n.x, n.z);
+          const mx = (lon / MAP_TAU + .5) * MAP_W, my = (.5 - lat / Math.PI) * MAP_H;
+          const k = MAP_H / (Math.PI * R);                     // chart px per world unit (north)
+          const stretch = 1 / Math.max(.20, Math.cos(lat));    // equirect stretches x near the poles
+          mapBasisUpdate();
+          const east = mapSample.set(Math.cos(lon), 0, -Math.sin(lon)).dot(mapBasis.fwd);
+          const north = mapOffset.set(-Math.sin(lat) * Math.sin(lon), Math.cos(lat), -Math.sin(lat) * Math.cos(lon)).dot(mapBasis.fwd);
+          const rot = -Math.PI / 2 - Math.atan2(-north, east);
           ctx.save();
           ctx.translate(c, c);
           ctx.rotate(rot);
-          ctx.drawImage(mapActive.canvas, (-MAP_PATCH - pe) * u, (-MAP_PATCH + pn) * u, mapSide * k, mapSide * k);
+          ctx.scale(u * stretch / k, u / k);
+          const half = rad * k / u * 1.2;
+          if (mx - half < 0 || mx + half > MAP_W) {
+            ctx.drawImage(mapChart, -mx, -my);                 // rare: the antimeridian, no crop
+          } else {
+            const sx = Math.floor(mx - half), sy = Math.max(0, Math.floor(my - half));
+            const sw = Math.ceil(half * 2), sh = Math.min(MAP_H, Math.ceil(my + half)) - sy;
+            ctx.drawImage(mapChart, sx, sy, sw, sh, sx - mx, sy - my, sw, sh);
+          }
           ctx.restore();
         }
         // Towns, then sanctuaries with the ley lines that tie them together.
@@ -4970,25 +4980,15 @@
         ctx.strokeStyle = 'rgba(165, 238, 225, .2)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(c, c, rad, 0, MAP_TAU); ctx.stroke();
       }
+      // Interval sampling: the chart is frozen, so the disc is simply re-drawn on a 20 Hz cadence
+      // (every third frame) instead of every frame. Nothing else is computed between draws.
+      let mapFrame = 0;
       function minimapUpdate() {
-        if (!mapCtx) return;
+        if (!mapCtx || !mapChart) return;
+        if (!mapNeedsDraw && (++mapFrame % 3) !== 0) return;
         mapBasisUpdate();
-        // Turning never invalidates the cache — that is the whole point of a world-anchored patch.
-        // Only walking does, and only once the walker has used up the margin.
-        const swing = d => (d.distanceTo(state.direction) * R);
-        const drift = mapActive ? swing(mapActive.center) : Infinity;
-        if (!mapActive) mapRequestPatch(state.direction);
-        else if (drift > MAP_PATCH - MAP_RANGE) {
-          // A jump (landing, view switch) leaves the cached patch unable to reach the rim of the
-          // disc, so bake the new one in a single go instead of drawing a half-covered map. It
-          // happens behind a transition, and it beats a disc that flickers water for a fifth.
-          mapRequestPatch(state.direction);
-          while (mapJob.active) mapAdvance(1e9);
-        } else if (drift > MAP_MARGIN) mapRequestPatch(state.direction);
-        else if (mapJob.active && swing(mapJob.patch.center) > MAP_MARGIN * 2.2) mapRequestPatch(state.direction);
-        if (mapJob.active) mapAdvance(1.1);
-        // The picture is cached, so redrawing is cheap; 12 Hz is plenty for drifting fauna.
-        if (mapNeedsDraw || (++mapFrames % 5) === 0) { mapDraw(); mapNeedsDraw = false; }
+        mapDraw();
+        mapNeedsDraw = false;
       }
 
       // Optional generated soundscape: wind, a low pad, and a night shimmer.
@@ -5569,11 +5569,8 @@
       if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
       // Bake the survey patch while the loader is still up, so the first first-person frame already
       // has ground on the disc (and nobody ever watches it fill in).
-      if (mapCtx) {
-        mapRequestPatch(landing);
-        for (let guard = 0; mapJob.active && guard < 80; guard++) { mapAdvance(14); await yieldFrame(); }
-        mapDraw();
-      }
+      await mapBakeChart();
+      mapDraw();
       renderer.shadowMap.needsUpdate=true;renderScene();
       startup.ready=true;startup.phase='running';
       status.hidden=true;document.body.classList.remove('loading');
