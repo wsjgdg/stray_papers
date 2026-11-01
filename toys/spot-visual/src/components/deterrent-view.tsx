@@ -56,6 +56,7 @@ import { calcPTSI, getUVByHour } from "@/lib/ptsi-calculator";
 import { useFocusSpot } from "@/lib/focus-spot";
 import { requestHere } from "@/lib/geolocation";
 import { pickUvAtHour, type HourUv } from "@/lib/uv-now";
+import { typicalUvAt, seasonalNote } from "@/lib/uv-climate";
 import { type PTSIResult, parseCoords } from "@/lib/spot-data";
 import { useAppStore } from "@/lib/store";
 
@@ -100,21 +101,30 @@ const speak = (text: string) => {
 };
 
 /* ═══ 时段数据 ═══ */
+// 五档：清晨 / 上午 / 正午 / 黄昏 / 夜间。
+// 原来只有三档，黄昏之后没有夜间——而夏天夜游恰恰是避暑的主要选择。
+// uv/shadow 不再写死典型值：UV 由 typicalUvAt(hour) 按**季节 + 时段**估算
+// （旧的是清晨2/正午11/黄昏4，那是盛夏量级，11 月正午实测才 0.2）。
 const TIME_PERIODS = [
   {
     label: "清晨",
-    // 代表小时：实测 UV 按这个小时去 uvToday 里取，不再是「永远取当前小时」
     hour: 7,
-    uv: 2,
     shadow: 68,
     bgFrom: "#EFF6FF",
     bgTo: "#DBEAFE",
     emoji: "🌅",
   },
   {
+    label: "上午",
+    hour: 10,
+    shadow: 20,
+    bgFrom: "#F0F9FF",
+    bgTo: "#BAE6FD",
+    emoji: "🌤️",
+  },
+  {
     label: "正午",
     hour: 13,
-    uv: 11,
     shadow: 8,
     bgFrom: "#FFF7ED",
     bgTo: "#FDBA74",
@@ -123,13 +133,22 @@ const TIME_PERIODS = [
   {
     label: "黄昏",
     hour: 18,
-    uv: 4,
     shadow: 42,
     bgFrom: "#FEF3C7",
     bgTo: "#FDE68A",
     emoji: "🌇",
   },
+  {
+    label: "夜间",
+    hour: 21,
+    shadow: 100,
+    bgFrom: "#1E293B",
+    bgTo: "#334155",
+    emoji: "🌙",
+  },
 ];
+/** 默认档位：正午 */
+const NOON_INDEX = 2;
 
 /** 实测 UV：where 说明这是**哪个地方**的实测，避免「选了黄山却拿本地的数据」。 */
 interface UvNow {
@@ -285,6 +304,8 @@ function Dial({
   };
 
   const period = TIME_PERIODS[value];
+  // 典型值按季节+时段估算（拿不到实测时才显示）
+  const typicalUv = typicalUvAt(period.hour);
 
   return (
     <div
@@ -364,14 +385,14 @@ function Dial({
             className="text-[36px] font-black leading-none"
             style={{
               color:
-                (realData?.uv ?? period.uv) >= 8
+                (realData?.uv ?? typicalUv) >= 8
                   ? "#DC2626"
-                  : (realData?.uv ?? period.uv) >= 5
+                  : (realData?.uv ?? typicalUv) >= 5
                     ? "#F59E0B"
                     : "#16A34A",
             }}
           >
-            {realData?.uv ?? period.uv}
+            {realData?.uv ?? typicalUv}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
             紫外线强度
@@ -420,7 +441,9 @@ function DialBackground({
   fromIdx: number;
   toIdx: number;
 }) {
-  const isNoonFlash = fromIdx === 0 && toIdx === 1; // 清晨→正午
+  const isNoonFlash =
+    TIME_PERIODS[fromIdx]?.label === "清晨" &&
+    TIME_PERIODS[toIdx]?.label === "正午";
   if (isNoonFlash) {
     return (
       <motion.div
@@ -1076,7 +1099,8 @@ function ConclusionButton({
 
   // ═══ 有效 UV：实测（Open-Meteo 实时，有则优先）覆盖静态典型值 ═══
   // 拨盘显示与 PTSI/结论判定共用同一口径，避免「显示实测、判定用典型值」的割裂
-  const effectiveUv = realData?.uv ?? TIME_PERIODS[timeIndex]?.uv ?? 0;
+  const effectiveUv =
+    realData?.uv ?? typicalUvAt(TIME_PERIODS[timeIndex]?.hour ?? 13);
 
   // ═══ 使用 ptsi-calculator 计算 PTSI ═══
   const ptsiResult = useMemo<PTSIResult>(() => {
@@ -1414,7 +1438,7 @@ function ConclusionButton({
    劝退指南主页面
    ═══════════════════════════════════════════════════ */
 export default function DeterrentView() {
-  const [timeIndex, setTimeIndex] = useState(1); // 默认正午
+  const [timeIndex, setTimeIndex] = useState(NOON_INDEX); // 默认正午
   // 身体条件在 store（三视图共享：体力沙盘/PTSI/劝退）
   const { spots, bodyConditions, toggleBodyCondition } = useAppStore();
   const activeConditions = useMemo(
@@ -1428,7 +1452,7 @@ export default function DeterrentView() {
   const [timelineIdx, setTimelineIdx] = useState(0);
   // 透明预测：周末按已知规律上调排队曲线（非实时，标注见标题）
   const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6;
-  const [prevTimeIdx, setPrevTimeIdx] = useState(1);
+  const [prevTimeIdx, setPrevTimeIdx] = useState(NOON_INDEX);
   // ═══ 假想目的地 selector 状态（D3.4 隐含前置） ═══
   // 劝退指南默认无 spot 上下文，仅做时段评估；为让 D3.4 的"相似用户踩坑"
   // 匹配能够成立，这里允许用户挑选一个假想目的地。
@@ -1443,7 +1467,7 @@ export default function DeterrentView() {
   );
   const selectedSpotName = selectedSpot?.name ?? null;
 
-  const period = TIME_PERIODS[timeIndex] || TIME_PERIODS[1];
+  const period = TIME_PERIODS[timeIndex] || TIME_PERIODS[NOON_INDEX];
 
   const toggleCondition = (id: string) => {
     toggleBodyCondition(id);
@@ -1539,9 +1563,19 @@ export default function DeterrentView() {
         </>
       );
     }
+    // 典型值也不是拍脑袋的固定数：按当前月份的季节曲线 + 时段比例估算
     if (destCoords)
-      return <>「{uvWhere}」该小时没取到实测数据，下面用典型值估算。</>;
-    return <>未取到实测天气（未授权定位或该小时无数据），下面用典型值估算。</>;
+      return (
+        <>
+          「{uvWhere}」该小时没取到实测数据，下面按 {seasonalNote()} 的季节曲线估算。
+        </>
+      );
+    return (
+      <>
+        未取到实测天气（未授权定位或该小时无数据），下面按 {seasonalNote()}{" "}
+        的季节曲线估算。
+      </>
+    );
   }, [realData, destCoords, uvWhere, timeIndex]);
 
 

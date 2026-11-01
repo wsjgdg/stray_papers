@@ -139,6 +139,19 @@ try {
       setting: "granted",
     }).catch(() => {});
   }
+  // --mobile：按 iPhone 14 视口（390×844）跑，验移动端布局有没有溢出/错位
+  if (opt.mobile) {
+    await send("Emulation.setDeviceMetricsOverride", {
+      width: 390,
+      height: 844,
+      deviceScaleFactor: 3,
+      mobile: true,
+    });
+    await send("Emulation.setTouchEmulationEnabled", {
+      enabled: true,
+      maxTouchPoints: 5,
+    });
+  }
   await send("Page.navigate", { url });
   await sleep(waitMs);
 
