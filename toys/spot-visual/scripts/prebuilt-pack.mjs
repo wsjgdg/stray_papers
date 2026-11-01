@@ -32,9 +32,13 @@ if (fs.existsSync(TAR)) fs.rmSync(TAR);
 // 一律用相对路径：Windows 下把绝对路径（C://...）交给 shell 拼进 tar 命令行会被转义坏掉
 // 归属归一交给解包侧：Windows bsdtar 不支持 --uid/--gid，硬塞会直接报错退出。
 // 沙箱解包用 --no-same-owner，Windows 的 SID 就不会触发 chown 失败。
-const r = spawnSync("tar", ["-czf", TAR, "-C", ".next", "."], {
-  stdio: "inherit",
-});
+// 排除 .next/cache（webpack/turbopack 构建缓存，130MB）：
+// 只在「重新构建」时有用，沙箱冷启动是解包即跑，用不上；留着只会把上传包撑大一倍。
+const r = spawnSync(
+  "tar",
+  ["-czf", TAR, "-C", ".next", "--exclude=./cache", "."],
+  { stdio: "inherit" },
+);
 if (r.status !== 0) {
   console.error("✗ tar 打包失败");
   process.exit(r.status ?? 1);
