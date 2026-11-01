@@ -4,7 +4,7 @@
 // D3.1: 劝退日记主视图
 // 用户浏览和筛选已记录的劝退日记
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookX,
@@ -18,6 +18,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useFocusSpot } from "@/lib/focus-spot";
 import { DISSUASION_TAGS, type DissuasionRecord } from "@/lib/spot-data";
 import DissuasionEditor from "./dissuasion-editor";
 
@@ -174,6 +175,15 @@ export default function DissuasionView() {
   const importInputRef = useRef<HTMLInputElement>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  // 从景点详情点「翻车日记」跳过来时，把该景点预置进搜索：
+  // 组件的意义就是「这个地方别人踩过什么坑」，进来先空着等于让用户重搜一遍。
+  const focusId = useFocusSpot((s) => s.id);
+  const spots = useAppStore((s) => s.spots);
+  useEffect(() => {
+    if (!focusId) return;
+    const name = spots.find((sp) => sp.id === focusId)?.name;
+    if (name) setSearchQuery(name);
+  }, [focusId, spots]);
   const [filterTag, setFilterTag] = useState<string | null>(null);
   // ═══ JSON 导入/导出：与景点导入对称，让翻车记录可迁移、可分享 ═══
   const exportRecords = () => {

@@ -1749,12 +1749,10 @@ function SpotDetailDialog() {
               <button
                 onClick={() => {
                   setSelectedSpot(null);
-                  try {
-                    sessionStorage.setItem(
-                      "dissuasion:focusSpotName",
-                      spot.name,
-                    );
-                  } catch {}
+                  // 以前写 sessionStorage「dissuasion:focusSpotName」，
+                  // 但翻车日记那边**从来没读过**——点进去不带景点，等于白传。
+                  // 统一走「关注景点」，由 DissuasionView 自己取名字预置搜索。
+                  useFocusSpot.getState().setName(spot.id);
                   setActiveView("dissuasion");
                 }}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-100 dark:border-gray-800"
@@ -2664,31 +2662,26 @@ function SpotsView() {
                 {spots.length}
               </span>
             </button>
-            {(citiesExpanded
-              ? HOT_PROVINCES
-              : visibleProvinces
-            ).map(
-              (hc) => {
-                const n = cityCounts[hc] ?? 0;
-                const on = cityFilter === hc;
-                return (
-                  <button
-                    key={hc}
-                    onClick={() => setCityFilter(on ? null : hc)}
-                    aria-pressed={on}
-                    title={n ? `${hc} · ${n} 个景点` : `${hc} · 库内无匹配`}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${on ? "bg-emerald-600 text-white border-emerald-600" : n === 0 ? "bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" : "bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"}`}
+            {(citiesExpanded ? HOT_PROVINCES : visibleProvinces).map((hc) => {
+              const n = cityCounts[hc] ?? 0;
+              const on = cityFilter === hc;
+              return (
+                <button
+                  key={hc}
+                  onClick={() => setCityFilter(on ? null : hc)}
+                  aria-pressed={on}
+                  title={n ? `${hc} · ${n} 个景点` : `${hc} · 库内无匹配`}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${on ? "bg-emerald-600 text-white border-emerald-600" : n === 0 ? "bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" : "bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"}`}
+                >
+                  {hc}
+                  <span
+                    className={`ml-1 text-[10px] ${on ? "text-white/70" : "text-gray-400 dark:text-gray-500"}`}
                   >
-                    {hc}
-                    <span
-                      className={`ml-1 text-[10px] ${on ? "text-white/70" : "text-gray-400 dark:text-gray-500"}`}
-                    >
-                      {n}
-                    </span>
-                  </button>
-                );
-              },
-            )}
+                    {n}
+                  </span>
+                </button>
+              );
+            })}
             {HOT_PROVINCES.length > 12 && (
               <button
                 onClick={() => setCitiesExpanded((v) => !v)}
@@ -3609,6 +3602,40 @@ export default function Home() {
   }, [activeView]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+
+  // ═══ 视图 keep-alive：切过的视图保持挂载，切换只改 display ═══
+  // 旧方案每次切换全量重挂载（6000 条过滤 + 60 卡片/图表重渲染，实测热切 65-160ms）；
+  // 挂载过一次的视图隐藏后保留 DOM 与 memo 缓存，热切换趋近 0。
+  // 首次仍是条件挂载（可见状态下 mount，ECharts 等需要真实容器尺寸）。
+  const [visitedViews, setVisitedViews] = useState<Set<ViewType>>(
+    () => new Set([activeView]),
+  );
+  useEffect(() => {
+    setVisitedViews((prev) =>
+      prev.has(activeView) ? prev : new Set(prev).add(activeView),
+    );
+  }, [activeView]);
+
+  // 闲时预取各视图 chunk：首次切屏不再等网络加载 dynamic 模块
+  useEffect(() => {
+    const warm = () => {
+      void import("@/components/trip-view");
+      void import("@/components/budget-view");
+      void import("@/components/deterrent-view");
+      void import("@/components/fitness-view");
+      void import("@/components/personality-view");
+      void import("@/components/stamina-sandbox-view");
+      void import("@/components/ptsi-view");
+      void import("@/components/dissuasion-view");
+      void import("@/components/network-view");
+      void import("@/components/dissuasion-editor");
+    };
+    const ric =
+      window.requestIdleCallback ??
+      ((cb: () => void) => window.setTimeout(cb, 200));
+    const t = window.setTimeout(() => ric(() => warm()), 1200);
+    return () => window.clearTimeout(t);
+  }, []);
   // 返回顶部：主内容是 overflow-y-auto 容器（不是 window），监听其滚动
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const [showTop, setShowTop] = useState(false);
@@ -3645,23 +3672,48 @@ export default function Home() {
               <div
                 className={`${activeView === "network" ? "" : "max-w-7xl mx-auto"} p-4 sm:p-6 lg:p-8`}
               >
-                {activeView === "spots" && <SpotsView />}
-                {activeView === "network" && (
-                  <div className="h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)]">
-                    <NetworkView />
-                  </div>
-                )}
-                {activeView === "favorites" && <FavoritesView />}
-                {activeView === "trip" && <TripView />}
-                {/* 修复：补全缺失的视图路由 */}
-                {activeView === "personality" && <PersonalityView />}
-                {activeView === "budget" && <BudgetView />}
-                {activeView === "deterrent" && <DeterrentView />}
-                {activeView === "fitness" && <FitnessView />}
-                {activeView === "stamina-sandbox" && <StaminaSandboxView />}
-                {activeView === "ptsi" && <PTSIView />}
-                {activeView === "dissuasion" && <DissuasionView />}
-                {activeView === "profile" && <ProfileView />}
+                {(
+                  [
+                    "spots",
+                    "network",
+                    "favorites",
+                    "trip",
+                    "personality",
+                    "budget",
+                    "deterrent",
+                    "fitness",
+                    "stamina-sandbox",
+                    "ptsi",
+                    "dissuasion",
+                    "profile",
+                  ] as ViewType[]
+                ).map((v) => {
+                  // keep-alive：挂载过的视图隐藏而非卸载（visitedViews 收集）
+                  if (!visitedViews.has(v)) return null;
+                  return (
+                    <div
+                      key={v}
+                      style={activeView === v ? undefined : { display: "none" }}
+                    >
+                      {v === "spots" && <SpotsView />}
+                      {v === "network" && (
+                        <div className="h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)]">
+                          <NetworkView />
+                        </div>
+                      )}
+                      {v === "favorites" && <FavoritesView />}
+                      {v === "trip" && <TripView />}
+                      {v === "personality" && <PersonalityView />}
+                      {v === "budget" && <BudgetView />}
+                      {v === "deterrent" && <DeterrentView />}
+                      {v === "fitness" && <FitnessView />}
+                      {v === "stamina-sandbox" && <StaminaSandboxView />}
+                      {v === "ptsi" && <PTSIView />}
+                      {v === "dissuasion" && <DissuasionView />}
+                      {v === "profile" && <ProfileView />}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
