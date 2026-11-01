@@ -46,7 +46,10 @@ import {
   generateStaminaAdvice,
 } from "@/lib/stamina-calculator";
 import { calcPTSI, getUVByHour } from "@/lib/ptsi-calculator";
-import { type PTSIResult } from "@/lib/spot-data";
+import { useFocusSpot } from "@/lib/focus-spot";
+import { requestHere } from "@/lib/geolocation";
+import { pickUvAtHour, type HourUv } from "@/lib/uv-now";
+import { type PTSIResult, parseCoords } from "@/lib/spot-data";
 import { useAppStore } from "@/lib/store";
 
 /* ═══ 工具函数 ═══ */
@@ -93,6 +96,8 @@ const speak = (text: string) => {
 const TIME_PERIODS = [
   {
     label: "清晨",
+    // 代表小时：实测 UV 按这个小时去 uvToday 里取，不再是「永远取当前小时」
+    hour: 7,
     uv: 2,
     shadow: 68,
     bgFrom: "#EFF6FF",
@@ -101,6 +106,7 @@ const TIME_PERIODS = [
   },
   {
     label: "正午",
+    hour: 13,
     uv: 11,
     shadow: 8,
     bgFrom: "#FFF7ED",
@@ -109,6 +115,7 @@ const TIME_PERIODS = [
   },
   {
     label: "黄昏",
+    hour: 18,
     uv: 4,
     shadow: 42,
     bgFrom: "#FEF3C7",
@@ -116,6 +123,14 @@ const TIME_PERIODS = [
     emoji: "🌇",
   },
 ];
+
+/** 实测 UV：where 说明这是**哪个地方**的实测，避免「选了黄山却拿本地的数据」。 */
+interface UvNow {
+  uv: number;
+  shadow: number;
+  source: "open-meteo";
+  where: string;
+}
 
 /* ═══ 身体条件 ═══ */
 const CONDITIONS = [
@@ -231,7 +246,7 @@ function Dial({
 }: {
   value: number;
   onChange: (i: number) => void;
-  realData: { uv: number; shadow: number; source: "open-meteo" } | null;
+  realData: UvNow | null;
 }) {
   // 棘轮拖动：motionX 跟手，跨 slot 边界触发短震，松手 spring 回弹到刻度
   const { motionX, handleStart, handleMove, handleEnd, snapTo } =
@@ -289,7 +304,25 @@ function Dial({
           return (
             <motion.div
               key={t.label}
-              className={`absolute text-center ${isActive ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}`}
+              // 只能拖、不能点：鼠标用户得拖准 160px 才算切档，键盘用户完全没法切。
+              // 加点击与 Enter/Space，等于给拨盘补一条「直接选中」的路径。
+              role="button"
+              tabIndex={0}
+              aria-label={`切换到${t.label}`}
+              aria-pressed={isActive}
+              onClick={() => {
+                if (i !== value) {
+                  onChange(i);
+                  vibrate(30);
+                }
+              }}
+              onKeyDown={(e) => {
+                if ((e.key === "Enter" || e.key === " ") && i !== value) {
+                  e.preventDefault();
+                  onChange(i);
+                }
+              }}
+              className={`absolute text-center cursor-pointer ${isActive ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}`}
               style={{ x: useTransform(motionX, (mv) => baseX + mv) }}
               animate={{
                 scale: isActive ? 1.15 : 0.85,
@@ -334,7 +367,7 @@ function Dial({
             紫外线强度
             {realData ? (
               <span className="text-emerald-600 dark:text-emerald-400 ml-0.5">
-                · 实时
+                · {realData.where}实测
               </span>
             ) : (
               <span className="ml-0.5">· 典型值</span>
@@ -349,7 +382,7 @@ function Dial({
             阴影占比
             {realData ? (
               <span className="text-emerald-600 dark:text-emerald-400 ml-0.5">
-                · 实时
+                · {realData.where}实测
               </span>
             ) : (
               <span className="ml-0.5">· 典型值</span>
@@ -1016,7 +1049,7 @@ function ConclusionButton({
   activeConditions: Set<string>;
   selectedSpotId: string | null;
   selectedSpotName: string | null;
-  realData: { uv: number; shadow: number; source: "open-meteo" } | null;
+  realData: UvNow | null;
 }) {
   const [showResult, setShowResult] = useState(false);
   const [result, setResult] = useState<"go" | "nogo">("go");
@@ -1089,7 +1122,8 @@ function ConclusionButton({
     const reasons: string[] = [];
     if (uvScore >= 50) reasons.push("正午紫外线极强");
     else if (uvScore >= 30) reasons.push("紫外线较强");
-    if (realData) reasons.push(`已按实测 UV ${uv} 校准`);
+    if (realData)
+      reasons.push(`已按「${realData.where}」实测 UV ${uv} 校准`);
     if (activeConditions.has("heat")) reasons.push("当前怕热中暑");
     if (activeConditions.has("heart")) reasons.push("当前心脏负担大");
     if (activeConditions.has("knee")) reasons.push("当前膝盖不适");
@@ -1382,14 +1416,16 @@ export default function DeterrentView() {
   // ═══ 假想目的地 selector 状态（D3.4 隐含前置） ═══
   // 劝退指南默认无 spot 上下文，仅做时段评估；为让 D3.4 的"相似用户踩坑"
   // 匹配能够成立，这里允许用户挑选一个假想目的地。
-  const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
-  const selectedSpotName = useMemo(
+  // 假想目的地与 PTSI 的 7 日窗口共用「关注景点」：
+  // 以前两边各存一份 state，同一页能出现两个不同目的地。
+  const selectedSpotId = useFocusSpot((s) => s.id);
+  const setSelectedSpotId = useFocusSpot((s) => s.setName);
+  const selectedSpot = useMemo(
     () =>
-      selectedSpotId
-        ? (spots.find((s) => s.id === selectedSpotId)?.name ?? null)
-        : null,
+      selectedSpotId ? (spots.find((s) => s.id === selectedSpotId) ?? null) : null,
     [spots, selectedSpotId],
   );
+  const selectedSpotName = selectedSpot?.name ?? null;
 
   const period = TIME_PERIODS[timeIndex] || TIME_PERIODS[1];
 
@@ -1404,46 +1440,70 @@ export default function DeterrentView() {
     setTimeIndex(i);
   };
 
-  // ═══ 真实 UV：geolocation → /api/weather（Open-Meteo 逐小时 uv_index）═══
-  // 提升到主组件：拨盘显示与 PTSI/结论判定共用同一份数据
-  // 失败/无定位静默回退典型值（TIME_PERIODS.uv）
-  const [realData, setRealData] = useState<{
-    uv: number;
-    shadow: number;
-    source: "open-meteo";
-  } | null>(null);
+  // ═══ 实测 UV：按**目的地**坐标取，再按拨盘时段取对应小时 ═══
+  // 旧实现有两个错：① 永远用浏览器定位坐标（选黄山也拿你所在地的 UV）；
+  // ② 只取「当前小时」那一格，拨盘切到清晨/黄昏 UV 不动，结论也不动。
+  const destCoords = useMemo(
+    () => (selectedSpot ? parseCoords(selectedSpot) : null),
+    [selectedSpot],
+  );
+  // 没选目的地时退回「你所在位置」，并在文案里标出来，不含糊成「实时」
+  const [hereCoords, setHereCoords] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (destCoords) return; // 有目的地就不用问定位权限了
     let alive = true;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const res = await fetch(
-            `/api/weather?lat=${pos.coords.latitude.toFixed(3)}&lng=${pos.coords.longitude.toFixed(3)}`,
-          );
-          if (!res.ok) return;
-          const j = await res.json();
-          const hour = String(new Date().getHours()).padStart(2, "0");
-          const hit = (j.uvToday ?? []).find(
-            (x: { hour: string }) => x.hour === hour,
-          );
-          if (hit && alive)
-            setRealData({
-              uv: hit.uv,
-              shadow: hit.shadow,
-              source: "open-meteo",
-            });
-        } catch {
-          /* 静默回退典型值 */
-        }
-      },
-      () => {},
-      { timeout: 5000 },
-    );
+    requestHere(5000).then((r) => {
+      if (alive && r.ok) setHereCoords({ lat: r.fix.lat, lng: r.fix.lng });
+    });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [destCoords]);
+
+  const uvWhere = destCoords
+    ? (selectedSpot?.name ?? "目的地")
+    : hereCoords
+      ? "你所在位置"
+      : null;
+  const fetchCoords = destCoords ?? hereCoords;
+
+  const [uvToday, setUvToday] = useState<HourUv[] | null>(null);
+  useEffect(() => {
+    if (!fetchCoords) {
+      setUvToday(null);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/weather?lat=${fetchCoords.lat.toFixed(3)}&lng=${fetchCoords.lng.toFixed(3)}`,
+        );
+        if (!res.ok) return;
+        const j = await res.json();
+        if (alive && Array.isArray(j.uvToday)) setUvToday(j.uvToday);
+      } catch {
+        /* 静默回退典型值 */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [fetchCoords]);
+
+  // 拨盘档位 → 该小时的实测值（时段变了 UV 才跟着变）
+  const realData = useMemo<UvNow | null>(() => {
+    const hit = pickUvAtHour(uvToday, TIME_PERIODS[timeIndex]?.hour ?? 0);
+    if (!hit || !uvWhere) return null;
+    return {
+      uv: hit.uv,
+      shadow: hit.shadow,
+      source: "open-meteo",
+      where: uvWhere,
+    };
+  }, [uvToday, timeIndex, uvWhere]);
 
   return (
     <div className="relative min-h-full">
@@ -1491,7 +1551,7 @@ export default function DeterrentView() {
               健康预警拨盘
             </span>
             <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
-              ← 左右滑动 →
+              ← 左右滑动 / 点选时段 →
             </span>
           </div>
           <Dial

@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { CalendarDays, RefreshCw, MapPin, Crown } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { calcPTSI } from "@/lib/ptsi-calculator";
+import { useFocusSpot } from "@/lib/focus-spot";
 import { parseCoords } from "@/lib/spot-data";
 
 interface DayRow {
@@ -45,14 +46,14 @@ export default function SevenDayWindow({
     );
   }, [spots, trip]);
 
-  // 从景点详情「看 7 日出行窗口」跳转来时，定位到该景点
-  const [spotId, setSpotId] = useState<string>(() => {
-    try {
-      return sessionStorage.getItem("ptsi:focusSpotId") ?? "";
-    } catch {
-      return "";
-    }
-  });
+  // 目的地与劝退指南共用「关注景点」（src/lib/focus-spot.ts）。
+  // 以前这里读 sessionStorage 且读完不清理：跳过一次之后，以后每次进 PTSI
+  // 都还沿用那个旧景点；而劝退指南那边又各选各的，同页两个目的地。
+  const focusId = useFocusSpot((s) => s.id);
+  const [spotId, setSpotId] = useState<string>("");
+  useEffect(() => {
+    if (focusId) setSpotId(focusId);
+  }, [focusId]);
   const [days, setDays] = useState<DayRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
