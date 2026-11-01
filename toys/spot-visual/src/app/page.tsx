@@ -2454,6 +2454,19 @@ function SpotsView() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        // 精度门槛：浏览器定位在桌面端常常走「网络/IP 定位」，误差可以到几十甚至上千公里
+        // （广州用户被定位到北京就是这么来的）。精度差就不假装成功，直接说清楚。
+        const accuracy = Number.isFinite(pos.coords.accuracy)
+          ? pos.coords.accuracy
+          : Number.POSITIVE_INFINITY;
+        if (accuracy > 50_000) {
+          setLocating(false);
+          setOsmMsg({
+            type: "err",
+            text: `定位不可靠（精度约 ±${Math.round(accuracy / 1000)} 公里，通常是网络/IP 定位，不是 GPS）。已取消定位，请手动输入城市名筛选，或在浏览器设置里允许「精确位置」后重试。`,
+          });
+          return;
+        }
         setUserLoc(here);
         setSortMode("distance");
         setLocating(false);
@@ -2481,10 +2494,13 @@ function SpotsView() {
           if (/[区县旗]$/.test(name)) continue;
           consider(name.replace(/(市|地区|自治州|盟)$/, ""), lng, lat);
         }
+        const accTxt = Number.isFinite(accuracy)
+          ? `（定位误差约 ±${Math.max(1, Math.round(accuracy / 1000))} 公里）`
+          : "";
         setOsmMsg({
-          type: "ok",
+          type: accuracy > 5_000 ? "err" : "ok",
           text: nearestCity
-            ? `已定位到「${nearestCity}」附近（距市中心约 ${Math.round(nearestKm)} 公里）：列表按距离从近到远排，不做城市过滤；只想看该城市可在输入框回车筛选。`
+            ? `已定位到「${nearestCity}」附近${accTxt}：列表按距离从近到远排，不做城市过滤；只想看该城市可在输入框回车筛选。`
             : "已定位，景点列表按离你最近的顺序排列（未做城市过滤）",
         });
       },

@@ -26,7 +26,8 @@
     "geo:centers": "node scripts/gen-city-centers.mjs",
     "pois:photos": "node scripts/download-poi-photos.mjs",
     "dev:iso": "node scripts/dev-iso.mjs",
-    "pack:deploy": "npm run build:deploy && node scripts/prebuilt-pack.mjs"
+    "pack:deploy": "npm run build:deploy && node scripts/prebuilt-pack.mjs",
+    "preview": "next start -p 3100"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
