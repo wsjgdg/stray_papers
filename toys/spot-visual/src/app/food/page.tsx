@@ -13,7 +13,9 @@ import {
   Sparkles,
   Layers,
   Download,
+  Compass,
 } from "lucide-react";
+import { withSharecode } from "@/lib/share-link";
 import type { EChartsOption } from "echarts";
 import {
   PROVINCE_FOODS,
@@ -588,6 +590,17 @@ export default function FoodPage() {
             >
               <ChevronLeft className="w-3.5 h-3.5" /> 返回全国
             </button>
+          )}
+          {/* 这一页以前是死胡同：看到「广东·白切鸡」想去景点览胜看广东的景点，
+              只能自己回首页再筛一遍，省名也带不过去。这里把省名带进 ?prov=。 */}
+          {drill && (
+            <a
+              href={withSharecode(`/?prov=${encodeURIComponent(drill)}`)}
+              className="inline-flex items-center gap-0.5 text-xs font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-full px-2.5 py-1 hover:bg-sky-100 transition-colors"
+              title={`去景点览胜看「${drill}」的景点（自动按该省筛选）`}
+            >
+              <Compass className="w-3.5 h-3.5" /> 看该省景点
+            </a>
           )}
           <div className="ml-auto inline-flex flex-wrap rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs shrink-0">
             {(

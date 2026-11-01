@@ -88,6 +88,11 @@ ws.onmessage = (e) => {
         (msg.params.args || []).map((a) => a.value ?? a.description ?? "").join(" "),
     );
   }
+  if (msg.method === "Page.javascriptDialogOpening") {
+    logs.push("DIALOG: " + (msg.params?.message || ""));
+    // alert/confirm 不处理会阻塞渲染进程，后面的求值全部超时
+    send("Page.handleJavaScriptDialog", { accept: true }).catch(() => {});
+  }
   if (msg.method === "Network.loadingFailed" && opt.net) {
     logs.push(
       "NET_FAIL " + msg.params?.type + " " + (msg.params?.errorText || ""),
@@ -165,7 +170,29 @@ try {
 
   if (opt.click) await doClick(opt.click);
   if (opt["click-label"]) await doClick(opt["click-label"], true);
+
+  // --focus=<placeholder 片段> + --insert=<文本>：给搜索框输入（点开候选用）
+  if (opt.focus) {
+    const focused = await send("Runtime.evaluate", {
+      expression: `(()=>{const el=[...document.querySelectorAll('input')].find(i=>(i.placeholder||'').includes(${JSON.stringify(opt.focus)}));if(!el)return false;el.focus();return true;})()`,
+      returnByValue: true,
+    });
+    if (!focused.result.value)
+      throw new Error("找不到输入框: " + opt.focus);
+    if (opt.insert) {
+      await send("Input.insertText", { text: opt.insert });
+      await sleep(Number(opt.after || 1200));
+    }
+  }
+
   if (opt.click2) await doClick(opt.click2);
+  if (opt.click3) await doClick(opt.click3);
+  // --reload=毫秒：点完之后刷新一次，用来验证「状态是否被错误持久化」
+  // （localStorage 在同一个 user-data-dir 里是保留的，等价于「用户下次打开」）
+  if (opt.reload) {
+    await send("Page.reload", { ignoreCache: false });
+    await sleep(Number(opt.reload));
+  }
   const r = await send("Runtime.evaluate", {
     expression: expr,
     returnByValue: true,

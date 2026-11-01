@@ -2354,6 +2354,20 @@ function SpotsView() {
   const setLevelFilter = useAppStore((s) => s.setLevelFilter);
   const [locating, setLocating] = useState(false);
 
+  // 从「中国味道」带 ?prov= 跳过来、或筛选的是第 13 个之后的省份时，
+  // 该省的 chip 本来在「展开全部省份」后面 → 进来看不到是哪个省被选中，
+  // 只能靠下面那行「返回全国」猜。这里把当前筛选的省份顶到可见列表最前面。
+  const visibleProvinces = useMemo(() => {
+    const base = citiesExpanded ? HOT_PROVINCES : HOT_PROVINCES.slice(0, 12);
+    if (
+      cityFilter &&
+      HOT_PROVINCES.includes(cityFilter) &&
+      !base.includes(cityFilter)
+    )
+      return [cityFilter, ...base];
+    return base;
+  }, [citiesExpanded, cityFilter]);
+
   // ═══ 筛选 ↔ URL 同步：?prov=广东&cat=自然风光&lv=5A&q=古镇 ═══
   // 以前筛选只写在 localStorage 里：链接发给别人，对方看到的是全国；
   // 而「中国味道」早就是 ?prov= 可分享的，两页口径不一致。
@@ -2650,7 +2664,10 @@ function SpotsView() {
                 {spots.length}
               </span>
             </button>
-            {(citiesExpanded ? HOT_PROVINCES : HOT_PROVINCES.slice(0, 12)).map(
+            {(citiesExpanded
+              ? HOT_PROVINCES
+              : visibleProvinces
+            ).map(
               (hc) => {
                 const n = cityCounts[hc] ?? 0;
                 const on = cityFilter === hc;
