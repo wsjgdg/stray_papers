@@ -21,6 +21,8 @@ const BACKUPS = {
   "src/lib/spot-profiles.generated.ts": null,
   "docs/outsource/out-desc-4a-merged.json": null,
   "docs/outsource/out-profile-merged.json": null,
+  // 收官后清单为空，验收器会临时写一份合成清单；跑完必须还原（原本没有就删掉）
+  "docs/outsource/profile-batch1.json": null,
 };
 /**
  * 合并器写出的 qc 抽检文件：按 glob 全量纳入，而不是写死 batch1。
@@ -79,14 +81,43 @@ const check = (name, pass, detail = "") => {
 const descBatch = JSON.parse(
   fs.readFileSync("docs/outsource/desc-4a-batch1.json", "utf8"),
 );
-const profBatch = JSON.parse(
-  fs.readFileSync("docs/outsource/profile-batch1.json", "utf8"),
-);
+// 档案清单在收官后会被清空（待补池 0 条），此时用合成清单跑验收用例。
+// 注意：必须在 backup() 之后才写这份夹具，否则备份会把它当成「原有文件」而不还原。
+const PROF_LIST = "docs/outsource/profile-batch1.json";
+let profBatch = null;
+const ensureProfBatch = () => {
+  if (fs.existsSync(PROF_LIST))
+    return JSON.parse(fs.readFileSync(PROF_LIST, "utf8"));
+  const names = [
+    ["scenic-北京-6", "故宫博物院"],
+    ["scenic-北京-7", "天坛公园"],
+    ["scenic-北京-8", "颐和园"],
+    ["scenic-北京-9", "八达岭长城"],
+    ["scenic-北京-10", "明十三陵"],
+  ];
+  const b = {
+    task: "景点档案结构化字段-批1（合成验收夹具）",
+    batch: 1,
+    count: names.length,
+    items: names.map(([id, name]) => ({
+      id,
+      name,
+      province: "北京",
+      city: "北京",
+      district: "",
+      level: "5A",
+      address: "北京",
+      category: "历史人文",
+    })),
+  };
+  fs.writeFileSync(PROF_LIST, JSON.stringify(b, null, 2));
+  return b;
+};
 
 const N = descBatch.items.length; // 合并器按整批验收条数，合成数据必须整批
-const PN = profBatch.items.length;
+let PN = 0; // 在 backup() 之后由 ensureProfBatch() 赋值
 const descItems = descBatch.items;
-const profItems = profBatch.items;
+let profItems = []; // 同上，backup() 之后赋值
 // 60–110 字、不含禁写词的合规描述（模板 + 名字，不足则补、超了则截）
 const goodDesc = (name) => {
   let s =
@@ -168,6 +199,9 @@ try {
   const profAdded = profItems.filter((it) => !baseProf.has(it.id)).length;
 
   writeDesc(D_OK, descItems);
+  profBatch = ensureProfBatch();
+  PN = profBatch.items.length;
+  profItems = profBatch.items;
   let r = run("scripts/merge-out-desc.mjs", D_OK);
   const mergedDesc = JSON.parse(
     fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
