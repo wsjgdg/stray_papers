@@ -31,6 +31,9 @@ function collect(target, out) {
     for (const name of fs.readdirSync(target).sort()) {
       if (name === "node_modules" || name === ".next" || name === ".cache")
         continue;
+      // 临时/诊断脚本不参与指纹：它们常被随手删掉，而部署平台上传源码不会删除
+      // 沙箱里的旧文件，残留会白白让指纹漂移、逼出一次无谓的全量重建。
+      if (name.startsWith("tmp-") || name.startsWith("tmp_")) continue;
       collect(path.join(target, name), out);
     }
     return;
