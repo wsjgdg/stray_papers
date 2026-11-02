@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-50">
+  <meta name="aetheris-build" content="pennants-51">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-50';
+    const BUILD_ID = 'pennants-51';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4007,6 +4007,27 @@
           `);
       };
       mantaMaterial.customProgramCacheKey = () => 'aetheris-bird-feathers-' + BUILD_ID;
+      // The membrane has no shape of its own: it is a flat sheet the vertex shader bends in flight. The
+      // shadow pass does not run that shader, so its shadow was the flat sheet, sliding about under an
+      // animal that was waving — the two never lined up. The depth material gets the same wave.
+      const mantaDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.DoubleSide });
+      mantaDepthMaterial.onBeforeCompile = shader => {
+        shader.uniforms.uForestTime = forestTime;
+        shader.vertexShader = shader.vertexShader
+          .replace('#include <common>', '#include <common>\nuniform float uForestTime;')
+          .replace('#include <begin_vertex>', `
+          #include <begin_vertex>
+          float flapPhase = 0.0;
+          #ifdef USE_INSTANCING
+            flapPhase = instanceMatrix[3].x*9.0 + instanceMatrix[3].y*7.0;
+          #endif
+          float tail = clamp((.150 - position.z) / .300, 0.0, 1.0);
+          float wave = sin(uForestTime * 2.2 + flapPhase - position.z * 15.0);
+          transformed.y += wave * (.005 + tail * .032);
+          transformed.x += cos(uForestTime * 1.7 + flapPhase - position.z * 9.0) * tail * .014;
+        `);
+      };
+      mantaDepthMaterial.customProgramCacheKey = () => 'aetheris-bird-depth-' + BUILD_ID;
       const flocks = [], creatureRandom = seeded(31871);
       landmarks.forEach((landmark, index) => {
         if (!landmark.elevated && index !== 0) return;
@@ -4027,6 +4048,7 @@
       mantas.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       mantas.boundingSphere = new THREE.Sphere(new THREE.Vector3(), R + 3.6);
       mantas.castShadow = true;
+      mantas.customDepthMaterial = mantaDepthMaterial;
       scene.add(mantas);
 
       // ---- Provincial architecture -------------------------------------------------------
@@ -4406,6 +4428,11 @@
       const dwAhead = new THREE.Vector3(), dwPlayer = new THREE.Vector3(), dwE = new THREE.Vector3();
       const dwN = new THREE.Vector3(), dwProbe = new THREE.Vector3(), dwCol = new THREE.Color();
       const dwTmp = new THREE.Vector3();          // bellNormal() must not write into its own argument
+      const dwProp = new THREE.Vector3();          // a prop's world position, reused
+      // What a bell may not walk through: the ground stones, which the ground pass scatters around the
+      // player and re-scatters as you move. Ninety matrix reads a frame would be waste, so this is a
+      // small cache rebuilt a few times a second. Towns are checked separately, off settlementDirs.
+
       // The ground normal under a direction: the slope of the height field along two tangents.
       const bellNormal = (dir, out) => {
         dwE.set(1, 0, 0).cross(dir);
@@ -4421,6 +4448,57 @@
       const dfE = new THREE.Vector3(), dfN = new THREE.Vector3(), dfP = new THREE.Vector3();
       // Each hoof is planted on the ground under it: a bell standing across a ridge in this country
       // would otherwise hang by two legs. Offsets are in the animal's own units, before its scale.
+      // Fill the prop cache from whatever the ground pass has laid down near the player.
+      const refreshBellProps = () => {
+        if (typeof groundStones === 'undefined' || !groundStones) return;
+        const props = refreshBellProps.props;
+        let n = 0;
+        for (let s = 0; s < groundStones.count; s++) {
+          groundStones.getMatrixAt(s, dwPart);
+          const e = dwPart.elements;
+          dwProp.set(e[12], e[13], e[14]);
+          if (dwProp.lengthSq() < 1e-10) continue;            // an unset slot, not a stone
+          const dir = (props[n] || (props[n] = { dir: new THREE.Vector3(), r: 0 })).dir;
+          dir.copy(dwProp).normalize();
+          // The stone's own size, off its matrix: a boulder is a metre wide, a pebble is not.
+          props[n].r = .5 * Math.max(
+            Math.hypot(e[0], e[1], e[2]), Math.hypot(e[4], e[5], e[6]), Math.hypot(e[8], e[9], e[10]));
+          n++;
+        }
+        props.length = n;
+      };
+      refreshBellProps.props = [];
+      refreshBellProps.age = 99;
+      // Would a step in `dirIn` (default: its own heading) put it into a prop? `reach` is how far ahead
+      // to look in radians, `margin` the clearance wanted beyond the prop's own radius.
+      const propAhead = (d, reach, dirIn, margin = .022) => {
+        const props = refreshBellProps.props;
+        const fwd = dirIn || d.fwd;
+        for (let i = 0; i < props.length; i++) {
+          const p2 = props[i];
+          const away = p2.dir.angleTo(d.pos);
+          if (away > reach + p2.r / R + .02) continue;
+          // Already standing in it: only walking *further* in is blocked, so it can always get out.
+          if (away < p2.r / R + .006) {
+            if (dwProp.copy(p2.dir).sub(d.pos).dot(fwd) > 0) return true;
+            continue;
+          }
+          dwProp.copy(p2.dir).sub(d.pos);
+          const along = dwProp.dot(fwd);
+          if (along <= 0) continue;
+          dwProp.addScaledVector(fwd, -along);
+          if (dwProp.length() * R < p2.r + margin) return true;
+        }
+        return false;
+      };
+      // The prop it is actually standing inside, if any.
+      const propUnder = (d) => {
+        const props = refreshBellProps.props;
+        for (let i = 0; i < props.length; i++) {
+          if (props[i].dir.angleTo(d.pos) < props[i].r / R + .004) return props[i];
+        }
+        return null;
+      };
       // The feet are planted where the legs actually are. The frame here has to be the *same* frame the
       // pose builds (up × forward, +Z forward), not "some tangent and some other tangent": the old code
       // sampled the ground in a frame half a right angle off the one it posed the legs in, so every foot
@@ -4591,7 +4669,7 @@
                 if (best) spot = best;
               }
               const d = {
-                center: spot.toArray(), home: home.clone(), pos: spot, goto: spot.clone(),
+                center: spot.toArray(), home: home.clone(), pos: spot, goto: spot.clone(), aim: spot.clone(),
                 up: bellNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
                 world: new THREE.Vector3(), mode: 'graze', timer: .8 + rng() * 2.6,
                 phase: rng() * TAU, stride: .18, headTilt: 1, speed: 0,
@@ -6950,10 +7028,13 @@
       // ones a real bell runs — graze, walk, watch you, bolt — plus one this world adds: when the sky
       // is being worked on, the herd stops and looks up at it.
       const dwTarget = new THREE.Vector3(), dwUp = new THREE.Vector3();
+      // Where it wants to be facing. It does not get to face there instantly: nothing alive snaps its
+      // heading through a hundred and eighty degrees between two frames, and doing exactly that is half
+      // of why the herd read as twitching. The heading is turned toward this at a walking rate below.
       const aimBell = (d, at) => {
-        d.fwd.copy(at).sub(d.world).addScaledVector(d.up, 0);
-        d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
-        if (d.fwd.lengthSq() > 1e-10) d.fwd.normalize();
+        d.aim.copy(at).sub(d.world);
+        d.aim.addScaledVector(d.pos, -d.aim.dot(d.pos));
+        if (d.aim.lengthSq() > 1e-10) d.aim.normalize();
       };
       function updateBell(dt, elapsed) {
         if (!bellBodyMesh) return;
@@ -6967,7 +7048,8 @@
         // Everything within about nine metres thinks. It used to be .10 rad — 420 mm of world — which
         // is close enough that half a herd fell asleep while you stood looking at it, and an animal that
         // is not moving reads as a prop, not as an animal.
-        const inRange = Math.cos(.14);
+        const inRange = Math.cos(.18);
+        if (++refreshBellProps.age > 20) { refreshBellProps.age = 0; refreshBellProps(); }
         for (let i = 0; i < bell.length; i++) {
           const d = bell[i];
           if (d.pos.dot(state.direction) < inRange) {
@@ -6977,7 +7059,7 @@
           }
           d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
           const dist = d.world.distanceTo(dwPlayer);
-          if (dist > .55) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
+          if (dist > .62) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
           d.awake = true;
           if (d.mode !== 'flee' && dist < (calm ? .020 : .045)) {
             // Bolt. Crouching and standing still is the only way to be close to one of these.
@@ -6996,6 +7078,19 @@
           } else if (d.mode === 'alert' || d.mode === 'watch') {
             d.mode = 'graze';
             d.timer = .6 + .8 * (1 + Math.sin(d.seedPhase * 2.3));
+          }
+          // A stone under it: the ground pass lays its stones down around the player and re-lays them
+          // as you walk, so one can appear where an animal is already standing. It walks out instead of
+          // standing in it, which is what "穿石头" looked like.
+          const under = d.mode === 'flee' ? null : propUnder(d);
+          if (under) {
+            d.mode = 'walk';
+            d.speed = .075;
+            d.timer = Math.min(d.timer, 1.1);
+            dwProbe.copy(d.pos).sub(under.dir);
+            dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
+            if (dwProbe.lengthSq() > 1e-10) d.aim.copy(dwProbe.normalize());
+            d.goto.copy(d.pos).addScaledVector(d.aim, .020).normalize();
           }
           if (d.mode === 'flee') {
             d.timer -= dt;
@@ -7088,11 +7183,42 @@
               }
             }
           }
+          // Turn toward wherever it has decided to look, at a rate a grazing animal could manage.
+          if (d.aim.lengthSq() > 1e-6) {
+            const ang = d.fwd.angleTo(d.aim);
+            if (ang > 1e-3) {
+              dwE.crossVectors(d.fwd, d.aim);
+              const axisLength = dwE.length();
+              if (axisLength > 1e-7) {
+                d.fwd.applyAxisAngle(dwE.multiplyScalar(1 / axisLength), Math.min(ang, dt * (d.mode === 'flee' ? 6.5 : 2.6)));
+                d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize();
+              } else {
+                d.fwd.copy(d.aim);                       // exactly opposite: pick the turn and take it
+              }
+            }
+          }
           if (d.speed > 1e-4) {
             d.moved = true;
+            // Nothing walkable straight ahead? Turn, do not flip. The old code negated the heading
+            // outright, and on a hillside both directions are too steep, so it turned round every
+            // other frame: thirteen reversals a second, which is the twitch the user saw. Widening
+            // turns to each side find a way round the slope, and if there is no way, it stops.
+            // A slope is not a wall: a tripod walks up hills all day. Only water and a real cliff face
+            // stop it, which is a much looser test than the one used for where a herd may *stand*.
+            const walkableAt = (p2) => heightAt(p2) >= SEA + .006 && bellNormal(p2, dwUp).dot(p2) >= .86;
+            // A boulder, or a house: the same two questions, asked of the next few centimetres.
+            const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) < .030) && !propAhead(d, .045);
             dwProbe.copy(d.pos).addScaledVector(d.fwd, .035).normalize();
-            if (heightAt(dwProbe) < SEA + .006 || bellNormal(dwProbe, dwUp).dot(dwProbe) < .93) {
-              d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize().negate();   // turn from the water
+            if (!walkableAt(dwProbe) || !clearAhead(dwProbe)) {
+              let turned = false;
+              for (let k = 1; k <= 3 && !turned; k++) {
+                for (const sgn of [1, -1]) {
+                  dwE.copy(d.fwd).applyAxisAngle(d.pos, sgn * .55 * k).normalize();
+                  dwProbe.copy(d.pos).addScaledVector(dwE, .035).normalize();
+                  if (walkableAt(dwProbe) && !propAhead(d, .045, dwE)) { d.fwd.copy(dwE); turned = true; break; }
+                }
+              }
+              if (!turned) { d.speed = 0; d.mode = 'graze'; d.timer = 1.4; }
             }
             d.pos.addScaledVector(d.fwd, d.speed * dt / R).normalize();
             d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
