@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="sea-ruins-41">
+  <meta name="aetheris-build" content="dry-shore-42">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'sea-ruins-41';
+    const BUILD_ID = 'dry-shore-42';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4413,12 +4413,16 @@
             // reads it while building; the offline checks use it to tell the civic core from the
             // houses that crowd it.
             let layer = 'town';
-            const put = (geo, mat, lx, lz, up, yaw, sx, sy, sz) => {
+            const put = (geo, mat, lx, lz, up, yaw, sx, sy, sz, sits = null) => {
               // A town is written on a flat datum, but only its plate is flat. Anything that stands on
               // the ground — rubble, piers, masts, a fallen cap — has to be put on the ground that is
               // actually under it, or a hillside leaves it hanging in the air (or buried). Pieces
               // stacked on something else keep their own height: only floor-level ones are lifted.
-              const floor = up >= 0 && up <= .020 ? up + standing(lx, lz) : up;
+              // A house says which it is instead of leaving it to the number (see putUp): its own
+              // floor is already the ground read at its corners, so a body piece that happened to
+              // land in the floor-level band used to be dropped twice, by the terrain under the
+              // wall — which is how a wall ended up in the sea while the room above it was dry.
+              const floor = sits === false ? up : (up >= 0 && up <= .020 ? up + standing(lx, lz) : up);
               const at = origin.clone().addScaledVector(ax, lx * TOWN_SCALE).addScaledVector(az, lz * TOWN_SCALE)
                 .addScaledVector(site.dir, floor * TOWN_SCALE);
               // Two things keep a town alive after the generator is done with it: the pool of light
@@ -4529,20 +4533,20 @@
                 for (let i = 0; i < count; i++) {
                   const off = count === 1 ? 0 : (i / (count - 1) - .5) * width * .60;
                   const [wx, wz] = local(yaw, off, face * (halfDepth + .004));
-                  put('window', 'lamp', lx + wx, lz + wz, base + lift, yaw, width * (count === 1 ? .26 : .17), pane, .004);
+                  put('window', 'lamp', lx + wx, lz + wz, base + lift, yaw, width * (count === 1 ? .26 : .17), pane, .004, false);
                 }
               }
             };
             const doorSteps = (lx, lz, yaw, width, halfDepth, mat, lift = 0) => {
               const [dx, dz] = local(yaw, 0, -(halfDepth + .012));
-              put('steps', mat, lx + dx, lz + dz, .004 + lift, yaw, width * .34, .20, .05);
+              put('steps', mat, lx + dx, lz + dz, .004 + lift, yaw, width * .34, .20, .05, false);
             };
             // ---- house archetypes --------------------------------------------------------------
             const house = (lx, lz, yaw, w, d, h, kind, lift = 0, low = 0) => {
               layer = 'house';
               // Everything inside a house sits on the same foundation, so the whole body moves as
               // one when the ground falls away underneath it.
-              const putUp = (geo, mat, x, z, up, yw, sx, sy, sz) => put(geo, mat, x, z, up + lift, yw, sx, sy, sz);
+              const putUp = (geo, mat, x, z, up, yw, sx, sy, sz) => put(geo, mat, x, z, up + lift, yw, sx, sy, sz, false);
               const litUp = (x, z, yw, width, halfDepth, base, pane, count) => lit(x, z, yw, width, halfDepth, base, pane, count, lift);
               const stepsUp = (x, z, yw, width, halfDepth, mat) => doorSteps(x, z, yw, width, halfDepth, mat, lift);
               // A stone footing from the lowest corner of the plot up to the floor. Flat ground
@@ -4550,7 +4554,7 @@
               // Stilt and tree houses carry their own legs instead (see below).
               if (kind !== 'stilt' && kind !== 'treehouse') {
                 const footTop = lift + .004, footLow = Math.min(low - .006, footTop - .012);
-                put('block', s.wall, lx, lz, (footTop + footLow) / 2, yaw, w * .92, footTop - footLow, d * .92);
+                put('block', s.wall, lx, lz, (footTop + footLow) / 2, yaw, w * .92, footTop - footLow, d * .92, false);
               }
               if (kind === 'ruin') {
                 // A house the town walked away from: walls shorn off at chest height, no roof,
@@ -4593,9 +4597,12 @@
                 // Mirella hangs a round room inside a ring of posts and rings a chime above it:
                 // the house is an instrument.
                 const lift0 = h * .30, bodyH = h * .72, ring = w * .58;
+                // The posts run down to the lowest corner of the plot, not to its floor: on a slope
+                // the downhill ones grew until they found dirt, and the uphill ones stay short.
+                const postLow = Math.min(0, low - lift - .004), postH = lift0 + .010 - postLow;
                 for (let i = 0; i < 6; i++) {
                   const a = i * TAU / 6 + rng() * .12;
-                  putUp('beam', s.wall, lx + Math.cos(a) * ring, lz + Math.sin(a) * ring, 0, a, .009, lift0 + .010, .009);
+                  putUp('beam', s.wall, lx + Math.cos(a) * ring, lz + Math.sin(a) * ring, postLow, a, .009, postH, .009);
                 }
                 putUp('block', s.roofMat, lx, lz, lift0 - .008, yaw, w * 1.20, .014, w * 1.20);
                 putUp('drum', s.wall, lx, lz, lift0, yaw, w * .92, bodyH, w * .92);
@@ -4685,7 +4692,9 @@
               const d = (.036 + rng() * .010) * k * scale;
               const h = (.044 + rng() * .020) * k * scale;
               // Keep the middle for the landmark (see clearOfCore). Drawn first so the random stream
-              // is exactly what it was: only the plot moves.
+              // is exactly what it was: only the plot moves. The ruler this swing uses is the one it
+              // has always used — town units, corners of the footprint — and it is left alone here:
+              // tightening it moves 325 plots, and the plans would lose the shape they have.
               const wet = (x, z) => site.h + standing(x, z) <= SEA + .006;
               dries = (x, z) => {
                 if (wet(x, z)) return false;
@@ -4696,6 +4705,57 @@
                 return true;
               };
               if (clear) [lx, lz] = clearOfCore(lx, lz, .5 * Math.hypot(w * 1.25, d * 1.25));
+              // The same question, asked in the units the world is actually in. `standing()` answers
+              // in town units and the world is TOWN_SCALE taller, so the ground above the planet's
+              // radius is `site.h + standing * TOWN_SCALE`; read as world units the test is 1.8x too
+              // shallow, which is how a shoreline row kept its last houses standing with their walls
+              // under the sea and the windows lighting the shallows.
+              const groundAt = (x, z) => site.h + standing(x, z) * TOWN_SCALE;
+              const wetAt = (x, z) => groundAt(x, z) <= SEA + .006;
+              const driesAt = (x, z) => {
+                if (wetAt(x, z)) return false;
+                for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+                  const [px, pz] = local(yaw, sx * w * .5, sz * d * .5);
+                  if (wetAt(x + px, z + pz)) return false;
+                }
+                return true;
+              };
+              // A plot whose own ground is under the sea is not a plot. A shoreline plan lays its row
+              // at the water's edge and the last plots of it go over the edge, so the town builds a
+              // house underwater. Two ways out, neither of which draws from the random stream (a
+              // plan's landmark is placed after its houses, so a house that changed shape would move
+              // the monument with it). The plot walks back along the shore first —
+              // a waterfront keeps the shape of its row — then inland, and never inward, since inward
+              // from a shore row is the landmark. Where nothing nearby is dry, the house keeps its
+              // plot and comes up out of the water on its footing, which already reaches from the
+              // lowest corner of the plot to the floor.
+              let lifted = false;
+              if (clear && !driesAt(lx, lz)) {
+                const r0 = Math.hypot(lx, lz), pad = .5 * Math.hypot(w, d);
+                const wx = Math.cos(waterAngle), wz = Math.sin(waterAngle);
+                let moved = null;
+                // Two passes: first anything dry that is not closer to the middle than the plot
+                // already was, then anything dry at all.
+                for (const out of [true, false]) {
+                  // Only a short walk: a plot that has to travel half the town to find dry ground is
+                  // a plot the town never had. Past this the house goes up on its footing instead.
+                  for (const step of [.008, .016, .026, .038, .052, .068]) {
+                    for (const [dx, dz] of [[-wz * step, wx * step], [wz * step, -wx * step],
+                      [-wx * step, -wz * step]]) {
+                      const x = lx + dx, z = lz + dz, r = Math.hypot(x, z);
+                      if (!driesAt(x, z)) continue;
+                      if (r < (site.civic || 0) + pad) continue;
+                      if (out && r < r0 - .002) continue;
+                      moved = [x, z];
+                      break;
+                    }
+                    if (moved) break;
+                  }
+                  if (moved) break;
+                }
+                if (moved) { lx = moved[0]; lz = moved[1]; }
+                else lifted = true;
+              }
               // The floor sits on the highest corner of the plot and the footing reaches down to
               // the lowest one: nothing hangs in the air, nothing is buried to the windows.
               let floor = standing(lx, lz), low = floor;
@@ -4708,6 +4768,9 @@
               // taller: past this the house reads as standing on a leg, so the uphill corner is
               // allowed to cut into the slope by a few centimetres instead.
               floor = Math.min(floor, low + .020);
+              // Out of the water even where the shelf falls away: the footing grows to meet the
+              // floor instead, so what stands in the shallows is a stone base with a house on it.
+              if (lifted) floor = Math.max(floor, (SEA - site.h) / TOWN_SCALE + .008);
               (site.kinds = site.kinds || new Set()).add(kind);
               house(lx, lz, yaw, kind === 'tower' ? w * .86 : w, d, h, kind, floor, low);
             };
