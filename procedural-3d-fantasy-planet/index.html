@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="shrine-weather-38">
+  <meta name="aetheris-build" content="sea-ruins-41">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'landmark-clear-40';
+    const BUILD_ID = 'sea-ruins-41';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4267,6 +4267,10 @@
       // Smoke and lamplight outlive the generator that places them: two uniforms the frame loop
       // drives, and the lists the towns fill while they are being built.
       let smokeUniforms = null, lampPoolUniforms = null, smokePoints = null, lampPools = null;
+      // Every stone of the drowned coast, recorded as it is laid down: the ruins are the only masonry in
+      // the world that belongs to no town, so without this the offline checks cannot tell them from a
+      // stretch of provincial wall. Nothing reads it at run time.
+      const seaStones = [];
       function provinceDressing() {
         const rng = seeded(52033);
         const quota = { vaelmar: 24, sennar: 22, caelth: 22, mirella: 22, vessper: 18 };
@@ -5481,6 +5485,97 @@
               putGround('block', 'road', d, top - .026, bearing(d, away), .38 * s, .007, .36 * s);
             }
           }
+        }
+        // ---- the drowned coast ------------------------------------------------------------------
+        // The sea is shallow enough in places that the surface is a window onto the floor: a few
+        // metres of water over a shelf that runs off every shore. What stands down there is the same
+        // dark masonry the shrines are cut from — broken colonnades, snapped off a hand's width under
+        // the waterline, a stylobate the sea has not covered yet, a beam that came down across the
+        // drums. They are found from the shore (one broken shaft shows above the surface) and walked
+        // through by diving. Nothing here draws from the town's random stream: a separate seed keeps
+        // the settlements, and the shrines under them, exactly where they were.
+        {
+          const seaRng = seeded(60217);
+          const ruinSpots = [];
+          const probeE = new THREE.Vector3(), probeN = new THREE.Vector3(), probeP = new THREE.Vector3();
+          for (let i = 0; i < 20000 && ruinSpots.length < 10; i++) {
+            const n = randomDirection(seaRng), depth = SEA - heightAt(n);
+            if (depth < .090 || depth > .170) continue;        // deep enough to swim, shallow enough to see
+            if (ruinSpots.some(s => s.dir.angleTo(n) < .085)) continue;
+            if (settlementDirs.some(s => s.dir.angleTo(n) < .11)) continue;   // not in a town's own shallows
+            probeE.set(1, 0, 0).cross(n).normalize();
+            probeN.crossVectors(n, probeE);
+            let high = -9, shore = false;
+            for (let k = 0; k < 12; k++) {
+              const a = k * TAU / 12;
+              probeP.copy(n).addScaledVector(probeE, Math.cos(a) * .075).addScaledVector(probeN, Math.sin(a) * .075).normalize();
+              high = Math.max(high, heightAt(probeP));
+              if (heightAt(nearDirection(n, a, .12)) > SEA + .004) shore = true;
+            }
+            if (high > SEA - .008) continue;                   // all of the footprint is under water
+            if (!shore) continue;                              // and it is always found from a beach
+            ruinSpots.push({ dir: n, depth });
+          }
+          const yawQ = new THREE.Quaternion();
+          ruinSpots.forEach((spot, ruinIndex) => {
+            const n = spot.dir;
+            const east = new THREE.Vector3(1, 0, 0).cross(n).normalize();
+            const north = new THREE.Vector3().crossVectors(n, east).normalize();
+            const qBase = new THREE.Quaternion().setFromUnitVectors(UP, n);
+            const at = (x, z) => n.clone().addScaledVector(east, x).addScaledVector(north, z).normalize();
+            // The floor here is rough at every scale (a tenth of a unit across it already moves by more
+            // than a drum is tall), so there is no levelled platform to stand a colonnade on: what is
+            // left of the temple has settled piece by piece. Every stone is set on the floor under
+            // itself, sunk a centimetre into the silt, and cut off under the waterline.
+            const putSea = (geo, mat, x, z, sink, yaw, sx, sy, sz) => {
+              const d = at(x, z), pos = d.clone().multiplyScalar(R + heightAt(d) - sink);
+              seaStones.push({ pos: pos.toArray(), geo, mat, scale: [sx, sy, sz], ruin: ruinIndex, center: n.toArray() });
+              push(geo, mat, pos, qBase.clone().multiply(yawQ.setFromAxisAngle(UP, yaw)), new THREE.Vector3(sx, sy, sz));
+            };
+            const roomAt = (x, z) => Math.max(.028, SEA - heightAt(at(x, z)));
+            const shaft = (x, z, h, thick) => putSea('column', 'basalt', x, z, .010, seaRng() * TAU,
+              thick, Math.max(.014, h), thick);
+            const pitch = seaRng() * TAU;                      // the line the colonnade stood on
+            // Two pairs of drums still facing each other — the shrine gate's own shape, drowned. One
+            // pair keeps a fragment of its architrave; the other lost it.
+            for (const [side, gap] of [[-1, .030], [1, .036]]) {
+              const u = side * (.028 + seaRng() * .022), v = (seaRng() - .5) * .012;
+              const x = Math.cos(pitch) * u - Math.sin(pitch) * v;
+              const z = Math.sin(pitch) * u + Math.cos(pitch) * v;
+              for (const across of [-1, 1]) {
+                const qx = x + Math.cos(pitch + Math.PI / 2) * across * gap * .5;
+                const qz = z + Math.sin(pitch + Math.PI / 2) * across * gap * .5;
+                shaft(qx, qz, roomAt(qx, qz) * (.52 + seaRng() * .44), .019 + seaRng() * .010);
+              }
+              if (side < 0) {
+                const bx = x + Math.cos(pitch + Math.PI / 2) * 0;
+                putSea('beam', 'basalt', bx, z, .006, pitch + Math.PI / 2,
+                  gap * .92, Math.min(.60, (roomAt(bx, z) - .02) / .100), .70);
+              }
+            }
+            // the one shaft the sea did not take: it is what you see from the beach, and why you swim out
+            {
+              const u = (seaRng() - .5) * .05;
+              const x = Math.cos(pitch) * u, z = Math.sin(pitch) * u;
+              shaft(x, z, roomAt(x, z) + .026, .022);
+            }
+            // what came down: two drums lying on their sides, loose blocks, the stair into the water
+            for (let i = 0; i < 2; i++) {
+              const x = (seaRng() - .5) * .13, z = (seaRng() - .5) * .13;
+              putSea('ledge', 'basalt', x, z, .004, seaRng() * TAU,
+                .045 + seaRng() * .035, Math.max(.10, Math.min(.70, (roomAt(x, z) - .02) / .130)), .55);
+            }
+            for (let i = 0; i < 3; i++) {
+              const a = seaRng() * TAU, rr = .03 + seaRng() * .06, bh = .012 + seaRng() * .012;
+              const x = Math.cos(a) * rr, z = Math.sin(a) * rr;
+              putSea('block', 'basalt', x, z, .006, seaRng() * TAU, .018 + seaRng() * .018, bh, .018 + seaRng() * .016);
+            }
+            {
+              const x = (seaRng() - .5) * .10, z = (seaRng() - .5) * .10;
+              putSea('steps', 'basalt', x, z, .004, seaRng() * TAU, .062,
+                Math.max(.10, Math.min(.55, (roomAt(x, z) - .010) / .110)), .055);
+            }
+          });
         }
         for (const [key, list] of buckets) {
           const [geoKey, matKey] = key.split('|');
