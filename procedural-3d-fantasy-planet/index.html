@@ -4276,7 +4276,7 @@
       // its antlers baked in, four legs — so a herd of five costs thirty instances in three draw
       // calls, and the rig is cut from the same part library as the houses. The third eye is a plain
       // bead of bone in the forehead: this world's light is borrowed, and nothing living owns any.
-      const DEER_HIP_Y = .0300, DEER_NECK_Y = .0420, DEER_NECK_Z = .0200;
+      const DEER_HIP_Y = .0300, DEER_NECK_Y = .0390, DEER_NECK_Z = .0150;
       const DEER_LEGS = [[-.0085, .0190], [.0085, .0190], [-.0092, -.0190], [.0092, -.0190]];
       const deer = [];
       let deerBodyMesh = null, deerHeadMesh = null, deerLegMesh = null;
@@ -4292,73 +4292,75 @@
       // The barrel: deep at the chest, tucked at the flank, with the shoulder hump a deer carries.
       function deerBodyPart() {
         const parts = [];
-        const barrel = new THREE.CylinderGeometry(.0118, .0110, .062, 9, 4, false);
+        // Deep at the chest, tucked at the flank, and carrying the shoulder hump a stag does: the
+        // back runs down from the shoulders to the tail, which is what makes it read as four-legged.
+        const len = .0570;
+        const barrel = new THREE.CylinderGeometry(.0122, .0112, len, 9, 4, false);
         barrel.rotateX(Math.PI / 2);
         const bp = barrel.attributes.position;
         for (let i = 0; i < bp.count; i++) {
-          const t = clamp((bp.getZ(i) + .031) / .062, 0, 1);
-          const k = .82 + .24 * t;
+          const t = clamp((bp.getZ(i) + len / 2) / len, 0, 1);            // 0 at the tail, 1 at the chest
+          const k = .78 + .28 * t;
           bp.setX(i, bp.getX(i) * k);
-          bp.setY(i, bp.getY(i) * (.94 + .10 * t) + .0018 * Math.sin(t * Math.PI));
+          bp.setY(i, bp.getY(i) * (.90 + .16 * t) + .0016 * Math.sin(t * Math.PI));
         }
-        barrel.translate(0, .0375, 0);
+        barrel.translate(0, .0368, 0);
         barrel.computeVertexNormals();
         parts.push(partTint(barrel, '#8d7a5e', .07));
-        const chest = new THREE.SphereGeometry(.0122, 8, 6); chest.scale(.95, 1.02, .75); chest.translate(0, .0375, .0285);
+        const chest = new THREE.SphereGeometry(.0130, 8, 6); chest.scale(.94, 1.04, .80); chest.translate(0, .0382, .0252);
         parts.push(partTint(chest, '#8d7a5e', .07));
-        const rump = new THREE.SphereGeometry(.0110, 8, 6); rump.scale(.92, .96, .78); rump.translate(0, .0380, -.0295);
+        const rump = new THREE.SphereGeometry(.0118, 8, 6); rump.scale(.90, .98, .82); rump.translate(0, .0358, -.0268);
         parts.push(partTint(rump, '#8d7a5e', .07));
         // The two lines that make a body read as an animal rather than as a box: a pale belly and a
         // dark stripe down the spine.
-        parts.push(partBox(.0165, .0052, .0520, '#b3a184', .0262, 0, .0015, .06));
-        parts.push(partBox(.0072, .0034, .0570, '#5d4d38', .0472, 0, -.0010, .06));
+        parts.push(partBox(.0160, .0050, .0490, '#b3a184', .0258, 0, .0015, .06));
+        parts.push(partBox(.0070, .0032, .0520, '#5d4d38', .0468, 0, -.0020, .06));
         // Tail, held up out of habit, showing its white underside.
-        parts.push(partBox(.0090, .0140, .0070, '#8d7a5e', .0405, 0, -.0352, .06));
-        parts.push(partBox(.0055, .0100, .0032, '#e0d5bd', .0408, 0, -.0378, .05));
+        parts.push(partBox(.0086, .0136, .0068, '#8d7a5e', .0392, 0, -.0330, .06));
+        parts.push(partBox(.0052, .0098, .0030, '#e0d5bd', .0394, 0, -.0356, .05));
         // Shoulder blades: where the neck comes out of the body.
-        for (const sx of [-1, 1]) parts.push(partBox(.0062, .0090, .0160, '#8d7a5e', .0415, sx * .0074, .0165, .06));
+        for (const sx of [-1, 1]) parts.push(partBox(.0062, .0090, .0160, '#8d7a5e', .0408, sx * .0068, .0150, .06));
         return join(parts);
       }
       // Head, neck and antlers, with the pivot at the base of the neck so the whole thing can swing
-      // down to graze.
+      // down to graze. The muzzle is two tapering bones rather than a box: a deer's face is a wedge,
+      // and a stack of boxes read as a crate with eyes on it.
       function deerHeadPart() {
         const parts = [];
-        parts.push(deerBone(0, 0, 0, 0, .0170, .0135, .0075, .0062, '#8d7a5e'));
-        const skull = new THREE.BoxGeometry(.0110, .0105, .0180, 1, 1, 2);
-        skull.translate(0, .0205, .0215);
-        parts.push(partTint(skull, '#8d7a5e', .06));
-        parts.push(partBox(.0078, .0068, .0135, '#8a7757', .0186, 0, .0305, .05));
-        parts.push(partBox(.0072, .0032, .0115, '#a79474', .0150, 0, .0310, .05));
-        parts.push(partBox(.0082, .0052, .0034, '#3a3229', .0186, 0, .0368, .05));
+        parts.push(deerBone(0, 0, 0, 0, .0150, .0100, .0082, .0066, '#8d7a5e'));
+        parts.push(deerBone(0, .0172, .0100, 0, .0198, .0245, .0069, .0052, '#8d7a5e'));
+        parts.push(deerBone(0, .0198, .0245, 0, .0170, .0364, .0050, .0034, '#8a7757'));
+        // The pale underside of the jaw, and the nose pad wrapped round the tip of the muzzle.
+        parts.push(partBox(.0060, .0026, .0132, '#a79474', .0166, 0, .0298, .05));
+        parts.push(partBox(.0044, .0032, .0024, '#2b2520', .0172, 0, .0366, .05));
         for (const sx of [-1, 1]) {
-          const ear = new THREE.ConeGeometry(.0052, .0150, 5);
-          ear.scale(1, 1, .52);
+          const ear = new THREE.ConeGeometry(.0044, .0150, 5);
+          ear.scale(1, 1, .42);
           ear.translate(0, .0075, 0);
-          ear.rotateZ(sx * 1.05);
-          ear.rotateX(-.35);
-          ear.translate(sx * .0076, .0245, .0175);
+          ear.rotateZ(sx * .82);
+          ear.rotateX(-.30);
+          ear.translate(sx * .0060, .0232, .0152);
           parts.push(partTint(ear, '#8d7a5e', .06));
         }
-        // Antlers: one beam and three tines a side, pale as bone and the only thing on the animal
-        // that catches the sky.
+        // Antlers: a beam that sweeps up and back, with three tines running forward off it. Pale as
+        // bone, and the only thing on the animal that catches the sky.
         for (const sx of [-1, 1]) {
-          const bx = sx * .0044, by = .0250, bz = .0180;
-          parts.push(deerBone(bx, by, bz, bx + sx * .0061, by + .0190, bz - .0090, .0021, .0014, '#e6dcc4'));
-          parts.push(deerBone(bx + sx * .0024, by + .0072, bz - .0034, bx + sx * .0106, by + .0110, bz + .0030, .0014, .0009, '#e6dcc4'));
-          parts.push(deerBone(bx + sx * .0044, by + .0126, bz - .0060, bx + sx * .0121, by + .0180, bz - .0018, .0013, .0008, '#e6dcc4'));
-          parts.push(deerBone(bx + sx * .0056, by + .0170, bz - .0080, bx + sx * .0086, by + .0255, bz - .0125, .0011, .0007, '#e6dcc4'));
+          parts.push(deerBone(sx * .0044, .0248, .0136, sx * .0078, .0436, .0030, .0026, .0016, '#e6dcc4'));
+          parts.push(deerBone(sx * .0048, .0262, .0150, sx * .0098, .0330, .0220, .0017, .0010, '#e6dcc4'));
+          parts.push(deerBone(sx * .0062, .0344, .0096, sx * .0126, .0424, .0128, .0015, .0009, '#e6dcc4'));
+          parts.push(deerBone(sx * .0074, .0420, .0044, sx * .0098, .0508, .0022, .0013, .0008, '#e6dcc4'));
         }
-        // Three eyes: the pair on the skull, and the third set into the forehead above and between
-        // them. Dark beads with one fleck of light each, because nothing here glows on its own.
+        // Three eyes: the pair on the skull, the third set into the brow above and between them — a
+        // bead of dark bone, not a lamp. Nothing in this world is lit from inside.
         for (const sx of [-1, 1]) {
-          const eye = new THREE.SphereGeometry(.0026, 6, 5); eye.translate(sx * .0058, .0225, .0268);
+          const eye = new THREE.SphereGeometry(.0024, 6, 5); eye.translate(sx * .0054, .0226, .0270);
           parts.push(partTint(eye, '#17130f', .04));
-          const glint = new THREE.SphereGeometry(.0008, 4, 3); glint.translate(sx * .0065, .0233, .0284);
+          const glint = new THREE.SphereGeometry(.0008, 4, 3); glint.translate(sx * .0060, .0233, .0283);
           parts.push(partTint(glint, '#f4ecd8', .02));
         }
-        const third = new THREE.SphereGeometry(.0030, 6, 6); third.scale(.60, 1.15, 1); third.translate(0, .0252, .0230);
+        const third = new THREE.SphereGeometry(.0022, 6, 6); third.scale(.66, 1.02, .80); third.translate(0, .0250, .0218);
         parts.push(partTint(third, '#17130f', .04));
-        const thirdGlint = new THREE.SphereGeometry(.0008, 4, 3); thirdGlint.translate(0, .0264, .0244);
+        const thirdGlint = new THREE.SphereGeometry(.0007, 4, 3); thirdGlint.translate(0, .0259, .0230);
         parts.push(partTint(thirdGlint, '#f4ecd8', .02));
         return join(parts);
       }
@@ -4367,7 +4369,7 @@
         const parts = [];
         parts.push(deerBone(0, 0, 0, 0, -.0160, .0015, .0038, .0026, '#8d7a5e'));
         parts.push(deerBone(0, -.0160, .0015, 0, -.0275, -.0008, .0025, .0016, '#7d6a4e'));
-        parts.push(partBox(.0048, .0030, .0062, '#2b241d', -.0300, 0, .0004, .05));
+        parts.push(partBox(.0042, .0026, .0052, '#241f19', -.0300, 0, .0004, .05));
         return join(parts);
       }
       const deerGeo = { body: deerBodyPart(), head: deerHeadPart(), leg: deerLegPart() };
