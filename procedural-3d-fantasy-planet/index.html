@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="whale-silhouette-46">
+  <meta name="aetheris-build" content="gentle-rise-47">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'whale-silhouette-46';
+    const BUILD_ID = 'gentle-rise-47';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4520,6 +4520,34 @@
                 if (rough < levelest) { levelest = rough; spot = dwProbe.clone(); }
               }
               if (!spot) spot = home.clone();          // the centre itself passed every test
+              // Two deer on one square metre read as one deer with eight legs: every candidate was
+              // picked for the levelest footing, which quietly funnels several of them onto the same
+              // tile. So spacing gets a vote — and among the spots that are far enough from the
+              // others, the levelest one still wins, because a deer on broken ground floats a hoof.
+              const tooClose = p => deer.some(o => o.pos.angleTo(p) * R < .012);
+              if (tooClose(spot)) {
+                let best = null, bestRough = Infinity;
+                for (let k = 0; k < 90; k++) {
+                  const a = rng() * TAU, r = .012 + rng() * .034;
+                  dwE.set(1, 0, 0).cross(home);
+                  if (dwE.lengthSq() < 1e-8) dwE.set(0, 0, 1).cross(home);
+                  dwE.normalize();
+                  dwN.crossVectors(home, dwE);
+                  dwProbe.copy(home).addScaledVector(dwE, Math.cos(a) * r).addScaledVector(dwN, Math.sin(a) * r).normalize();
+                  // The same gates the first search had to pass: on land, in this province, off a
+                  // cliff, out of the town and off the landmarks. Making room must not walk a deer
+                  // into a house.
+                  if (heightAt(dwProbe) < SEA + .008) continue;
+                  if (provinceAt(dwProbe) !== pack.id) continue;
+                  if (!flatEnough(dwProbe)) continue;
+                  if (settlementDirs.some(sv => sv.dir.angleTo(dwProbe) < .046)) continue;
+                  if (!freeOf(dwProbe)) continue;
+                  if (tooClose(dwProbe)) continue;
+                  const rough = deerRough(dwProbe, 1);
+                  if (rough < bestRough) { bestRough = rough; best = dwProbe.clone(); }
+                }
+                if (best) spot = best;
+              }
               const d = {
                 center: spot.toArray(), home: home.clone(), pos: spot,
                 up: deerNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
@@ -4725,13 +4753,14 @@
       const wwAhead = new THREE.Vector3(), wwE = new THREE.Vector3(), wwN = new THREE.Vector3();
       const wwSpin = new THREE.Matrix4().makeRotationY(Math.PI);   // a fin modelled pointing +X, turned round
       // One animal into the four instance slots. `beat` is the tail's stroke, `bank` the roll into a turn.
-      const poseWhale = (w, i, beat = 0) => {
+      const poseWhale = (w, i, beat = 0, pitch = 0) => {
         wwFrame.position.copy(w.world);
         wwFrame.up.copy(w.up);
         wwAhead.copy(w.world).addScaledVector(w.fwd, -.050);       // lookAt aims +Z at its target
         wwFrame.lookAt(wwAhead);
         wwFrame.scale.setScalar(w.scale);
         wwFrame.rotateZ(w.bank);
+        wwFrame.rotateX(-pitch);                                   // nose up when climbing, down when sinking
         wwFrame.updateMatrix();
         whaleBodyMesh.setMatrixAt(i, wwFrame.matrix);
         // A whale's flukes beat **up and down**: about X, the axis across the animal. (A fish beats
@@ -4780,7 +4809,7 @@
             home, pos: home.clone(), up: home.clone(), fwd: new THREE.Vector3(), world: new THREE.Vector3(),
             orbit: .062 + rng() * .028, angle: rng() * TAU, dir: rng() < .5 ? 1 : -1,
             depth: .05, wantDepth: .05, mode: 'cruise', timer: 6 + rng() * 20,
-            phase: rng() * TAU, beat: 0, bank: 0, scale: .86 + rng() * .30,
+            phase: rng() * TAU, beat: 0, bank: 0, pitch: 0, scale: .86 + rng() * .30,
             spout: 0, spoutHold: 1, awake: false, eye: rng() * TAU
           };
           // A heading tangent to the surface, along the circle it is about to swim.
@@ -6890,30 +6919,37 @@
         dwPlayer.copy(state.direction).multiplyScalar(state.radius);
         for (let i = 0; i < whales.length; i++) {
           const w = whales[i];
+          const depth0 = w.depth;
           const room = SEA - heightAt(w.pos);                 // water under it, right here
           const cruise = clamp(room * .52, .030, .092);
           w.timer -= dt;
           if (w.mode === 'cruise') {
             w.wantDepth = cruise;
-            if (w.timer <= 0) { w.mode = 'rise'; w.timer = 3.2; }
+            if (w.timer <= 0) { w.mode = 'rise'; w.timer = 6.5; }
           } else if (w.mode === 'rise') {
             w.wantDepth = .004;
             if (w.depth < .012) { w.mode = 'blow'; w.timer = 1.9; }
           } else if (w.mode === 'blow') {
             w.wantDepth = .004;
-            if (w.timer <= 0) { w.mode = 'sink'; w.timer = 4.5; }
+            if (w.timer <= 0) { w.mode = 'sink'; w.timer = 7.0; }
           } else {
             w.wantDepth = cruise;
             if (w.depth > cruise - .006) { w.mode = 'cruise'; w.timer = 16 + 14 * (.5 + .5 * Math.sin(w.eye * 3.1)); }
           }
           // The floor is close in places: never sink into it, whatever the tank says.
           w.wantDepth = Math.min(w.wantDepth, Math.max(.012, room - .038));
-          w.depth += (w.wantDepth - w.depth) * (1 - Math.exp(-dt * 1.6));
+          w.depth += (w.wantDepth - w.depth) * (1 - Math.exp(-dt * .55));
           // A hard floor under all of it: the belly is never allowed into the silt, however fast the
           // ground comes up at it.
           w.depth = Math.min(w.depth, Math.max(.010, room - .034));
           // A slow circle round the farm, drifting in and out of the radius it was given.
           const speed = .034 * w.scale;
+          // How fast it is climbing, against how fast it is swimming: the body has to answer the
+          // climb, or the animal rises like a lift. It used to spend 1.1 s going from 51 mm to 12 mm,
+          // four times its own swimming speed, without pitching a degree.
+          const climb = (depth0 - w.depth) / Math.max(dt, .0001);     // positive = rising
+          const wantPitch = clamp(Math.atan2(climb, Math.max(speed, .001)), -.40, .40);
+          w.pitch += (wantPitch - w.pitch) * (1 - Math.exp(-dt * 2.2));
           w.angle += w.dir * (speed * dt / R) / Math.max(.012, w.orbit);
           let wobble = w.orbit * (1 + .16 * Math.sin(elapsed * .11 + w.eye));
           dwProbe.copy(nearDirection(w.home, w.angle, wobble));
@@ -6946,7 +6982,7 @@
             if (w.pos.dot(state.direction) > Math.cos(.30)) whaleCall(clamp(1 - w.world.distanceTo(dwPlayer) / .45, 0, 1) * .085);
           }
           if (w.mode !== 'blow') w.called = false;
-          poseWhale(w, i, Math.sin(w.phase) * .26);
+          poseWhale(w, i, Math.sin(w.phase) * .26, w.pitch);
         }
         for (const mesh of [whaleBodyMesh, whaleTailMesh, whaleFinMesh, whaleSpoutMesh]) mesh.instanceMatrix.needsUpdate = true;
       }
