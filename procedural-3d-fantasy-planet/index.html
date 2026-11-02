@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="shrine-weather-34">
+  <meta name="aetheris-build" content="shrine-weather-35">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'shrine-weather-34';
+    const BUILD_ID = 'shrine-weather-35';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4035,9 +4035,10 @@
         // Damp earth for the tracks leading into every town and up to every altar: darker and
         // softer than the paving, and the one surface that answers rain hardest.
         road: new THREE.MeshStandardMaterial({ color: 0x6b6152, vertexColors: true, roughness: .96, metalness: 0, dithering: true }),
-        // The shrines under the altars are sanctuary masonry, not provincial carpentry: the same
-        // weathered stone the islands are cut from, so they read as the altars' own footing.
-        shrine: new THREE.MeshStandardMaterial({ color: 0x9a927c, vertexColors: true, roughness: .88, metalness: .04, dithering: true })
+        // The shrines under the altars are sanctuary masonry, not provincial carpentry: dark
+        // weathered basalt against the pale town stone, so a way-stone reads from across a street
+        // instead of dissolving into the paving it stands on.
+        shrine: new THREE.MeshStandardMaterial({ color: 0x5f574a, vertexColors: true, roughness: .90, metalness: .05, dithering: true })
       };
       // Built surfaces remember their dry state so weather can soak them and dry them again.
       provinceWet = Object.entries(provinceMat).map(([key, m]) => ({
