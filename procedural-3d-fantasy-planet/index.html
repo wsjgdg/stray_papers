@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-54">
+  <meta name="aetheris-build" content="pennants-55">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-54';
+    const BUILD_ID = 'pennants-55';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4331,6 +4331,11 @@
       // tube of muscle at the front that grinds the moss off the ground. Three legs are the whole point
       // — no vertebrate has three, and a tripod cannot rock, so it stands on this broken country far
       // better than four ever did.
+      // The animal was authored at `1` and is one and a half times that in the world: a knee-high
+      // grazer reads as part of the ground, and the user's note was that the animals are too small.
+      // Every body-sized clearance below is written as a multiple of this, so the herd stays a herd
+      // rather than a pile of overlapping shells when the number changes.
+      const BELL_SIZE = 1.45;
       const BELL_HIP_Y = .0300, BELL_NECK_Y = .0300, BELL_NECK_Z = .0122;
       // One leg forward, two back. The forward leg takes the weight when the tube is down and grazing.
       const BELL_LEGS = [[0, .0212], [-.0182, -.0134], [.0182, -.0134]];
@@ -4445,7 +4450,7 @@
         if (hardBandCache) return hardBandCache;
         if (!bellGeo.body) return (hardBandCache = .035);
         if (!bellGeo.body.boundingBox) bellGeo.body.computeBoundingBox();
-        return (hardBandCache = Math.max(.012, bellGeo.body.boundingBox.max.y * .65));
+        return (hardBandCache = Math.max(.012, bellGeo.body.boundingBox.max.y * BELL_SIZE * .65));
       };
       const hardWidthOf = (pos, band = hardBand()) => {
         let lo = Infinity;
@@ -4495,7 +4500,7 @@
         const gn = (heightAt(dwTmp.copy(dir).addScaledVector(dwN, step).normalize()) - h0) / span;
         return out.copy(dir).addScaledVector(dwE, -ge).addScaledVector(dwN, -gn).normalize();
       };
-      const dfE = new THREE.Vector3(), dfN = new THREE.Vector3(), dfP = new THREE.Vector3();
+      const dfE = new THREE.Vector3(), dfN = new THREE.Vector3(), dfP = new THREE.Vector3(), dfQ = new THREE.Vector3();
       // Each hoof is planted on the ground under it: a bell standing across a ridge in this country
       // would otherwise hang by two legs. Offsets are in the animal's own units, before its scale.
       // Fill the prop cache from whatever the ground pass has laid down near the player.
@@ -4534,7 +4539,7 @@
       refreshBellProps.age = 99;
       // Would a step in `dirIn` (default: its own heading) put it into a prop? `reach` is how far ahead
       // to look in radians, `margin` the clearance wanted beyond the prop's own radius.
-      const propAhead = (d, reach, dirIn, margin = .014) => {
+      const propAhead = (d, reach, dirIn, margin = .014 * BELL_SIZE) => {
         const props = refreshBellProps.props;
         const fwd = dirIn || d.fwd;
         // The stones, then the trunks and boulders on its own short list. Both loops are the same test.
@@ -4575,13 +4580,34 @@
       // sampled the ground in a frame half a right angle off the one it posed the legs in, so every foot
       // was compensated for the height of a patch of ground it was not standing on. On four legs the
       // error averaged out; on three it does not, and it showed up as a pad 13 mm in the air.
+      // The lowest point of the leg model, in the animal's own units: the pad, and the height the pad
+      // hangs at when the leg is fully retracted. Read off the model once.
+      let BELL_PAD_Y = 0;
       const plantFeet = (d) => {
+        if (!BELL_PAD_Y) {
+          if (!bellGeo.leg.boundingBox) bellGeo.leg.computeBoundingBox();
+          BELL_PAD_Y = bellGeo.leg.boundingBox.min.y;
+        }
         dfE.crossVectors(d.up, d.fwd).normalize();
         dfN.copy(d.fwd);
-        const h0 = heightAt(d.pos);
+        const base = R + heightAt(d.pos), drop = BELL_HIP_Y + BELL_PAD_Y;
         for (let l = 0; l < BELL_LEGS.length; l++) {
-          dfP.copy(d.pos).addScaledVector(dfE, BELL_LEGS[l][0] * d.scale / R).addScaledVector(dfN, BELL_LEGS[l][1] * d.scale / R).normalize();
-          d.foot[l] = clamp((heightAt(dfP) - h0) / d.scale, -.020, .020);
+          // Where the pad would hang with the leg fully retracted: the body's ground point, carried out
+          // to the foot's own place on the tangent plane.
+          dfP.copy(d.pos).multiplyScalar(base)
+            .addScaledVector(dfE, BELL_LEGS[l][0] * d.scale)
+            .addScaledVector(dfN, BELL_LEGS[l][1] * d.scale);
+          // The leg hangs along the body's up, which is not the radius, and the ground under the pad
+          // changes as the pad moves — so the offset is solved, not guessed. One guess was a hand's
+          // width out at this animal's size; three passes of the exact root are a tenth of a millimetre.
+          let u = 0;
+          for (let pass = 0; pass < 3; pass++) {
+            dfQ.copy(dfP).addScaledVector(d.up, u);
+            const target = R + heightAt(dfQ.normalize());
+            const b = dfP.dot(d.up), disc = b * b - (dfP.lengthSq() - target * target);
+            if (disc > 0) u = -b + Math.sqrt(disc);
+          }
+          d.foot[l] = clamp(u / d.scale - drop, -.020 * BELL_SIZE, .020 * BELL_SIZE);
         }
       };
       // Peak-to-peak ground under the animal's own stance. The terrain of this world is fine-grained
@@ -4664,9 +4690,9 @@
           return up.dot(dir) > .935;                                  // no cliff faces
         };
         // …and not inside a trunk or a boulder: the flora pass planted those long before this ran.
-        const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) * R < (s.wr || .20) + .034) &&
+        const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) * R < (s.wr || .20) + .034 * BELL_SIZE) &&
           !landmarks.some(l => l.direction.angleTo(dir) < .17) &&
-          !hardProps.some(p2 => p2.dir.angleTo(dir) * R < p2.r + .026);
+          !hardProps.some(p2 => p2.dir.angleTo(dir) * R < p2.r + .026 * BELL_SIZE);
         for (const pack of packs) {
           for (let h = 0; h < pack.packs; h++) {
             let found = null, levelest = Infinity;
@@ -4702,12 +4728,12 @@
                 if (heightAt(dwProbe) < SEA + .008) continue;
                 if (provinceAt(dwProbe) !== pack.id) continue;
                 if (!flatEnough(dwProbe)) continue;
-                if (settlementDirs.some(s => s.dir.angleTo(dwProbe) * R < (s.wr || .20) + .028)) continue;
+                if (settlementDirs.some(s => s.dir.angleTo(dwProbe) * R < (s.wr || .20) + .028 * BELL_SIZE)) continue;
                 const rough = bellRough(dwProbe, 1);
                 // A tripod cannot rock, so it does not have to be *perfectly* level — but a spot whose
                 // own stance spans more than a centimetre of ground is one where a pad cannot reach the
                 // ground at all, and the animal ends up standing on two legs and a hope.
-                if (rough < .012 && rough < levelest) { levelest = rough; spot = dwProbe.clone(); }
+                if (rough < .012 / BELL_SIZE && rough < levelest) { levelest = rough; spot = dwProbe.clone(); }
               }
               if (!spot) spot = home.clone();          // the centre itself passed every test
               // Two bell on one square metre read as one bell with eight legs: every candidate was
@@ -4717,7 +4743,7 @@
               // Spacing is measured in whole animals, not in the old .012: a bell is 34 mm across the
               // lip, so two of them 12 mm apart were literally inside one another — the user saw "几只重叠
               // 在一起" and they were. A body and a half is the least that reads as two animals.
-              const tooClose = p => bell.some(o => o.pos.angleTo(p) * R < .046);
+              const tooClose = p => bell.some(o => o.pos.angleTo(p) * R < .052 * BELL_SIZE);
               if (tooClose(spot)) {
                 let best = null, bestRough = Infinity;
                 for (let k = 0; k < 160; k++) {
@@ -4733,7 +4759,7 @@
                   if (heightAt(dwProbe) < SEA + .008) continue;
                   if (provinceAt(dwProbe) !== pack.id) continue;
                   if (!flatEnough(dwProbe)) continue;
-                  if (settlementDirs.some(sv => sv.dir.angleTo(dwProbe) * R < (sv.wr || .20) + .028)) continue;
+                  if (settlementDirs.some(sv => sv.dir.angleTo(dwProbe) * R < (sv.wr || .20) + .028 * BELL_SIZE)) continue;
                   if (!freeOf(dwProbe)) continue;
                   if (tooClose(dwProbe)) continue;
                   const rough = bellRough(dwProbe, 1);
@@ -4746,7 +4772,7 @@
                 up: bellNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
                 world: new THREE.Vector3(), mode: 'graze', timer: .8 + rng() * 2.6,
                 phase: rng() * TAU, stride: .18, headTilt: 1, speed: 0,
-                scale: .90 + rng() * .24, seedPhase: rng() * TAU, coat: pack.tint, awake: false,
+                scale: BELL_SIZE * (.90 + rng() * .24), seedPhase: rng() * TAU, coat: pack.tint, awake: false,
                 foot: BELL_LEGS.map(() => 0)
               };
               // A first heading, tangent to the ground and away from the herd's centre of mass.
@@ -7218,9 +7244,9 @@
               if (o === d) continue;
               dwProbe.copy(o.pos).sub(d.pos);
               const along = dwProbe.dot(d.fwd);
-              if (along <= 0 || along * R > .070) continue;        // behind, or too far to matter
+              if (along <= 0 || along * R > .070 * BELL_SIZE) continue;   // behind, or too far to matter
               dwProbe.addScaledVector(d.fwd, -along);
-              if (dwProbe.length() * R < .036) { d.timer = 0; break; }
+              if (dwProbe.length() * R < .042 * BELL_SIZE) { d.timer = 0; break; }
             }
             if (d.timer <= 0 || d.pos.angleTo(d.goto) < .008) {
               d.mode = 'graze';
@@ -7253,7 +7279,7 @@
                 d.goto.copy(d.pos).addScaledVector(dwE, Math.cos(a2) * reach).addScaledVector(dwN, Math.sin(a2) * reach).normalize();
                 // It never wanders far from its own patch of moss: past 200 mm, it heads home instead.
                 if (d.goto.angleTo(d.home) > .048) d.goto.copy(d.home);
-                clear = !bell.some(o => o !== d && o.pos.angleTo(d.goto) * R < .042);
+                clear = !bell.some(o => o !== d && o.pos.angleTo(d.goto) * R < .048 * BELL_SIZE);
               }
               // The last resort: if the whole herd has taken the ground there is anywhere to go, walk
               // away from whoever is nearest rather than stand there pretending to graze.
@@ -7306,7 +7332,7 @@
             // stop it, which is a much looser test than the one used for where a herd may *stand*.
             const walkableAt = (p2) => heightAt(p2) >= SEA + .006 && bellNormal(p2, dwUp).dot(p2) >= .86;
             // A boulder, or a house: the same two questions, asked of the next few centimetres.
-            const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) * R < (sv.wr || .20) + .028) && !propAhead(d, .038);
+            const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) * R < (sv.wr || .20) + .028 * BELL_SIZE) && !propAhead(d, .038);
             dwProbe.copy(d.pos).addScaledVector(d.fwd, .035).normalize();
             if (!walkableAt(dwProbe) || !clearAhead(dwProbe)) {
               let turned = false;
