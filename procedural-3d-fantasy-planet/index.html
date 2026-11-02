@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-52">
+  <meta name="aetheris-build" content="pennants-53">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-52';
+    const BUILD_ID = 'pennants-53';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3142,6 +3142,10 @@
       const ROCK = 3, CRYSTAL = 4, CRAG = 5, PALM = 6, CACTUS = 7, CUSHION = 8, SCRUB = 9, FERN = 10;
       const SPECIES = { fir: 0, oak: 1, willow: 2, palm: PALM, cactus: CACTUS, cushion: CUSHION, scrub: SCRUB, fern: FERN };
       const cells = Array.from({ length: prototypes.length }, () => new Map());
+      // Everything the flora pass plants, in the order it plants it: direction, species, size. What an
+      // animal may not walk through is worked out from these later (see hardFloraRadius) — the model
+      // itself is asked how wide the trunk is, rather than a number being invented here.
+      const floraHard = [];
       // Per-species habitat: firs & oaks on forested slopes, willows by water, boulders, crystals, and
       // 3D alpine crags on mountain ridges. `count` is only used by the three geology prototypes —
       // how many plants of a species exist is a per-province decision (PROVINCE_FLORA below).
@@ -3215,6 +3219,7 @@
         if (!cells[type].has(id)) cells[type].set(id, []);
         instanceTint.setHSL(.12 + rng() * .1, .08 + rng() * .14, .84 + rng() * .12);
         cells[type].get(id).push({ matrix: transform.matrix.clone(), tint: instanceTint.clone() });
+        floraHard.push({ dir: n.clone(), type, size: Math.max(transform.scale.x, transform.scale.z) });
         if (type === CRYSTAL || (type !== ROCK && type !== CRAG && rng() < .42)) {
           const glow = n.clone().multiplyScalar(R + height + (type === CRYSTAL ? .14 : .26) * size);
           spores.push(glow.x, glow.y, glow.z); sporePhases.push(rng() * TAU);
@@ -4314,6 +4319,42 @@
       // the world that belongs to no town, so without this the offline checks cannot tell them from a
       // stretch of provincial wall. Nothing reads it at run time.
       const seaStones = [];
+      // Trees, boulders and crystal the herd has to walk round (see HARD_FLORA). Filled when the
+      // province dressing finishes — the flora is planted long before — and read by `refreshBellProps`,
+      // which keeps a short list per animal so the per-frame cost is a handful of dots, not fifteen
+      // hundred.
+      const hardProps = [];
+      // How wide a planted thing is where an animal would meet it, read off its own model: a tree gives
+      // only its **trunk** — the bottom eighth of the geometry — so a herd can still walk under the
+      // canopy; a boulder or a crystal gives its whole footprint; ground cover (cushion, scrub, fern)
+      // gives nothing, because that is what they walk through. Memoised per species: eleven models.
+      // The width a bell would meet, measured on the model: the widest thing in the band of air the
+      // animal's own body occupies — the ground up to 35 mm, which is the top of its shell before the
+      // plant's own scale. Anything higher up (boughs, a canopy, a crystal's tip) is air it can walk
+      // under. `band` is a parameter only so the offline checks can look at other heights.
+      const hardWidthOf = (pos, band = .035) => {
+        let lo = Infinity;
+        for (let i = 0; i < pos.count; i++) if (pos.getY(i) < lo) lo = pos.getY(i);
+        const top = lo + band, wide = { r: 0 };
+        for (let i = 0; i < pos.count; i++) {
+          if (pos.getY(i) > top) continue;
+          const r = Math.hypot(pos.getX(i), pos.getZ(i));
+          if (r > wide.r) wide.r = r;
+        }
+        return wide.r;
+      };
+      const hardFloraWidth = [];
+      const hardFloraRadius = (type) => {
+        if (hardFloraWidth[type] !== undefined) return hardFloraWidth[type];
+        const woody = type <= 2 || type === 6 || type === 7;      // fir, oak, willow, palm, cactus
+        const solid = woody || type === 3 || type === 4 || type === 5;   // …, boulder, crystal, crag
+        let wide = 0;
+        if (solid && typeof prototypes !== 'undefined' && prototypes[type] && prototypes[type].low) {
+          wide = hardWidthOf(prototypes[type].low.attributes.position);
+        }
+        hardFloraWidth[type] = wide;
+        return wide;
+      };
       // ---- The mossbell: the ground's own animal -------------------------------------------------
       // The mantas own the sky and the raft owns the shallows; this is what walks. It is not a bell.
       // Everything that made the last version a bell was a vertebrate: a barrel, a neck, a face, four
@@ -4454,10 +4495,11 @@
       // would otherwise hang by two legs. Offsets are in the animal's own units, before its scale.
       // Fill the prop cache from whatever the ground pass has laid down near the player.
       const refreshBellProps = () => {
-        if (typeof groundStones === 'undefined' || !groundStones) return;
         const props = refreshBellProps.props;
         let n = 0;
-        for (let s = 0; s < groundStones.count; s++) {
+        // The stones are the ground pass's; a build without one (the offline checks) has none, and the
+        // list is left as the test filled it.
+        for (let s = 0; typeof groundStones !== 'undefined' && groundStones && s < groundStones.count; s++) {
           groundStones.getMatrixAt(s, dwPart);
           const e = dwPart.elements;
           dwProp.set(e[12], e[13], e[14]);
@@ -4469,30 +4511,46 @@
             Math.hypot(e[0], e[1], e[2]), Math.hypot(e[4], e[5], e[6]), Math.hypot(e[8], e[9], e[10]));
           n++;
         }
-        props.length = n;
+        if (typeof groundStones !== 'undefined' && groundStones) props.length = n;
+        // Each animal keeps the few hard props within 336 mm of it, so walking costs a handful of dot
+        // products a frame instead of fifteen hundred. Rebuilt with the stones, three times a second;
+        // in twenty frames a bell covers 25 mm, nothing can slip in unseen.
+        const nearCos = Math.cos(.08);
+        for (let i = 0; i < bell.length; i++) {
+          const d = bell[i], near = d.near || (d.near = []);
+          near.length = 0;
+          for (let h = 0; h < hardProps.length; h++) {
+            const p2 = hardProps[h];
+            if (p2.dir.dot(d.pos) > nearCos && p2.dir.angleTo(d.pos) * R < p2.r + .05) near.push(p2);
+          }
+        }
       };
       refreshBellProps.props = [];
       refreshBellProps.age = 99;
       // Would a step in `dirIn` (default: its own heading) put it into a prop? `reach` is how far ahead
       // to look in radians, `margin` the clearance wanted beyond the prop's own radius.
-      const propAhead = (d, reach, dirIn, margin = .022) => {
+      const propAhead = (d, reach, dirIn, margin = .014) => {
         const props = refreshBellProps.props;
         const fwd = dirIn || d.fwd;
-        for (let i = 0; i < props.length; i++) {
-          const p2 = props[i];
+        // The stones, then the trunks and boulders on its own short list. Both loops are the same test.
+        const test = (p2) => {
           const away = p2.dir.angleTo(d.pos);
-          if (away > reach + p2.r / R + .02) continue;
+          if (away > reach + p2.r / R + .02) return false;
           // Already standing in it: only walking *further* in is blocked, so it can always get out.
           if (away < p2.r / R + .006) {
             if (dwProp.copy(p2.dir).sub(d.pos).dot(fwd) > 0) return true;
-            continue;
+            return false;
           }
           dwProp.copy(p2.dir).sub(d.pos);
           const along = dwProp.dot(fwd);
-          if (along <= 0) continue;
+          if (along <= 0) return false;
           dwProp.addScaledVector(fwd, -along);
           if (dwProp.length() * R < p2.r + margin) return true;
-        }
+          return false;
+        };
+        for (let i = 0; i < props.length; i++) if (test(props[i])) return true;
+        const near = d.near;
+        if (near) for (let i = 0; i < near.length; i++) if (test(near[i])) return true;
         return false;
       };
       // The prop it is actually standing inside, if any.
@@ -4500,6 +4558,10 @@
         const props = refreshBellProps.props;
         for (let i = 0; i < props.length; i++) {
           if (props[i].dir.angleTo(d.pos) < props[i].r / R + .004) return props[i];
+        }
+        const near = d.near;
+        if (near) for (let i = 0; i < near.length; i++) {
+          if (near[i].dir.angleTo(d.pos) < near[i].r / R + .004) return near[i];
         }
         return null;
       };
@@ -4596,8 +4658,10 @@
           bellNormal(dir, up);
           return up.dot(dir) > .935;                                  // no cliff faces
         };
+        // …and not inside a trunk or a boulder: the flora pass planted those long before this ran.
         const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) * R < (s.wr || .20) + .034) &&
-          !landmarks.some(l => l.direction.angleTo(dir) < .17);
+          !landmarks.some(l => l.direction.angleTo(dir) < .17) &&
+          !hardProps.some(p2 => p2.dir.angleTo(dir) * R < p2.r + .026);
         for (const pack of packs) {
           for (let h = 0; h < pack.packs; h++) {
             let found = null, levelest = Infinity;
@@ -4673,7 +4737,7 @@
                 if (best) spot = best;
               }
               const d = {
-                center: spot.toArray(), home: home.clone(), pos: spot, goto: spot.clone(), aim: spot.clone(),
+                center: spot.toArray(), home: home.clone(), pos: spot, goto: spot.clone(), aim: spot.clone(), near: [],
                 up: bellNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
                 world: new THREE.Vector3(), mode: 'graze', timer: .8 + rng() * 2.6,
                 phase: rng() * TAU, stride: .18, headTilt: 1, speed: 0,
@@ -6440,6 +6504,19 @@
             }
           });
         }
+        // What the herd has to walk round: crystal the geology laid down, and every trunk and boulder
+        // the flora planted (which happened long before this function ran). Walls and houses are not
+        // in here — the herd keeps out of the towns' whole footprints instead, which is both cheaper
+        // and covers more than any list of wall pieces would.
+        for (const [key, list] of buckets) {
+          if (!key.startsWith('shard|')) continue;
+          for (const item of list) hardProps.push({ dir: item.origin.clone().normalize(), r: .5 * Math.max(item.scale.x, item.scale.z) });
+        }
+        // Every trunk, boulder and crystal the flora pass planted, at the width its own model reports.
+        if (typeof floraHard !== 'undefined') for (let i = 0; i < floraHard.length; i++) {
+          const item = floraHard[i], wide = hardFloraRadius(item.type);
+          if (wide > .002) hardProps.push({ dir: item.dir, r: wide * item.size });
+        }
         for (const [key, list] of buckets) {
           const [geoKey, matKey] = key.split('|');
           const inst = new THREE.InstancedMesh(provinceGeo[geoKey], provinceMat[matKey], list.length);
@@ -7221,7 +7298,7 @@
             // stop it, which is a much looser test than the one used for where a herd may *stand*.
             const walkableAt = (p2) => heightAt(p2) >= SEA + .006 && bellNormal(p2, dwUp).dot(p2) >= .86;
             // A boulder, or a house: the same two questions, asked of the next few centimetres.
-            const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) * R < (sv.wr || .20) + .028) && !propAhead(d, .045);
+            const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) * R < (sv.wr || .20) + .028) && !propAhead(d, .038);
             dwProbe.copy(d.pos).addScaledVector(d.fwd, .035).normalize();
             if (!walkableAt(dwProbe) || !clearAhead(dwProbe)) {
               let turned = false;
@@ -7229,7 +7306,7 @@
                 for (const sgn of [1, -1]) {
                   dwE.copy(d.fwd).applyAxisAngle(d.pos, sgn * .55 * k).normalize();
                   dwProbe.copy(d.pos).addScaledVector(dwE, .035).normalize();
-                  if (walkableAt(dwProbe) && !propAhead(d, .045, dwE)) { d.fwd.copy(dwE); turned = true; break; }
+                  if (walkableAt(dwProbe) && !propAhead(d, .038, dwE)) { d.fwd.copy(dwE); turned = true; break; }
                 }
               }
               if (!turned) { d.speed = 0; d.mode = 'graze'; d.timer = 1.4; }
