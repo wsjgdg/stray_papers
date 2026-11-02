@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="dry-shore-42">
+  <meta name="aetheris-build" content="grey-stags-43">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'dry-shore-42';
+    const BUILD_ID = 'grey-stags-43';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4271,6 +4271,298 @@
       // the world that belongs to no town, so without this the offline checks cannot tell them from a
       // stretch of provincial wall. Nothing reads it at run time.
       const seaStones = [];
+      // ---- Deer: the ground's own animal -------------------------------------------------------
+      // The mantas own the sky; until now nothing walked. A deer is six instances — barrel, head with
+      // its antlers baked in, four legs — so a herd of five costs thirty instances in three draw
+      // calls, and the rig is cut from the same part library as the houses. The third eye is a plain
+      // bead of bone in the forehead: this world's light is borrowed, and nothing living owns any.
+      const DEER_HIP_Y = .0300, DEER_NECK_Y = .0420, DEER_NECK_Z = .0200;
+      const DEER_LEGS = [[-.0085, .0190], [.0085, .0190], [-.0092, -.0190], [.0092, -.0190]];
+      const deer = [];
+      let deerBodyMesh = null, deerHeadMesh = null, deerLegMesh = null;
+      // A bone between two points, in deer-local units: legs, neck and every tine are the same call.
+      const deerBone = (ax, ay, az, bx, by, bz, r0, r1, color) => {
+        const dx = bx - ax, dy = by - ay, dz = bz - az, len = Math.hypot(dx, dy, dz) || 1e-4;
+        const g = new THREE.CylinderGeometry(r1, r0, len, 5, 1, false);
+        g.translate(0, len / 2, 0);
+        g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, new THREE.Vector3(dx / len, dy / len, dz / len)));
+        g.translate(ax, ay, az);
+        return partTint(g, color, .05);
+      };
+      // The barrel: deep at the chest, tucked at the flank, with the shoulder hump a deer carries.
+      function deerBodyPart() {
+        const parts = [];
+        const barrel = new THREE.CylinderGeometry(.0118, .0110, .062, 9, 4, false);
+        barrel.rotateX(Math.PI / 2);
+        const bp = barrel.attributes.position;
+        for (let i = 0; i < bp.count; i++) {
+          const t = clamp((bp.getZ(i) + .031) / .062, 0, 1);
+          const k = .82 + .24 * t;
+          bp.setX(i, bp.getX(i) * k);
+          bp.setY(i, bp.getY(i) * (.94 + .10 * t) + .0018 * Math.sin(t * Math.PI));
+        }
+        barrel.translate(0, .0375, 0);
+        barrel.computeVertexNormals();
+        parts.push(partTint(barrel, '#8d7a5e', .07));
+        const chest = new THREE.SphereGeometry(.0122, 8, 6); chest.scale(.95, 1.02, .75); chest.translate(0, .0375, .0285);
+        parts.push(partTint(chest, '#8d7a5e', .07));
+        const rump = new THREE.SphereGeometry(.0110, 8, 6); rump.scale(.92, .96, .78); rump.translate(0, .0380, -.0295);
+        parts.push(partTint(rump, '#8d7a5e', .07));
+        // The two lines that make a body read as an animal rather than as a box: a pale belly and a
+        // dark stripe down the spine.
+        parts.push(partBox(.0165, .0052, .0520, '#b3a184', .0262, 0, .0015, .06));
+        parts.push(partBox(.0072, .0034, .0570, '#5d4d38', .0472, 0, -.0010, .06));
+        // Tail, held up out of habit, showing its white underside.
+        parts.push(partBox(.0090, .0140, .0070, '#8d7a5e', .0405, 0, -.0352, .06));
+        parts.push(partBox(.0055, .0100, .0032, '#e0d5bd', .0408, 0, -.0378, .05));
+        // Shoulder blades: where the neck comes out of the body.
+        for (const sx of [-1, 1]) parts.push(partBox(.0062, .0090, .0160, '#8d7a5e', .0415, sx * .0074, .0165, .06));
+        return join(parts);
+      }
+      // Head, neck and antlers, with the pivot at the base of the neck so the whole thing can swing
+      // down to graze.
+      function deerHeadPart() {
+        const parts = [];
+        parts.push(deerBone(0, 0, 0, 0, .0170, .0135, .0075, .0062, '#8d7a5e'));
+        const skull = new THREE.BoxGeometry(.0110, .0105, .0180, 1, 1, 2);
+        skull.translate(0, .0205, .0215);
+        parts.push(partTint(skull, '#8d7a5e', .06));
+        parts.push(partBox(.0078, .0068, .0135, '#8a7757', .0186, 0, .0305, .05));
+        parts.push(partBox(.0072, .0032, .0115, '#a79474', .0150, 0, .0310, .05));
+        parts.push(partBox(.0082, .0052, .0034, '#3a3229', .0186, 0, .0368, .05));
+        for (const sx of [-1, 1]) {
+          const ear = new THREE.ConeGeometry(.0052, .0150, 5);
+          ear.scale(1, 1, .52);
+          ear.translate(0, .0075, 0);
+          ear.rotateZ(sx * 1.05);
+          ear.rotateX(-.35);
+          ear.translate(sx * .0076, .0245, .0175);
+          parts.push(partTint(ear, '#8d7a5e', .06));
+        }
+        // Antlers: one beam and three tines a side, pale as bone and the only thing on the animal
+        // that catches the sky.
+        for (const sx of [-1, 1]) {
+          const bx = sx * .0044, by = .0250, bz = .0180;
+          parts.push(deerBone(bx, by, bz, bx + sx * .0061, by + .0190, bz - .0090, .0021, .0014, '#e6dcc4'));
+          parts.push(deerBone(bx + sx * .0024, by + .0072, bz - .0034, bx + sx * .0106, by + .0110, bz + .0030, .0014, .0009, '#e6dcc4'));
+          parts.push(deerBone(bx + sx * .0044, by + .0126, bz - .0060, bx + sx * .0121, by + .0180, bz - .0018, .0013, .0008, '#e6dcc4'));
+          parts.push(deerBone(bx + sx * .0056, by + .0170, bz - .0080, bx + sx * .0086, by + .0255, bz - .0125, .0011, .0007, '#e6dcc4'));
+        }
+        // Three eyes: the pair on the skull, and the third set into the forehead above and between
+        // them. Dark beads with one fleck of light each, because nothing here glows on its own.
+        for (const sx of [-1, 1]) {
+          const eye = new THREE.SphereGeometry(.0026, 6, 5); eye.translate(sx * .0058, .0225, .0268);
+          parts.push(partTint(eye, '#17130f', .04));
+          const glint = new THREE.SphereGeometry(.0008, 4, 3); glint.translate(sx * .0065, .0233, .0284);
+          parts.push(partTint(glint, '#f4ecd8', .02));
+        }
+        const third = new THREE.SphereGeometry(.0030, 6, 6); third.scale(.60, 1.15, 1); third.translate(0, .0252, .0230);
+        parts.push(partTint(third, '#17130f', .04));
+        const thirdGlint = new THREE.SphereGeometry(.0008, 4, 3); thirdGlint.translate(0, .0264, .0244);
+        parts.push(partTint(thirdGlint, '#f4ecd8', .02));
+        return join(parts);
+      }
+      // One leg, pivot at the hip, hoof exactly at y = -DEER_HIP_Y so a posed leg stands on the ground.
+      function deerLegPart() {
+        const parts = [];
+        parts.push(deerBone(0, 0, 0, 0, -.0160, .0015, .0038, .0026, '#8d7a5e'));
+        parts.push(deerBone(0, -.0160, .0015, 0, -.0275, -.0008, .0025, .0016, '#7d6a4e'));
+        parts.push(partBox(.0048, .0030, .0062, '#2b241d', -.0300, 0, .0004, .05));
+        return join(parts);
+      }
+      const deerGeo = { body: deerBodyPart(), head: deerHeadPart(), leg: deerLegPart() };
+      const deerMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .92, metalness: .02 });
+      // Scratch, reused by every pose: no allocation inside the frame loop.
+      const dwFrame = new THREE.Object3D(), dwLocal = new THREE.Matrix4(), dwPart = new THREE.Matrix4();
+      const dwAhead = new THREE.Vector3(), dwPlayer = new THREE.Vector3(), dwE = new THREE.Vector3();
+      const dwN = new THREE.Vector3(), dwProbe = new THREE.Vector3(), dwCol = new THREE.Color();
+      const dwTmp = new THREE.Vector3();          // deerNormal() must not write into its own argument
+      // The ground normal under a direction: the slope of the height field along two tangents.
+      const deerNormal = (dir, out) => {
+        dwE.set(1, 0, 0).cross(dir);
+        if (dwE.lengthSq() < 1e-8) dwE.set(0, 0, 1).cross(dir);
+        dwE.normalize();
+        dwN.crossVectors(dir, dwE);
+        const h0 = heightAt(dir);
+        const step = .004, span = step * R;          // the step is an angle; the ground it spans is R times it
+        const ge = (heightAt(dwTmp.copy(dir).addScaledVector(dwE, step).normalize()) - h0) / span;
+        const gn = (heightAt(dwTmp.copy(dir).addScaledVector(dwN, step).normalize()) - h0) / span;
+        return out.copy(dir).addScaledVector(dwE, -ge).addScaledVector(dwN, -gn).normalize();
+      };
+      const dfE = new THREE.Vector3(), dfN = new THREE.Vector3(), dfP = new THREE.Vector3();
+      // Each hoof is planted on the ground under it: a deer standing across a ridge in this country
+      // would otherwise hang by two legs. Offsets are in the animal's own units, before its scale.
+      const plantFeet = (d) => {
+        dfE.set(1, 0, 0).cross(d.pos);
+        if (dfE.lengthSq() < 1e-8) dfE.set(0, 0, 1).cross(d.pos);
+        dfE.normalize();
+        dfN.crossVectors(d.pos, dfE);
+        const h0 = heightAt(d.pos);
+        for (let l = 0; l < 4; l++) {
+          dfP.copy(d.pos).addScaledVector(dfE, DEER_LEGS[l][0] * d.scale / R).addScaledVector(dfN, DEER_LEGS[l][1] * d.scale / R).normalize();
+          d.foot[l] = clamp((heightAt(dfP) - h0) / d.scale, -.014, .014);
+        }
+      };
+      // Peak-to-peak ground under the animal's own stance. The terrain of this world is fine-grained
+      // enough that four feet a hand's width apart can straddle half a metre of rise, so a herd looks
+      // for the levelest ground within reach rather than for ground that is merely level enough.
+      const deerRough = (dir, scale) => {
+        dfE.set(1, 0, 0).cross(dir);
+        if (dfE.lengthSq() < 1e-8) dfE.set(0, 0, 1).cross(dir);
+        dfE.normalize();
+        dfN.crossVectors(dir, dfE);
+        let lo = 9, hi = -9;
+        for (let l = 0; l < 4; l++) {
+          dfP.copy(dir).addScaledVector(dfE, DEER_LEGS[l][0] * scale / R).addScaledVector(dfN, DEER_LEGS[l][1] * scale / R).normalize();
+          const h = heightAt(dfP);
+          if (h < lo) lo = h;
+          if (h > hi) hi = h;
+        }
+        return hi - lo;
+      };
+      // Put one animal into the six instance slots. `bob` is the walk cycle lifting the barrel.
+      const poseDeer = (d, i, bob = 0) => {
+        dwFrame.position.copy(d.world).addScaledVector(d.up, bob);
+        dwFrame.up.copy(d.up);
+        // Object3D.lookAt() points a model's +Z at its target (only cameras look down -Z), and a deer
+        // carries its head on +Z, so aiming a hand's width ahead of the animal faces it forward.
+        dwAhead.copy(d.world).addScaledVector(d.fwd, .012);
+        dwFrame.lookAt(dwAhead);
+        dwFrame.scale.setScalar(d.scale);
+        dwFrame.updateMatrix();
+        deerBodyMesh.setMatrixAt(i, dwFrame.matrix);
+        dwLocal.makeRotationX(d.headTilt);
+        dwLocal.setPosition(0, DEER_NECK_Y, DEER_NECK_Z);
+        dwPart.multiplyMatrices(dwFrame.matrix, dwLocal);
+        deerHeadMesh.setMatrixAt(i, dwPart);
+        const swing = Math.sin(d.phase) * d.stride;
+        for (let l = 0; l < 4; l++) {
+          const s = l === 0 || l === 3 ? swing : -swing;      // diagonal pairs, as a walk actually works
+          dwLocal.makeRotationX(s);
+          dwLocal.setPosition(DEER_LEGS[l][0], DEER_HIP_Y + d.foot[l], DEER_LEGS[l][1]);
+          dwPart.multiplyMatrices(dwFrame.matrix, dwLocal);
+          deerLegMesh.setMatrixAt(i * 4 + l, dwPart);
+        }
+      };
+      // Where a herd can stand: land, out of the water, off a cliff, and clear of the towns that would
+      // otherwise put a deer inside a house. The first pack is pulled toward the landing, because a
+      // player who never meets one has been given no animal at all.
+      function deerHerd() {
+        const rng = seeded(71243);
+        // Coat by province, multiplied over the neutral fur the parts are cut from. Deer eat plants,
+        // so the crystal basin — which has no plants at all — gets none of them.
+        const coats = {
+          vaelmar: [1.12, .86, .60], caelth: [1.26, 1.30, 1.36],
+          mirella: [1.02, .98, .92], sennar: [1.30, 1.16, .92]
+        };
+        const packs = [{ id: 'vaelmar', packs: 5, near: false }, { id: 'caelth', packs: 3, near: false }];
+        // A player who never meets one has been given no animal at all. The crystal basin the walker
+        // comes down in has no plants, so the nearest green province gets one herd pulled toward it —
+        // and if the landing itself is green, that is where the first herd goes.
+        let green = null, aim = null, gap = Infinity;
+        for (let i = 0; i < 260; i++) {
+          const dir = nearDirection(landing, rng() * TAU, .02 + rng() * .40);
+          const here = provinceAt(dir);
+          if (!coats[here]) continue;
+          const d = dir.angleTo(landing);
+          if (d < gap) { gap = d; green = here; aim = dir.clone(); }
+        }
+        const near = packs.find(p => p.id === green);
+        if (near) { near.near = true; near.aim = aim; }
+        else if (green) packs.unshift({ id: green, packs: 1, near: true, aim });
+        for (const pack of packs) pack.tint = coats[pack.id];
+        const centre = new THREE.Vector3(), up = new THREE.Vector3();
+        const flatEnough = dir => {
+          deerNormal(dir, up);
+          return up.dot(dir) > .935;                                  // no cliff faces
+        };
+        const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) < .052) &&
+          !landmarks.some(l => l.direction.angleTo(dir) < .17);
+        for (const pack of packs) {
+          for (let h = 0; h < pack.packs; h++) {
+            let found = null, levelest = Infinity;
+            for (let pass = 0; pass < 2 && !(found && levelest < .008); pass++) {
+              // The first herd, in the province the walker comes down in, is drawn from a cap around
+              // the landing rather than from the whole planet — a uniform sample would all but never
+              // land inside it.
+              const nearLanding = pack.near && h === 0 && pass === 0;
+              for (let i = 0; i < 900; i++) {
+                if (nearLanding) centre.copy(nearDirection(pack.aim, rng() * TAU, Math.sqrt(rng()) * .055));
+                else centre.copy(randomDirection(rng));
+                if (provinceAt(centre) !== pack.id) continue;
+                if (heightAt(centre) < SEA + .012) continue;
+                if (!freeOf(centre) || !flatEnough(centre)) continue;
+                const rough = deerRough(centre, 1);
+                if (rough < levelest) { levelest = rough; found = centre.clone(); }
+              }
+            }
+            if (!found) continue;
+            const n = 3 + Math.floor(rng() * 3), home = found.clone();
+            for (let k = 0; k < n; k++) {
+              let spot = null, levelest = Infinity;
+              for (let tries = 0; tries < 56; tries++) {
+                const a = rng() * TAU;
+                const r = tries < 36 ? .008 + rng() * .022 : rng() * .008;   // then close in on the centre
+                dwE.set(1, 0, 0).cross(home);
+                if (dwE.lengthSq() < 1e-8) dwE.set(0, 0, 1).cross(home);
+                dwE.normalize();
+                dwN.crossVectors(home, dwE);
+                dwProbe.copy(home).addScaledVector(dwE, Math.cos(a) * r).addScaledVector(dwN, Math.sin(a) * r).normalize();
+                // Each animal is placed on its own footing: the ground here is fine-grained enough
+                // that two deer a hand's width apart can be on either side of a ridge.
+                if (heightAt(dwProbe) < SEA + .008) continue;
+                if (provinceAt(dwProbe) !== pack.id) continue;
+                if (!flatEnough(dwProbe)) continue;
+                if (settlementDirs.some(s => s.dir.angleTo(dwProbe) < .046)) continue;
+                const rough = deerRough(dwProbe, 1);
+                if (rough < levelest) { levelest = rough; spot = dwProbe.clone(); }
+              }
+              if (!spot) spot = home.clone();          // the centre itself passed every test
+              const d = {
+                center: spot.toArray(), home: home.clone(), pos: spot,
+                up: deerNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
+                world: new THREE.Vector3(), mode: 'graze', timer: .8 + rng() * 2.6,
+                phase: rng() * TAU, stride: .18, headTilt: 1, speed: 0,
+                scale: .90 + rng() * .24, seedPhase: rng() * TAU, coat: pack.tint, awake: false,
+                foot: [0, 0, 0, 0]
+              };
+              // A first heading, tangent to the ground and away from the herd's centre of mass.
+              d.fwd.copy(spot).sub(home).addScaledVector(d.up, 0);
+              d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
+              if (d.fwd.lengthSq() < 1e-8) {
+                dwProbe.copy(randomDirection(rng));
+                d.fwd.copy(dwProbe).addScaledVector(d.pos, -dwProbe.dot(d.pos));
+              }
+              d.fwd.normalize();
+              d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
+              deer.push(d);
+            }
+          }
+        }
+        if (!deer.length) return;
+        deerBodyMesh = new THREE.InstancedMesh(deerGeo.body, deerMat, deer.length);
+        deerHeadMesh = new THREE.InstancedMesh(deerGeo.head, deerMat, deer.length);
+        deerLegMesh = new THREE.InstancedMesh(deerGeo.leg, deerMat, deer.length * 4);
+        for (const mesh of [deerBodyMesh, deerHeadMesh, deerLegMesh]) {
+          mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          mesh.frustumCulled = false;                  // they are spread across the whole planet
+          scene.add(mesh);
+        }
+        deer.forEach((d, i) => {
+          plantFeet(d);
+          poseDeer(d, i);
+          dwCol.setRGB(d.coat[0], d.coat[1], d.coat[2]);
+          deerBodyMesh.setColorAt(i, dwCol);
+          deerHeadMesh.setColorAt(i, dwCol);
+          for (let l = 0; l < 4; l++) deerLegMesh.setColorAt(i * 4 + l, dwCol);
+        });
+        for (const mesh of [deerBodyMesh, deerHeadMesh, deerLegMesh]) {
+          mesh.instanceMatrix.needsUpdate = true;
+          if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        }
+      }
       function provinceDressing() {
         const rng = seeded(52033);
         const quota = { vaelmar: 24, sennar: 22, caelth: 22, mirella: 22, vessper: 18 };
@@ -5753,6 +6045,8 @@
           lampPools.renderOrder = 7;
           scene.add(lampPools);
         }
+        // Deer last, because they have to know where the towns are to stay out of them.
+        deerHerd();
       }
 
       provinceDressing();
@@ -6224,6 +6518,116 @@
         moveVelocity: new THREE.Vector3(), speed: 0, slope: 1,
         coyote: 0, jumpBuffer: 0, landDip: 0, roll: 0
       };
+      // ---- Deer: who is afraid of whom ---------------------------------------------------------
+      // Stepped once a frame, and only for the animals close enough to see: a deer further than a
+      // stone's throw is already posed in the buffers and nothing off screen moves. The modes are the
+      // ones a real deer runs — graze, walk, watch you, bolt — plus one this world adds: when the sky
+      // is being worked on, the herd stops and looks up at it.
+      const dwTarget = new THREE.Vector3(), dwUp = new THREE.Vector3();
+      const aimDeer = (d, at) => {
+        d.fwd.copy(at).sub(d.world).addScaledVector(d.up, 0);
+        d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
+        if (d.fwd.lengthSq() > 1e-10) d.fwd.normalize();
+      };
+      function updateDeer(dt, elapsed) {
+        if (!deerBodyMesh) return;
+        dt = Math.min(dt, .05);                      // a tab that was asleep must not teleport the herd
+        dwPlayer.copy(state.direction).multiplyScalar(state.radius);
+        const calm = state.crouch > .55 && state.speed < .10;
+        const debt = costState.debt;
+        const worked = Math.max(debt.sky, debt.air, debt.light, debt.growth, debt.fauna);
+        // Anything further off than a stone's throw is skipped before it costs a ground sample: the
+        // angle is the same test at a tenth of the price.
+        const inRange = Math.cos(.10);
+        for (let i = 0; i < deer.length; i++) {
+          const d = deer[i];
+          if (d.pos.dot(state.direction) < inRange) {
+            d.awake = false;
+            if (d.speed) { d.speed = 0; poseDeer(d, i); }
+            continue;
+          }
+          d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
+          const dist = d.world.distanceTo(dwPlayer);
+          if (dist > .42) { d.awake = false; if (d.speed) { d.speed = 0; poseDeer(d, i); } continue; }
+          d.awake = true;
+          if (d.mode !== 'flee' && dist < (calm ? .020 : .045)) {
+            // Bolt. Crouching and standing still is the only way to be close to one of these.
+            d.mode = 'flee';
+            d.timer = .40 + .22 * (1 + Math.sin(d.seedPhase));
+            d.speed = .95;
+            aimDeer(d, dwTarget.copy(d.world).multiplyScalar(2).sub(dwPlayer));   // straight away from you
+            if (d.fwd.lengthSq() < 1e-8) d.fwd.crossVectors(d.up, d.pos).normalize();
+            deerCall(clamp(1 - dist / .20, 0, 1) * .06);
+          } else if (d.mode === 'flee') {
+            // Nothing else matters to a bolting animal for the first half second.
+          } else if (dist < .120) {
+            if (d.mode !== 'alert') { d.mode = 'alert'; d.timer = 0; }
+          } else if (worked > .28 && dist < .30) {
+            d.mode = 'watch';
+          } else if (d.mode === 'alert' || d.mode === 'watch') {
+            d.mode = 'graze';
+            d.timer = .6 + .8 * (1 + Math.sin(d.seedPhase * 2.3));
+          }
+          if (d.mode === 'flee') {
+            d.timer -= dt;
+            d.speed *= Math.exp(-dt * 1.85);          // one burst, then it is over
+            d.stride = .60;
+            d.headTilt += (-.10 - d.headTilt) * (1 - Math.exp(-dt * 14));
+            if (d.timer <= 0 || d.speed < .02) {
+              d.mode = 'walk'; d.timer = 1.6; d.speed = .05; d.headTilt = .30;
+            }
+          } else if (d.mode === 'alert') {
+            d.speed = 0; d.stride = 0;
+            d.headTilt += (-.10 - d.headTilt) * (1 - Math.exp(-dt * 7));
+            aimDeer(d, dwPlayer);                     // it turns its head to keep you in sight
+          } else if (d.mode === 'watch') {
+            d.speed = 0; d.stride = 0;
+            d.headTilt += (-.52 - d.headTilt) * (1 - Math.exp(-dt * 3));
+          } else if (d.mode === 'walk') {
+            d.speed = .048; d.stride = .20;
+            d.headTilt += (.30 - d.headTilt) * (1 - Math.exp(-dt * 5));
+            d.timer -= dt;
+            aimDeer(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
+            if (d.timer <= 0 || d.pos.angleTo(d.home) < .010) {
+              d.mode = 'graze';
+              d.timer = 1.2 + .9 * (1 + Math.sin(d.seedPhase * 1.7));
+            }
+          } else {
+            d.speed = 0; d.stride = 0;
+            d.headTilt += (1 - d.headTilt) * (1 - Math.exp(-dt * 5));
+            d.timer -= dt;
+            if (d.timer <= 0) {
+              d.mode = 'walk';
+              d.timer = 2.2 + .9 * (1 + Math.cos(d.seedPhase * 2.9));
+              // A new line, turned by a deterministic angle: nothing here draws from the world's
+              // random stream, or the weather and the events downstream of it would move as well.
+              d.fwd.applyAxisAngle(d.up, Math.sin(elapsed * .61 + d.seedPhase) * 2.1);
+              d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
+              if (d.fwd.lengthSq() > 1e-8) d.fwd.normalize();
+            }
+          }
+          if (d.speed > 1e-4) {
+            d.moved = true;
+            dwProbe.copy(d.pos).addScaledVector(d.fwd, .035).normalize();
+            if (heightAt(dwProbe) < SEA + .006 || deerNormal(dwProbe, dwUp).dot(dwProbe) < .93) {
+              d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize().negate();   // turn from the water
+            }
+            d.pos.addScaledVector(d.fwd, d.speed * dt / R).normalize();
+            d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
+            if (d.fwd.lengthSq() < 1e-8) aimDeer(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
+            else d.fwd.normalize();
+            deerNormal(d.pos, d.up);
+            d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
+            d.phase += dt * (d.speed > .25 ? 12 : d.speed > .06 ? 6.4 : 3.2);
+          }
+          if (d.moved) { plantFeet(d); d.moved = d.speed > 1e-4; }
+          poseDeer(d, i, Math.abs(Math.sin(d.phase)) * .0011 * (d.stride / .2));
+        }
+        deerBodyMesh.instanceMatrix.needsUpdate = true;
+        deerHeadMesh.instanceMatrix.needsUpdate = true;
+        deerLegMesh.instanceMatrix.needsUpdate = true;
+      }
+
       const keys = new Set(), pointers = new Map(), joystick = { x: 0, y: 0, id: null };
       let touchDive = false, touchRise = false;
       const targetPosition = new THREE.Vector3(), targetRotation = new THREE.Quaternion(), lookMatrix = new THREE.Matrix4();
@@ -7182,6 +7586,24 @@
           gain.gain.exponentialRampToValueAtTime(.0008,t+.9);
         }catch(_){ /* audio is decoration: never let it break the frame */ }
       }
+      // A startled stag: a short breathy huff — a falling saw through a band-pass. Heard only when the
+      // herd is close, and only with sound on.
+      function deerCall(volume){
+        if(!audio||!soundOn||volume<=.001)return;
+        try{
+          const t=audio.ctx.currentTime;
+          const gain=audio.ctx.createGain(),band=audio.ctx.createBiquadFilter();
+          band.type='bandpass';band.frequency.value=380;band.Q.value=1.2;
+          gain.connect(band).connect(audio.master);
+          const osc=audio.ctx.createOscillator(),oscGain=audio.ctx.createGain();
+          osc.type='sawtooth';osc.frequency.setValueAtTime(172,t);osc.frequency.exponentialRampToValueAtTime(88,t+.20);
+          oscGain.gain.value=.35;osc.connect(oscGain).connect(gain);
+          osc.start(t);osc.stop(t+.28);
+          gain.gain.setValueAtTime(0,t);
+          gain.gain.linearRampToValueAtTime(volume,t+.015);
+          gain.gain.exponentialRampToValueAtTime(.0004,t+.26);
+        }catch(_){ /* audio is decoration: never let it break the frame */ }
+      }
       function updateAudioMix(daylight,surface){
         if(!audio||!soundOn)return;
         const t=audio.ctx.currentTime,night=1-smooth(-.2,.3,daylight);
@@ -7579,6 +8001,7 @@
           mantas.setMatrixAt(i,transform.matrix);
         }
         mantas.instanceMatrix.needsUpdate=true;
+        updateDeer(dt,elapsed);
         // A starfall event turns the occasional streak into a shower: shorter trails, faster cadence.
         const shower=eventFx.meteor;
         if(meteorState.active){
@@ -7768,7 +8191,7 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),deer:deer.length,deerAwake:deer.filter(d=>d.awake).length,grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,
