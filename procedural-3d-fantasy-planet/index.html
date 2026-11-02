@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-51">
+  <meta name="aetheris-build" content="pennants-52">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-51';
+    const BUILD_ID = 'pennants-52';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3707,6 +3707,10 @@
       const bannerGeometry = new THREE.PlaneGeometry(.062, .12, 3, 8);
       bannerGeometry.translate(0, -.06, 0);
       const landmarks = [];
+      // Towns record how far they actually reach (`site.wr`, filled as they are built), because nothing
+      // else knew: the animals kept clear of a town's *centre* and walked through its houses. A town
+      // with no reach recorded yet — the herd is placed before the map is drawn — is assumed typical:
+      // the test is `s.dir.angleTo(p) * R < (s.wr || .20) + clearance`, in world units.
       const settlementDirs = [];   // towns in draw order, for the survey map
       function createSanctuary(direction, size, seed, elevated = false) {
         const group = new THREE.Group(), rng = seeded(seed);
@@ -4592,7 +4596,7 @@
           bellNormal(dir, up);
           return up.dot(dir) > .935;                                  // no cliff faces
         };
-        const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) < .052) &&
+        const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) * R < (s.wr || .20) + .034) &&
           !landmarks.some(l => l.direction.angleTo(dir) < .17);
         for (const pack of packs) {
           for (let h = 0; h < pack.packs; h++) {
@@ -4629,7 +4633,7 @@
                 if (heightAt(dwProbe) < SEA + .008) continue;
                 if (provinceAt(dwProbe) !== pack.id) continue;
                 if (!flatEnough(dwProbe)) continue;
-                if (settlementDirs.some(s => s.dir.angleTo(dwProbe) < .046)) continue;
+                if (settlementDirs.some(s => s.dir.angleTo(dwProbe) * R < (s.wr || .20) + .028)) continue;
                 const rough = bellRough(dwProbe, 1);
                 // A tripod cannot rock, so it does not have to be *perfectly* level — but a spot whose
                 // own stance spans more than a centimetre of ground is one where a pad cannot reach the
@@ -4660,7 +4664,7 @@
                   if (heightAt(dwProbe) < SEA + .008) continue;
                   if (provinceAt(dwProbe) !== pack.id) continue;
                   if (!flatEnough(dwProbe)) continue;
-                  if (settlementDirs.some(sv => sv.dir.angleTo(dwProbe) < .046)) continue;
+                  if (settlementDirs.some(sv => sv.dir.angleTo(dwProbe) * R < (sv.wr || .20) + .028)) continue;
                   if (!freeOf(dwProbe)) continue;
                   if (tooClose(dwProbe)) continue;
                   const rough = bellRough(dwProbe, 1);
@@ -5217,6 +5221,11 @@
               // Clamped: a fallen tower's rubble and an observatory's far spire reach twice as far as the
               // thing they belong to, and houses do not need to clear a heap of stones.
               if (layer === 'landmark') site.civic = Math.min(.115 * k, Math.max(site.civic || 0, Math.hypot(lx, lz) + .5 * Math.max(sx, sz)));
+              // How far the town actually reaches, in world units: nothing else knows this, and the
+              // animals need it — a bell that only kept clear of a town's *centre* walked through its
+              // houses, and a herd placed on the edge of one stood inside a wall.
+              const reach = (Math.hypot(lx, lz) + .5 * Math.max(sx, sz)) * TOWN_SCALE;
+              if (reach > (site.wr || 0)) site.wr = reach;
               if (geo === 'lamp') lampPoints.push(at.clone());
               if (geo === 'chimney') chimneyPoints.push(at.clone().addScaledVector(site.dir, sy * TOWN_SCALE * .55));
               push(geo, mat, at, qBase.clone().multiply(yawQuat.setFromAxisAngle(UP, yaw)),
@@ -7050,6 +7059,11 @@
         // is not moving reads as a prop, not as an animal.
         const inRange = Math.cos(.18);
         if (++refreshBellProps.age > 20) { refreshBellProps.age = 0; refreshBellProps(); }
+        // A herd wakes as a herd. One of them close enough is enough for all of them: half a herd
+        // grazing and half frozen a few centimetres away reads as broken animals, not as animals.
+        // (Their world positions are last frame's, which is a sixteenth of a millimetre out.)
+        let herdNear = false;
+        for (let i = 0; i < bell.length; i++) if (bell[i].world.distanceTo(dwPlayer) < .62) { herdNear = true; break; }
         for (let i = 0; i < bell.length; i++) {
           const d = bell[i];
           if (d.pos.dot(state.direction) < inRange) {
@@ -7059,7 +7073,7 @@
           }
           d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
           const dist = d.world.distanceTo(dwPlayer);
-          if (dist > .62) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
+          if (dist > .62 && !herdNear) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
           d.awake = true;
           if (d.mode !== 'flee' && dist < (calm ? .020 : .045)) {
             // Bolt. Crouching and standing still is the only way to be close to one of these.
@@ -7207,7 +7221,7 @@
             // stop it, which is a much looser test than the one used for where a herd may *stand*.
             const walkableAt = (p2) => heightAt(p2) >= SEA + .006 && bellNormal(p2, dwUp).dot(p2) >= .86;
             // A boulder, or a house: the same two questions, asked of the next few centimetres.
-            const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) < .030) && !propAhead(d, .045);
+            const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) * R < (sv.wr || .20) + .028) && !propAhead(d, .045);
             dwProbe.copy(d.pos).addScaledVector(d.fwd, .035).normalize();
             if (!walkableAt(dwProbe) || !clearAhead(dwProbe)) {
               let turned = false;
