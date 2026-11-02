@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-57">
+  <meta name="aetheris-build" content="pennants-58">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-57';
+    const BUILD_ID = 'pennants-58';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4323,6 +4323,11 @@
       // finishes — the flora is planted long before — and read by `refreshBellProps`, which keeps a
       // short list per animal so the per-frame cost is a handful of dots, not fifteen hundred.
       const hardProps = [];
+      // The walls of every house, as one box each: a footprint, a yaw, and nothing else. Houses are
+      // the last thing the walker could pass through, and they are the largest one — a first-person
+      // camera going through the side of a cottage is the same bug as going through a trunk, only
+      // bigger. The herd never needs these: it keeps clear of whole towns.
+      const townSolids = [];
       // ---- The mossbell: the ground's own animal -------------------------------------------------
       // The mantas own the sky and the raft owns the shallows; this is what walks. It is not a bell.
       // Everything that made the last version a bell was a vertebrate: a barrel, a neck, a face, four
@@ -5231,6 +5236,7 @@
         }
         settlementDirs.length = 0;
         for (const id of Object.keys(sites)) for (const site of sites[id]) settlementDirs.push(site);
+        townSolids.length = 0;
 
         const buckets = new Map();
         const push = (geo, mat, position, quat, scale) => {
@@ -5663,6 +5669,17 @@
               // floor instead, so what stands in the shallows is a stone base with a house on it.
               if (lifted) floor = Math.max(floor, (SEA - site.h) / TOWN_SCALE + .008);
               (site.kinds = site.kinds || new Set()).add(kind);
+              // The wall the walker cannot pass. Half-extents in world units, and the house's own two
+              // axes so the box turns with the plot instead of becoming a circle round it: a circle
+              // big enough to hold the corners of a longhouse blocks the lane beside it.
+              const yc = Math.cos(yaw), ys = Math.sin(yaw);
+              townSolids.push({
+                dir: dirAt(lx, lz),
+                ex: ax.clone().multiplyScalar(yc).addScaledVector(az, -ys),   // the plot's own x, in world
+                ez: ax.clone().multiplyScalar(ys).addScaledVector(az, yc),    // ...and its z
+                hw: (kind === 'tower' ? w * .86 : w) * .5 * TOWN_SCALE,
+                hd: d * .5 * TOWN_SCALE
+              });
               house(lx, lz, yaw, kind === 'tower' ? w * .86 : w, d, h, kind, floor, low);
             };
             // ---- cliff colony ------------------------------------------------------------------
@@ -7678,6 +7695,43 @@
             const into=-state.moveVelocity.dot(walkBump);
             if (into>0) state.moveVelocity.addScaledVector(walkBump,into);
             walkProbe.copy(state.direction);
+          }
+        }
+        // The same for the walls of a house, which are boxes rather than posts: the body's offset from
+        // the plot is taken in the plot's own two axes, and if it has stepped inside the footprint
+        // (widened by the body) it is put back out through the nearest face. Circles were not good
+        // enough here — a circle that holds the corners of a longhouse reaches into the lane beside it.
+        // ...and three passes, because the houses in a town are often built one against the other:
+        // pushed out of one box the body can land inside its neighbour, and only a second pass puts
+        // it back on the street. One pass left it up to 35 mm inside a wall.
+        if (townSolids.length) {
+          walkProbe.copy(state.direction);
+          for (let pass=0;pass<3;pass++) {
+            let moved=false;
+            for (let i=0;i<townSolids.length;i++) {
+              const box=townSolids[i];
+              if (box.dir.dot(walkProbe)<.9) continue;
+              walkBump.copy(state.direction).sub(box.dir).multiplyScalar(R);
+              const u=walkBump.dot(box.ex), v=walkBump.dot(box.ez);
+              const ex=box.hw+WALKER_RADIUS, ez=box.hd+WALKER_RADIUS;
+              if (Math.abs(u)>=ex||Math.abs(v)>=ez) continue;
+              // Out through whichever face is nearest, so a body never gets pushed across a room.
+              if (ex-Math.abs(u)<=ez-Math.abs(v)) {
+                const face=u<0?-1:1;
+                walkBump.copy(box.ex).multiplyScalar(face*ex).addScaledVector(box.ez,v).multiplyScalar(1/R);
+                const along=state.moveVelocity.dot(box.ex);
+                if (along*face<0) state.moveVelocity.addScaledVector(box.ex,-along);
+              } else {
+                const face=v<0?-1:1;
+                walkBump.copy(box.ez).multiplyScalar(face*ez).addScaledVector(box.ex,u).multiplyScalar(1/R);
+                const along=state.moveVelocity.dot(box.ez);
+                if (along*face<0) state.moveVelocity.addScaledVector(box.ez,-along);
+              }
+              state.direction.copy(box.dir).add(walkBump).normalize();
+              walkProbe.copy(state.direction);
+              moved=true;
+            }
+            if (!moved) break;
           }
         }
 
