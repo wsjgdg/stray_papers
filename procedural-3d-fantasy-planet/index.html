@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'settlement-plans-39';
+    const BUILD_ID = 'landmark-clear-40';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4405,6 +4405,10 @@
             const qBase = new THREE.Quaternion().setFromUnitVectors(UP, site.dir);
             const ax = new THREE.Vector3(1, 0, 0).applyQuaternion(qBase);
             const az = new THREE.Vector3(0, 0, 1).applyQuaternion(qBase);
+            // What is being laid down right now — a dwelling, the landmark, street clutter. Nothing
+            // reads it while building; the offline checks use it to tell the civic core from the
+            // houses that crowd it.
+            let layer = 'town';
             const put = (geo, mat, lx, lz, up, yaw, sx, sy, sz) => {
               // A town is written on a flat datum, but only its plate is flat. Anything that stands on
               // the ground — rubble, piers, masts, a fallen cap — has to be put on the ground that is
@@ -4415,6 +4419,10 @@
                 .addScaledVector(site.dir, floor * TOWN_SCALE);
               // Two things keep a town alive after the generator is done with it: the pool of light
               // a lamp leaves on the ground, and the smoke a chimney leaves in the air.
+              // How much of the middle the landmark has taken, so the dwellings can keep clear of it.
+              // Clamped: a fallen tower's rubble and an observatory's far spire reach twice as far as the
+              // thing they belong to, and houses do not need to clear a heap of stones.
+              if (layer === 'landmark') site.civic = Math.min(.115 * k, Math.max(site.civic || 0, Math.hypot(lx, lz) + .5 * Math.max(sx, sz)));
               if (geo === 'lamp') lampPoints.push(at.clone());
               if (geo === 'chimney') chimneyPoints.push(at.clone().addScaledVector(site.dir, sy * TOWN_SCALE * .55));
               push(geo, mat, at, qBase.clone().multiply(yawQuat.setFromAxisAngle(UP, yaw)),
@@ -4527,6 +4535,7 @@
             };
             // ---- house archetypes --------------------------------------------------------------
             const house = (lx, lz, yaw, w, d, h, kind, lift = 0, low = 0) => {
+              layer = 'house';
               // Everything inside a house sits on the same foundation, so the whole body moves as
               // one when the ground falls away underneath it.
               const putUp = (geo, mat, x, z, up, yw, sx, sy, sz) => put(geo, mat, x, z, up + lift, yw, sx, sy, sz);
@@ -4665,11 +4674,24 @@
                 putUp('wall', s.wall, lx, lz, .004, yaw, w * .82, sh, d * .9);
                 putUp(s.roof === 'dome' ? 'dome' : s.roof, s.roofMat, lx, lz, .004 + sh * .955, yaw, w * .95, sh * .55, d * 1.02);
               }
+              layer = 'town';
             };
-            const houseAt = (lx, lz, yaw, kind, scale = 1) => {
+            const houseAt = (lx, lz, yaw, kind, scale = 1, clear = true) => {
               const w = (.044 + rng() * .014) * k * scale;
               const d = (.036 + rng() * .010) * k * scale;
               const h = (.044 + rng() * .020) * k * scale;
+              // Keep the middle for the landmark (see clearOfCore). Drawn first so the random stream
+              // is exactly what it was: only the plot moves.
+              const wet = (x, z) => site.h + standing(x, z) <= SEA + .006;
+              dries = (x, z) => {
+                if (wet(x, z)) return false;
+                for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+                  const [px, pz] = local(yaw, sx * w * .5, sz * d * .5);
+                  if (wet(x + px, z + pz)) return false;
+                }
+                return true;
+              };
+              if (clear) [lx, lz] = clearOfCore(lx, lz, .5 * Math.hypot(w * 1.25, d * 1.25));
               // The floor sits on the highest corner of the plot and the footing reaches down to
               // the lowest one: nothing hangs in the air, nothing is buried to the windows.
               let floor = standing(lx, lz), low = floor;
@@ -4798,6 +4820,7 @@
             // ---- landmark ----------------------------------------------------------------------
             const landmark = pick(LANDMARKS[id]);
             site.landmark = landmark;
+            layer = 'landmark';
             if (id === 'vaelmar') {
               if (landmark === 'archive') {
                 const t = (.105 + rng() * .035) * k;
@@ -4982,6 +5005,36 @@
             if (id === 'vessper') { site.plan = landmark; continue; }
             const kinds = HOUSES[id];
             site.plan = plan;
+            layer = 'town';
+            // A plan writes its houses around the middle of the town — but the middle is the
+            // landmark's. Every plan put them at four to nine centimetres from the centre, so the
+            // dwellings of a `lane` or a `hall` town stood inside the hall itself, and on a steep
+            // site (where the plate shrinks to the landmark's own square) the town sat on top of
+            // its monument. Now a plot that lands inside the civic footprint is moved straight out
+            // along its own radius, far enough to clear the landmark plus its own roof.
+            // Dry means the whole plot, not just its centre: a house pushed to the edge of a shore
+            // still ends up with its downhill wall under the surface.
+            let dries = () => true;
+            const clearOfCore = (lx, lz, pad) => {
+              const need = (site.civic || 0) + pad;
+              if (!need) return [lx, lz];
+              const d = Math.hypot(lx, lz);
+              if (d >= need) return [lx, lz];
+              const a0 = d < 1e-4 ? 0 : Math.atan2(lz, lx);
+              // Straight out along the plot's own radius first. On a shore the straight-out direction
+              // is the water, so the row swings along the shoreline instead of walking into the sea —
+              // pushing every plot radially drowned 232 of the 707 shore houses.
+              // Farthest dry ground first; on a small islet nothing is dry at the full distance, so the
+              // plot takes the best it can get rather than going back inside the monument.
+              for (const shrink of [1, .86, .72, .58]) {
+                const r = need * shrink;
+                for (const turn of [0, .26, -.26, .52, -.52, .79, -.79, 1.05, -1.05, 1.31, -1.31, 1.57, -1.57]) {
+                  const a = a0 + turn, x = Math.cos(a) * r, z = Math.sin(a) * r;
+                  if (dries(x, z)) return [x, z];
+                }
+              }
+              return [lx, lz];
+            };
             // Three sizes: a hamlet of two or three houses, a village, a market town. The tail
             // matters more than the average — equal towns read as a spreadsheet.
             const countFor = base => Math.max(2, base + tier - 1 + (rng() < .30 ? 1 : 0));
@@ -5010,9 +5063,14 @@
               const wx = Math.cos(waterAngle), wz = Math.sin(waterAngle);
               const tx = -wz, tz = wx;
               const facing = Math.atan2(-wx, -wz);
+              // The row stands at the water's edge, not in the middle of the square — it used to sit
+              // .012–.024 from the town's own centre, which is where the landmark is. Measured to the
+              // water and pulled back by half a house, so the row fronts the sea and leaves the core.
+              const waterTown = Number.isFinite(waterDist) ? waterDist / TOWN_SCALE : .095 * k;
+              const rowBack = Math.max(.030 * k, Math.min(waterTown, .105 * k) - .022 * k);
               for (let i = 0; i < count; i++) {
                 const along = (i - (count - 1) / 2) * .050 * k;
-                const back = (.012 + rng() * .012) * k;
+                const back = rowBack + (rng() - .5) * .010 * k;
                 houseAt(tx * along + wx * back, tz * along + wz * back, facing + (rng() - .5) * .10, pick(kinds), .88 + rng() * .26);
               }
               const deckC = (.055 + rng() * .030) * k;
