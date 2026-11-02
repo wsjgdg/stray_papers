@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-56">
+  <meta name="aetheris-build" content="pennants-57">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-56';
+    const BUILD_ID = 'pennants-57';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4483,6 +4483,7 @@
       const dwAhead = new THREE.Vector3(), dwPlayer = new THREE.Vector3(), dwE = new THREE.Vector3();
       const dwN = new THREE.Vector3(), dwProbe = new THREE.Vector3(), dwCol = new THREE.Color();
       const dwTmp = new THREE.Vector3();          // bellNormal() must not write into its own argument
+      const dwFeet = new THREE.Vector3();          // where the walker stands, not where the eye is
       const dwProp = new THREE.Vector3();          // a prop's world position, reused
       // What a bell may not walk through: the ground stones, which the ground pass scatters around the
       // player and re-scatters as you move. Ninety matrix reads a frame would be waste, so this is a
@@ -7163,6 +7164,12 @@
         if (!bellBodyMesh) return;
         dt = Math.min(dt, .05);                      // a tab that was asleep must not teleport the herd
         dwPlayer.copy(state.direction).multiplyScalar(state.radius);
+        // ...and the ground under the walker. An animal is two body lengths tall at most, and the eye
+        // is a hundred millimetres above its own feet: measured to the camera, a bell you are standing
+        // right against is already 102 mm away, so the bolt radius below (.045) could not be reached
+        // from standing height at all — the herd could only stop and stare, which is exactly what
+        // "they do not move when you walk up to them" was. Every distance in here is to the feet.
+        dwFeet.copy(state.direction).multiplyScalar(R + heightAt(state.direction));
         const calm = state.crouch > .55 && state.speed < .10;
         const debt = costState.debt;
         const worked = Math.max(debt.sky, debt.air, debt.light, debt.growth, debt.fauna);
@@ -7177,7 +7184,7 @@
         // grazing and half frozen a few centimetres away reads as broken animals, not as animals.
         // (Their world positions are last frame's, which is a sixteenth of a millimetre out.)
         let herdNear = false;
-        for (let i = 0; i < bell.length; i++) if (bell[i].world.distanceTo(dwPlayer) < .62) { herdNear = true; break; }
+        for (let i = 0; i < bell.length; i++) if (bell[i].world.distanceTo(dwFeet) < .62) { herdNear = true; break; }
         for (let i = 0; i < bell.length; i++) {
           const d = bell[i];
           if (d.pos.dot(state.direction) < inRange) {
@@ -7186,7 +7193,7 @@
             continue;
           }
           d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
-          const dist = d.world.distanceTo(dwPlayer);
+          const dist = d.world.distanceTo(dwFeet);
           if (dist > .62 && !herdNear) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
           d.awake = true;
           if (d.mode !== 'flee' && dist < (calm ? .020 : .045)) {
@@ -7194,7 +7201,7 @@
             d.mode = 'flee';
             d.timer = .40 + .22 * (1 + Math.sin(d.seedPhase));
             d.speed = .95;
-            aimBell(d, dwTarget.copy(d.world).multiplyScalar(2).sub(dwPlayer));   // straight away from you
+            aimBell(d, dwTarget.copy(d.world).multiplyScalar(2).sub(dwFeet));    // straight away from you
             if (d.fwd.lengthSq() < 1e-8) d.fwd.crossVectors(d.up, d.pos).normalize();
             bellCall(clamp(1 - dist / .20, 0, 1) * .06);
           } else if (d.mode === 'flee') {
@@ -7229,9 +7236,24 @@
               d.mode = 'walk'; d.timer = 1.6; d.speed = .05; d.headTilt = .30;
             }
           } else if (d.mode === 'alert') {
-            d.speed = 0; d.stride = 0;
+            // It looks first, then gives ground. Standing perfectly still while somebody walks up to it
+            // is what made the herd read as scenery: an animal at arm's length that neither steps
+            // away nor bolts looks switched off. So after half a second of watching, it walks away
+            // from the walker at a grazer's pace, and keeps doing it for as long as you stay close.
             d.headTilt += (-.10 - d.headTilt) * (1 - Math.exp(-dt * 7));
-            aimBell(d, dwPlayer);                     // it turns its head to keep you in sight
+            d.timer += dt;
+            if (d.timer < .45) {
+              d.speed = 0; d.stride = 0;
+              aimBell(d, dwPlayer);                   // it turns its head to keep you in sight
+            } else {
+              d.speed = .085; d.stride = .22;
+              dwProbe.copy(d.pos).sub(dwFeet);
+              dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
+              if (dwProbe.lengthSq() > 1e-10) {
+                dwTarget.copy(d.pos).addScaledVector(dwProbe.normalize(), .030).normalize();
+                aimBell(d, dwTarget.multiplyScalar(R + heightAt(dwTarget)));
+              }
+            }
           } else if (d.mode === 'watch') {
             d.speed = 0; d.stride = 0;
             d.headTilt += (-.52 - d.headTilt) * (1 - Math.exp(-dt * 3));
