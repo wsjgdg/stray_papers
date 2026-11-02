@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="gentle-rise-47">
+  <meta name="aetheris-build" content="drift-reefs-48">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'gentle-rise-47';
+    const BUILD_ID = 'drift-reefs-48';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4598,162 +4598,185 @@
       // four instances — body (with its garden grown on the back), tail stock, two flippers — plus one
       // for the spout when it comes up to breathe. It does not glow: the coral on its back is ordinary
       // coral, and the only light out there is the sun coming through the surface.
-      const REEF_LEN = .1000, REEF_NOSE = .0500, REEF_TAIL = -.0500;
+      const REEF_LEN = .1500, REEF_WIDE = .0480, REEF_DEEP = .0074;
+      const REEF_NOSE = REEF_LEN * .48, REEF_TAIL = -REEF_LEN * .50;
       const reefs = [];
       let reefBodyMesh = null, reefVeilMesh = null, reefSkirtMesh = null, reefPlumeMesh = null;
       function reefBodyPart() {
         const parts = [];
-        // The barrel: widest just behind the blowhole, drawn down to a stock no thicker than a wrist,
-        // blunt at the snout. The back carries the garden, so it is the one part that must be broad.
-        const body = new THREE.CylinderGeometry(.0128, .0128, REEF_LEN, 10, 7, false);
-        body.rotateX(Math.PI / 2);
-        const bp = body.attributes.position;
-        for (let i = 0; i < bp.count; i++) {
-          const t = clamp((bp.getZ(i) + REEF_LEN / 2) / REEF_LEN, 0, 1);   // 0 at the tail stock, 1 at the snout
-          const k = .20 + .80 * smooth(.02, .60, t) - .30 * smooth(.70, 1, t);
-          bp.setX(i, bp.getX(i) * k * .96);
-          bp.setY(i, bp.getY(i) * k * 1.05 + .0014 * Math.sin(t * Math.PI) * (1 - t * .5));
+        // The plate. A drift-reef is a shield, not a barrel: long, half again as wide as it is deep,
+        // squared at the nose, pinched to a wrist at the tail, and flat along the back — because the
+        // flat back is what the garden grows on and what has to face the light.
+        const plate = new THREE.CylinderGeometry(1, 1, REEF_LEN, 16, 12, false);
+        plate.rotateX(Math.PI / 2);                        // axis down the length of it
+        const pp = plate.attributes.position;
+        for (let i = 0; i < pp.count; i++) {
+          const z0 = pp.getZ(i), t = clamp((z0 + REEF_LEN / 2) / REEF_LEN, 0, 1);   // 0 tail, 1 nose
+          const wide = .30 + .70 * Math.sin(Math.PI * Math.pow(t, .58)) - .14 * smooth(.84, 1, t);
+          const deep = .74 + .26 * Math.sin(Math.PI * t);
+          pp.setX(i, pp.getX(i) * REEF_WIDE * wide);
+          let y = pp.getY(i) * REEF_DEEP * deep * wide;
+          if (y > 0) y *= .38;                             // the back is nearly level; the keel is deep
+          pp.setY(i, y);
+          pp.setZ(i, z0 * (t > .58 ? 1 - (t - .58) * .26 : 1));   // a shorter, blunter head
         }
-        body.computeVertexNormals();
-        parts.push(partTint(body, '#67737a', .07));
-        // The snout, blunt as a fist, and the lower jaw under it with the pale throat behind.
-        const snout = new THREE.SphereGeometry(.0122, 9, 7); snout.scale(.92, .86, .78); snout.translate(0, .0006, .0470);
-        parts.push(partTint(snout, '#6b777e', .07));
-        parts.push(partBox(.0150, .0058, .0300, '#5d6970', -.0074, 0, .0350, .06));
-        parts.push(partBox(.0126, .0034, .0230, '#c9c2b2', -.0106, 0, .0330, .05));
-        // Three throat grooves: the lines that make a reef face read as a reef and not as a fish.
-        for (const gx of [-.0042, 0, .0042]) parts.push(partBox(.0011, .0012, .0165, '#3f4a50', -.0102, gx, .0290, .04));
-        // The jaw line: one dark crease from the corner of the mouth forward to the snout, both sides.
-        for (const sx of [-1, 1]) {
-          const jaw = new THREE.BoxGeometry(.0012, .0014, .0260);
-          jaw.rotateY(sx * .12);
-          jaw.translate(sx * .0084, -.0042, .0330);
-          parts.push(partTint(jaw, '#2f383d', .05));
+        plate.computeVertexNormals();
+        parts.push(partTint(plate, '#7d8177', .07));
+        // The plate is thin at the ends and deep amidships, so anything hung under the keel has to be
+        // measured against it here rather than guessed: the first combs went straight through the
+        // thin part of the back and showed up as dark slits lying on it.
+        const girth = (t) => .30 + .70 * Math.sin(Math.PI * Math.pow(t, .58)) - .14 * smooth(.84, 1, t);
+        const keelAt = (x, z) => {
+          const t = clamp((z + REEF_LEN / 2) / REEF_LEN, 0, 1), wd = girth(t);
+          const across = Math.sqrt(Math.max(0, 1 - Math.pow(x / (REEF_WIDE * wd), 2)));
+          return REEF_DEEP * (.74 + .26 * Math.sin(Math.PI * t)) * wd * across;
+        };
+        // The girdle: a row of angular plates all the way round the rim, the way a chiton wears its
+        // edge. They follow the outline itself, so the silhouette is scalloped rather than smooth —
+        // which is most of what stops this reading as a ray.
+        for (let k = 0; k < 24; k++) {
+          const a2 = (k + .5) / 24 * TAU;
+          const cx = Math.cos(a2), cz = Math.sin(a2);
+          const rimX = REEF_WIDE * .88, rimZ = REEF_LEN * .50 * .86;
+          const scale = new THREE.BoxGeometry(.0072, .0024, .0110);
+          scale.rotateY(a2 + Math.PI / 2);
+          scale.translate(cx * rimX, -.0012, cz * rimZ);
+          parts.push(partTint(scale, k % 3 ? '#6c7168' : '#8a8b7d', .08));
         }
-        // Eyes, low and far forward on the sides.
-        for (const sx of [-1, 1]) {
-          const eye = new THREE.SphereGeometry(.0023, 6, 5); eye.translate(sx * .0102, -.0018, .0345);
-          parts.push(partTint(eye, '#141618', .04));
+        // The leading edge is blunt and pale, with a row of dark sense pits along it.
+        const lip = new THREE.SphereGeometry(.0080, 11, 6); lip.scale(2.0, .34, .78); lip.translate(0, -.0002, REEF_LEN * .44);
+        parts.push(partTint(lip, '#8f9082', .06));
+        for (const [px, pz] of [[-.0135, .0560], [-.0054, .0630], [.0054, .0630], [.0135, .0560], [0, .0655]]) {
+          const pit = new THREE.SphereGeometry(.0016, 6, 5); pit.scale(1, .5, 1); pit.translate(px, .0018, pz);
+          parts.push(partTint(pit, '#20262a', .04));
         }
-        // The blowhole on the crown, and the hooked dorsal fin a third of the way back.
-        parts.push(partBox(.0052, .0016, .0088, '#2c3438', .0112, 0, .0120, .04));
-        const dorsal = new THREE.ConeGeometry(.0068, .0148, 4);
-        dorsal.scale(.34, 1, 1);
-        dorsal.rotateX(.62);
-        dorsal.translate(0, .0136, -.0215);
-        parts.push(partTint(dorsal, '#5f6b72', .06));
-        // Barnacle crust, in patches rather than a rash.
-        const patch = [[.0092, .0030, .0240, .0028], [-.0080, .0060, .0010, .0034], [.0066, .0082, -.0090, .0022], [-.0098, .0022, .0170, .0020]];
+        // Underneath: the intake, a recessed slot down the middle of the keel, and two rows of pale
+        // comb-fringes either side of it — how it feeds on the farm it is drifting over. Both are
+        // hung off the local keel so they hang clear of it everywhere, ends included.
+        const intakeZ = .0040;
+        parts.push(partBox(.0068, .0020, .0440, '#39413f', -(keelAt(0, intakeZ) + .0022), 0, intakeZ, .05));
+        // Barnacle crust, in patches rather than an even rash.
+        const patch = [[.0140, .0026, .0230, .0030], [-.0126, .0030, .0080, .0032], [.0082, .0034, -.0190, .0024], [-.0162, .0022, -.0090, .0022]];
         for (const [px, py, pz, pr] of patch) {
-          const b = new THREE.SphereGeometry(pr, 6, 4); b.scale(1.25, .55, 1.15); b.translate(px, py, pz);
-          parts.push(partTint(b, '#b9b6a6', .07));
+          const b2 = new THREE.SphereGeometry(pr, 6, 4); b2.scale(1.3, .48, 1.2); b2.translate(px, py, pz);
+          parts.push(partTint(b2, '#b8b5a4', .07));
         }
-        // The garden: fan coral, standing on the back. Each tuft is three flat fans turned against each
-        // other, so it reads as a bush of fans from any angle and never as a handful of spikes.
+        // The garden: fan coral standing on the flat back, each tuft three flat fans turned against one
+        // another so it reads as a bush of fans from any angle.
         const coral = [
-          ['#a8776f', .0022, -.0050, .0155, .25],
-          ['#c39b8a', -.0044, -.0125, .0128, -.30],
-          ['#8f9a8a', .0048, .0058, .0112, .55],
-          ['#a8776f', -.0026, .0148, .0102, -.15],
-          ['#cbb08c', .0012, -.0175, .0086, .40]
+          ['#a8776f', .0026, -.0050, .0215, .25],
+          ['#c39b8a', -.0062, -.0140, .0180, -.30],
+          ['#8f9a8a', .0068, .0072, .0162, .55],
+          ['#a8776f', -.0038, .0170, .0142, -.15],
+          ['#cbb08c', .0018, -.0210, .0120, .40],
+          ['#9aa294', -.0112, .0040, .0130, -.62],
+          ['#b3907f', .0122, .0002, .0110, .78],
+          ['#8f9a8a', -.0020, -.0282, .0104, -.40]
         ];
         for (const [col, cx, cz, len, yaw] of coral) {
           for (let f = 0; f < 3; f++) {
-            // Narrow at the holdfast, wide at the crown: that taper is the whole silhouette of a fan.
             const fan = new THREE.CylinderGeometry(.0042, .0007, len, 5, 1, true);
             fan.scale(1, 1, .14);
             fan.translate(0, len / 2, 0);
             fan.rotateY(yaw + f * 1.05);
             fan.rotateZ((f - 1) * .24);
-            fan.translate(cx, .0100, cz);
+            fan.translate(cx, .0022, cz);
             parts.push(partTint(fan, col, .08));
             const crown = new THREE.SphereGeometry(.0011, 5, 4);
-            crown.translate(cx, .0100 + len * .96, cz);
+            crown.translate(cx, .0022 + len * .96, cz);
             parts.push(partTint(crown, '#e3d3bd', .05));
           }
         }
         return join(parts);
       }
-      // The tail stock and the flukes, with the pivot where the stock leaves the body.
+      // The veil: the trailing edge of the plate, hinged where the shield runs out. It is not a tail —
+      // there is no stock and no fluke — just a thin fan that trails and sweeps, and the only part of
+      // the animal that moves slowly enough to look heavy.
       function reefVeilPart() {
         const parts = [];
-        // The peduncle, thick where it leaves the body and drawn down to a wrist at the flukes. The
-        // radii were the other way round before: it flared as it went back, so from the side the tail
-        // read as a trumpet with a needle in it rather than as a tail.
-        const stock = new THREE.CylinderGeometry(.0072, .0028, .0190, 9, 2, false);
-        stock.rotateX(Math.PI / 2);            // axis down the body: .0072 at the body, .0028 at the wrist
-        stock.scale(.86, 1, 1);                // a peduncle is a tall oval, not a tube
-        stock.translate(0, 0, -.0092);
-        stock.computeVertexNormals();
-        parts.push(partTint(stock, '#5f6b72', .07));
-        // Flukes: one horizontal blade either side of the notch — thick at the root so the edge reads
-        // from the side, swept back and thinning, with the tips lifted a little.
+        const veil = new THREE.BoxGeometry(.0680, .0013, .0420, 7, 1, 4);
+        const vp = veil.attributes.position;
+        for (let i = 0; i < vp.count; i++) {
+          const u = clamp(vp.getX(i) / .0340, -1, 1);          // across the fan
+          const v = clamp(vp.getZ(i) / .0210 + .5, 0, 1);      // 0 at the hinge, 1 at the trailing edge
+          vp.setX(i, vp.getX(i) * (1 - v * .22));
+          vp.setZ(i, vp.getZ(i) - v * v * .0125 - (1 - v) * u * u * .0080);   // swept, and notched
+          vp.setY(i, vp.getY(i) + v * v * .0022);              // lifts a little at the edge
+        }
+        veil.computeVertexNormals();
+        veil.translate(0, 0, -.0210);
+        parts.push(partTint(veil, '#767c72', .07));
+        // Two stiffening spars, so the fan does not read as a sheet of glass.
         for (const sx of [-1, 1]) {
-          const blade = new THREE.BoxGeometry(.0200, .0044, .0130, 3, 1, 2);
-          const bpos = blade.attributes.position;
-          for (let i = 0; i < bpos.count; i++) {
-            const u = clamp((bpos.getX(i) * sx + .0100) / .0200, 0, 1);   // 0 root, 1 tip
-            bpos.setZ(i, bpos.getZ(i) * (1 - u * .55) - .0224 - u * u * .0100);  // back, and swept
-            bpos.setY(i, bpos.getY(i) * (1 - u * .62) + u * .0036);      // thinner, and lifted
-          }
-          blade.computeVertexNormals();
-          blade.translate(sx * .0104, 0, 0);
-          parts.push(partTint(blade, '#5a666d', .07));
+          const spar = partBox(.0016, .0020, .0400, '#64695f', 0, sx * .0170, -.0180, .06);
+          spar.rotateY(sx * .10);
+          parts.push(spar);
         }
         return join(parts);
       }
-      // One flipper, pivot at the shoulder, hanging back and down the way a reef's does.
+      // One skirt: a thin sheet hinged along the flank, modelled pointing +X so the pair mirrors. The
+      // two of them beat in opposite phase — that ripple is the whole locomotion, and it is what makes
+      // the thing look like it is flying through the water rather than paddling it.
       function reefSkirtPart() {
         const parts = [];
-        const fin = new THREE.BoxGeometry(.0225, .0032, .0128, 4, 1, 2);
-        const fpos = fin.attributes.position;
-        for (let i = 0; i < fpos.count; i++) {
-          const u = clamp((fpos.getX(i) + .01125) / .0225, 0, 1);
-          // A flipper is a wing: it narrows, thins and trails back toward the tip.
-          fpos.setZ(i, fpos.getZ(i) * (1 - u * .50) - u * .0048);
-          fpos.setY(i, fpos.getY(i) * (1 - u * .58));
+        const sheet = new THREE.BoxGeometry(.0560, .0014, .0860, 7, 1, 7);
+        const sp = sheet.attributes.position;
+        for (let i = 0; i < sp.count; i++) {
+          const u = clamp(sp.getX(i) / .0280 + .5, 0, 1);      // 0 at the hinge, 1 at the outer edge
+          const v = sp.getZ(i) / .0430;                        // -1 tail, +1 nose
+          sp.setZ(i, sp.getZ(i) * (1 - .34 * u) - u * u * .0090);          // swept back
+          sp.setY(i, sp.getY(i) - u * u * .0042);                          // droops at the edge
+          sp.setX(i, sp.getX(i) * (1 - .20 * v * v));                      // rounded fore and aft
         }
-        fin.computeVertexNormals();
-        // Held at a droop, not flat: a horizontal blade is edge-on from the side and reads as a stick,
-        // which is exactly what the first pass looked like.
-        fin.rotateX(.62);
-        fin.translate(.0112, 0, 0);
-        parts.push(partTint(fin, '#5d6970', .07));
+        sheet.computeVertexNormals();
+        sheet.translate(.0280, 0, 0);
+        parts.push(partTint(sheet, '#71776d', .07));
+        for (let r = 0; r < 4; r++) {
+          const rib = partBox(.0240, .0012, .0016, '#666b60', 0, .0010, .0270 - r * .0175, .06);
+          parts.push(rib);
+        }
         return join(parts);
       }
-      // The spout: a column that widens as it goes and breaks into a head of spray, all of it pale
-      // enough to vanish against the sky from a distance and to read as water up close.
+      // The plume: not a spout. Nothing is being blown out of a hole — this is the garden spawning,
+      // a loose drift of pale motes that rises off the emergent back and is gone by the time the
+      // animal settles again. From the beach it reads as a smudge on the water and nothing more.
       function reefPlumePart() {
         const parts = [];
-        const column = new THREE.CylinderGeometry(.0052, .0016, .0380, 7, 3, true);
-        column.translate(0, .0190, 0);
-        parts.push(partTint(column, '#dfe9ee', .04));
-        for (const [r, y, s] of [[.0090, .0395, 1.25], [.0068, .0450, 1.05], [.0042, .0492, .9]]) {
+        const motes = [[.0110, .0035, 1.30], [.0086, .0092, 1.10], [.0060, .0148, .95], [.0038, .0198, .85]];
+        for (const [r, y, s2] of motes) {
           const puff = new THREE.IcosahedronGeometry(r, 0);
-          puff.scale(s, .72, s);
-          puff.translate(0, y, 0);
-          parts.push(partTint(puff, '#eef4f6', .03));
+          puff.scale(s2, .62, s2);
+          puff.translate((y * .9 % 1 - .5) * .0080, y, (y * 1.7 % 1 - .5) * .0080);
+          parts.push(partTint(puff, '#e6ece4', .05));
         }
         return join(parts);
       }
       // The parts are authored at a comfortable modelling size and scaled once here: a reef has to be
       // the biggest thing in the water by a margin, not a deer with flippers on.
-      const REEF_S = 1.30;
+      const REEF_S = 1.50;
       const scalePart = g => g.scale(REEF_S, REEF_S, REEF_S);
       const reefGeo = {
-        body: scalePart(reefBodyPart()), tail: scalePart(reefVeilPart()),
-        fin: scalePart(reefSkirtPart()), spout: scalePart(reefPlumePart())
+        body: scalePart(reefBodyPart()), veil: scalePart(reefVeilPart()),
+        skirt: scalePart(reefSkirtPart()), plume: scalePart(reefPlumePart())
       };
+      // How far the keel hangs below the animal's centre line — taken off the finished geometry, not
+      // guessed from the plate's radius, because the intake hangs lower than the shell does. Everything
+      // about how deep it may drift follows from this number.
+      reefGeo.body.computeBoundingBox();
+      const REEF_HALF_DEEP = -reefGeo.body.boundingBox.min.y;
+      const REEF_HALF_LEN = reefGeo.body.boundingBox.max.z, REEF_HALF_WIDE = reefGeo.body.boundingBox.max.x;
       const reefMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .78, metalness: .02 });
       const reefPlumeMat = new THREE.MeshStandardMaterial({
         vertexColors: true, roughness: .55, metalness: 0, transparent: true, opacity: .62, depthWrite: false
       });
-      // Scratch for the pod: a reef's frame is its heading, its bank and the beat of its tail.
+      // Scratch for the pod: a reef's frame is its heading, the bank it leans into a turn, and the
+      // ripple running down it from bow to stern.
       const wwFrame = new THREE.Object3D(), wwLocal = new THREE.Matrix4(), wwPart = new THREE.Matrix4();
       const wwAhead = new THREE.Vector3(), wwE = new THREE.Vector3(), wwN = new THREE.Vector3();
-      const wwSpin = new THREE.Matrix4().makeRotationY(Math.PI);   // a fin modelled pointing +X, turned round
-      // One animal into the four instance slots. `beat` is the tail's stroke, `bank` the roll into a turn.
-      const poseReef = (w, i, beat = 0, pitch = 0) => {
+      const wwSpin = new THREE.Matrix4().makeRotationY(Math.PI);   // a sheet modelled pointing +X, turned round
+      // One animal into the five instance slots. `phase` is the ripple's position in its cycle, `pitch`
+      // the angle the plate is holding in the water.
+      const poseReef = (w, i, phase = 0, pitch = 0) => {
         wwFrame.position.copy(w.world);
         wwFrame.up.copy(w.up);
         wwAhead.copy(w.world).addScaledVector(w.fwd, -.050);       // lookAt aims +Z at its target
@@ -4763,25 +4786,26 @@
         wwFrame.rotateX(-pitch);                                   // nose up when climbing, down when sinking
         wwFrame.updateMatrix();
         reefBodyMesh.setMatrixAt(i, wwFrame.matrix);
-        // A reef's flukes beat **up and down**: about X, the axis across the animal. (A fish beats
-        // side to side, about Y, which is what this used to do — the tail swept like a shark's.)
-        wwLocal.makeRotationX(beat);
-        wwLocal.setPosition(0, 0, REEF_TAIL);
-        wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
-        reefVeilMesh.setMatrixAt(i, wwPart);
+        // The two skirts beat in opposite phase: as one lifts, the other drops. That is the stroke.
         for (let f = 0; f < 2; f++) {
           const sx = f === 0 ? -1 : 1;
-          // The blade is modelled pointing along +X. The right one is placed as it is; the left is
-          // turned round to face the other way and flaps through the opposite sign, so both flippers
-          // rise and fall together and neither one lies inside the body.
-          wwLocal.makeRotationZ(sx * (-.10 + beat * .9));
+          const flap = .05 + .34 * Math.sin(phase + (sx > 0 ? Math.PI : 0));
+          wwLocal.makeRotationZ(sx * flap);
           if (sx < 0) wwLocal.multiply(wwSpin);
-          wwLocal.setPosition(sx * .0100, -.0052, .0270);
+          // Hinged out at the rim, not at the centre line: a sheet starting inside the plate is
+          // half-buried in it, and its ribs poke through the back as dark slits.
+          wwLocal.setPosition(sx * .0300, -.0032, .0000);
           wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
           reefSkirtMesh.setMatrixAt(i * 2 + f, wwPart);
         }
-        wwLocal.makeScale(w.spout, w.spout * w.spoutHold, w.spout);
-        wwLocal.setPosition(0, .0110, .0140);
+        // The veil trails behind and sweeps a beat late, so the ripple visibly travels down the body.
+        wwLocal.makeRotationY(.20 * Math.sin(phase * .55 - 1.2));
+        wwLocal.setPosition(0, 0, REEF_TAIL + .0120);
+        wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
+        reefVeilMesh.setMatrixAt(i, wwPart);
+        // The plume is scaled from nothing as the garden comes out of the water.
+        wwLocal.makeScale(w.plume, w.plume * w.plumeHold, w.plume);
+        wwLocal.setPosition(0, .0035, -.0020);
         wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
         reefPlumeMesh.setMatrixAt(i, wwPart);
       };
@@ -4807,10 +4831,12 @@
           const home = new THREE.Vector3(...center);
           const w = {
             home, pos: home.clone(), up: home.clone(), fwd: new THREE.Vector3(), world: new THREE.Vector3(),
-            orbit: .062 + rng() * .028, angle: rng() * TAU, dir: rng() < .5 ? 1 : -1,
-            depth: .05, wantDepth: .05, mode: 'cruise', timer: 6 + rng() * 20,
-            phase: rng() * TAU, beat: 0, bank: 0, pitch: 0, scale: .86 + rng() * .30,
-            spout: 0, spoutHold: 1, awake: false, eye: rng() * TAU
+            // `nearDirection` takes its distance in radians on the unit sphere, so a ring of .012
+            // is about 50 mm of world: half the width of the farm it is drifting over.
+            orbit: .010 + rng() * .008, angle: rng() * TAU, dir: rng() < .5 ? 1 : -1,
+            depth: .020, wantDepth: .020, mode: 'cruise', timer: 6 + rng() * 20,
+            phase: rng() * TAU, bank: 0, pitch: 0, scale: .90 + rng() * .24,
+            plume: 0, plumeHold: 1, awake: false, eye: rng() * TAU
           };
           // A heading tangent to the surface, along the circle it is about to swim.
           wwE.set(1, 0, 0).cross(home);
@@ -4819,18 +4845,33 @@
           wwN.crossVectors(home, wwE);
           w.fwd.copy(wwE).multiplyScalar(-Math.sin(w.angle) * w.dir).addScaledVector(wwN, Math.cos(w.angle) * w.dir).normalize();
           w.pos.copy(nearDirection(home, w.angle, w.orbit));
-          for (let k = 0; k < 4 && SEA - heightAt(w.pos) < .060; k++) w.pos.copy(nearDirection(home, w.angle, w.orbit * Math.pow(.6, k + 1)));
+          for (let k = 0; k < 4 && SEA - heightAt(w.pos) < .045; k++) w.pos.copy(nearDirection(home, w.angle, w.orbit * Math.pow(.6, k + 1)));
           w.up.copy(w.pos);
-          w.depth = clamp((SEA - heightAt(w.pos)) * .52, .026, Math.max(.030, SEA - heightAt(w.pos) - .040));
+          w.depth = .020;
           w.world.copy(w.pos).multiplyScalar(R + SEA - w.depth);
+          // The stones of its own farm, kept as directions: the plate may only settle out of the light
+          // when none of them is under it. A radius test around the farm is not enough — the animal is
+          // longer than the farm — so this is the same footprint question the bench asks.
+          w.stones = [];
+          for (const stone of seaStones) {
+            if (new THREE.Vector3(...stone.center).angleTo(home) > .001) continue;
+            // The stone's own footprint, in world units: its part's bounding box through its instance
+            // scale. Reading the scale alone gets the ledger's ledger wrong — a ledge is .55 deep and
+            // that is not a radius.
+            const part = provinceGeo[stone.geo];
+            if (!part.boundingBox) part.computeBoundingBox();
+            const bb = part.boundingBox;
+            const r = Math.max(Math.abs(bb.min.x), bb.max.x) * stone.scale[0] + Math.max(Math.abs(bb.min.z), bb.max.z) * stone.scale[2];
+            w.stones.push({ dir: new THREE.Vector3(stone.pos[0], stone.pos[1], stone.pos[2]).normalize(), r: r * .52 });
+          }
           reefs.push(w);
           void k;
         });
         if (!reefs.length) return;
         reefBodyMesh = new THREE.InstancedMesh(reefGeo.body, reefMat, reefs.length);
-        reefVeilMesh = new THREE.InstancedMesh(reefGeo.tail, reefMat, reefs.length);
-        reefSkirtMesh = new THREE.InstancedMesh(reefGeo.fin, reefMat, reefs.length * 2);
-        reefPlumeMesh = new THREE.InstancedMesh(reefGeo.spout, reefPlumeMat, reefs.length);
+        reefVeilMesh = new THREE.InstancedMesh(reefGeo.veil, reefMat, reefs.length);
+        reefSkirtMesh = new THREE.InstancedMesh(reefGeo.skirt, reefMat, reefs.length * 2);
+        reefPlumeMesh = new THREE.InstancedMesh(reefGeo.plume, reefPlumeMat, reefs.length);
         for (const mesh of [reefBodyMesh, reefVeilMesh, reefSkirtMesh, reefPlumeMesh]) {
           mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
           mesh.castShadow = mesh !== reefPlumeMesh;
@@ -6169,8 +6210,13 @@
               push(geo, mat, pos, qBase.clone().multiply(yawQ.setFromAxisAngle(UP, yaw)), new THREE.Vector3(sx, sy, sz));
             };
             const roomAt = (x, z) => Math.max(.028, SEA - heightAt(at(x, z)));
-            const shaft = (x, z, h, thick) => putSea('column', 'basalt', x, z, .010, seaRng() * TAU,
-              thick, Math.max(.014, h), thick);
+            // Every stone in a drowned farm is cut off under the waterline, and now cut off low
+            // enough to be swum over: the reefs ride at the surface and their keel hangs ~15 mm down,
+            // so nothing may stand within 40 mm of the surface — the one shaft that still shows most
+            // of all keeps 30 mm, which leaves it the tallest thing down there without blocking them.
+            const sunk = (x, z, h, clear = .040) => Math.min(h, Math.max(.010, roomAt(x, z) + .010 - clear));
+            const shaft = (x, z, h, thick, clear = .040) => putSea('column', 'basalt', x, z, .010, seaRng() * TAU,
+              thick, Math.max(.014, sunk(x, z, h, clear)), thick);
             const pitch = seaRng() * TAU;                      // the line the colonnade stood on
             // Two pairs of drums still facing each other — the shrine gate's own shape, drowned. One
             // pair keeps a fragment of its architrave; the other lost it.
@@ -6186,20 +6232,20 @@
               if (side < 0) {
                 const bx = x + Math.cos(pitch + Math.PI / 2) * 0;
                 putSea('beam', 'basalt', bx, z, .006, pitch + Math.PI / 2,
-                  gap * .92, Math.min(.60, (roomAt(bx, z) - .02) / .100), .70);
+                  gap * .92, sunk(bx, z, Math.min(.60, (roomAt(bx, z) - .02) / .100), .044), .70);
               }
             }
             // the one shaft the sea did not take: it is what you see from the beach, and why you swim out
             {
               const u = (seaRng() - .5) * .05;
               const x = Math.cos(pitch) * u, z = Math.sin(pitch) * u;
-              shaft(x, z, roomAt(x, z) + .026, .022);
+              shaft(x, z, roomAt(x, z) + .026, .022, .030);
             }
             // what came down: two drums lying on their sides, loose blocks, the stair into the water
             for (let i = 0; i < 2; i++) {
               const x = (seaRng() - .5) * .13, z = (seaRng() - .5) * .13;
               putSea('ledge', 'basalt', x, z, .004, seaRng() * TAU,
-                .045 + seaRng() * .035, Math.max(.10, Math.min(.70, (roomAt(x, z) - .02) / .130)), .55);
+                .045 + seaRng() * .035, sunk(x, z, Math.max(.10, Math.min(.70, (roomAt(x, z) - .02) / .130)), .044), .55);
             }
             for (let i = 0; i < 3; i++) {
               const a = seaRng() * TAU, rr = .03 + seaRng() * .06, bh = .012 + seaRng() * .012;
@@ -6209,7 +6255,7 @@
             {
               const x = (seaRng() - .5) * .10, z = (seaRng() - .5) * .10;
               putSea('steps', 'basalt', x, z, .004, seaRng() * TAU, .062,
-                Math.max(.10, Math.min(.55, (roomAt(x, z) - .010) / .110)), .055);
+                sunk(x, z, Math.max(.10, Math.min(.55, (roomAt(x, z) - .010) / .110)), .040), .055);
             }
           });
         }
@@ -6921,68 +6967,94 @@
           const w = reefs[i];
           const depth0 = w.depth;
           const room = SEA - heightAt(w.pos);                 // water under it, right here
-          const cruise = clamp(room * .52, .030, .092);
-          w.timer -= dt;
-          if (w.mode === 'cruise') {
-            w.wantDepth = cruise;
-            if (w.timer <= 0) { w.mode = 'rise'; w.timer = 6.5; }
-          } else if (w.mode === 'rise') {
-            w.wantDepth = .004;
-            if (w.depth < .012) { w.mode = 'blow'; w.timer = 1.9; }
-          } else if (w.mode === 'blow') {
-            w.wantDepth = .004;
-            if (w.timer <= 0) { w.mode = 'sink'; w.timer = 7.0; }
-          } else {
-            w.wantDepth = cruise;
-            if (w.depth > cruise - .006) { w.mode = 'cruise'; w.timer = 16 + 14 * (.5 + .5 * Math.sin(w.eye * 3.1)); }
+          // A drift-reef rides the top of the water, and everything about how deep follows from two
+          // numbers: the tallest drowned column stands 37 mm under the surface, and the keel hangs
+          // 11 mm below the animal's own centre line. Over its farm it therefore goes shallower still
+          // — that is where the garden is working — and out over the open shelf it may settle deeper
+          // and drift, which is the only time you see it as a shape rather than as a shadow.
+          const over = w.pos.angleTo(w.home) < .020;          // radians: about 84 mm of world
+          // The lap is in two halves: over the farm, where it rides the surface, and out over the
+          // shelf, where the water deepens and it settles. That rise and sink is the only vertical
+          // motion the animal has, and it is slow.
+          const driftPhase = .5 + .5 * Math.sin(elapsed * .045 + w.eye);
+          const outer = driftPhase > .62;
+          // It may only settle out of the light where there is water to settle into, and never while
+          // it is over the stones: the keel has 26 mm of stone to clear.
+          // Is any stone of its own farm under the plate right now? Not a radius round the farm: the
+          // animal is longer than the farm is wide, so the ends are still over the stones when the
+          // middle has drifted away. This is the same footprint test the bench does.
+          let overStones = false;
+          for (const stone of w.stones) {
+            // Directions live on the unit sphere: multiply the chord out to world units, or the plate
+            // is measured in the wrong unit and covers the whole farm for ever.
+            const rel = stone.dir.clone().sub(w.pos).multiplyScalar(R);
+            const along = rel.dot(w.fwd);
+            const lateral = rel.addScaledVector(w.fwd, -along).length();
+            // Two centimetres of margin on top of the plate: the bench asks the same question and
+            // wants the keel to come out with daylight under it, not with a millimetre to spare.
+            if (Math.abs(along) < REEF_HALF_LEN * w.scale + stone.r + .020 &&
+                lateral < REEF_HALF_WIDE * w.scale + stone.r + .020) { overStones = true; break; }
           }
+          const canDive = room > .090;
+          const cruise = (outer && canDive && !overStones) ? .042 : .004;
+          // It rides the surface over the farm — back out of the water, garden in the air — and sinks
+          // only where the shelf falls away, which is where you get to see it as a shape rather than
+          // as a shadow overhead. Coming back over the stones it has to climb again: that climb is the
+          // only dive-and-rise it does, and it is slow.
+          w.timer -= dt;
+          if (w.mode === 'blow') {
+            if (w.timer <= 0) { w.mode = 'cruise'; w.timer = 14 + 16 * (.5 + .5 * Math.sin(w.eye * 3.1)); }
+          } else if (w.timer <= 0 && over && w.depth < .014) {
+            w.mode = 'blow'; w.timer = 2.6;
+          }
+          w.wantDepth = w.mode === 'blow' ? .002 : cruise;
           // The floor is close in places: never sink into it, whatever the tank says.
-          w.wantDepth = Math.min(w.wantDepth, Math.max(.012, room - .038));
+          w.wantDepth = Math.min(w.wantDepth, Math.max(.004, room - (REEF_HALF_DEEP * w.scale + .014)));
           w.depth += (w.wantDepth - w.depth) * (1 - Math.exp(-dt * .55));
-          // A hard floor under all of it: the belly is never allowed into the silt, however fast the
+          // A hard floor under all of it: the keel is never allowed into the silt, however fast the
           // ground comes up at it.
-          w.depth = Math.min(w.depth, Math.max(.010, room - .034));
-          // A slow circle round the farm, drifting in and out of the radius it was given.
-          const speed = .034 * w.scale;
+          w.depth = Math.min(w.depth, Math.max(.004, room - (REEF_HALF_DEEP * w.scale + .008)));
+          // A slow drift round the farm: it comes in over the columns, then works its way back out
+          // into the deeper water and down, over the better part of a minute.
+          const speed = .026 * w.scale;
           // How fast it is climbing, against how fast it is swimming: the body has to answer the
-          // climb, or the animal rises like a lift. It used to spend 1.1 s going from 51 mm to 12 mm,
-          // four times its own swimming speed, without pitching a degree.
+          // climb, or the animal rises like a lift.
           const climb = (depth0 - w.depth) / Math.max(dt, .0001);     // positive = rising
-          const wantPitch = clamp(Math.atan2(climb, Math.max(speed, .001)), -.40, .40);
+          const wantPitch = clamp(Math.atan2(climb, Math.max(speed, .001)), -.34, .34);
           w.pitch += (wantPitch - w.pitch) * (1 - Math.exp(-dt * 2.2));
           w.angle += w.dir * (speed * dt / R) / Math.max(.012, w.orbit);
-          let wobble = w.orbit * (1 + .16 * Math.sin(elapsed * .11 + w.eye));
+          let wobble = w.orbit * (.80 + 5.00 * driftPhase);
           dwProbe.copy(nearDirection(w.home, w.angle, wobble));
-          // The ring is drawn round the farm, which is not always surrounded by deep water: where it
-          // would carry the animal over the shallows, it comes back in over the stones instead.
-          for (let k = 0, pull = 1; k < 3 && SEA - heightAt(dwProbe) < .060; k++) {
-            pull *= .6;
+          // Where the ring would carry it over the shallows it comes back in over the stones instead.
+          for (let k = 0, pull = 1; k < 3 && SEA - heightAt(dwProbe) < .045; k++) {
+            pull *= .62;
             dwProbe.copy(nearDirection(w.home, w.angle, wobble * pull));
           }
-          w.pos.lerp(dwProbe, 1 - Math.exp(-dt * 1.1)).normalize();
+          w.pos.lerp(dwProbe, 1 - Math.exp(-dt * .9)).normalize();
           w.up.copy(w.pos);
-          // Heading: the tangent it is swimming along, from the change it just made.
+          // Heading: the tangent it is drifting along, from the change it just made.
           wwE.set(1, 0, 0).cross(w.pos);
           if (wwE.lengthSq() < 1e-8) wwE.set(0, 0, 1).cross(w.pos);
           wwE.normalize();
           wwN.crossVectors(w.pos, wwE);
           w.fwd.copy(wwE).multiplyScalar(-Math.sin(w.angle) * w.dir).addScaledVector(wwN, Math.cos(w.angle) * w.dir).normalize();
           w.world.copy(w.pos).multiplyScalar(R + SEA - w.depth);
-          // It leans into the circle, and rolls a little as it breathes.
-          const bankNow = w.dir * .16 + Math.sin(elapsed * .37 + w.eye) * .05;
+          // It leans into the circle, and rolls a little as it works.
+          const bankNow = w.dir * .12 + Math.sin(elapsed * .37 + w.eye) * .04;
           w.bank += (bankNow - w.bank) * (1 - Math.exp(-dt * 1.2));
-          w.phase += dt * (1.15 + (w.mode === 'rise' ? .5 : 0));
-          // The spout: up over a third of a second, held while it blows, gone by the time it dives.
-          // A spout only exists while the blowhole is out of the water: the moment the animal sinks, it
-          // is gone. That is also what makes it read from the beach as a reef, not as a fountain.
-          const blowing = w.mode === 'blow' && w.depth < .010 ? 1 : 0;
-          w.spout += (blowing - w.spout) * (1 - Math.exp(-dt * (blowing ? 5.5 : 7.5)));
-          if (blowing && w.spout > .55 && !w.called) {
+          // The ripple travels down the plate: the skirts beat against each other and the veil
+          // answers a beat later.
+          w.phase += dt * (1.5 + speed * 6);
+          // The plume: not a breath. This is the garden spawning while it is out of the water, and it
+          // is gone by the time the animal settles again.
+          const spawning = w.mode === 'blow' && over ? 1 : 0;
+          w.plume += (spawning - w.plume) * (1 - Math.exp(-dt * (spawning ? 3.0 : 3.8)));
+          if (spawning && w.plume > .55 && !w.called) {
             w.called = true;
-            if (w.pos.dot(state.direction) > Math.cos(.30)) reefCall(clamp(1 - w.world.distanceTo(dwPlayer) / .45, 0, 1) * .085);
+            if (w.pos.dot(state.direction) > Math.cos(.30)) reefCall(clamp(1 - w.world.distanceTo(dwPlayer) / .45, 0, 1) * .060);
           }
           if (w.mode !== 'blow') w.called = false;
-          poseReef(w, i, Math.sin(w.phase) * .26, w.pitch);
+          poseReef(w, i, w.phase, w.pitch);
         }
         for (const mesh of [reefBodyMesh, reefVeilMesh, reefSkirtMesh, reefPlumeMesh]) mesh.instanceMatrix.needsUpdate = true;
       }
