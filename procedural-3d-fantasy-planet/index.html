@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-62">
+  <meta name="aetheris-build" content="pennants-63">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -236,7 +236,7 @@
     .marker-dot { width: 7px; height: 7px; border: 1px solid var(--aqua); border-radius: 50%; background: rgba(165, 238, 225, .35); box-shadow: 0 0 10px rgba(120, 230, 205, .55); }
     .marker-stem { width: 1px; height: 14px; background: linear-gradient(180deg, rgba(165,238,225,.6), transparent); }
 
-    .archive-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px; border: 1px solid rgba(174, 224, 216, .24);
+    .archive-chip { position: relative; display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px; border: 1px solid rgba(174, 224, 216, .24);
       border-radius: 3px; background: rgba(12, 34, 41, .34); color: #cfe7de; font: inherit; cursor: pointer;
       transition: border-color .25s ease, color .25s ease, background .25s ease; }
     .archive-chip:hover { border-color: var(--aqua); color: #fff; background: rgba(18, 50, 56, .55); }
@@ -269,6 +269,16 @@
     .archive-row.tell > span:last-child { color: #f0dfae; }
     .archive-tag { display: inline-block; margin-top: 9px; padding: 2px 7px; border: 1px solid rgba(165, 238, 225, .22); border-radius: 999px;
       font-size: 7.5px; letter-spacing: .18em; color: #86c3b4; }
+    /* A dot on the archive chip, never a number on the screen: something has been added to the list. */
+    .archive-chip.has-news::after { content: ''; position: absolute; right: 3px; top: 3px; width: 4px; height: 4px;
+      border-radius: 50%; background: #f0dfae; box-shadow: 0 0 7px rgba(240, 223, 174, .85); }
+    /* The list of what is alive: unseen entries keep their shape and lose their words. */
+    .codex-count { margin-left: 8px; font-size: 7.5px; letter-spacing: .2em; color: #86c3b4; }
+    .codex-note { margin: 8px 0 0; font-size: 11px; line-height: 1.66; color: #b9d2ca; }
+    .codex-entry.is-unseen .archive-code { color: #6d8882; letter-spacing: .3em; }
+    .codex-entry.is-unseen .archive-zh { color: #5d7a74; }
+    .codex-entry.is-unseen .codex-note { color: #617d77; font-style: italic; }
+    .codex-entry.is-new .archive-code::after { content: 'NEW'; margin-left: 9px; font-size: 6.5px; letter-spacing: .2em; color: #f0dfae; }
     @media (max-width: 760px), (pointer: coarse) {
       .archive-head { padding: 18px 18px 12px; }
       .archive-body { padding: 4px 18px 28px; }
@@ -584,7 +594,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-62';
+    const BUILD_ID = 'pennants-63';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -8897,6 +8907,69 @@
       diveButton.addEventListener('pointerdown',event=>{event.preventDefault();touchDive=true;});
       for(const event of ['pointerup','pointercancel','pointerleave'])diveButton.addEventListener(event,()=>{touchDive=false;});
 
+      // ---- The list of what is alive (begin) ------------------------------------------------------
+      // The archive is a document of what the ground is not told. This is the other half: what the
+      // ground can be told, if it goes and looks. Nobody writes a line for a thing they have not seen —
+      // that is the whole reason the list exists — so each entry keeps its shape and withholds its words
+      // until you have stood in front of one. (The block is fenced like this because the offline bench
+      // lifts it whole; keep the two markers and it stays testable.)
+      const CODEX = [
+        { id: 'bell', name: 'MOSSBELL', zh: '钵行者', where: 'VAELMAR / CAELTH / MIRELLA', range: .34,
+          hint: '三足的苔钟，背上驮着一床它自己吃的苔。',
+          note: '它怕你，但只到二十毫米。蹲下来，它就当你是一块石头，继续吃它背上的苔——那是它自己的牧场，不是它的家。' },
+        { id: 'reef', name: 'REEF-RIDER', zh: '驮园', where: '镜海 · 六处水下废墟之上', range: .70,
+          hint: '贴着水面滑翔，背上是一座珊瑚园。',
+          note: '它浮上来不是为了呼吸——它没有肺。它浮上来是让背上那座园子见光，散出来的是园子的卵，不是水柱。' },
+        { id: 'flock', name: 'SKY PENNANT', zh: '浮幡', where: '九座圣所的上空', range: 1.15,
+          hint: '没有翅膀，也没有前后：一条膜靠往自己身上送波前进。',
+          note: '它绕着圣所转，四五百毫米高。走音者把东西绑在它身上——它是唯一能飞越环洋的邮差，也是唯一不归穹顶管的航线。' },
+        { id: 'swarm-vaelmar', name: 'EMBER MOTH', zh: '萤蛾', province: 'vaelmar', where: 'VAELMAR 的苔面',
+          hint: '黄昏之后成片浮起来，暖色，很慢。',
+          note: '它们不吃苔，吃苔边界上的光。所以一块被踩秃的苔地上，萤蛾总是比别处多。' },
+        { id: 'swarm-sennar', name: 'GLASS WASP', zh: '玻璃蜂', province: 'sennar', where: 'SENNAR 的沙丘',
+          hint: '冷白、快，带一点棱镜的闪。',
+          note: '巢是天然棱镜：白天把光折进沙下，夜里再放出来。灰烬商团按巢的形状给井定方位。' },
+        { id: 'swarm-caelth', name: 'FROST PLUME', zh: '霜羽', province: 'caelth', where: 'CAELTH 的冰原',
+          hint: '苍白，几乎是往下掉的。',
+          note: '它们往上飞得很吃力——那片地方的风只往下走。所以在这里，飘得慢的东西才是活着的。' },
+        { id: 'swarm-mirella', name: 'TIDE MITE', zh: '潮虫', province: 'mirella', where: 'MIRELLA 的泥滩',
+          hint: '青绿，往上飘，像倒着下的雨。',
+          note: '退潮时从泥里升起来，涨潮之前一定落回去。歌者用它们的时辰下网，比钟准。' },
+        { id: 'swarm-vessper', name: 'SHARD DUST', zh: '晶屑', province: 'vessper', where: 'VESSPER 的晶化盆地',
+          hint: '淡紫，会闪，只在晶化盆地。',
+          note: '那不是虫子，是晶体磨下来的屑。它自己以为自己活着，而灵脉读数会同意它。' }
+      ];
+      CODEX.forEach(entry => { entry.seen = false; entry.fresh = false; });
+      // Seen means: close enough that it is a thing and not a speck, and inside the cone you are looking
+      // down. Distance is the chord across the sphere — the same measure the animals' own senses use.
+      const CODEX_SIGHT_COS = .74;                       // a 42° cone, roughly the middle of the screen
+      function inSight(dir, eyeDir, forward, range) {
+        return dir.angleTo(eyeDir) * R <= range && dir.dot(forward) > CODEX_SIGHT_COS;
+      }
+      const codexDir = new THREE.Vector3();
+      const codexForward = new THREE.Vector3();
+      let codexClock = 0;
+      function codexScan(eyeDir, forward) {
+        let found = 0;
+        for (const entry of CODEX) {
+          if (entry.seen) continue;
+          let hit = false;
+          if (entry.province) hit = provinceAt(eyeDir) === entry.province;
+          else if (entry.id === 'bell') { for (let i = 0; i < bell.length && !hit; i++) hit = inSight(bell[i].pos, eyeDir, forward, entry.range); }
+          else if (entry.id === 'reef') { for (let i = 0; i < reefs.length && !hit; i++) hit = inSight(reefs[i].pos, eyeDir, forward, entry.range); }
+          else if (entry.id === 'flock') {
+            for (let i = 0; i < flocks.length && !hit; i++) {
+              codexDir.set(flockWorld[i * 3], flockWorld[i * 3 + 1], flockWorld[i * 3 + 2]);
+              if (codexDir.lengthSq() < 1e-6) continue;    // not placed yet this frame
+              hit = inSight(codexDir.normalize(), eyeDir, forward, entry.range);
+            }
+          }
+          if (hit) { entry.seen = true; entry.fresh = true; found++; }
+        }
+        return found;
+      }
+      // ---- The list of what is alive (end) --------------------------------------------------------
+
       // ---- Field archive (O) ---------------------------------------------------------------
       // Everything the ground is not allowed to know, written down once. The panel never pauses
       // the world and never locks the camera: you can read it while an operation runs overhead.
@@ -9010,13 +9083,37 @@
             <h3>DELIBERATELY UNFILED</h3>
             <p>写下来会被找到的东西，所以只留标题。</p>
             ${omissions}
-          </section>`;
+          </section>
+          <section class="archive-section" id="codexSection"></section>`;
+        refreshCodex();
+      }
+      // The list renders itself from the state of CODEX, so the panel can be open while something is
+      // added to it — which is exactly what happens, because you read the archive while walking.
+      function codexHTML() {
+        const seen = CODEX.filter(e => e.seen).length;
+        const rows = CODEX.map(e => `
+          <article class="archive-entry codex-entry ${e.seen ? (e.fresh ? 'is-new' : 'is-seen') : 'is-unseen'}">
+            <div><span class="archive-code">${e.seen ? e.name : '· · ·'}</span><span class="archive-zh">${e.seen ? e.zh : '未见'}</span></div>
+            ${archiveRow('WHERE', e.where)}
+            <p class="codex-note">${e.seen ? e.note : e.hint}</p>
+          </article>`).join('');
+        return `
+          <h3>WHAT IS ALIVE <span class="codex-count">${seen} / ${CODEX.length}</span></h3>
+          <p>走音者记下来的东西。看过的，才写下来——所以没写的那几条，不是没有，是你还没站到它面前。</p>
+          ${rows}`;
+      }
+      function refreshCodex() {
+        const box = document.getElementById('codexSection');
+        if (box) box.innerHTML = codexHTML();
       }
       function setArchive(open) {
         if (open && worldMapOpen) setWorldMap(false);
         archiveOpen = open;
         if (open) {
           buildArchive();
+          refreshCodex();                                  // the marks are shown once, then spent
+          CODEX.forEach(entry => { entry.fresh = false; });
+          archiveChip.classList.remove('has-news');
           keys.clear();
           if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
           document.body.classList.add('archive-open');
@@ -9273,6 +9370,17 @@
         mantas.instanceMatrix.needsUpdate=true;
         updateBell(dt,elapsed);
         updateReefs(dt,elapsed);
+        // The list. Twice a second is plenty for something that has to walk into view, and it only
+        // counts while you are on your feet — you cannot see a mossbell from orbit.
+        codexClock += dt;
+        if (codexClock > .5 && state.mode === 'walk' && !state.transition) {
+          codexClock = 0;
+          camera.getWorldDirection(codexForward);
+          if (codexScan(state.direction, codexForward)) {
+            refreshCodex();
+            archiveChip.classList.add('has-news');
+          }
+        }
         // Feet. The walk cycle crosses a step every pi radians, counted in the physics step; the sound
         // is the province underfoot — moss, sand, snow, wet moss, stone — and water when wading. Quiet
         // on purpose: a footfall you notice is a footfall too loud.
