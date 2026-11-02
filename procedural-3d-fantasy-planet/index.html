@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-61">
+  <meta name="aetheris-build" content="pennants-62">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-61';
+    const BUILD_ID = 'pennants-62';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -2101,6 +2101,119 @@
       bakeColor(moonGeo, '#9caaa8', .5);
       const moon = new THREE.Mesh(moonGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
       scene.add(moon);
+
+      // ---- What is above: the sun-mirror net -------------------------------------------------------
+      // Not an orbit — the directorate cannot leave the atmosphere (WORLD §4.2). This is its 日镜网,
+      // the net that dims a whole sky when it wants to: two inclined bands of mirrors held up on the
+      // floating lattice, high enough to flare and regular enough that an attentive eye calls them
+      // machinery. Almost all of them are dark at any moment — what the surface sees is the arc whose
+      // faces happen to throw the sun at the eye, which is also how the surface explains them away.
+      // Everything the archive calls an operation is something this net did; during one, the panels
+      // overhead come up, so the light in the sky has a source you can point at.
+      const latticeRings = [
+        { radius: 8.45, tilt: .36, yaw: .55, spin: .00270, count: compact ? 30 : 78, size: .050 },
+        { radius: 9.40, tilt: -.22, yaw: 2.15, spin: -.00214, count: compact ? 20 : 54, size: .042 }
+      ];
+      const latticePanels = [];
+      const latticePlane = new THREE.PlaneGeometry(1, 1);
+      const latticeRandom = seeded(44711);
+      for (const ring of latticeRings) {
+        ring.spinObject = new THREE.Group();                 // turns about the planet's axis
+        ring.frame = new THREE.Group();                      // carries this band's own inclination
+        ring.frame.rotation.order = 'YXZ';
+        ring.frame.rotation.set(ring.tilt, ring.yaw, 0);
+        ring.spinObject.add(ring.frame);
+        scene.add(ring.spinObject);
+        // No vertexColors here: the per-panel colour arrives as instanceColor, and asking for both
+        // would have the shader read a vertex colour this geometry does not carry — every panel black.
+        const mesh = new THREE.InstancedMesh(latticePlane, new THREE.MeshBasicMaterial({
+          side: THREE.DoubleSide, fog: false, transparent: true,
+          depthWrite: false, blending: THREE.AdditiveBlending
+        }), ring.count);
+        mesh.frustumCulled = false;
+        mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+        ring.frame.add(mesh);
+        const place = new THREE.Object3D(), radial = new THREE.Vector3(), spin = new THREE.Quaternion();
+        // Both bands re-aim, but each one re-aims as a band: a shared axis, a shared rate, and only a
+        // little wander panel to panel. Aligned panels catch the sun over a whole arc at once — which is
+        // the difference between a chain of mirrors and a scatter of glitter.
+        ring.aimAxis = new THREE.Vector3(latticeRandom() - .5, latticeRandom() - .5, latticeRandom() - .5).normalize();
+        ring.aimRate = .030 + latticeRandom() * .042;
+        for (let i = 0; i < ring.count; i++) {
+          const a = (i / ring.count) * TAU + (latticeRandom() - .5) * .06;
+          const rr = ring.radius + (latticeRandom() - .5) * .12;
+          place.position.set(Math.cos(a) * rr, (latticeRandom() - .5) * .14, Math.sin(a) * rr);
+          // Every panel faces the planet, with just enough wander that they do not flare as one.
+          radial.copy(place.position).normalize();
+          place.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), radial);
+          spin.setFromAxisAngle(new THREE.Vector3(latticeRandom() - .5, latticeRandom() - .5, latticeRandom() - .5).normalize(), (latticeRandom() - .5) * .84);
+          place.quaternion.multiply(spin);
+          const w = ring.size * (.82 + latticeRandom() * .38);
+          place.scale.set(w, w * .68, 1);
+          place.updateMatrix();
+          mesh.setMatrixAt(i, place.matrix);
+          mesh.setColorAt(i, new THREE.Color(0, 0, 0));
+          // Panels that hold one attitude for ever would flash once and then be dark for hours. A real
+          // array tracks the sun; these re-aim slowly on their own, so the band keeps catching light.
+          latticePanels.push({
+            mesh, ring, local: place.position.clone(), index: i,
+            normal: new THREE.Vector3(0, 0, 1).applyQuaternion(place.quaternion),
+            aimAxis: ring.aimAxis, aimRate: ring.aimRate, aimPhase: (latticeRandom() - .5) * .26
+          });
+        }
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.instanceColor.needsUpdate = true;
+        ring.mesh = mesh;
+      }
+      const latticeWorld = new THREE.Vector3(), latticeNormal = new THREE.Vector3(), latticeQuat = new THREE.Quaternion();
+      const latticeSunDir = new THREE.Vector3(), latticeEye = new THREE.Vector3(), latticeHalf = new THREE.Vector3();
+      const latticeShadow = new THREE.Vector3(), latticePlaneWorld = new THREE.Vector3(), latticeMoonDir = new THREE.Vector3(), latticeTint = new THREE.Color();
+      const latticeAim = new THREE.Quaternion();
+      // One panel: is the sun above its own horizon, is the planet between it and the sun, and does its
+      // face throw the sun at this eye? A hundred and thirty-two panels, one loop, no draw call each.
+      function updateLattice(elapsed, dayAmount, cloud, eyeDir, operation) {
+        // Daylight and cloud wash the bands out. A mirror you can see at noon is a lie; one you can
+        // just about catch at noon is a satellite.
+        const visibility = clamp(1 - dayAmount * .945, .03, 1) * (1 - cloud * .5);
+        latticeSunDir.copy(sun).normalize();
+        latticeMoonDir.copy(moon.position).normalize();
+        for (const ring of latticeRings) {
+          ring.spinObject.rotation.y = elapsed * ring.spin;
+          ring.spinObject.updateMatrixWorld(true);      // this frame's roll, not last frame's
+          ring.mesh.getWorldQuaternion(latticeQuat);
+        }
+        // An operation runs through one node: whichever panel of the band is nearest the zenith of the
+        // ground below it. Everything else in the sky stays as it was, so the light has a source.
+        let node = null, nodeUp = -2;
+        if (operation > 0 && eyeDir) {
+          for (const panel of latticePanels) {
+            const up = eyeDir.dot(latticePlaneWorld.copy(panel.local).applyMatrix4(panel.mesh.matrixWorld).normalize());
+            if (up > nodeUp) { nodeUp = up; node = panel; }
+          }
+        }
+        for (const panel of latticePanels) {
+          latticeWorld.copy(panel.local).applyMatrix4(panel.mesh.matrixWorld);
+          const toSun = latticeWorld.dot(latticeSunDir);
+          // Behind the planet, and low enough over the sun line to be inside its shadow.
+          latticeShadow.copy(latticeWorld).addScaledVector(latticeSunDir, -toSun);
+          const lit = toSun > 0 || latticeShadow.length() > R + .04 ? 1 : .05;
+          latticeAim.setFromAxisAngle(panel.aimAxis, elapsed * panel.aimRate + panel.aimPhase);
+          latticeNormal.copy(panel.normal).applyQuaternion(latticeQuat).applyQuaternion(latticeAim).normalize();
+          latticeEye.copy(camera.position).sub(latticeWorld).normalize();
+          latticeHalf.copy(latticeSunDir).add(latticeEye).normalize();
+          const flare = Math.pow(Math.max(0, latticeNormal.dot(latticeHalf)), 14);
+          // ...and the moon does the same thing, fainter and colder. Without this the bands vanish at
+          // local midnight, when every panel overhead is facing the night side of the planet.
+          latticeHalf.copy(latticeMoonDir).add(latticeEye).normalize();
+          const moonFlare = Math.pow(Math.max(0, latticeNormal.dot(latticeHalf)), 16) * .62;
+          const overhead = eyeDir ? Math.max(0, eyeDir.dot(latticeWorld) / latticeWorld.length()) : 0;
+          const working = Math.min(1, Math.pow(overhead, 9) * 2.6 + (panel === node ? .85 : 0)) * operation;
+          const brightness = visibility * lit * (.045 + flare * 1.5 + moonFlare + working * .5);
+          latticeTint.setRGB(.60 + working * .30, .68 + working * .24, .78 + working * .14).multiplyScalar(brightness);
+          panel.mesh.setColorAt(panel.index, latticeTint);
+        }
+        for (const ring of latticeRings) ring.mesh.instanceColor.needsUpdate = true;
+      }
 
       // Sky-derived image-based lighting: metals, crystal and wet ground pick up believable reflections.
       const pmrem = new THREE.PMREMGenerator(renderer);
@@ -9102,6 +9215,9 @@
         moon.position.set(Math.cos(elapsed*.007+2.1)*29,12,Math.sin(elapsed*.007+2.1)*29);
         moonlight.position.copy(moon.position);
         waterUniforms.uMoon.value.copy(moon.position).normalize();
+        // The mirror lattice: lit panels burn through the night sky, and an operation lights the ones
+        // overhead. Dimmed by daylight and cloud, because a mirror you can see at noon is a lie.
+        updateLattice(elapsed, dayAmount, weatherNow.cloud, state.mode === 'walk' ? state.direction : null, eventFx.glow);
         if(surface)desiredShadowFocus.copy(state.direction).multiplyScalar(state.radius);else desiredShadowFocus.set(0,0,0);
         shadowFocus.lerp(desiredShadowFocus,1-Math.exp(-dt*4));
         sunlight.position.copy(shadowFocus).addScaledVector(sun,18);sunlight.target.position.copy(shadowFocus);
