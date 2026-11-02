@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'shrine-weather-38';
+    const BUILD_ID = 'settlement-plans-39';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4435,20 +4435,34 @@
             const gradX = (heightAt(dirAt(step, 0)) - site.h) / step;
             const gradZ = (heightAt(dirAt(0, step)) - site.h) / step;
             const slope = Math.hypot(gradX, gradZ);
-            // Look further out than one house for the sea: a town is a seaside town if water sits
-            // within a short walk, and the pier then points at whichever bearing it is closest.
-            let waterAngle = null, waterLow = Infinity;
-            for (const reach of [.10, .22, .40]) {
-              for (let i = 0; i < 10; i++) {
-                const a = i * TAU / 10, h = heightAt(dirAt(Math.cos(a) * reach, Math.sin(a) * reach));
+            // `slope` over one house is mostly the grain of the noise: on this planet it is above
+            // .20 at every single site, so weighting the plan by it decided nothing. The plan is a
+            // reading of the *hillside*, so measure that at four town-widths instead.
+            const hill = .48;
+            const hillSlope = Math.hypot((heightAt(dirAt(hill, 0)) - site.h) / hill,
+              (heightAt(dirAt(0, hill)) - site.h) / hill);
+            // Look for the sea at two distances. A town is a *seaside* town only if water is within a
+            // short walk of its own edge — one reach — but the pier still points at the nearest water
+            // wherever that is. Taking any water within .40 turned almost every town on the planet
+            // into a harbour town, and a harbour town is always the same shape, so the plans
+            // collapsed into one.
+            let waterAngle = null, waterLow = Infinity, waterDist = Infinity;
+            for (const reach of [.04, .06, .09, .13, .20, .30, .40]) {
+              for (let i = 0; i < 12; i++) {
+                const a = i * TAU / 12, h = heightAt(dirAt(Math.cos(a) * reach, Math.sin(a) * reach));
                 if (h < waterLow) { waterLow = h; waterAngle = a; }
+                if (h < SEA + .004 && reach < waterDist) waterDist = reach;
               }
             }
-            const coastal = site.shore || waterLow < SEA + .004;
+            // Half the towns in this world have water within .04, and nearly all of them within .40:
+            // the land is a fine-grained archipelago at settlement scale. So "the sea is nearby" is a
+            // weight on the plan, not a verdict on it — see where the plan is drawn.
+            const coastal = site.shore || waterDist <= .13;
             let nearSanctuary = 9;
             for (const landmark of landmarks) nearSanctuary = Math.min(nearSanctuary, site.dir.distanceTo(landmark.direction));
             const hearth = clamp(1 - nearSanctuary / .90, 0, 1);
-            const steep = slope > .20;
+            const steep = slope > .20;                 // ground rough enough that a level plate is a podium
+            const hillside = hillSlope > .62;          // the slope of the hill the town is on
             // Hamlet / village / market town: a long tail instead of a uniform row of equal towns.
             const sizeScore = hearth * .75 + rng() * .55;
             const tier = sizeScore > .86 ? 2 : (sizeScore < .36 ? 0 : 1);
@@ -4480,7 +4494,7 @@
             const weightOf = entry => {
               const kind = entry[0];
               let w = entry[1];
-              if (steep) {
+              if (hillside) {
                 if (kind === 'hollow') w *= .25;
                 else if (kind === 'row') w *= 2.4;
                 else if (kind === 'cross') w *= 1.3;
@@ -4490,7 +4504,13 @@
               }
               return [kind, w];
             };
-            const plan = id === 'vessper' ? null : (coastal ? 'shore' : pick(PLANS[id].map(weightOf)));
+            // A town on the water is more likely to turn its front to it, but it is not condemned to:
+            // forcing every coastal town into the one shore plan is what flattened the province into
+            // a single shape — 74% of all towns on six sample worlds. The harbour is a weight now,
+            // and one town in three draws it.
+            const planPool = id === 'vessper' ? null : PLANS[id].map(weightOf);
+            if (planPool) planPool.push(['shore', coastal ? (waterDist <= .06 ? 4 : 2.4) : 0]);
+            const plan = planPool ? (site.shore ? 'shore' : pick(planPool.filter(e => e[1] > 0))) : null;
             // A row of lit windows on both long faces of a block.
             const lit = (lx, lz, yaw, width, halfDepth, base, pane, count, lift = 0) => {
               for (const face of [-1, 1]) {
@@ -5114,6 +5134,9 @@
                 if (gy > -.012) continue;                            // only where the hill falls away
                 const h = Math.min(.062, -gy + .012);
                 put('block', groundMat, px, pz, gy + h * .5, a + Math.PI / 2, .095 * k, h, .018 * k);
+                // Written down so the offline checks can find these stones by name. Guessing them back
+                // from "a block near the rim" picked up hillside houses that happen to land there too.
+                (plateFoot.wallStones || (plateFoot.wallStones = [])).push([px, pz, gy, h]);
               }
             }
             // 4. what a lived-in place collects: crates stacked by the track
