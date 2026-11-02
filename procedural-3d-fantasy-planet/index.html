@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-64">
+  <meta name="aetheris-build" content="pennants-65">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -594,7 +594,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-64';
+    const BUILD_ID = 'pennants-65';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4686,6 +4686,7 @@
       const dwN = new THREE.Vector3(), dwProbe = new THREE.Vector3(), dwCol = new THREE.Color();
       const dwTmp = new THREE.Vector3();          // bellNormal() must not write into its own argument
       const dwFeet = new THREE.Vector3();          // where the walker stands, not where the eye is
+      const dwTurn = new THREE.Vector3();          // axis for turning a body a frame's worth
       const dwProp = new THREE.Vector3();          // a prop's world position, reused
       // What a bell may not walk through: the ground stones, which the ground pass scatters around the
       // player and re-scatters as you move. Ninety matrix reads a frame would be waste, so this is a
@@ -4936,7 +4937,15 @@
                 // A tripod cannot rock, so it does not have to be *perfectly* level — but a spot whose
                 // own stance spans more than a centimetre of ground is one where a pad cannot reach the
                 // ground at all, and the animal ends up standing on two legs and a hope.
-                if (rough < .012 / BELL_SIZE && rough < levelest) { levelest = rough; spot = dwProbe.clone(); }
+                // ...and not standing inside a boulder, a crystal or a trunk. The first search only asked
+                // about the ground — level footing, own province, off a cliff — and the prop test lived in
+                // the make-room loop below, which only runs when the spot is too close to another animal.
+                // So an animal with good footing and no neighbour was placed inside a crystal and stayed
+                // there: the harness found one 42 mm in.
+                if (rough < .012 / BELL_SIZE && rough < levelest &&
+                  !hardProps.some(p2 => p2.dir.angleTo(dwProbe) * R < p2.r + .026 * BELL_SIZE)) {
+                  levelest = rough; spot = dwProbe.clone();
+                }
               }
               if (!spot) spot = home.clone();          // the centre itself passed every test
               // Two bell on one square metre read as one bell with eight legs: every candidate was
@@ -4970,6 +4979,10 @@
                 }
                 if (best) spot = best;
               }
+              // ...and if even that fails, this one is not placed. A herd of four is a herd; two bodies
+              // inside each other is a bug the eye finds immediately, and the fallback above is exactly
+              // how it got in: the crowded pack had no legal tile, so the animal was stood on a taken one.
+              if (tooClose(spot)) continue;
               const d = {
                 center: spot.toArray(), home: home.clone(), pos: spot, goto: spot.clone(), aim: spot.clone(), near: [],
                 up: bellNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
@@ -6796,6 +6809,13 @@
             ex.addScaledVector(dir, -ex.dot(dir));
             ez.addScaledVector(dir, -ez.dot(dir));
             if (ex.lengthSq() < 1e-6 || ez.lengthSq() < 1e-6) continue;      // upright: no footprint
+            // Flattening two perpendicular axes onto the tangent plane does not keep them perpendicular:
+            // ex'·ez' = -(ex·dir)(ez·dir), up to 0.37 for a tilted roof piece. The collision below reads
+            // the offset in these two axes as if they were a rectangle, so one had to be made square to
+            // the other or the footprint is a parallelogram the walker is measured against.
+            ex.normalize();
+            ez.addScaledVector(ex, -ez.dot(ex));
+            if (ez.lengthSq() < 1e-6) continue;
             walkBoxes.push({
               dir, top, ex: ex.normalize(), ez: ez.normalize(),
               hx: Math.max(-bb.min.x, bb.max.x) * item.scale.x,
@@ -7687,7 +7707,13 @@
                 d.fwd.applyAxisAngle(dwE.multiplyScalar(1 / axisLength), Math.min(ang, dt * (d.mode === 'flee' ? 6.5 : 2.6)));
                 d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize();
               } else {
-                d.fwd.copy(d.aim);                       // exactly opposite: pick the turn and take it
+                // Exactly opposite. This used to be `d.fwd.copy(d.aim)` — a 180° turn in one frame, which
+                // is a spin, not an animal. Take the long way round at the same rate as any other turn.
+                dwE.set(0, 1, 0).cross(d.fwd);
+                if (dwE.lengthSq() < 1e-8) dwE.crossVectors(d.pos, d.fwd);
+                if (dwE.lengthSq() < 1e-8) dwE.set(1, 0, 0);
+                d.fwd.applyAxisAngle(dwE.normalize(), dt * (d.mode === 'flee' ? 6.5 : 2.6));
+                d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize();
               }
             }
           }
@@ -7711,7 +7737,26 @@
                 for (const sgn of [1, -1]) {
                   dwE.copy(d.fwd).applyAxisAngle(d.pos, sgn * .55 * k).normalize();
                   dwProbe.copy(d.pos).addScaledVector(dwE, .035).normalize();
-                  if (walkableAt(dwProbe) && !propAhead(d, .038, dwE)) { d.fwd.copy(dwE); turned = true; break; }
+                  if (walkableAt(dwProbe) && !propAhead(d, .038, dwE)) {
+                    // Turn toward the way round instead of snapping onto it. Copying the heading outright
+                    // was a 30–95° change in one frame, which reads as a twitch even though it is not the
+                    // 180° flip of `-51`. Turning at a rate, and slowing while doing it, costs nothing.
+                    const turn = d.fwd.angleTo(dwE);
+                    dwTurn.crossVectors(d.fwd, dwE);
+                    if (dwTurn.lengthSq() > 1e-12) {
+                      d.fwd.applyAxisAngle(dwTurn.normalize(), Math.min(turn, dt * 4.5));
+                      d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize();
+                    } else {
+                      // Parallel to the way round: any perpendicular will do, and it still has to be a turn
+                      // rather than a snap.
+                      dwTurn.crossVectors(d.pos, d.fwd);
+                      if (dwTurn.lengthSq() < 1e-12) dwTurn.set(1, 0, 0);
+                      d.fwd.applyAxisAngle(dwTurn.normalize(), Math.min(turn, dt * 4.5));
+                      d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize();
+                    }
+                    if (turn > .45) d.speed *= .55;             // turning hard: walk, do not run
+                    turned = true; break;
+                  }
                 }
               }
               if (!turned) { d.speed = 0; d.mode = 'graze'; d.timer = 1.4; }
@@ -7726,6 +7771,82 @@
           }
           if (d.moved) { plantFeet(d); d.moved = d.speed > 1e-4; }
           poseBell(d, i, Math.abs(Math.sin(d.phase)) * .0011 * (d.stride / .2));
+        }
+        // ---- shoulders -------------------------------------------------------------------------
+        // Placement keeps the herd apart, but walking closes the gap: two animals steering for two
+        // patches of moss a hand's width apart end up inside each other, which is the one thing a herd
+        // must never look like. A relaxation pass over the awake bodies, a couple of millimetres a frame,
+        // is enough to keep them shoulder to shoulder instead. And the walker is a post here rather than
+        // something to lean on: a body that finds itself on top of the player steps off, so a herd can
+        // never shove a standing person across the ground.
+        const shoulder = .052 * BELL_SIZE;
+        for (let i = 0; i < bell.length; i++) {
+          const a = bell[i];
+          if (!a.awake) continue;
+          // the walker first: a body that overlaps you moves, you do not
+          const playerGap = a.pos.angleTo(state.direction) * R;
+          if (playerGap < a.hit.r + WALKER_RADIUS + .004 * BELL_SIZE) {
+            dwProbe.copy(a.pos).addScaledVector(state.direction, -state.direction.dot(a.pos));
+            if (dwProbe.lengthSq() > 1e-12) {
+              dwProbe.normalize();
+              a.pos.addScaledVector(dwProbe, .0015 / R).normalize();
+              a.fwd.addScaledVector(a.pos, -a.fwd.dot(a.pos));
+              if (a.fwd.lengthSq() > 1e-8) a.fwd.normalize();
+              a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos));
+            }
+          }
+          // ...and off the furniture. Placement steers round trunks and boulders, but walking brushes
+          // them, and a shoulder inside a trunk is the same bug as a shoulder inside another animal.
+          const bodyR = BELL_HALF_WIDE * BELL_SIZE;
+          for (let h = 0; h < a.near.length; h++) {
+            const post = a.near[h];
+            const gap = a.pos.angleTo(post.dir) * R - post.r - bodyR;
+            if (gap >= 0 || gap < -.10) continue;
+            dwProbe.copy(a.pos).sub(post.dir).multiplyScalar(R);
+            dwProbe.addScaledVector(a.pos, -dwProbe.dot(a.pos));
+            if (dwProbe.lengthSq() < 1e-12) continue;
+            const stepped = a.pos.clone().addScaledVector(dwProbe.normalize(), Math.min(.0015, -gap) / R).normalize();
+            if (heightAt(stepped) >= SEA + .006) { a.pos.copy(stepped); a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos)); }
+          }
+          // A wall is a box, and the same relaxation applies: step out through the nearest face.
+          for (let h = 0; h < walkBoxes.length; h++) {
+            const box = walkBoxes[h];
+            if (box.dir.dot(a.pos) < .995) continue;
+            const off = dwProbe.copy(a.pos).sub(box.dir).multiplyScalar(R);
+            const u = off.dot(box.ex), v = off.dot(box.ez);
+            const ex = box.hx + bodyR, ez = box.hz + bodyR;
+            if (Math.abs(u) >= ex || Math.abs(v) >= ez) continue;
+            const outX = ex - Math.abs(u), outZ = ez - Math.abs(v);
+            if (outX <= outZ) {
+              const face = u < 0 ? -1 : 1;
+              off.copy(box.ex).multiplyScalar(face * (ex + .0004)).addScaledVector(box.ez, v).multiplyScalar(1 / R);
+            } else {
+              const face = v < 0 ? -1 : 1;
+              off.copy(box.ez).multiplyScalar(face * (ez + .0004)).addScaledVector(box.ex, u).multiplyScalar(1 / R);
+            }
+            const stepped = box.dir.clone().add(off).normalize();
+            if (heightAt(stepped) >= SEA + .006) { a.pos.copy(stepped); a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos)); }
+          }
+          for (let j = i + 1; j < bell.length; j++) {
+            const b = bell[j];
+            // A sleeping animal is still solid, so an awake one has to give way to it; only when both are
+            // asleep is there nothing to do.
+            const gap = a.pos.angleTo(b.pos) * R;
+            if (gap >= shoulder || gap < 1e-6) continue;
+            dwProbe.copy(a.pos).sub(b.pos);
+            dwProbe.addScaledVector(a.pos, -dwProbe.dot(a.pos));
+            if (dwProbe.lengthSq() < 1e-12) continue;
+            dwProbe.normalize();
+            const push = Math.min(.0015, (shoulder - gap) * (b.awake ? .5 : 1)) / R;
+            const moved = a.pos.clone().addScaledVector(dwProbe, push).normalize();
+            if (heightAt(moved) >= SEA + .006) a.pos.copy(moved);
+            if (b.awake) {
+              const movedB = b.pos.clone().addScaledVector(dwProbe, -push).normalize();
+              if (heightAt(movedB) >= SEA + .006) b.pos.copy(movedB);
+            }
+            a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos));
+            b.world.copy(b.pos).multiplyScalar(R + heightAt(b.pos));
+          }
         }
         bellBodyMesh.instanceMatrix.needsUpdate = true;
         bellHeadMesh.instanceMatrix.needsUpdate = true;
