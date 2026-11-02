@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="drift-reefs-48">
+  <meta name="aetheris-build" content="mossbells-49">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'drift-reefs-48';
+    const BUILD_ID = 'mossbells-49';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4271,17 +4271,22 @@
       // the world that belongs to no town, so without this the offline checks cannot tell them from a
       // stretch of provincial wall. Nothing reads it at run time.
       const seaStones = [];
-      // ---- Deer: the ground's own animal -------------------------------------------------------
-      // The mantas own the sky; until now nothing walked. A deer is six instances — barrel, head with
-      // its antlers baked in, four legs — so a herd of five costs thirty instances in three draw
-      // calls, and the rig is cut from the same part library as the houses. The third eye is a plain
-      // bead of bone in the forehead: this world's light is borrowed, and nothing living owns any.
-      const DEER_HIP_Y = .0300, DEER_NECK_Y = .0390, DEER_NECK_Z = .0150;
-      const DEER_LEGS = [[-.0085, .0190], [.0085, .0190], [-.0092, -.0190], [.0092, -.0190]];
-      const deer = [];
-      let deerBodyMesh = null, deerHeadMesh = null, deerLegMesh = null;
-      // A bone between two points, in deer-local units: legs, neck and every tine are the same call.
-      const deerBone = (ax, ay, az, bx, by, bz, r0, r1, color) => {
+      // ---- The mossbell: the ground's own animal -------------------------------------------------
+      // The mantas own the sky and the raft owns the shallows; this is what walks. It is not a bell.
+      // Everything that made the last version a bell was a vertebrate: a barrel, a neck, a face, four
+      // legs, antlers, a tail. Take those away and what is left is a colony that decided to stand up: a
+      // bell of layered shell, three legs splayed in a tripod, a moss bed growing on its back, and one
+      // tube of muscle at the front that grinds the moss off the ground. Three legs are the whole point
+      // — no vertebrate has three, and a tripod cannot rock, so it stands on this broken country far
+      // better than four ever did.
+      const BELL_HIP_Y = .0300, BELL_NECK_Y = .0300, BELL_NECK_Z = .0122;
+      // One leg forward, two back. The forward leg takes the weight when the tube is down and grazing.
+      const BELL_LEGS = [[0, .0212], [-.0182, -.0134], [.0182, -.0134]];
+      const bell = [];
+      let bellBodyMesh = null, bellHeadMesh = null, bellLegMesh = null;
+      // A bone between two points, in the animal's own units: legs, the grazing tube and every rim spine
+      // are the same call.
+      const bellBone = (ax, ay, az, bx, by, bz, r0, r1, color) => {
         const dx = bx - ax, dy = by - ay, dz = bz - az, len = Math.hypot(dx, dy, dz) || 1e-4;
         const g = new THREE.CylinderGeometry(r1, r0, len, 5, 1, false);
         g.translate(0, len / 2, 0);
@@ -4289,98 +4294,103 @@
         g.translate(ax, ay, az);
         return partTint(g, color, .05);
       };
-      // The barrel: deep at the chest, tucked at the flank, with the shoulder hump a deer carries.
-      function deerBodyPart() {
+      // The bell: a dome cut off square at the bottom, with a flared lip, a fringe of spines round the
+      // lip, and the moss bed it carries on its back. The bed is the animal's food — it grazes it down
+      // and it grows back — which is why it is the only thing on this world that is deliberately farmed
+      // by the thing that eats it.
+      function bellBodyPart() {
         const parts = [];
-        // Deep at the chest, tucked at the flank, and carrying the shoulder hump a stag does: the
-        // back runs down from the shoulders to the tail, which is what makes it read as four-legged.
-        const len = .0570;
-        const barrel = new THREE.CylinderGeometry(.0122, .0112, len, 9, 4, false);
-        barrel.rotateX(Math.PI / 2);
-        const bp = barrel.attributes.position;
-        for (let i = 0; i < bp.count; i++) {
-          const t = clamp((bp.getZ(i) + len / 2) / len, 0, 1);            // 0 at the tail, 1 at the chest
-          const k = .78 + .28 * t;
-          bp.setX(i, bp.getX(i) * k);
-          bp.setY(i, bp.getY(i) * (.90 + .16 * t) + .0016 * Math.sin(t * Math.PI));
+        const RIM = .0262;                         // where the lip sits, in the animal's own units
+        const shell = new THREE.SphereGeometry(.0164, 15, 11, 0, TAU, 0, Math.PI * .60);
+        shell.scale(1, 1.30, 1);
+        shell.translate(0, RIM + .0068, 0);
+        parts.push(partTint(shell, '#9a927c', .07));
+        // The lip: a flat flange, so the shell ends in an edge rather than in a cut sphere.
+        const lip = new THREE.CylinderGeometry(.0169, .0150, .0038, 15, 1, false);
+        lip.translate(0, RIM + .0019, 0);
+        parts.push(partTint(lip, '#8b8370', .06));
+        // Spines hanging off the lip, of two lengths, alternating: a fringe, not a skirt.
+        for (let k = 0; k < 14; k++) {
+          const a = k / 14 * TAU + .10;
+          const len = .0042 + .0026 * (k % 2);
+          const sp = new THREE.ConeGeometry(.0016, len, 4);
+          sp.rotateX(Math.PI);
+          sp.rotateZ(Math.cos(a) * .18);
+          sp.translate(Math.cos(a) * .0152, RIM - len * .5 + .0012, Math.sin(a) * .0152);
+          parts.push(partTint(sp, '#7b7360', .06));
         }
-        barrel.translate(0, .0368, 0);
-        barrel.computeVertexNormals();
-        parts.push(partTint(barrel, '#8d7a5e', .07));
-        const chest = new THREE.SphereGeometry(.0130, 8, 6); chest.scale(.94, 1.04, .80); chest.translate(0, .0382, .0252);
-        parts.push(partTint(chest, '#8d7a5e', .07));
-        const rump = new THREE.SphereGeometry(.0118, 8, 6); rump.scale(.90, .98, .82); rump.translate(0, .0358, -.0268);
-        parts.push(partTint(rump, '#8d7a5e', .07));
-        // The two lines that make a body read as an animal rather than as a box: a pale belly and a
-        // dark stripe down the spine.
-        parts.push(partBox(.0160, .0050, .0490, '#b3a184', .0258, 0, .0015, .06));
-        parts.push(partBox(.0070, .0032, .0520, '#5d4d38', .0468, 0, -.0020, .06));
-        // Tail, held up out of habit, showing its white underside.
-        parts.push(partBox(.0086, .0136, .0068, '#8d7a5e', .0392, 0, -.0330, .06));
-        parts.push(partBox(.0052, .0098, .0030, '#e0d5bd', .0394, 0, -.0356, .05));
-        // Shoulder blades: where the neck comes out of the body.
-        for (const sx of [-1, 1]) parts.push(partBox(.0062, .0090, .0160, '#8d7a5e', .0408, sx * .0068, .0150, .06));
+        // The moss bed: a shallow mat over the dome, ragged at its edge, with a few upright tufts.
+        // A cap over the dome, not a disc inside it: the first bed was a flat plate set at the shell's
+        // mid-height and the shell simply swallowed it. This is the same sphere the shell is cut from,
+        // a little larger and cut at the same angle, so the moss lies *on* the shell.
+        const bed = new THREE.SphereGeometry(.0170, 13, 6, 0, TAU, 0, 1.02);
+        bed.scale(1, 1.30, 1);
+        bed.translate(0, RIM + .0068, 0);
+        parts.push(partTint(bed, '#5b6a4a', .10));
+        for (let k = 0; k < 13; k++) {
+          const a = k * 2.39996, rr = .0040 + .0070 * ((k * 37 % 17) / 17);
+          const ty = RIM + .0068 + 1.30 * Math.sqrt(Math.max(.00004, .0170 * .0170 - rr * rr)) - .0004;
+          const tuft = new THREE.ConeGeometry(.0020, .0032 + .0026 * ((k * 7) % 5) / 5, 4);
+          tuft.rotateZ(.16 * Math.cos(a));
+          tuft.translate(Math.cos(a) * rr, ty + .0016, Math.sin(a) * rr);
+          parts.push(partTint(tuft, k % 3 ? '#66754f' : '#77855c', .09));
+        }
+        // Three eyes on the front of the shell, not a face: two low, one high, all of them lenses rather
+        // than lamps. Nothing living on this world is lit from inside.
+        const eyes = [[-.0062, RIM + .0090, .0142], [.0062, RIM + .0090, .0142], [0, RIM + .0150, .0126]];
+        for (const [ex, ey, ez] of eyes) {
+          const bead = new THREE.SphereGeometry(.0022, 7, 5);
+          bead.scale(1, .92, .82);
+          bead.translate(ex, ey, ez);
+          parts.push(partTint(bead, '#1b1712', .04));
+          const glint = new THREE.SphereGeometry(.0007, 4, 3);
+          glint.translate(ex * .96, ey + .0007, ez + .0013);
+          parts.push(partTint(glint, '#f2ead6', .02));
+        }
         return join(parts);
       }
-      // Head, neck and antlers, with the pivot at the base of the neck so the whole thing can swing
-      // down to graze. The muzzle is two tapering bones rather than a box: a deer's face is a wedge,
-      // and a stack of boxes read as a crate with eyes on it.
-      function deerHeadPart() {
+      // The grazing tube. Not a head: no jaw, no ears, no muzzle, and nothing that looks back at you.
+      // It is one muscle that hangs off the front lip, ends in a ring of grinding plates, and is pulled
+      // down to the moss.
+      function bellHeadPart() {
         const parts = [];
-        parts.push(deerBone(0, 0, 0, 0, .0150, .0100, .0082, .0066, '#8d7a5e'));
-        parts.push(deerBone(0, .0172, .0100, 0, .0198, .0245, .0069, .0052, '#8d7a5e'));
-        parts.push(deerBone(0, .0198, .0245, 0, .0170, .0364, .0050, .0034, '#8a7757'));
-        // The pale underside of the jaw, and the nose pad wrapped round the tip of the muzzle.
-        parts.push(partBox(.0060, .0026, .0132, '#a79474', .0166, 0, .0298, .05));
-        parts.push(partBox(.0044, .0032, .0024, '#2b2520', .0172, 0, .0366, .05));
-        for (const sx of [-1, 1]) {
-          const ear = new THREE.ConeGeometry(.0044, .0150, 5);
-          ear.scale(1, 1, .42);
-          ear.translate(0, .0075, 0);
-          ear.rotateZ(sx * .82);
-          ear.rotateX(-.30);
-          ear.translate(sx * .0060, .0232, .0152);
-          parts.push(partTint(ear, '#8d7a5e', .06));
+        parts.push(bellBone(0, .0010, .0010, 0, -.0068, .0132, .0062, .0044, '#948c76'));
+        parts.push(bellBone(0, -.0068, .0132, 0, -.0092, .0248, .0042, .0026, '#8b836d'));
+        const knob = new THREE.SphereGeometry(.0030, 7, 5);
+        knob.scale(1, .82, 1.05);
+        knob.translate(0, -.0092, .0248);
+        parts.push(partTint(knob, '#8b836d', .06));
+        // The grinding ring: six little plates turned against each other round the tip.
+        for (let k = 0; k < 6; k++) {
+          const a = k / 6 * TAU;
+          const plate = partBox(.0022, .0016, .0018, k % 2 ? '#6f6753' : '#7c7460',
+            -.0090 + Math.sin(a) * .0022, Math.cos(a) * .0024, .0256);
+          parts.push(plate);
         }
-        // Antlers: a beam that sweeps up and back, with three tines running forward off it. Pale as
-        // bone, and the only thing on the animal that catches the sky.
-        for (const sx of [-1, 1]) {
-          parts.push(deerBone(sx * .0044, .0248, .0136, sx * .0078, .0436, .0030, .0026, .0016, '#e6dcc4'));
-          parts.push(deerBone(sx * .0048, .0262, .0150, sx * .0098, .0330, .0220, .0017, .0010, '#e6dcc4'));
-          parts.push(deerBone(sx * .0062, .0344, .0096, sx * .0126, .0424, .0128, .0015, .0009, '#e6dcc4'));
-          parts.push(deerBone(sx * .0074, .0420, .0044, sx * .0098, .0508, .0022, .0013, .0008, '#e6dcc4'));
-        }
-        // Three eyes: the pair on the skull, the third set into the brow above and between them — a
-        // bead of dark bone, not a lamp. Nothing in this world is lit from inside.
-        for (const sx of [-1, 1]) {
-          const eye = new THREE.SphereGeometry(.0024, 6, 5); eye.translate(sx * .0054, .0226, .0270);
-          parts.push(partTint(eye, '#17130f', .04));
-          const glint = new THREE.SphereGeometry(.0008, 4, 3); glint.translate(sx * .0060, .0233, .0283);
-          parts.push(partTint(glint, '#f4ecd8', .02));
-        }
-        const third = new THREE.SphereGeometry(.0022, 6, 6); third.scale(.66, 1.02, .80); third.translate(0, .0250, .0218);
-        parts.push(partTint(third, '#17130f', .04));
-        const thirdGlint = new THREE.SphereGeometry(.0007, 4, 3); thirdGlint.translate(0, .0259, .0230);
-        parts.push(partTint(thirdGlint, '#f4ecd8', .02));
         return join(parts);
       }
-      // One leg, pivot at the hip, hoof exactly at y = -DEER_HIP_Y so a posed leg stands on the ground.
-      function deerLegPart() {
+      // One leg: two bones and a pad, not a hoof. A pad spreads on broken ground; a hoof punches through.
+      function bellLegPart() {
         const parts = [];
-        parts.push(deerBone(0, 0, 0, 0, -.0160, .0015, .0038, .0026, '#8d7a5e'));
-        parts.push(deerBone(0, -.0160, .0015, 0, -.0275, -.0008, .0025, .0016, '#7d6a4e'));
-        parts.push(partBox(.0042, .0026, .0052, '#241f19', -.0300, 0, .0004, .05));
+        parts.push(bellBone(0, 0, 0, .0018, -.0152, .0010, .0040, .0029, '#948c76'));
+        parts.push(bellBone(.0018, -.0152, .0010, .0010, -.0266, -.0004, .0028, .0019, '#867e69'));
+        const pad = new THREE.SphereGeometry(.0034, 7, 5);
+        pad.scale(1.24, .60, 1.06);
+        pad.translate(.0010, -.0279, -.0004);       // underside exactly at -BELL_HIP_Y
+        parts.push(partTint(pad, '#5c5647', .05));
+        // Two small clasp spines on the outside of the shin, so a leg still reads as a limb at distance.
+        parts.push(partBox(.0011, .0036, .0011, '#6f6753', -.0012, -.0072, .0006, .05));
         return join(parts);
       }
-      const deerGeo = { body: deerBodyPart(), head: deerHeadPart(), leg: deerLegPart() };
-      const deerMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .92, metalness: .02 });
+      const bellGeo = { body: bellBodyPart(), head: bellHeadPart(), leg: bellLegPart() };
+      const bellMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .92, metalness: .02 });
       // Scratch, reused by every pose: no allocation inside the frame loop.
       const dwFrame = new THREE.Object3D(), dwLocal = new THREE.Matrix4(), dwPart = new THREE.Matrix4();
       const dwAhead = new THREE.Vector3(), dwPlayer = new THREE.Vector3(), dwE = new THREE.Vector3();
       const dwN = new THREE.Vector3(), dwProbe = new THREE.Vector3(), dwCol = new THREE.Color();
-      const dwTmp = new THREE.Vector3();          // deerNormal() must not write into its own argument
+      const dwTmp = new THREE.Vector3();          // bellNormal() must not write into its own argument
       // The ground normal under a direction: the slope of the height field along two tangents.
-      const deerNormal = (dir, out) => {
+      const bellNormal = (dir, out) => {
         dwE.set(1, 0, 0).cross(dir);
         if (dwE.lengthSq() < 1e-8) dwE.set(0, 0, 1).cross(dir);
         dwE.normalize();
@@ -4392,30 +4402,39 @@
         return out.copy(dir).addScaledVector(dwE, -ge).addScaledVector(dwN, -gn).normalize();
       };
       const dfE = new THREE.Vector3(), dfN = new THREE.Vector3(), dfP = new THREE.Vector3();
-      // Each hoof is planted on the ground under it: a deer standing across a ridge in this country
+      // Each hoof is planted on the ground under it: a bell standing across a ridge in this country
       // would otherwise hang by two legs. Offsets are in the animal's own units, before its scale.
+      // The feet are planted where the legs actually are. The frame here has to be the *same* frame the
+      // pose builds (up × forward, +Z forward), not "some tangent and some other tangent": the old code
+      // sampled the ground in a frame half a right angle off the one it posed the legs in, so every foot
+      // was compensated for the height of a patch of ground it was not standing on. On four legs the
+      // error averaged out; on three it does not, and it showed up as a pad 13 mm in the air.
       const plantFeet = (d) => {
-        dfE.set(1, 0, 0).cross(d.pos);
-        if (dfE.lengthSq() < 1e-8) dfE.set(0, 0, 1).cross(d.pos);
-        dfE.normalize();
-        dfN.crossVectors(d.pos, dfE);
+        dfE.crossVectors(d.up, d.fwd).normalize();
+        dfN.copy(d.fwd);
         const h0 = heightAt(d.pos);
-        for (let l = 0; l < 4; l++) {
-          dfP.copy(d.pos).addScaledVector(dfE, DEER_LEGS[l][0] * d.scale / R).addScaledVector(dfN, DEER_LEGS[l][1] * d.scale / R).normalize();
-          d.foot[l] = clamp((heightAt(dfP) - h0) / d.scale, -.014, .014);
+        for (let l = 0; l < BELL_LEGS.length; l++) {
+          dfP.copy(d.pos).addScaledVector(dfE, BELL_LEGS[l][0] * d.scale / R).addScaledVector(dfN, BELL_LEGS[l][1] * d.scale / R).normalize();
+          d.foot[l] = clamp((heightAt(dfP) - h0) / d.scale, -.020, .020);
         }
       };
       // Peak-to-peak ground under the animal's own stance. The terrain of this world is fine-grained
       // enough that four feet a hand's width apart can straddle half a metre of rise, so a herd looks
       // for the levelest ground within reach rather than for ground that is merely level enough.
-      const deerRough = (dir, scale) => {
+      // How rough the ground under a stance is, whichever way the animal ends up facing it. The stance is
+      // a ring at the radius of the outermost foot — measuring it in three fixed directions measured the
+      // three places the feet would be if the animal faced one particular way, which is not a question
+      // anybody asked, and it let a herd settle on ground where one pad could not reach.
+      const BELL_STANCE = Math.max(...BELL_LEGS.map(([lx, lz]) => Math.hypot(lx, lz)));
+      const bellRough = (dir, scale) => {
         dfE.set(1, 0, 0).cross(dir);
         if (dfE.lengthSq() < 1e-8) dfE.set(0, 0, 1).cross(dir);
         dfE.normalize();
         dfN.crossVectors(dir, dfE);
         let lo = 9, hi = -9;
-        for (let l = 0; l < 4; l++) {
-          dfP.copy(dir).addScaledVector(dfE, DEER_LEGS[l][0] * scale / R).addScaledVector(dfN, DEER_LEGS[l][1] * scale / R).normalize();
+        for (let l = 0; l < 8; l++) {
+          const a = l / 8 * TAU;
+          dfP.copy(dir).addScaledVector(dfE, Math.cos(a) * BELL_STANCE * scale / R).addScaledVector(dfN, Math.sin(a) * BELL_STANCE * scale / R).normalize();
           const h = heightAt(dfP);
           if (h < lo) lo = h;
           if (h > hi) hi = h;
@@ -4423,35 +4442,35 @@
         return hi - lo;
       };
       // Put one animal into the six instance slots. `bob` is the walk cycle lifting the barrel.
-      const poseDeer = (d, i, bob = 0) => {
+      const poseBell = (d, i, bob = 0) => {
         dwFrame.position.copy(d.world).addScaledVector(d.up, bob);
         dwFrame.up.copy(d.up);
-        // Object3D.lookAt() points a model's +Z at its target (only cameras look down -Z), and a deer
+        // Object3D.lookAt() points a model's +Z at its target (only cameras look down -Z), and a bell
         // carries its head on +Z, so aiming a hand's width ahead of the animal faces it forward.
         dwAhead.copy(d.world).addScaledVector(d.fwd, .012);
         dwFrame.lookAt(dwAhead);
         dwFrame.scale.setScalar(d.scale);
         dwFrame.updateMatrix();
-        deerBodyMesh.setMatrixAt(i, dwFrame.matrix);
+        bellBodyMesh.setMatrixAt(i, dwFrame.matrix);
         dwLocal.makeRotationX(d.headTilt);
-        dwLocal.setPosition(0, DEER_NECK_Y, DEER_NECK_Z);
+        dwLocal.setPosition(0, BELL_NECK_Y, BELL_NECK_Z);
         dwPart.multiplyMatrices(dwFrame.matrix, dwLocal);
-        deerHeadMesh.setMatrixAt(i, dwPart);
+        bellHeadMesh.setMatrixAt(i, dwPart);
         const swing = Math.sin(d.phase) * d.stride;
-        for (let l = 0; l < 4; l++) {
-          const s = l === 0 || l === 3 ? swing : -swing;      // diagonal pairs, as a walk actually works
+        for (let l = 0; l < BELL_LEGS.length; l++) {
+          const s = l === 0 ? swing : -swing * .55;            // the front leg leads; the two back ones trail it
           dwLocal.makeRotationX(s);
-          dwLocal.setPosition(DEER_LEGS[l][0], DEER_HIP_Y + d.foot[l], DEER_LEGS[l][1]);
+          dwLocal.setPosition(BELL_LEGS[l][0], BELL_HIP_Y + d.foot[l], BELL_LEGS[l][1]);
           dwPart.multiplyMatrices(dwFrame.matrix, dwLocal);
-          deerLegMesh.setMatrixAt(i * 4 + l, dwPart);
+          bellLegMesh.setMatrixAt(i * BELL_LEGS.length + l, dwPart);
         }
       };
       // Where a herd can stand: land, out of the water, off a cliff, and clear of the towns that would
-      // otherwise put a deer inside a house. The first pack is pulled toward the landing, because a
+      // otherwise put a bell inside a house. The first pack is pulled toward the landing, because a
       // player who never meets one has been given no animal at all.
-      function deerHerd() {
+      function bellHerd() {
         const rng = seeded(71243);
-        // Coat by province, multiplied over the neutral fur the parts are cut from. Deer eat plants,
+        // Coat by province, multiplied over the neutral fur the parts are cut from. Bell eat plants,
         // so the crystal basin — which has no plants at all — gets none of them.
         const coats = {
           vaelmar: [1.12, .86, .60], caelth: [1.26, 1.30, 1.36],
@@ -4475,7 +4494,7 @@
         for (const pack of packs) pack.tint = coats[pack.id];
         const centre = new THREE.Vector3(), up = new THREE.Vector3();
         const flatEnough = dir => {
-          deerNormal(dir, up);
+          bellNormal(dir, up);
           return up.dot(dir) > .935;                                  // no cliff faces
         };
         const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) < .052) &&
@@ -4494,7 +4513,7 @@
                 if (provinceAt(centre) !== pack.id) continue;
                 if (heightAt(centre) < SEA + .012) continue;
                 if (!freeOf(centre) || !flatEnough(centre)) continue;
-                const rough = deerRough(centre, 1);
+                const rough = bellRough(centre, 1);
                 if (rough < levelest) { levelest = rough; found = centre.clone(); }
               }
             }
@@ -4511,20 +4530,23 @@
                 dwN.crossVectors(home, dwE);
                 dwProbe.copy(home).addScaledVector(dwE, Math.cos(a) * r).addScaledVector(dwN, Math.sin(a) * r).normalize();
                 // Each animal is placed on its own footing: the ground here is fine-grained enough
-                // that two deer a hand's width apart can be on either side of a ridge.
+                // that two bell a hand's width apart can be on either side of a ridge.
                 if (heightAt(dwProbe) < SEA + .008) continue;
                 if (provinceAt(dwProbe) !== pack.id) continue;
                 if (!flatEnough(dwProbe)) continue;
                 if (settlementDirs.some(s => s.dir.angleTo(dwProbe) < .046)) continue;
-                const rough = deerRough(dwProbe, 1);
-                if (rough < levelest) { levelest = rough; spot = dwProbe.clone(); }
+                const rough = bellRough(dwProbe, 1);
+                // A tripod cannot rock, so it does not have to be *perfectly* level — but a spot whose
+                // own stance spans more than a centimetre of ground is one where a pad cannot reach the
+                // ground at all, and the animal ends up standing on two legs and a hope.
+                if (rough < .012 && rough < levelest) { levelest = rough; spot = dwProbe.clone(); }
               }
               if (!spot) spot = home.clone();          // the centre itself passed every test
-              // Two deer on one square metre read as one deer with eight legs: every candidate was
+              // Two bell on one square metre read as one bell with eight legs: every candidate was
               // picked for the levelest footing, which quietly funnels several of them onto the same
               // tile. So spacing gets a vote — and among the spots that are far enough from the
-              // others, the levelest one still wins, because a deer on broken ground floats a hoof.
-              const tooClose = p => deer.some(o => o.pos.angleTo(p) * R < .012);
+              // others, the levelest one still wins, because a bell on broken ground floats a hoof.
+              const tooClose = p => bell.some(o => o.pos.angleTo(p) * R < .012);
               if (tooClose(spot)) {
                 let best = null, bestRough = Infinity;
                 for (let k = 0; k < 90; k++) {
@@ -4535,7 +4557,7 @@
                   dwN.crossVectors(home, dwE);
                   dwProbe.copy(home).addScaledVector(dwE, Math.cos(a) * r).addScaledVector(dwN, Math.sin(a) * r).normalize();
                   // The same gates the first search had to pass: on land, in this province, off a
-                  // cliff, out of the town and off the landmarks. Making room must not walk a deer
+                  // cliff, out of the town and off the landmarks. Making room must not walk a bell
                   // into a house.
                   if (heightAt(dwProbe) < SEA + .008) continue;
                   if (provinceAt(dwProbe) !== pack.id) continue;
@@ -4543,18 +4565,18 @@
                   if (settlementDirs.some(sv => sv.dir.angleTo(dwProbe) < .046)) continue;
                   if (!freeOf(dwProbe)) continue;
                   if (tooClose(dwProbe)) continue;
-                  const rough = deerRough(dwProbe, 1);
+                  const rough = bellRough(dwProbe, 1);
                   if (rough < bestRough) { bestRough = rough; best = dwProbe.clone(); }
                 }
                 if (best) spot = best;
               }
               const d = {
                 center: spot.toArray(), home: home.clone(), pos: spot,
-                up: deerNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
+                up: bellNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
                 world: new THREE.Vector3(), mode: 'graze', timer: .8 + rng() * 2.6,
                 phase: rng() * TAU, stride: .18, headTilt: 1, speed: 0,
                 scale: .90 + rng() * .24, seedPhase: rng() * TAU, coat: pack.tint, awake: false,
-                foot: [0, 0, 0, 0]
+                foot: BELL_LEGS.map(() => 0)
               };
               // A first heading, tangent to the ground and away from the herd's centre of mass.
               d.fwd.copy(spot).sub(home).addScaledVector(d.up, 0);
@@ -4565,113 +4587,136 @@
               }
               d.fwd.normalize();
               d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
-              deer.push(d);
+              bell.push(d);
             }
           }
         }
-        if (!deer.length) return;
-        deerBodyMesh = new THREE.InstancedMesh(deerGeo.body, deerMat, deer.length);
-        deerHeadMesh = new THREE.InstancedMesh(deerGeo.head, deerMat, deer.length);
-        deerLegMesh = new THREE.InstancedMesh(deerGeo.leg, deerMat, deer.length * 4);
-        for (const mesh of [deerBodyMesh, deerHeadMesh, deerLegMesh]) {
+        if (!bell.length) return;
+        bellBodyMesh = new THREE.InstancedMesh(bellGeo.body, bellMat, bell.length);
+        bellHeadMesh = new THREE.InstancedMesh(bellGeo.head, bellMat, bell.length);
+        bellLegMesh = new THREE.InstancedMesh(bellGeo.leg, bellMat, bell.length * BELL_LEGS.length);
+        for (const mesh of [bellBodyMesh, bellHeadMesh, bellLegMesh]) {
           mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
           mesh.castShadow = true;
           mesh.receiveShadow = true;
           mesh.frustumCulled = false;                  // they are spread across the whole planet
           scene.add(mesh);
         }
-        deer.forEach((d, i) => {
+        bell.forEach((d, i) => {
           plantFeet(d);
-          poseDeer(d, i);
+          poseBell(d, i);
           dwCol.setRGB(d.coat[0], d.coat[1], d.coat[2]);
-          deerBodyMesh.setColorAt(i, dwCol);
-          deerHeadMesh.setColorAt(i, dwCol);
-          for (let l = 0; l < 4; l++) deerLegMesh.setColorAt(i * 4 + l, dwCol);
+          bellBodyMesh.setColorAt(i, dwCol);
+          bellHeadMesh.setColorAt(i, dwCol);
+          for (let l = 0; l < BELL_LEGS.length; l++) bellLegMesh.setColorAt(i * BELL_LEGS.length + l, dwCol);
         });
-        for (const mesh of [deerBodyMesh, deerHeadMesh, deerLegMesh]) {
+        for (const mesh of [bellBodyMesh, bellHeadMesh, bellLegMesh]) {
           mesh.instanceMatrix.needsUpdate = true;
           if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
         }
       }
       // ---- Coral reefs: the herd that farms the drowned coast ---------------------------------------
-      // The ruins on the shelf are the singers' old farms, and something has to tend them. A reef is
-      // four instances — body (with its garden grown on the back), tail stock, two flippers — plus one
-      // for the spout when it comes up to breathe. It does not glow: the coral on its back is ordinary
-      // coral, and the only light out there is the sun coming through the surface.
-      const REEF_LEN = .1500, REEF_WIDE = .0480, REEF_DEEP = .0074;
-      const REEF_NOSE = REEF_LEN * .48, REEF_TAIL = -REEF_LEN * .50;
+      // The ruins on the shelf are the singers' old farms, and something has to tend them. What tends
+      // them is not an animal in the sense a whale is: it is one flat colony, a raft of flesh the size of
+      // a boat, lobed round its whole margin and carrying a garden on its back. It has no head end and no
+      // tail end — the outline is blunt all the way round and the same distance across in every
+      // direction — so nothing about it reads as a fish. The first version did: long, tapering to a point
+      // at both ends, and the user called it a shark. They were right.
+      const REEF_LEN = .1500, REEF_WIDE = .0700, REEF_DEEP = .0082;
+      // A superellipse, not an ellipse: exponent 3 lets the plan stay broad almost to the edge and then
+      // turn, which is a raft. An ellipse pinches to nothing at the ends no matter how wide its middle
+      // is, and a pinched end is a snout.
+      const REEF_PLAN = 3.8;
+      // Six slow lobes round the margin, at three, five and two cycles, so it is not even a symmetric
+      // disc: one flank is fuller than the other and no two scallops are the same size.
+      const reefOutline = (a) => {
+        const cn = Math.abs(Math.cos(a)), sn = Math.abs(Math.sin(a));
+        const sup = Math.pow(Math.pow(cn, REEF_PLAN) + Math.pow(sn, REEF_PLAN), -1 / REEF_PLAN);
+        return sup * (1 + .075 * Math.cos(3 * a + .7) + .045 * Math.cos(5 * a - 1.1) + .030 * Math.cos(2 * a + .4));
+      };
+      const REEF_TAIL = -REEF_LEN * .50;
       const reefs = [];
       let reefBodyMesh = null, reefVeilMesh = null, reefSkirtMesh = null, reefPlumeMesh = null;
       function reefBodyPart() {
         const parts = [];
-        // The plate. A drift-reef is a shield, not a barrel: long, half again as wide as it is deep,
-        // squared at the nose, pinched to a wrist at the tail, and flat along the back — because the
-        // flat back is what the garden grows on and what has to face the light.
-        const plate = new THREE.CylinderGeometry(1, 1, REEF_LEN, 16, 12, false);
-        plate.rotateX(Math.PI / 2);                        // axis down the length of it
-        const pp = plate.attributes.position;
-        for (let i = 0; i < pp.count; i++) {
-          const z0 = pp.getZ(i), t = clamp((z0 + REEF_LEN / 2) / REEF_LEN, 0, 1);   // 0 tail, 1 nose
-          const wide = .30 + .70 * Math.sin(Math.PI * Math.pow(t, .58)) - .14 * smooth(.84, 1, t);
-          const deep = .74 + .26 * Math.sin(Math.PI * t);
-          pp.setX(i, pp.getX(i) * REEF_WIDE * wide);
-          let y = pp.getY(i) * REEF_DEEP * deep * wide;
-          if (y > 0) y *= .38;                             // the back is nearly level; the keel is deep
-          pp.setY(i, y);
-          pp.setZ(i, z0 * (t > .58 ? 1 - (t - .58) * .26 : 1));   // a shorter, blunter head
+        // The raft itself. A squashed sphere carries the whole shape: the plan comes from the equator
+        // (superellipse x lobes), the top is flattened to .40 of the sphere's height so the garden has a
+        // bed to stand on, and the keel keeps the full curve so the underside still has a belly.
+        const raft = new THREE.SphereGeometry(1, 30, 16);
+        const rp = raft.attributes.position;
+        for (let i = 0; i < rp.count; i++) {
+          const px = rp.getX(i), py = rp.getY(i), pz = rp.getZ(i);
+          const a = Math.atan2(pz, px);
+          const f = Math.hypot(px, pz);                 // 1 at the rim, 0 at the poles
+          const out = reefOutline(a);
+          rp.setX(i, Math.cos(a) * f * out * REEF_WIDE);
+          rp.setZ(i, Math.sin(a) * f * out * REEF_LEN * .50);
+          // The back is not perfectly level: it dips a little between the coral beds.
+          const dome = py > 0 ? .40 + .045 * Math.cos(3 * a + .7) : 1;
+          rp.setY(i, py * dome * REEF_DEEP);
         }
-        plate.computeVertexNormals();
-        parts.push(partTint(plate, '#7d8177', .07));
-        // The plate is thin at the ends and deep amidships, so anything hung under the keel has to be
-        // measured against it here rather than guessed: the first combs went straight through the
-        // thin part of the back and showed up as dark slits lying on it.
-        const girth = (t) => .30 + .70 * Math.sin(Math.PI * Math.pow(t, .58)) - .14 * smooth(.84, 1, t);
-        const keelAt = (x, z) => {
-          const t = clamp((z + REEF_LEN / 2) / REEF_LEN, 0, 1), wd = girth(t);
-          const across = Math.sqrt(Math.max(0, 1 - Math.pow(x / (REEF_WIDE * wd), 2)));
-          return REEF_DEEP * (.74 + .26 * Math.sin(Math.PI * t)) * wd * across;
-        };
-        // The girdle: a row of angular plates all the way round the rim, the way a chiton wears its
-        // edge. They follow the outline itself, so the silhouette is scalloped rather than smooth —
-        // which is most of what stops this reading as a ray.
-        for (let k = 0; k < 24; k++) {
-          const a2 = (k + .5) / 24 * TAU;
-          const cx = Math.cos(a2), cz = Math.sin(a2);
-          const rimX = REEF_WIDE * .88, rimZ = REEF_LEN * .50 * .86;
-          const scale = new THREE.BoxGeometry(.0072, .0024, .0110);
-          scale.rotateY(a2 + Math.PI / 2);
-          scale.translate(cx * rimX, -.0012, cz * rimZ);
-          parts.push(partTint(scale, k % 3 ? '#6c7168' : '#8a8b7d', .08));
+        raft.computeVertexNormals();
+        parts.push(partTint(raft, '#7d8177', .07));
+        // The girdle: a chain of angular plates all the way round, following the lobes themselves. It is
+        // what holds the margin together, the way a chiton's eight valves do, and it is the reason the
+        // silhouette is scalloped rather than smooth.
+        for (let k = 0; k < 30; k++) {
+          const a2 = (k + .5) / 30 * TAU;
+          const out = reefOutline(a2) * .960;
+          const j = ((k * 2654435761) >>> 0) / 4294967296;
+          const w = .0046 + .0022 * j, h = .0015 + .0009 * j, d = .0082 + .0044 * ((k * 40503 % 101) / 101);
+          const g = new THREE.BoxGeometry(w, h, d);
+          g.rotateY(a2 + Math.PI / 2);
+          g.translate(Math.cos(a2) * REEF_WIDE * out, -.0010, Math.sin(a2) * REEF_LEN * .50 * out);
+          parts.push(partTint(g, k % 5 ? '#7a8076' : '#868a7c', .04));
         }
-        // The leading edge is blunt and pale, with a row of dark sense pits along it.
-        const lip = new THREE.SphereGeometry(.0080, 11, 6); lip.scale(2.0, .34, .78); lip.translate(0, -.0002, REEF_LEN * .44);
-        parts.push(partTint(lip, '#8f9082', .06));
-        for (const [px, pz] of [[-.0135, .0560], [-.0054, .0630], [.0054, .0630], [.0135, .0560], [0, .0655]]) {
-          const pit = new THREE.SphereGeometry(.0016, 6, 5); pit.scale(1, .5, 1); pit.translate(px, .0018, pz);
-          parts.push(partTint(pit, '#20262a', .04));
+        // Eyes round the whole rim, not a face at one end: a dozen pale beads set into the girdle, each
+        // with a dark lens on the outward side, like the eyes a scallop wears along its mantle. Whatever
+        // it is looking at, it is looking at it from every direction at once.
+        for (let k = 0; k < 12; k++) {
+          const a3 = k / 12 * TAU + .26;
+          const out = reefOutline(a3) * .995;
+          const ex = Math.cos(a3) * REEF_WIDE * out, ez = Math.sin(a3) * REEF_LEN * .50 * out;
+          const bead = new THREE.SphereGeometry(.0017, 6, 5);
+          bead.scale(1, .72, 1);
+          bead.translate(ex, .0013, ez);
+          parts.push(partTint(bead, '#b9b6a2', .06));
+          const lens = new THREE.SphereGeometry(.0009, 5, 4);
+          lens.translate(Math.cos(a3) * .0011, .0015, Math.sin(a3) * .0011);
+          lens.translate(ex, 0, ez);
+          parts.push(partTint(lens, '#20262a', .04));
         }
-        // Underneath: the intake, a recessed slot down the middle of the keel, and two rows of pale
-        // comb-fringes either side of it — how it feeds on the farm it is drifting over. Both are
-        // hung off the local keel so they hang clear of it everywhere, ends included.
-        const intakeZ = .0040;
-        parts.push(partBox(.0068, .0020, .0440, '#39413f', -(keelAt(0, intakeZ) + .0022), 0, intakeZ, .05));
+        // Underneath: the intake, a recessed slot down the middle of the keel — how it feeds on the farm
+        // it is drifting over. It hangs off the local keel so it stays clear of it everywhere.
+        parts.push(partBox(.0068, .0020, .0400, '#39413f', -(REEF_DEEP + .0016), 0, .0040, .05));
+        // Two rows of pale comb-fringes either side of the slot.
+        for (const sx of [-1, 1]) {
+          for (let c = 0; c < 7; c++) {
+            const cz = .0170 - c * .0064;
+            parts.push(partBox(.0012, .0011, .0034, '#a8a493', sx * .0078, -(REEF_DEEP + .0004), cz, .04));
+          }
+        }
         // Barnacle crust, in patches rather than an even rash.
-        const patch = [[.0140, .0026, .0230, .0030], [-.0126, .0030, .0080, .0032], [.0082, .0034, -.0190, .0024], [-.0162, .0022, -.0090, .0022]];
+        const patch = [[.0140, .0026, .0230, .0030], [-.0126, .0030, .0080, .0032], [.0082, .0034, -.0190, .0024], [-.0162, .0022, -.0090, .0022], [.0210, .0024, -.0130, .0026]];
         for (const [px, py, pz, pr] of patch) {
           const b2 = new THREE.SphereGeometry(pr, 6, 4); b2.scale(1.3, .48, 1.2); b2.translate(px, py, pz);
           parts.push(partTint(b2, '#b8b5a4', .07));
         }
         // The garden: fan coral standing on the flat back, each tuft three flat fans turned against one
-        // another so it reads as a bush of fans from any angle.
+        // another so it reads as a bush of fans from any angle. It is spread over the whole back, not
+        // down a spine — a raft has no spine to grow down.
         const coral = [
-          ['#a8776f', .0026, -.0050, .0215, .25],
-          ['#c39b8a', -.0062, -.0140, .0180, -.30],
-          ['#8f9a8a', .0068, .0072, .0162, .55],
-          ['#a8776f', -.0038, .0170, .0142, -.15],
-          ['#cbb08c', .0018, -.0210, .0120, .40],
-          ['#9aa294', -.0112, .0040, .0130, -.62],
-          ['#b3907f', .0122, .0002, .0110, .78],
-          ['#8f9a8a', -.0020, -.0282, .0104, -.40]
+          ['#a8776f', .0030, -.0060, .0215, .25],
+          ['#c39b8a', -.0068, -.0150, .0180, -.30],
+          ['#8f9a8a', .0074, .0080, .0162, .55],
+          ['#a8776f', -.0042, .0180, .0142, -.15],
+          ['#cbb08c', .0020, -.0230, .0120, .40],
+          ['#9aa294', -.0122, .0050, .0130, -.62],
+          ['#b3907f', .0132, .0002, .0110, .78],
+          ['#8f9a8a', -.0022, -.0310, .0104, -.40],
+          ['#a8776f', .0180, .0160, .0098, .95],
+          ['#8f9a8a', -.0190, -.0225, .0092, -.85],
+          ['#cbb08c', .0090, .0280, .0086, .15]
         ];
         for (const [col, cx, cz, len, yaw] of coral) {
           for (let f = 0; f < 3; f++) {
@@ -4680,37 +4725,46 @@
             fan.translate(0, len / 2, 0);
             fan.rotateY(yaw + f * 1.05);
             fan.rotateZ((f - 1) * .24);
-            fan.translate(cx, .0022, cz);
+            fan.translate(cx, .0018, cz);
             parts.push(partTint(fan, col, .08));
             const crown = new THREE.SphereGeometry(.0011, 5, 4);
-            crown.translate(cx, .0022 + len * .96, cz);
+            crown.translate(cx, .0018 + len * .96, cz);
             parts.push(partTint(crown, '#e3d3bd', .05));
           }
         }
         return join(parts);
       }
-      // The veil: the trailing edge of the plate, hinged where the shield runs out. It is not a tail —
-      // there is no stock and no fluke — just a thin fan that trails and sweeps, and the only part of
-      // the animal that moves slowly enough to look heavy.
+      // The comb: a fringe of soft tendrils round the stern half of the rim, of unequal length, drooping
+      // into the wake. None of it is a tail — there is no stock, no fluke and no fin ray, and the longest
+      // arm is on the centre line exactly where a tail would be, which is the point: a fish has one big
+      // engine at the back, a colony has a hem. They drag behind and swing a beat after the skirts.
       function reefVeilPart() {
         const parts = [];
-        const veil = new THREE.BoxGeometry(.0680, .0013, .0420, 7, 1, 4);
-        const vp = veil.attributes.position;
-        for (let i = 0; i < vp.count; i++) {
-          const u = clamp(vp.getX(i) / .0340, -1, 1);          // across the fan
-          const v = clamp(vp.getZ(i) / .0210 + .5, 0, 1);      // 0 at the hinge, 1 at the trailing edge
-          vp.setX(i, vp.getX(i) * (1 - v * .22));
-          vp.setZ(i, vp.getZ(i) - v * v * .0125 - (1 - v) * u * u * .0080);   // swept, and notched
-          vp.setY(i, vp.getY(i) + v * v * .0022);              // lifts a little at the edge
-        }
-        veil.computeVertexNormals();
-        veil.translate(0, 0, -.0210);
-        parts.push(partTint(veil, '#767c72', .07));
-        // Two stiffening spars, so the fan does not read as a sheet of glass.
-        for (const sx of [-1, 1]) {
-          const spar = partBox(.0016, .0020, .0400, '#64695f', 0, sx * .0170, -.0180, .06);
-          spar.rotateY(sx * .10);
-          parts.push(spar);
+        const ARMS = 13;
+        const veilZ = REEF_TAIL + .0230;                    // the instance sits here; roots are measured back from it
+        for (let k = 0; k < ARMS; k++) {
+          const a = -Math.PI * (.14 + .72 * (k / (ARMS - 1)));      // round the back, side to side
+          const out = reefOutline(a) * .93;
+          const rx = Math.cos(a) * REEF_WIDE * out;
+          const rz = Math.sin(a) * REEF_LEN * .50 * out;
+          const j = ((k * 2246822519) >>> 0) / 4294967296;
+          // Short and of two lengths, curling in at the tip: a hem, not a set of legs. Long arms hanging
+          // off a raft read as a centipede from above, which is worse than reading as a fish.
+          const len = .013 + .016 * j;
+          const r0 = .0028 + .0011 * j;
+          // It hangs *under* the stern rather than striking out past the rim: from above the raft is still
+          // a raft, and the fringe is only there when you are under it, which is where you meet it.
+          const tipX = rx * .99, tipZ = rz - len * (.42 + .44 * Math.abs(Math.sin(a)));
+          const midX = rx * .995, midZ = rz - len * .40, midY = -.0030 - len * .16;
+          const tipY = -.0040 - len * .34;
+          parts.push(bellBone(rx, -.0006, rz - veilZ, midX, midY, midZ - veilZ, r0, r0 * .66, '#7b8177'));
+          parts.push(bellBone(midX, midY, midZ - veilZ, tipX, tipY, tipZ - veilZ, r0 * .66, r0 * .16, '#737a70'));
+          const knuckle = new THREE.SphereGeometry(r0 * .70, 5, 4);
+          knuckle.translate(midX, midY, midZ - veilZ);
+          parts.push(partTint(knuckle, '#8b9082', .06));
+          const bead = new THREE.SphereGeometry(r0 * .32, 5, 4);
+          bead.translate(tipX, tipY, tipZ - veilZ);
+          parts.push(partTint(bead, '#c9c4ae', .05));
         }
         return join(parts);
       }
@@ -4719,20 +4773,23 @@
       // the thing look like it is flying through the water rather than paddling it.
       function reefSkirtPart() {
         const parts = [];
-        const sheet = new THREE.BoxGeometry(.0560, .0014, .0860, 7, 1, 7);
+        const sheet = new THREE.BoxGeometry(.0320, .0013, .0780, 7, 1, 9);
         const sp = sheet.attributes.position;
         for (let i = 0; i < sp.count; i++) {
-          const u = clamp(sp.getX(i) / .0280 + .5, 0, 1);      // 0 at the hinge, 1 at the outer edge
-          const v = sp.getZ(i) / .0430;                        // -1 tail, +1 nose
-          sp.setZ(i, sp.getZ(i) * (1 - .34 * u) - u * u * .0090);          // swept back
-          sp.setY(i, sp.getY(i) - u * u * .0042);                          // droops at the edge
-          sp.setX(i, sp.getX(i) * (1 - .20 * v * v));                      // rounded fore and aft
+          const u = clamp(sp.getX(i) / .0160 + .5, 0, 1);      // 0 at the hinge, 1 at the outer edge
+          const v = sp.getZ(i) / .0390;                        // -1 tail, +1 nose
+          // Scalloped outer edge: a straight line of sheet reads as a blade — which is exactly what a
+          // fin is. The margin is cut in five soft lobes, like the hem of a mantle.
+          const scallop = 1 - .12 * u * u * (1 - Math.cos(v * Math.PI * 4.5));
+          sp.setZ(i, sp.getZ(i) * (1 - .34 * u) - u * u * .0075);
+          sp.setY(i, sp.getY(i) - u * u * .0044);
+          sp.setX(i, sp.getX(i) * (1 - .26 * v * v) * scallop);
         }
         sheet.computeVertexNormals();
-        sheet.translate(.0280, 0, 0);
+        sheet.translate(.0160, 0, 0);
         parts.push(partTint(sheet, '#71776d', .07));
         for (let r = 0; r < 4; r++) {
-          const rib = partBox(.0240, .0012, .0016, '#666b60', 0, .0010, .0270 - r * .0175, .06);
+          const rib = partBox(.0140, .0011, .0015, '#666b60', 0, .0010, .0235 - r * .0145, .06);
           parts.push(rib);
         }
         return join(parts);
@@ -4752,7 +4809,7 @@
         return join(parts);
       }
       // The parts are authored at a comfortable modelling size and scaled once here: a reef has to be
-      // the biggest thing in the water by a margin, not a deer with flippers on.
+      // the biggest thing in the water by a margin, not a bell with flippers on.
       const REEF_S = 1.50;
       const scalePart = g => g.scale(REEF_S, REEF_S, REEF_S);
       const reefGeo = {
@@ -4794,13 +4851,13 @@
           if (sx < 0) wwLocal.multiply(wwSpin);
           // Hinged out at the rim, not at the centre line: a sheet starting inside the plate is
           // half-buried in it, and its ribs poke through the back as dark slits.
-          wwLocal.setPosition(sx * .0300, -.0032, .0000);
+          wwLocal.setPosition(sx * .0340, -.0036, .0000);
           wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
           reefSkirtMesh.setMatrixAt(i * 2 + f, wwPart);
         }
         // The veil trails behind and sweeps a beat late, so the ripple visibly travels down the body.
         wwLocal.makeRotationY(.20 * Math.sin(phase * .55 - 1.2));
-        wwLocal.setPosition(0, 0, REEF_TAIL + .0120);
+        wwLocal.setPosition(0, -.0004, REEF_TAIL + .0230);
         wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
         reefVeilMesh.setMatrixAt(i, wwPart);
         // The plume is scaled from nothing as the garden comes out of the water.
@@ -4834,7 +4891,10 @@
             // `nearDirection` takes its distance in radians on the unit sphere, so a ring of .012
             // is about 50 mm of world: half the width of the farm it is drifting over.
             orbit: .010 + rng() * .008, angle: rng() * TAU, dir: rng() < .5 ? 1 : -1,
-            depth: .020, wantDepth: .020, mode: 'cruise', timer: 6 + rng() * 20,
+            // It spawns at the surface, over its own farm: starting it deep put a fresh raft over a
+            // column before the first frame had run, which is a clip nobody would ever see but the bench
+            // scored as one — and would be one, the day the page starts mid-lap.
+            depth: .004, wantDepth: .004, mode: 'cruise', timer: 6 + rng() * 20,
             phase: rng() * TAU, bank: 0, pitch: 0, scale: .90 + rng() * .24,
             plume: 0, plumeHold: 1, awake: false, eye: rng() * TAU
           };
@@ -4847,7 +4907,7 @@
           w.pos.copy(nearDirection(home, w.angle, w.orbit));
           for (let k = 0; k < 4 && SEA - heightAt(w.pos) < .045; k++) w.pos.copy(nearDirection(home, w.angle, w.orbit * Math.pow(.6, k + 1)));
           w.up.copy(w.pos);
-          w.depth = .020;
+          w.depth = .004;
           w.world.copy(w.pos).multiplyScalar(R + SEA - w.depth);
           // The stones of its own farm, kept as directions: the plate may only settle out of the light
           // when none of them is under it. A radius test around the farm is not enough — the animal is
@@ -4862,7 +4922,21 @@
             if (!part.boundingBox) part.computeBoundingBox();
             const bb = part.boundingBox;
             const r = Math.max(Math.abs(bb.min.x), bb.max.x) * stone.scale[0] + Math.max(Math.abs(bb.min.z), bb.max.z) * stone.scale[2];
-            w.stones.push({ dir: new THREE.Vector3(stone.pos[0], stone.pos[1], stone.pos[2]).normalize(), r: r * .52 });
+            // How high that stone actually stands: the highest corner of its box, stood up where it was
+            // put. Without this the animal can only ask "is there a stone under me", and over shallow
+            // water the seabed clamp then parks it 20 mm down with a column head 30 mm under the surface
+            // — which is the one thing the whole gate exists to prevent.
+            const sup = new THREE.Vector3(stone.pos[0], stone.pos[1], stone.pos[2]).normalize();
+            const sq = new THREE.Quaternion().setFromUnitVectors(UP, sup);
+            const ss = new THREE.Vector3(stone.scale[0], stone.scale[1], stone.scale[2]);
+            const sp = new THREE.Vector3(stone.pos[0], stone.pos[1], stone.pos[2]);
+            let top = -Infinity;
+            for (let c = 0; c < 8; c++) {
+              const corner = new THREE.Vector3(c & 1 ? bb.max.x : bb.min.x, c & 2 ? bb.max.y : bb.min.y, c & 4 ? bb.max.z : bb.min.z)
+                .multiply(ss).applyQuaternion(sq).add(sp);
+              top = Math.max(top, corner.length());
+            }
+            w.stones.push({ dir: sup, r: r * .52, top });
           }
           reefs.push(w);
           void k;
@@ -6372,9 +6446,9 @@
           lampPools.renderOrder = 7;
           scene.add(lampPools);
         }
-        // Deer last, because they have to know where the towns are to stay out of them; the reefs
+        // Bell last, because they have to know where the towns are to stay out of them; the reefs
         // after them, because they live over the drowned farms the towns were kept clear of.
-        deerHerd();
+        bellHerd();
         reefPod();
       }
 
@@ -6827,8 +6901,11 @@
       // Ground-controller tuning. Acceleration is deliberately slower than braking so stops feel
       // planted, air control is weak, and jumping uses a two-stage (tap = short hop) impulse.
       const WALK_SPEED = .34, SPRINT_SPEED = .66, SWIM_SPEED = .2;
-      // Swimming: dive with C, rise with SPACE, float up slowly when you let go.
-      const DIVE_SPEED = .055, RISE_SPEED = .085, BUOYANCY = .016, MAX_DIVE = .30, SWIM_EYE = .033;
+      // Swimming: dive with C, rise with SPACE, and stay where you left it when you let go. There is no
+      // buoyancy pulling the eye back to the surface: the first version drifted up at 16 mm/s, which
+      // meant you could not stop at a column to look at it — you had to hold C the whole time, and the
+      // moment you let go the depth was gone. Neutral water, like everything else on this coast.
+      const DIVE_SPEED = .055, RISE_SPEED = .085, MAX_DIVE = .30, SWIM_EYE = .033;
       const GROUND_ACCEL = 7.5, GROUND_BRAKE = 11, AIR_ACCEL = 2.6;
       const GRAVITY = 3.15, JUMP_SPEED = .78, COYOTE_TIME = .1, JUMP_BUFFER_TIME = .14;
       const PITCH_LIMIT = 1.48;
@@ -6842,24 +6919,24 @@
         mode: 'orbit', yaw: initialYaw, polar: initialPolar, distance: fitDistance(),
         composition: compact ? 0 : 1, compositionTarget: compact ? 0 : 1,
         direction: landing.clone(), radius: groundRadius(landing) + EYE,
-        heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false, depth: 0, submerged: false, crouch: 0,
+        heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false, depth: 0, submerged: false, crouch: 0, swimBlend: 0,
         transition: null, solarOffset: 0, solarTarget: 0, walkPhase: 0,
         moveVelocity: new THREE.Vector3(), speed: 0, slope: 1,
         coyote: 0, jumpBuffer: 0, landDip: 0, roll: 0
       };
-      // ---- Deer: who is afraid of whom ---------------------------------------------------------
-      // Stepped once a frame, and only for the animals close enough to see: a deer further than a
+      // ---- Bell: who is afraid of whom ---------------------------------------------------------
+      // Stepped once a frame, and only for the animals close enough to see: a bell further than a
       // stone's throw is already posed in the buffers and nothing off screen moves. The modes are the
-      // ones a real deer runs — graze, walk, watch you, bolt — plus one this world adds: when the sky
+      // ones a real bell runs — graze, walk, watch you, bolt — plus one this world adds: when the sky
       // is being worked on, the herd stops and looks up at it.
       const dwTarget = new THREE.Vector3(), dwUp = new THREE.Vector3();
-      const aimDeer = (d, at) => {
+      const aimBell = (d, at) => {
         d.fwd.copy(at).sub(d.world).addScaledVector(d.up, 0);
         d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
         if (d.fwd.lengthSq() > 1e-10) d.fwd.normalize();
       };
-      function updateDeer(dt, elapsed) {
-        if (!deerBodyMesh) return;
+      function updateBell(dt, elapsed) {
+        if (!bellBodyMesh) return;
         dt = Math.min(dt, .05);                      // a tab that was asleep must not teleport the herd
         dwPlayer.copy(state.direction).multiplyScalar(state.radius);
         const calm = state.crouch > .55 && state.speed < .10;
@@ -6868,25 +6945,25 @@
         // Anything further off than a stone's throw is skipped before it costs a ground sample: the
         // angle is the same test at a tenth of the price.
         const inRange = Math.cos(.10);
-        for (let i = 0; i < deer.length; i++) {
-          const d = deer[i];
+        for (let i = 0; i < bell.length; i++) {
+          const d = bell[i];
           if (d.pos.dot(state.direction) < inRange) {
             d.awake = false;
-            if (d.speed) { d.speed = 0; poseDeer(d, i); }
+            if (d.speed) { d.speed = 0; poseBell(d, i); }
             continue;
           }
           d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
           const dist = d.world.distanceTo(dwPlayer);
-          if (dist > .42) { d.awake = false; if (d.speed) { d.speed = 0; poseDeer(d, i); } continue; }
+          if (dist > .42) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
           d.awake = true;
           if (d.mode !== 'flee' && dist < (calm ? .020 : .045)) {
             // Bolt. Crouching and standing still is the only way to be close to one of these.
             d.mode = 'flee';
             d.timer = .40 + .22 * (1 + Math.sin(d.seedPhase));
             d.speed = .95;
-            aimDeer(d, dwTarget.copy(d.world).multiplyScalar(2).sub(dwPlayer));   // straight away from you
+            aimBell(d, dwTarget.copy(d.world).multiplyScalar(2).sub(dwPlayer));   // straight away from you
             if (d.fwd.lengthSq() < 1e-8) d.fwd.crossVectors(d.up, d.pos).normalize();
-            deerCall(clamp(1 - dist / .20, 0, 1) * .06);
+            bellCall(clamp(1 - dist / .20, 0, 1) * .06);
           } else if (d.mode === 'flee') {
             // Nothing else matters to a bolting animal for the first half second.
           } else if (dist < .120) {
@@ -6908,7 +6985,7 @@
           } else if (d.mode === 'alert') {
             d.speed = 0; d.stride = 0;
             d.headTilt += (-.10 - d.headTilt) * (1 - Math.exp(-dt * 7));
-            aimDeer(d, dwPlayer);                     // it turns its head to keep you in sight
+            aimBell(d, dwPlayer);                     // it turns its head to keep you in sight
           } else if (d.mode === 'watch') {
             d.speed = 0; d.stride = 0;
             d.headTilt += (-.52 - d.headTilt) * (1 - Math.exp(-dt * 3));
@@ -6916,7 +6993,7 @@
             d.speed = .048; d.stride = .20;
             d.headTilt += (.30 - d.headTilt) * (1 - Math.exp(-dt * 5));
             d.timer -= dt;
-            aimDeer(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
+            aimBell(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
             if (d.timer <= 0 || d.pos.angleTo(d.home) < .010) {
               d.mode = 'graze';
               d.timer = 1.2 + .9 * (1 + Math.sin(d.seedPhase * 1.7));
@@ -6938,23 +7015,23 @@
           if (d.speed > 1e-4) {
             d.moved = true;
             dwProbe.copy(d.pos).addScaledVector(d.fwd, .035).normalize();
-            if (heightAt(dwProbe) < SEA + .006 || deerNormal(dwProbe, dwUp).dot(dwProbe) < .93) {
+            if (heightAt(dwProbe) < SEA + .006 || bellNormal(dwProbe, dwUp).dot(dwProbe) < .93) {
               d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize().negate();   // turn from the water
             }
             d.pos.addScaledVector(d.fwd, d.speed * dt / R).normalize();
             d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
-            if (d.fwd.lengthSq() < 1e-8) aimDeer(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
+            if (d.fwd.lengthSq() < 1e-8) aimBell(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
             else d.fwd.normalize();
-            deerNormal(d.pos, d.up);
+            bellNormal(d.pos, d.up);
             d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
             d.phase += dt * (d.speed > .25 ? 12 : d.speed > .06 ? 6.4 : 3.2);
           }
           if (d.moved) { plantFeet(d); d.moved = d.speed > 1e-4; }
-          poseDeer(d, i, Math.abs(Math.sin(d.phase)) * .0011 * (d.stride / .2));
+          poseBell(d, i, Math.abs(Math.sin(d.phase)) * .0011 * (d.stride / .2));
         }
-        deerBodyMesh.instanceMatrix.needsUpdate = true;
-        deerHeadMesh.instanceMatrix.needsUpdate = true;
-        deerLegMesh.instanceMatrix.needsUpdate = true;
+        bellBodyMesh.instanceMatrix.needsUpdate = true;
+        bellHeadMesh.instanceMatrix.needsUpdate = true;
+        bellLegMesh.instanceMatrix.needsUpdate = true;
       }
       // ---- Reefs: slow circles over the drowned farms ------------------------------------------------
       // They swim, they come up every half minute to breathe, and they blow. Nothing here draws from
@@ -6983,17 +7060,26 @@
           // Is any stone of its own farm under the plate right now? Not a radius round the farm: the
           // animal is longer than the farm is wide, so the ends are still over the stones when the
           // middle has drifted away. This is the same footprint test the bench does.
-          let overStones = false;
+          // It has to answer this question before it gets there, not when it is there: the sink from
+          // cruising depth back to the surface takes about a second and a half, and in that time the
+          // raft covers most of its own length. The first version only asked where it was, and a wider
+          // body then arrived over a column still 5 mm too deep.
+          // A disc, not a box: the raft is as wide as it is long, so there is no long axis to hide a
+          // stone beside. Everything within one half-length of the middle is under it.
+          const lookAhead = 0;                      // the disc already covers the approach
+          let overStones = false, stoneRoof = Infinity;
           for (const stone of w.stones) {
             // Directions live on the unit sphere: multiply the chord out to world units, or the plate
             // is measured in the wrong unit and covers the whole farm for ever.
             const rel = stone.dir.clone().sub(w.pos).multiplyScalar(R);
-            const along = rel.dot(w.fwd);
-            const lateral = rel.addScaledVector(w.fwd, -along).length();
+            const away = rel.length();
             // Two centimetres of margin on top of the plate: the bench asks the same question and
             // wants the keel to come out with daylight under it, not with a millimetre to spare.
-            if (Math.abs(along) < REEF_HALF_LEN * w.scale + stone.r + .020 &&
-                lateral < REEF_HALF_WIDE * w.scale + stone.r + .020) { overStones = true; break; }
+            if (away < Math.max(REEF_HALF_LEN, REEF_HALF_WIDE) * w.scale + stone.r + .050) {
+              overStones = true;
+              // ...and how deep it may sit over that particular stone.
+              stoneRoof = Math.min(stoneRoof, (R + SEA) - stone.top - REEF_HALF_DEEP * w.scale - .010);
+            }
           }
           const canDive = room > .090;
           const cruise = (outer && canDive && !overStones) ? .042 : .004;
@@ -7010,7 +7096,10 @@
           w.wantDepth = w.mode === 'blow' ? .002 : cruise;
           // The floor is close in places: never sink into it, whatever the tank says.
           w.wantDepth = Math.min(w.wantDepth, Math.max(.004, room - (REEF_HALF_DEEP * w.scale + .014)));
-          w.depth += (w.wantDepth - w.depth) * (1 - Math.exp(-dt * .55));
+          if (overStones) w.wantDepth = Math.min(w.wantDepth, Math.max(.004, stoneRoof));
+          // .55 was slow enough to be a lie: the raft needs most of two seconds to climb off a dive,
+          // and at its own swim speed that is seventy millimetres of wreck it has already flown over.
+          w.depth += (w.wantDepth - w.depth) * (1 - Math.exp(-dt * .90));
           // A hard floor under all of it: the keel is never allowed into the silt, however fast the
           // ground comes up at it.
           w.depth = Math.min(w.depth, Math.max(.004, room - (REEF_HALF_DEEP * w.scale + .008)));
@@ -7170,7 +7259,10 @@
         if (rawLength>1e-6) move.multiplyScalar(1/rawLength); else move.set(0,0,0);
 
         const elevation=heightAt(state.direction);
-        state.water=elevation<SEA-.006;
+        // Still in the water while the body is still standing up out of it: the pose blend below runs
+        // on its own clock, and handing the eye over to the walking rig before it has finished is what
+        // made stepping out of the shallows a 20 mm snap.
+        state.water=elevation<SEA-.006||state.swimBlend>.02;
 
         // Terrain grade under the intended path: uphill bleeds speed, downhill returns a little.
         let grade=1;
@@ -7239,8 +7331,16 @@
           // waterDepth = standEye - SWIM_EYE, so as the floor drops away there is no step in the
           // camera — it only changes slope, which is what stepping into deep water should feel like.
           const waterDepth=SEA-elevation;
+          // The blend from standing to floating runs the whole way from the waterline (where the two
+          // poses are literally the same height) to well past the depth at which the feet leave the
+          // bottom. It used to be a narrow band, which compressed the eye's 90 mm of surfacing into ten
+          // frames as the ground came up under a swimmer — 17 mm in one frame, which reads as a snap.
+          // Slow and wide, the same crossing is two millimetres a frame.
           const wadeDepth=Math.max(.02,standEye-SWIM_EYE);
-          const floating=smooth(wadeDepth*.9,wadeDepth*1.3,waterDepth);
+          const floating=smooth(.006,wadeDepth*1.45,waterDepth);
+          // ...and the pose change itself is rate-limited: the raw fraction is what the physics asks
+          // for, but the body takes about a quarter second to actually stand up or lie down in it.
+          state.swimBlend+=clamp(floating-state.swimBlend,-dt*3.0,dt*3.0);
           const standR=R+elevation+standEye;
           const floatR=R+SEA+SWIM_EYE-state.depth;
           const restR=Math.max(standR,floatR);
@@ -7255,9 +7355,9 @@
             const seabed=Math.max(0,waterDepth-.008);
             const diving=keys.has('KeyC')||touchDive;
             const rising=keys.has('Space')||touchRise;
-            const drift=diving?DIVE_SPEED:rising?-RISE_SPEED:-BUOYANCY;
+            const drift=diving?DIVE_SPEED:rising?-RISE_SPEED:0;
             state.depth=floating<=0?0:clamp(state.depth+drift*dt,0,Math.min(seabed,MAX_DIVE));
-            state.radius=mix(standR,floatR,floating);
+            state.radius=mix(standR,floatR,state.swimBlend);
             state.velocity=0;
             state.grounded=floating<.5;
             state.coyote=state.grounded?COYOTE_TIME:0;
@@ -7265,6 +7365,7 @@
           state.submerged=state.radius<R+SEA-.004;
         } else {
           state.depth=0; state.submerged=false;
+          state.swimBlend+=clamp(-state.swimBlend,-dt*3.0,dt*3.0);   // settle back onto the walking rig
           state.velocity-=GRAVITY*dt;
           state.radius+=state.velocity*dt;
           const floor=footRadius+eyeHeight;
@@ -8019,7 +8120,7 @@
       }
       // A startled stag: a short breathy huff — a falling saw through a band-pass. Heard only when the
       // herd is close, and only with sound on.
-      function deerCall(volume){
+      function bellCall(volume){
         if(!audio||!soundOn||volume<=.001)return;
         try{
           const t=audio.ctx.currentTime;
@@ -8107,7 +8208,7 @@
         provinces: [
           { name: 'VAELMAR', zh: '苍苔行省', seat: '苔庭联邦 Tilin｜树居城邦联盟',
             build: '活树塔、根系桥、树冠间的苔织回廊；温带丘陵与苔原台地。',
-            life: '三眼鹿、苔背兽、萤蛾（黄昏后成片浮在苔面上）。',
+            life: '钵行者（三足的苔钟，背上长着它自己吃的苔）、苔背兽、萤蛾（黄昏后成片浮在苔面上）。',
             note: '母圣所 VAEL 在此，所有灵脉读数以它的钟为准。树即是档案：菌丝脉络越密，记录越重大。' },
           { name: 'SENNAR', zh: '森纳荒原', seat: '灰烬商团 Ash Concord｜商队城邦',
             build: '风塔、镜井、玄武岩采石城；琥珀沙丘与盐碱台地。',
@@ -8115,11 +8216,11 @@
             note: '垄断镜子：日镜坯料只有这里的玻璃窑烧得出来。SENNAR GATE 是最大的陆路关隘。' },
           { name: 'CAELTH', zh: '凯尔高地', seat: '守夜人｜天文台城邦',
             build: '天文台穹顶、石砌观测井、风蚀的瞭望尖塔；冰原与高山。',
-            life: '霜羽鸟、冰下鳃虫；冬季整片高地会安静得像一张纸。',
+            life: '霜羽鸟、冰下鳃虫、钵行者（只在有苔的坡上，成小群）；冬季整片高地会安静得像一张纸。',
             note: '冰下藏着共鸣腔。他们记的不是历史，是光的时刻表。' },
           { name: 'MIRELLA', zh: '米瑞拉环礁', seat: '歌者｜群岛聚落',
             build: '高脚屋、歌环、潮汐钟楼；浅滩上全是木桩与绳桥。',
-            life: '驮礁（背上驮着珊瑚园的扁平活体）、发光水母、蝠鲼幼群。',
+            life: '驮园（一片会漂的珊瑚园，边缘长着眼睛）、发光水母、蝠鲼幼群。',
             note: '用声音控制潮汐；他们说潮水听得懂调子，所以从不把歌记在纸上。' },
           { name: 'VESSPER', zh: '维斯珀孤陆', seat: '（无主）｜遗弃的发射场',
             build: '晶柱、环形基座、一半被掀倒的塔架；结晶盆地。',
@@ -8454,7 +8555,7 @@
           mantas.setMatrixAt(i,transform.matrix);
         }
         mantas.instanceMatrix.needsUpdate=true;
-        updateDeer(dt,elapsed);
+        updateBell(dt,elapsed);
         updateReefs(dt,elapsed);
         // A starfall event turns the occasional streak into a shower: shorter trails, faster cadence.
         const shower=eventFx.meteor;
@@ -8645,7 +8746,7 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),deer:deer.length,deerAwake:deer.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,
