@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="grey-stags-43">
+  <meta name="aetheris-build" content="coral-whales-44">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'grey-stags-43';
+    const BUILD_ID = 'coral-whales-44';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4565,6 +4565,239 @@
           if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
         }
       }
+      // ---- Coral whales: the herd that farms the drowned coast ---------------------------------------
+      // The ruins on the shelf are the singers' old farms, and something has to tend them. A whale is
+      // four instances — body (with its garden grown on the back), tail stock, two flippers — plus one
+      // for the spout when it comes up to breathe. It does not glow: the coral on its back is ordinary
+      // coral, and the only light out there is the sun coming through the surface.
+      const WHALE_LEN = .1000, WHALE_NOSE = .0500, WHALE_TAIL = -.0500;
+      const whales = [];
+      let whaleBodyMesh = null, whaleTailMesh = null, whaleFinMesh = null, whaleSpoutMesh = null;
+      function whaleBodyPart() {
+        const parts = [];
+        // The barrel: widest just behind the blowhole, drawn down to a stock no thicker than a wrist,
+        // blunt at the snout. The back carries the garden, so it is the one part that must be broad.
+        const body = new THREE.CylinderGeometry(.0128, .0128, WHALE_LEN, 10, 7, false);
+        body.rotateX(Math.PI / 2);
+        const bp = body.attributes.position;
+        for (let i = 0; i < bp.count; i++) {
+          const t = clamp((bp.getZ(i) + WHALE_LEN / 2) / WHALE_LEN, 0, 1);   // 0 at the tail stock, 1 at the snout
+          const k = .20 + .80 * smooth(.02, .60, t) - .30 * smooth(.70, 1, t);
+          bp.setX(i, bp.getX(i) * k * .96);
+          bp.setY(i, bp.getY(i) * k * 1.05 + .0014 * Math.sin(t * Math.PI) * (1 - t * .5));
+        }
+        body.computeVertexNormals();
+        parts.push(partTint(body, '#67737a', .07));
+        // The snout, blunt as a fist, and the lower jaw under it with the pale throat behind.
+        const snout = new THREE.SphereGeometry(.0122, 9, 7); snout.scale(.92, .86, .78); snout.translate(0, .0006, .0470);
+        parts.push(partTint(snout, '#6b777e', .07));
+        parts.push(partBox(.0150, .0058, .0300, '#5d6970', -.0074, 0, .0350, .06));
+        parts.push(partBox(.0126, .0034, .0230, '#c9c2b2', -.0106, 0, .0330, .05));
+        // Three throat grooves: the lines that make a whale face read as a whale and not as a fish.
+        for (const gx of [-.0042, 0, .0042]) parts.push(partBox(.0011, .0012, .0165, '#3f4a50', -.0102, gx, .0290, .04));
+        // The jaw line: one dark crease from the corner of the mouth forward to the snout, both sides.
+        for (const sx of [-1, 1]) {
+          const jaw = new THREE.BoxGeometry(.0012, .0014, .0260);
+          jaw.rotateY(sx * .12);
+          jaw.translate(sx * .0084, -.0042, .0330);
+          parts.push(partTint(jaw, '#2f383d', .05));
+        }
+        // Eyes, low and far forward on the sides.
+        for (const sx of [-1, 1]) {
+          const eye = new THREE.SphereGeometry(.0023, 6, 5); eye.translate(sx * .0102, -.0018, .0345);
+          parts.push(partTint(eye, '#141618', .04));
+        }
+        // The blowhole on the crown, and the hooked dorsal fin a third of the way back.
+        parts.push(partBox(.0052, .0016, .0088, '#2c3438', .0112, 0, .0120, .04));
+        const dorsal = new THREE.ConeGeometry(.0068, .0148, 4);
+        dorsal.scale(.34, 1, 1);
+        dorsal.rotateX(.62);
+        dorsal.translate(0, .0136, -.0215);
+        parts.push(partTint(dorsal, '#5f6b72', .06));
+        // Barnacle crust, in patches rather than a rash.
+        const patch = [[.0092, .0030, .0240, .0028], [-.0080, .0060, .0010, .0034], [.0066, .0082, -.0090, .0022], [-.0098, .0022, .0170, .0020]];
+        for (const [px, py, pz, pr] of patch) {
+          const b = new THREE.SphereGeometry(pr, 6, 4); b.scale(1.25, .55, 1.15); b.translate(px, py, pz);
+          parts.push(partTint(b, '#b9b6a6', .07));
+        }
+        // The garden: fan coral, standing on the back. Each tuft is three flat fans turned against each
+        // other, so it reads as a bush of fans from any angle and never as a handful of spikes.
+        const coral = [
+          ['#a8776f', .0022, -.0050, .0155, .25],
+          ['#c39b8a', -.0044, -.0125, .0128, -.30],
+          ['#8f9a8a', .0048, .0058, .0112, .55],
+          ['#a8776f', -.0026, .0148, .0102, -.15],
+          ['#cbb08c', .0012, -.0175, .0086, .40]
+        ];
+        for (const [col, cx, cz, len, yaw] of coral) {
+          for (let f = 0; f < 3; f++) {
+            // Narrow at the holdfast, wide at the crown: that taper is the whole silhouette of a fan.
+            const fan = new THREE.CylinderGeometry(.0042, .0007, len, 5, 1, true);
+            fan.scale(1, 1, .14);
+            fan.translate(0, len / 2, 0);
+            fan.rotateY(yaw + f * 1.05);
+            fan.rotateZ((f - 1) * .24);
+            fan.translate(cx, .0100, cz);
+            parts.push(partTint(fan, col, .08));
+            const crown = new THREE.SphereGeometry(.0011, 5, 4);
+            crown.translate(cx, .0100 + len * .96, cz);
+            parts.push(partTint(crown, '#e3d3bd', .05));
+          }
+        }
+        return join(parts);
+      }
+      // The tail stock and the flukes, with the pivot where the stock leaves the body.
+      function whaleTailPart() {
+        const parts = [];
+        const stock = new THREE.CylinderGeometry(.0042, .0108, .0170, 8, 2, false);
+        stock.rotateX(Math.PI / 2);
+        stock.translate(0, 0, -.0085);
+        parts.push(partTint(stock, '#5f6b72', .07));
+        // Flukes: two flat blades swept back from the notch, each tipped a little.
+        for (const sx of [-1, 1]) {
+          const blade = new THREE.BoxGeometry(.0190, .0026, .0110, 2, 1, 1);
+          blade.translate(sx * .0104, 0, -.0150);
+          const bpos = blade.attributes.position;
+          for (let i = 0; i < bpos.count; i++) {
+            const u = clamp((bpos.getX(i) * sx + .0010) / .0200, 0, 1);
+            bpos.setZ(i, bpos.getZ(i) - u * u * .0090);       // swept back
+            bpos.setY(i, bpos.getY(i) * (1 - u * .35));
+          }
+          blade.computeVertexNormals();
+          parts.push(partTint(blade, '#5a666d', .07));
+        }
+        return join(parts);
+      }
+      // One flipper, pivot at the shoulder, hanging back and down the way a whale's does.
+      function whaleFinPart() {
+        const parts = [];
+        const fin = new THREE.BoxGeometry(.0190, .0028, .0086, 3, 1, 1);
+        const fpos = fin.attributes.position;
+        for (let i = 0; i < fpos.count; i++) {
+          const u = clamp((fpos.getX(i) + .0095) / .0190, 0, 1);
+          fpos.setZ(i, fpos.getZ(i) * (1 - u * .45) - u * .0032);
+          fpos.setY(i, fpos.getY(i) * (1 - u * .3));
+        }
+        fin.computeVertexNormals();
+        fin.translate(.0095, 0, 0);
+        parts.push(partTint(fin, '#5d6970', .07));
+        return join(parts);
+      }
+      // The spout: a column that widens as it goes and breaks into a head of spray, all of it pale
+      // enough to vanish against the sky from a distance and to read as water up close.
+      function whaleSpoutPart() {
+        const parts = [];
+        const column = new THREE.CylinderGeometry(.0052, .0016, .0380, 7, 3, true);
+        column.translate(0, .0190, 0);
+        parts.push(partTint(column, '#dfe9ee', .04));
+        for (const [r, y, s] of [[.0090, .0395, 1.25], [.0068, .0450, 1.05], [.0042, .0492, .9]]) {
+          const puff = new THREE.IcosahedronGeometry(r, 0);
+          puff.scale(s, .72, s);
+          puff.translate(0, y, 0);
+          parts.push(partTint(puff, '#eef4f6', .03));
+        }
+        return join(parts);
+      }
+      // The parts are authored at a comfortable modelling size and scaled once here: a whale has to be
+      // the biggest thing in the water by a margin, not a deer with flippers on.
+      const WHALE_S = 1.30;
+      const scalePart = g => g.scale(WHALE_S, WHALE_S, WHALE_S);
+      const whaleGeo = {
+        body: scalePart(whaleBodyPart()), tail: scalePart(whaleTailPart()),
+        fin: scalePart(whaleFinPart()), spout: scalePart(whaleSpoutPart())
+      };
+      const whaleMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .78, metalness: .02 });
+      const whaleSpoutMat = new THREE.MeshStandardMaterial({
+        vertexColors: true, roughness: .55, metalness: 0, transparent: true, opacity: .62, depthWrite: false
+      });
+      // Scratch for the pod: a whale's frame is its heading, its bank and the beat of its tail.
+      const wwFrame = new THREE.Object3D(), wwLocal = new THREE.Matrix4(), wwPart = new THREE.Matrix4();
+      const wwAhead = new THREE.Vector3(), wwE = new THREE.Vector3(), wwN = new THREE.Vector3();
+      // One animal into the four instance slots. `beat` is the tail's stroke, `bank` the roll into a turn.
+      const poseWhale = (w, i, beat = 0) => {
+        wwFrame.position.copy(w.world);
+        wwFrame.up.copy(w.up);
+        wwAhead.copy(w.world).addScaledVector(w.fwd, -.050);       // lookAt aims +Z at its target
+        wwFrame.lookAt(wwAhead);
+        wwFrame.scale.setScalar(w.scale);
+        wwFrame.rotateZ(w.bank);
+        wwFrame.updateMatrix();
+        whaleBodyMesh.setMatrixAt(i, wwFrame.matrix);
+        wwLocal.makeRotationY(beat);                                // a whale beats up and down, not side to side
+        wwLocal.setPosition(0, 0, WHALE_TAIL);
+        wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
+        whaleTailMesh.setMatrixAt(i, wwPart);
+        for (let f = 0; f < 2; f++) {
+          const sx = f === 0 ? -1 : 1;
+          wwLocal.makeRotationY(sx * (-.42 + beat * 1.4));
+          wwLocal.setPosition(sx * .0112, -.0030, .0340);
+          wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
+          whaleFinMesh.setMatrixAt(i * 2 + f, wwPart);
+        }
+        wwLocal.makeScale(w.spout, w.spout * w.spoutHold, w.spout);
+        wwLocal.setPosition(0, .0110, .0140);
+        wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
+        whaleSpoutMesh.setMatrixAt(i, wwPart);
+      };
+      // Where the pod lives: over the drowned farms, because that is what they are tending.
+      function whalePod() {
+        const rng = seeded(90821);
+        const ruins = [];
+        for (const stone of seaStones) if (!ruins.includes(stone.ruin)) ruins.push(stone.ruin);
+        if (!ruins.length) return;
+        const centres = new Map();
+        for (const stone of seaStones) {
+          if (centres.has(stone.ruin)) continue;
+          centres.set(stone.ruin, stone.center);
+        }
+        const chosen = [];
+        for (const ruin of ruins) {
+          if (chosen.length >= 6) break;
+          const c = centres.get(ruin);
+          if (chosen.some(o => new THREE.Vector3(...o).angleTo(new THREE.Vector3(...c)) < .12)) continue;
+          chosen.push(c);
+        }
+        chosen.forEach((center, k) => {
+          const home = new THREE.Vector3(...center);
+          const w = {
+            home, pos: home.clone(), up: home.clone(), fwd: new THREE.Vector3(), world: new THREE.Vector3(),
+            orbit: .062 + rng() * .028, angle: rng() * TAU, dir: rng() < .5 ? 1 : -1,
+            depth: .05, wantDepth: .05, mode: 'cruise', timer: 6 + rng() * 20,
+            phase: rng() * TAU, beat: 0, bank: 0, scale: .86 + rng() * .30,
+            spout: 0, spoutHold: 1, awake: false, eye: rng() * TAU
+          };
+          // A heading tangent to the surface, along the circle it is about to swim.
+          wwE.set(1, 0, 0).cross(home);
+          if (wwE.lengthSq() < 1e-8) wwE.set(0, 0, 1).cross(home);
+          wwE.normalize();
+          wwN.crossVectors(home, wwE);
+          w.fwd.copy(wwE).multiplyScalar(-Math.sin(w.angle) * w.dir).addScaledVector(wwN, Math.cos(w.angle) * w.dir).normalize();
+          w.pos.copy(nearDirection(home, w.angle, w.orbit));
+          for (let k = 0; k < 4 && SEA - heightAt(w.pos) < .060; k++) w.pos.copy(nearDirection(home, w.angle, w.orbit * Math.pow(.6, k + 1)));
+          w.up.copy(w.pos);
+          w.depth = clamp((SEA - heightAt(w.pos)) * .52, .026, Math.max(.030, SEA - heightAt(w.pos) - .040));
+          w.world.copy(w.pos).multiplyScalar(R + SEA - w.depth);
+          whales.push(w);
+          void k;
+        });
+        if (!whales.length) return;
+        whaleBodyMesh = new THREE.InstancedMesh(whaleGeo.body, whaleMat, whales.length);
+        whaleTailMesh = new THREE.InstancedMesh(whaleGeo.tail, whaleMat, whales.length);
+        whaleFinMesh = new THREE.InstancedMesh(whaleGeo.fin, whaleMat, whales.length * 2);
+        whaleSpoutMesh = new THREE.InstancedMesh(whaleGeo.spout, whaleSpoutMat, whales.length);
+        for (const mesh of [whaleBodyMesh, whaleTailMesh, whaleFinMesh, whaleSpoutMesh]) {
+          mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+          mesh.castShadow = mesh !== whaleSpoutMesh;
+          mesh.receiveShadow = mesh !== whaleSpoutMesh;
+          mesh.frustumCulled = false;                    // they range across the whole shelf
+          scene.add(mesh);
+        }
+        whaleSpoutMesh.renderOrder = 6;
+        whales.forEach((w, i) => poseWhale(w, i));
+        for (const mesh of [whaleBodyMesh, whaleTailMesh, whaleFinMesh, whaleSpoutMesh]) {
+          mesh.instanceMatrix.needsUpdate = true;
+        }
+      }
       function provinceDressing() {
         const rng = seeded(52033);
         const quota = { vaelmar: 24, sennar: 22, caelth: 22, mirella: 22, vessper: 18 };
@@ -6047,8 +6280,10 @@
           lampPools.renderOrder = 7;
           scene.add(lampPools);
         }
-        // Deer last, because they have to know where the towns are to stay out of them.
+        // Deer last, because they have to know where the towns are to stay out of them; the whales
+        // after them, because they live over the drowned farms the towns were kept clear of.
         deerHerd();
+        whalePod();
       }
 
       provinceDressing();
@@ -6628,6 +6863,75 @@
         deerBodyMesh.instanceMatrix.needsUpdate = true;
         deerHeadMesh.instanceMatrix.needsUpdate = true;
         deerLegMesh.instanceMatrix.needsUpdate = true;
+      }
+      // ---- Whales: slow circles over the drowned farms ------------------------------------------------
+      // They swim, they come up every half minute to breathe, and they blow. Nothing here draws from
+      // the world's random stream: the pod is seeded once and every path afterwards is a sine.
+      function updateWhales(dt, elapsed) {
+        if (!whaleBodyMesh) return;
+        dt = Math.min(dt, .05);
+        dwPlayer.copy(state.direction).multiplyScalar(state.radius);
+        for (let i = 0; i < whales.length; i++) {
+          const w = whales[i];
+          const room = SEA - heightAt(w.pos);                 // water under it, right here
+          const cruise = clamp(room * .52, .030, .092);
+          w.timer -= dt;
+          if (w.mode === 'cruise') {
+            w.wantDepth = cruise;
+            if (w.timer <= 0) { w.mode = 'rise'; w.timer = 3.2; }
+          } else if (w.mode === 'rise') {
+            w.wantDepth = .004;
+            if (w.depth < .012) { w.mode = 'blow'; w.timer = 1.9; }
+          } else if (w.mode === 'blow') {
+            w.wantDepth = .004;
+            if (w.timer <= 0) { w.mode = 'sink'; w.timer = 4.5; }
+          } else {
+            w.wantDepth = cruise;
+            if (w.depth > cruise - .006) { w.mode = 'cruise'; w.timer = 16 + 14 * (.5 + .5 * Math.sin(w.eye * 3.1)); }
+          }
+          // The floor is close in places: never sink into it, whatever the tank says.
+          w.wantDepth = Math.min(w.wantDepth, Math.max(.012, room - .038));
+          w.depth += (w.wantDepth - w.depth) * (1 - Math.exp(-dt * 1.6));
+          // A hard floor under all of it: the belly is never allowed into the silt, however fast the
+          // ground comes up at it.
+          w.depth = Math.min(w.depth, Math.max(.010, room - .034));
+          // A slow circle round the farm, drifting in and out of the radius it was given.
+          const speed = .034 * w.scale;
+          w.angle += w.dir * (speed * dt / R) / Math.max(.012, w.orbit);
+          let wobble = w.orbit * (1 + .16 * Math.sin(elapsed * .11 + w.eye));
+          dwProbe.copy(nearDirection(w.home, w.angle, wobble));
+          // The ring is drawn round the farm, which is not always surrounded by deep water: where it
+          // would carry the animal over the shallows, it comes back in over the stones instead.
+          for (let k = 0, pull = 1; k < 3 && SEA - heightAt(dwProbe) < .060; k++) {
+            pull *= .6;
+            dwProbe.copy(nearDirection(w.home, w.angle, wobble * pull));
+          }
+          w.pos.lerp(dwProbe, 1 - Math.exp(-dt * 1.1)).normalize();
+          w.up.copy(w.pos);
+          // Heading: the tangent it is swimming along, from the change it just made.
+          wwE.set(1, 0, 0).cross(w.pos);
+          if (wwE.lengthSq() < 1e-8) wwE.set(0, 0, 1).cross(w.pos);
+          wwE.normalize();
+          wwN.crossVectors(w.pos, wwE);
+          w.fwd.copy(wwE).multiplyScalar(-Math.sin(w.angle) * w.dir).addScaledVector(wwN, Math.cos(w.angle) * w.dir).normalize();
+          w.world.copy(w.pos).multiplyScalar(R + SEA - w.depth);
+          // It leans into the circle, and rolls a little as it breathes.
+          const bankNow = w.dir * .16 + Math.sin(elapsed * .37 + w.eye) * .05;
+          w.bank += (bankNow - w.bank) * (1 - Math.exp(-dt * 1.2));
+          w.phase += dt * (1.15 + (w.mode === 'rise' ? .5 : 0));
+          // The spout: up over a third of a second, held while it blows, gone by the time it dives.
+          // A spout only exists while the blowhole is out of the water: the moment the animal sinks, it
+          // is gone. That is also what makes it read from the beach as a whale, not as a fountain.
+          const blowing = w.mode === 'blow' && w.depth < .010 ? 1 : 0;
+          w.spout += (blowing - w.spout) * (1 - Math.exp(-dt * (blowing ? 5.5 : 7.5)));
+          if (blowing && w.spout > .55 && !w.called) {
+            w.called = true;
+            if (w.pos.dot(state.direction) > Math.cos(.30)) whaleCall(clamp(1 - w.world.distanceTo(dwPlayer) / .45, 0, 1) * .085);
+          }
+          if (w.mode !== 'blow') w.called = false;
+          poseWhale(w, i, Math.sin(w.phase) * .20);
+        }
+        for (const mesh of [whaleBodyMesh, whaleTailMesh, whaleFinMesh, whaleSpoutMesh]) mesh.instanceMatrix.needsUpdate = true;
       }
 
       const keys = new Set(), pointers = new Map(), joystick = { x: 0, y: 0, id: null };
@@ -7606,6 +7910,28 @@
           gain.gain.exponentialRampToValueAtTime(.0004,t+.26);
         }catch(_){ /* audio is decoration: never let it break the frame */ }
       }
+      // A whale coming up: a slow moan that starts under everything else in the mix and drops away.
+      function whaleCall(volume){
+        if(!audio||!soundOn||volume<=.001)return;
+        try{
+          const t=audio.ctx.currentTime;
+          const gain=audio.ctx.createGain(),low=audio.ctx.createBiquadFilter();
+          low.type='lowpass';low.frequency.setValueAtTime(520,t);low.frequency.exponentialRampToValueAtTime(240,t+1.4);
+          gain.connect(low).connect(audio.master);
+          for(const [hz,detune] of [[88,-9],[88,11],[176,4]]){
+            const osc=audio.ctx.createOscillator(),g=audio.ctx.createGain();
+            osc.type='sine';osc.detune.value=detune;
+            osc.frequency.setValueAtTime(hz,t);
+            osc.frequency.exponentialRampToValueAtTime(hz*.72,t+1.5);
+            g.gain.value=hz>150?.10:.34;
+            osc.connect(g).connect(gain);
+            osc.start(t);osc.stop(t+1.6);
+          }
+          gain.gain.setValueAtTime(0,t);
+          gain.gain.linearRampToValueAtTime(volume,t+.34);
+          gain.gain.exponentialRampToValueAtTime(.0005,t+1.5);
+        }catch(_){ /* audio is decoration: never let it break the frame */ }
+      }
       function updateAudioMix(daylight,surface){
         if(!audio||!soundOn)return;
         const t=audio.ctx.currentTime,night=1-smooth(-.2,.3,daylight);
@@ -8004,6 +8330,7 @@
         }
         mantas.instanceMatrix.needsUpdate=true;
         updateDeer(dt,elapsed);
+        updateWhales(dt,elapsed);
         // A starfall event turns the occasional streak into a shower: shorter trails, faster cadence.
         const shower=eventFx.meteor;
         if(meteorState.active){
@@ -8193,7 +8520,7 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),deer:deer.length,deerAwake:deer.filter(d=>d.awake).length,grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),deer:deer.length,deerAwake:deer.filter(d=>d.awake).length,whales:whales.length,whalesUp:whales.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,
