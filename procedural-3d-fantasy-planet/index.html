@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="shrine-weather-37">
+  <meta name="aetheris-build" content="shrine-weather-38">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'shrine-weather-37';
+    const BUILD_ID = 'shrine-weather-38';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4898,7 +4898,7 @@
                   qBase.clone().multiply(yawQuat), new THREE.Vector3(.026 * k, big * .55, .026 * k));
                 for (let i = 0; i < 2; i++) {
                   const a = rng() * TAU, dist = (.07 + rng() * .04) * k;
-                  put('mast', 'crystal', Math.cos(a) * dist, Math.sin(a) * dist, .004, a, .022 * k, (.095 + rng() * .05) * k, .022 * k);
+                  put('mast', 'crystal', Math.cos(a) * dist, Math.sin(a) * dist, .004, a, .022 * k, (.088 + rng() * .032) * k, .022 * k);
                 }
                 put('lamp', 'lamp', 0, 0, big * .55, 0, .006, .008, .006);
               } else if (landmark === 'lattice') {
@@ -4910,12 +4910,12 @@
                     .addScaledVector(ax, Math.cos(a) * dist * TOWN_SCALE)
                     .addScaledVector(az, Math.sin(a) * dist * TOWN_SCALE)
                     .addScaledVector(site.dir, .004 * TOWN_SCALE),
-                  qBase.clone().multiply(yawQuat), new THREE.Vector3(.016 * k * TOWN_SCALE, (.082 + rng() * .038) * k * TOWN_SCALE, .016 * k * TOWN_SCALE));
+                  qBase.clone().multiply(yawQuat), new THREE.Vector3(.016 * k * TOWN_SCALE, (.080 + rng() * .030) * k * TOWN_SCALE, .016 * k * TOWN_SCALE));
                 }
                 put('beam', 'crystal', 0, 0, .010, yaw0 + rng() * TAU, .16 * k, .022, .014);
                 for (let i = 0, n = 4 + Math.floor(rng() * 3); i < n; i++) {
                   const a = rng() * TAU, d = (.04 + rng() * .09) * k;
-                  const hgt = (.032 + rng() * .046) * k;
+                  const hgt = (.028 + rng() * .034) * k;
                   put('shard', 'crystal', Math.cos(a) * d, Math.sin(a) * d, hgt * .5, a, .011 * k, hgt, .011 * k);
                 }
                 put('lamp', 'lamp', 0, 0, .03 * k, 0, .006, .008, .006);
@@ -4935,7 +4935,7 @@
                     (.014 + rng() * .034) * k, (.010 + rng() * .022) * k, (.014 + rng() * .030) * k);
                 }
                 // Whatever the tower held is still lit under the rubble.
-                put('shard', 'crystal', 0, 0, stumpH, yaw0, .015 * k, (.046 + rng() * .022) * k, .015 * k);
+                put('shard', 'crystal', 0, 0, stumpH, yaw0, .015 * k, (.040 + rng() * .018) * k, .015 * k);
                 for (let i = 0; i < 3; i++) {
                   const a = rng() * TAU, d = (.06 + rng() * .07) * k;
                   put('shard', 'crystal', Math.cos(a) * d, Math.sin(a) * d, .004, a, .010 * k, (.026 + rng() * .026) * k, .010 * k);
@@ -4954,7 +4954,7 @@
                   const [px, pz] = local(yaw0, 0, side * .042 * k);
                   put('beam', 'basalt', px, pz, pierH * .96, yaw0, span * 1.04, .10, .020);
                 }
-                put('shard', 'crystal', 0, 0, .004, rng() * TAU, .015 * k, (.062 + rng() * .014) * k, .015 * k);
+                put('shard', 'crystal', 0, 0, .004, rng() * TAU, .015 * k, (.052 + rng() * .012) * k, .015 * k);
                 put('lamp', 'lamp', 0, 0, .004 + .09 * k * 1.0, 0, .006, .008, .006);
               }
             }
@@ -5101,14 +5101,17 @@
                 put('lamp', 'lamp', gx, gz, gy + postH * 1.02, 0, .005, .007, .005);
               }
             }
-            // 3. the terrace edge: a retaining wall wherever the plate stands above the ground
+            // 3. the terrace edge: a retaining wall wherever the plate stands above the ground.
+            //    Sampled just *outside* the rim — the ground under the plate is the plate, so a
+            //    reading taken on the rim itself always came back level and this wall was never
+            //    built on any town in the world.
             if (footLow < -.010 && plateFoot) {
-              const R = plateFoot.r != null ? plateFoot.r : Math.min(plateFoot.hx, plateFoot.hz);
-              for (let i = 0; i < 5; i++) {
-                const a = i * TAU / 5 + rng() * .12;
+              const R = (plateFoot.r != null ? plateFoot.r : Math.min(plateFoot.hx, plateFoot.hz)) * 1.04;
+              for (let i = 0; i < 8; i++) {
+                const a = i * TAU / 8 + .13;      // no rng() here: adding pieces must not reshuffle the town
                 const px = Math.cos(a) * R, pz = Math.sin(a) * R;
                 const gy = standing(px, pz);
-                if (gy > -.008) continue;                            // only where the hill falls away
+                if (gy > -.012) continue;                            // only where the hill falls away
                 const h = Math.min(.062, -gy + .012);
                 put('block', groundMat, px, pz, gy + h * .5, a + Math.PI / 2, .095 * k, h, .018 * k);
               }
@@ -5270,13 +5273,19 @@
           // way-stone fits where a pair cannot, and reads as the last marker of a lost shrine.
           if (gate && gateClear < -.085) { gate = null; lone = true; }
           if (!gate) {
-            // No room for a gate: one stone, standing where the street leaves the most space.
-            let best = null, bestClear = -.09;
-            for (const { dir } of candidates) {
-              if (!dry(dir)) continue;
-              if (landmarks.some(other => other !== landmark && other.direction.angleTo(dir) < altar.angleTo(dir) - .02)) continue;
-              const clear = clearanceAt(dir);
-              if (clear > bestClear) { bestClear = clear; best = dir; }
+            // No room for a gate: one stone where the street leaves the most space. If the street
+            // leaves none at all, the least buried spot still gets the stone — a sanctuary with no
+            // marker reads as no sanctuary, which is the failure that mattered.
+            let best = null;
+            for (const floor of [-.09, -.16, -9]) {
+              let bestClear = floor;
+              for (const { dir } of candidates) {
+                if (!dry(dir)) continue;
+                if (landmarks.some(other => other !== landmark && other.direction.angleTo(dir) < altar.angleTo(dir) - .02)) continue;
+                const clear = clearanceAt(dir);
+                if (clear > bestClear) { bestClear = clear; best = dir; }
+              }
+              if (best) break;
             }
             if (!best) continue;                               // walled in on every side
             gate = best;
