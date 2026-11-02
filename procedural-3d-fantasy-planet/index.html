@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="shrine-weather-36">
+  <meta name="aetheris-build" content="shrine-weather-37">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'shrine-weather-36';
+    const BUILD_ID = 'shrine-weather-37';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4406,8 +4406,13 @@
             const ax = new THREE.Vector3(1, 0, 0).applyQuaternion(qBase);
             const az = new THREE.Vector3(0, 0, 1).applyQuaternion(qBase);
             const put = (geo, mat, lx, lz, up, yaw, sx, sy, sz) => {
+              // A town is written on a flat datum, but only its plate is flat. Anything that stands on
+              // the ground — rubble, piers, masts, a fallen cap — has to be put on the ground that is
+              // actually under it, or a hillside leaves it hanging in the air (or buried). Pieces
+              // stacked on something else keep their own height: only floor-level ones are lifted.
+              const floor = up >= 0 && up <= .020 ? up + standing(lx, lz) : up;
               const at = origin.clone().addScaledVector(ax, lx * TOWN_SCALE).addScaledVector(az, lz * TOWN_SCALE)
-                .addScaledVector(site.dir, up * TOWN_SCALE);
+                .addScaledVector(site.dir, floor * TOWN_SCALE);
               // Two things keep a town alive after the generator is done with it: the pool of light
               // a lamp leaves on the ground, and the smoke a chimney leaves in the air.
               if (geo === 'lamp') lampPoints.push(at.clone());
@@ -4887,13 +4892,13 @@
             } else {
               if (landmark === 'basin') {
                 put('ring', 'crystal', 0, 0, .006, yaw0, .11 * k, .11 * k, .05);
-                const big = (.12 + rng() * .06) * k, leanA = rng() * TAU;
+                const big = (.085 + rng() * .045) * k, leanA = rng() * TAU;
                 yawQuat.setFromAxisAngle(axis.set(Math.cos(leanA), 0, Math.sin(leanA)).normalize(), .06 + rng() * .12);
                 push('shard', 'crystal', origin.clone().addScaledVector(site.dir, big * .45),
                   qBase.clone().multiply(yawQuat), new THREE.Vector3(.026 * k, big * .55, .026 * k));
                 for (let i = 0; i < 2; i++) {
                   const a = rng() * TAU, dist = (.07 + rng() * .04) * k;
-                  put('mast', 'crystal', Math.cos(a) * dist, Math.sin(a) * dist, .004, a, .030 * k, (.14 + rng() * .08) * k, .030 * k);
+                  put('mast', 'crystal', Math.cos(a) * dist, Math.sin(a) * dist, .004, a, .022 * k, (.095 + rng() * .05) * k, .022 * k);
                 }
                 put('lamp', 'lamp', 0, 0, big * .55, 0, .006, .008, .006);
               } else if (landmark === 'lattice') {
@@ -4905,13 +4910,13 @@
                     .addScaledVector(ax, Math.cos(a) * dist * TOWN_SCALE)
                     .addScaledVector(az, Math.sin(a) * dist * TOWN_SCALE)
                     .addScaledVector(site.dir, .004 * TOWN_SCALE),
-                  qBase.clone().multiply(yawQuat), new THREE.Vector3(.026 * k * TOWN_SCALE, (.13 + rng() * .06) * k * TOWN_SCALE, .026 * k * TOWN_SCALE));
+                  qBase.clone().multiply(yawQuat), new THREE.Vector3(.016 * k * TOWN_SCALE, (.082 + rng() * .038) * k * TOWN_SCALE, .016 * k * TOWN_SCALE));
                 }
                 put('beam', 'crystal', 0, 0, .010, yaw0 + rng() * TAU, .16 * k, .022, .014);
                 for (let i = 0, n = 4 + Math.floor(rng() * 3); i < n; i++) {
                   const a = rng() * TAU, d = (.04 + rng() * .09) * k;
-                  const hgt = (.05 + rng() * .08) * k;
-                  put('shard', 'crystal', Math.cos(a) * d, Math.sin(a) * d, hgt * .5, a, .014 * k, hgt, .014 * k);
+                  const hgt = (.032 + rng() * .046) * k;
+                  put('shard', 'crystal', Math.cos(a) * d, Math.sin(a) * d, hgt * .5, a, .011 * k, hgt, .011 * k);
                 }
                 put('lamp', 'lamp', 0, 0, .03 * k, 0, .006, .008, .006);
               } else if (landmark === 'fallen') {
@@ -4930,7 +4935,7 @@
                     (.014 + rng() * .034) * k, (.010 + rng() * .022) * k, (.014 + rng() * .030) * k);
                 }
                 // Whatever the tower held is still lit under the rubble.
-                put('shard', 'crystal', 0, 0, stumpH, yaw0, .018 * k, (.070 + rng() * .030) * k, .018 * k);
+                put('shard', 'crystal', 0, 0, stumpH, yaw0, .015 * k, (.046 + rng() * .022) * k, .015 * k);
                 for (let i = 0; i < 3; i++) {
                   const a = rng() * TAU, d = (.06 + rng() * .07) * k;
                   put('shard', 'crystal', Math.cos(a) * d, Math.sin(a) * d, .004, a, .010 * k, (.026 + rng() * .026) * k, .010 * k);
@@ -4949,7 +4954,7 @@
                   const [px, pz] = local(yaw0, 0, side * .042 * k);
                   put('beam', 'basalt', px, pz, pierH * .96, yaw0, span * 1.04, .10, .020);
                 }
-                put('shard', 'crystal', 0, 0, .004, rng() * TAU, .018 * k, .09 * k, .018 * k);
+                put('shard', 'crystal', 0, 0, .004, rng() * TAU, .015 * k, (.062 + rng() * .014) * k, .015 * k);
                 put('lamp', 'lamp', 0, 0, .004 + .09 * k * 1.0, 0, .006, .008, .006);
               }
             }
