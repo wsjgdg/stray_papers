@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="coral-whales-44">
+  <meta name="aetheris-build" content="whale-flukes-45">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'coral-whales-44';
+    const BUILD_ID = 'whale-flukes-45';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4713,6 +4713,7 @@
       // Scratch for the pod: a whale's frame is its heading, its bank and the beat of its tail.
       const wwFrame = new THREE.Object3D(), wwLocal = new THREE.Matrix4(), wwPart = new THREE.Matrix4();
       const wwAhead = new THREE.Vector3(), wwE = new THREE.Vector3(), wwN = new THREE.Vector3();
+      const wwSpin = new THREE.Matrix4().makeRotationY(Math.PI);   // a fin modelled pointing +X, turned round
       // One animal into the four instance slots. `beat` is the tail's stroke, `bank` the roll into a turn.
       const poseWhale = (w, i, beat = 0) => {
         wwFrame.position.copy(w.world);
@@ -4723,13 +4724,19 @@
         wwFrame.rotateZ(w.bank);
         wwFrame.updateMatrix();
         whaleBodyMesh.setMatrixAt(i, wwFrame.matrix);
-        wwLocal.makeRotationY(beat);                                // a whale beats up and down, not side to side
+        // A whale's flukes beat **up and down**: about X, the axis across the animal. (A fish beats
+        // side to side, about Y, which is what this used to do — the tail swept like a shark's.)
+        wwLocal.makeRotationX(beat);
         wwLocal.setPosition(0, 0, WHALE_TAIL);
         wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
         whaleTailMesh.setMatrixAt(i, wwPart);
         for (let f = 0; f < 2; f++) {
           const sx = f === 0 ? -1 : 1;
-          wwLocal.makeRotationY(sx * (-.42 + beat * 1.4));
+          // The blade is modelled pointing along +X. The right one is placed as it is; the left is
+          // turned round to face the other way and flaps through the opposite sign, so both flippers
+          // rise and fall together and neither one lies inside the body.
+          wwLocal.makeRotationZ(sx * (-.10 + beat * .9));
+          if (sx < 0) wwLocal.multiply(wwSpin);
           wwLocal.setPosition(sx * .0112, -.0030, .0340);
           wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
           whaleFinMesh.setMatrixAt(i * 2 + f, wwPart);
@@ -6929,7 +6936,7 @@
             if (w.pos.dot(state.direction) > Math.cos(.30)) whaleCall(clamp(1 - w.world.distanceTo(dwPlayer) / .45, 0, 1) * .085);
           }
           if (w.mode !== 'blow') w.called = false;
-          poseWhale(w, i, Math.sin(w.phase) * .20);
+          poseWhale(w, i, Math.sin(w.phase) * .26);
         }
         for (const mesh of [whaleBodyMesh, whaleTailMesh, whaleFinMesh, whaleSpoutMesh]) mesh.instanceMatrix.needsUpdate = true;
       }
