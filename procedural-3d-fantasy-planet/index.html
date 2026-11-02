@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="mossbells-49">
+  <meta name="aetheris-build" content="pennants-50">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'mossbells-49';
+    const BUILD_ID = 'pennants-50';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3929,17 +3929,31 @@
         return { map, normalMap, surfaceMap };
       }
       const birdMaps = birdFeatherMaps();
-      // Sky birds glide around the sanctuaries; textured wings flap in the vertex shader.
-      const mantaPositions = new Float32Array([
-        0,.004,.10,  .035,0,.01,  -.035,0,.01,
-        -.035,0,.01,  .035,0,.01,  0,0,-.11,
-        -.035,0,.01,  -.15,.012,-.03,  -.045,0,-.07,
-        -.035,0,.01,  -.045,0,-.07,  0,0,-.11,
-        .035,0,.01,  .045,0,-.07,  .15,.012,-.03,
-        .035,0,.01,  0,0,-.11,  .045,0,-.07
-      ]);
+      // ---- What flies: a pennant, not a bird ------------------------------------------------------
+      // The last version was a six-triangle ray with a feather texture and a wing-beat in the vertex
+      // shader — an Earth batoid, in other words, and the same complaint that killed the whale applies.
+      // Nothing with a pair of wings flies here. What does is one long membrane of tissue with no bones
+      // and no arms: it swims by sending a wave down its own length, it banks by twisting, and it has no
+      // front and no back except the way the wave runs. From below it reads as a torn banner drifting in
+      // a circle, which is exactly what it is.
+      const mantaPositions = [];
+      {
+        const STATIONS = 10, LEN = .150;
+        const halfWidth = t => .010 + .052 * Math.sin(Math.PI * Math.pow(t, .82)) * (1 + .16 * Math.cos(t * 11.3));
+        for (let i = 0; i < STATIONS; i++) {
+          const t0 = i / STATIONS, t1 = (i + 1) / STATIONS;
+          const z0 = .150 - LEN * 2 * t0 * .5 * 2, z1 = .150 - LEN * 2 * t1 * .5 * 2;
+          const w0 = halfWidth(t0), w1 = halfWidth(t1);
+          // The membrane is not flat: its margins droop, so it has a cross-section and catches light.
+          const y0 = -.0050 * Math.sin(t0 * 7.1), y1 = -.0050 * Math.sin(t1 * 7.1);
+          mantaPositions.push(
+            -w0, y0, z0, w0, y0, z0, w1, y1, z1,
+            w0, y0, z0, w1, y1, z1, -w1, y1, z1
+          );
+        }
+      }
       const mantaGeo = new THREE.BufferGeometry();
-      mantaGeo.setAttribute('position', new THREE.BufferAttribute(mantaPositions, 3));
+      mantaGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(mantaPositions), 3));
       const mantaUV = new Float32Array(mantaPositions.length / 3 * 2);
       for (let i = 0; i < mantaPositions.length / 3; i++) {
         mantaUV[i * 2] = clamp(.5 + mantaPositions[i * 3] / .32, .03, .97);
@@ -3963,9 +3977,12 @@
           #else
             vBirdWorld = (modelMatrix * vec4(position, 1.0)).xyz;
           #endif
-          float wing = smoothstep(.02,.15,abs(position.x));
-          transformed.y += sin(uForestTime*4.6+flapPhase+abs(position.x)*13.0)*wing*.05;
-          transformed.x *= 1.0 - wing*.1*(.5+.5*sin(uForestTime*4.6+flapPhase));
+          // A wave running nose to tail and growing as it goes: the membrane is the engine, and there
+          // is no pair of anything to beat.
+          float tail = clamp((.150 - position.z) / .300, 0.0, 1.0);
+          float wave = sin(uForestTime * 2.2 + flapPhase - position.z * 15.0);
+          transformed.y += wave * (.005 + tail * .032);
+          transformed.x += cos(uForestTime * 1.7 + flapPhase - position.z * 9.0) * tail * .014;
         `);
         shader.fragmentShader = shader.fragmentShader
           .replace('#include <common>', '#include <common>\nuniform sampler2D uBirdSurface;\nuniform vec3 uBirdSun;\nuniform float uForestTime;\nvarying vec3 vBirdWorld;')
@@ -8261,8 +8278,8 @@
             truth: '强制生长期：把生长频率灌进灵脉，逼生物圈超额产出药材、纤维与孢子。溢出的光就是「荧光」。',
             tell: '这是唯一的窗口——到处都在发光时，人和货可以不被看见地移动。' },
           { code: 'ZENITH MIGRATION', zh: '天穹迁徙', official: 'THE FLOCKS CLIMB THE THERMALS',
-            truth: '驱赶作业：用浮晶格脉冲把蝠鲼赶出镜阵航线，同时取走它们体内的磁记忆。',
-            tell: '蝠鲼是唯一能飞越环洋的邮差，走音者会在它们身上绑东西。' }
+            truth: '驱赶作业：用浮晶格脉冲把浮幡赶出镜阵航线，同时取走它们体内的磁记忆。',
+            tell: '浮幡是唯一能飞越环洋的邮差，走音者会在它们身上绑东西。' }
         ],
         provinces: [
           { name: 'VAELMAR', zh: '苍苔行省', seat: '苔庭联邦 Tilin｜树居城邦联盟',
@@ -8279,7 +8296,7 @@
             note: '冰下藏着共鸣腔。他们记的不是历史，是光的时刻表。' },
           { name: 'MIRELLA', zh: '米瑞拉环礁', seat: '歌者｜群岛聚落',
             build: '高脚屋、歌环、潮汐钟楼；浅滩上全是木桩与绳桥。',
-            life: '驮园（一片会漂的珊瑚园，边缘长着眼睛）、发光水母、蝠鲼幼群。',
+            life: '驮园（一片会漂的珊瑚园，边缘长着眼睛）、发光水母、浮幡幼群。',
             note: '用声音控制潮汐；他们说潮水听得懂调子，所以从不把歌记在纸上。' },
           { name: 'VESSPER', zh: '维斯珀孤陆', seat: '（无主）｜遗弃的发射场',
             build: '晶柱、环形基座、一半被掀倒的塔架；结晶盆地。',
@@ -8289,7 +8306,7 @@
         waters: [
           { name: 'MIRROR SEA', zh: '镜海', band: '0–50 m', who: '歌者的养殖场、浅滩遗迹、发光浮游生物',
             note: '内海，无风，近乎镜面。浅到你能看见自己的影子铺在珊瑚上。' },
-          { name: 'CIRCLING OCEAN', zh: '环洋', band: '50–170 m', who: '蝠鲼迁徙走廊、远洋商船、浮岛',
+          { name: 'CIRCLING OCEAN', zh: '环洋', band: '50–170 m', who: '浮幡迁徙走廊、远洋商船、浮岛',
             note: '环绕全球的风暴带，把五块大陆隔开。正因横渡成本极高，各大陆才保住了自己的样子。' },
           { name: 'VANE TRENCH', zh: '无光沟', band: '> 170 m', who: '沉默者的柱群、异形生物圈',
             note: '光照与灵脉都到不了，靠热液维持。整条沟是一个活的处理器。' }
