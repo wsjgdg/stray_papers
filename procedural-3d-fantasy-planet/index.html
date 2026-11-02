@@ -7164,7 +7164,7 @@
       lightningBolt.renderOrder = 22;
       scene.add(lightningBolt);
       const lightningStart = new THREE.Vector3(), lightningPoint = new THREE.Vector3(), lightningForward = new THREE.Vector3(), lightningSide = new THREE.Vector3();
-      function spawnLightning(span = .22) {
+      function spawnLightning(span = .22, level = 1) {
         lightningForward.set(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
         lightningSide.set(1, 0, 0).applyQuaternion(camera.quaternion).normalize();
         lightningStart.copy(camera.position).addScaledVector(lightningForward, 5 + random() * 4).addScaledVector(state.direction, 5.5 + random() * 2.5).addScaledVector(lightningSide, (random() - .5) * 5);
@@ -7177,6 +7177,8 @@
           lightningPoint.addScaledVector(lightningSide, (random() - .5) * .26);
           lightningPoint.addScaledVector(lightningForward, (random() - .5) * .14);
         }
+        // Light is instant, sound is not: the thunder is scheduled from how far this channel actually is.
+        thunderCall(camera.position.distanceTo(lightningStart), level);
         lightningGeo.attributes.position.needsUpdate = true;
         lightningBolt.visible = true;
         lightningBolt.material.opacity = .96;
@@ -7222,16 +7224,44 @@
         const gap = drumroll + lull;
         return 27 * (1 - Math.exp(-gap / 27));
       }
+      // How a bolt becomes thunder. One pure function, so the bench can check the physics of it without an
+      // AudioContext: distance decides *when* you hear it, how loud, how muffled, and how long it rolls.
+      // Close thunder is one short crack; far thunder is a long low roll with several lobes in it.
+      const METRES_PER_UNIT = 17, SPEED_OF_SOUND = 343;
+      function thunderPlan(distanceUnits, level) {
+        const metres = Math.max(2, distanceUnits * METRES_PER_UNIT);
+        const delay = Math.min(7, metres / SPEED_OF_SOUND);
+        const near = clamp(1 - metres / 900, .10, 1);
+        const count = 1 + Math.floor(random() * (near > .45 ? 5 : 3));
+        const span = (near > .45 ? .8 : 1.5) + random() * 2.6;
+        const lobes = [];
+        let at = 0;
+        for (let i = 0; i < count; i++) {
+          lobes.push({
+            at,
+            level: level * (i === 0 ? 1 : .5 + random() * .45) * (.4 + random() * .6),
+            decay: .35 + random() * (near > .45 ? 1.1 : 2.1),
+            cutoff: 80 + near * 1400 * (.35 + random() * .65)   // close thunder keeps its top end
+          });
+          at += .04 + random() * (span / count) * .9;
+        }
+        return { delay, length: at + 1.4, lobes, crack: metres < 220 ? near : 0 };
+      }
       function updateStrike(dt) {
         if (!weather.strokes.length) { weather.flash *= Math.exp(-dt * 6.5); return; }
         weather.strikeAge += dt;
-        let glow = 0, live = null;
+        let glow = 0, live = null, unheard = 0;
         for (const stroke of weather.strokes) {
           if (weather.strikeAge < stroke.at) continue;
           const value = stroke.level * Math.exp(-(weather.strikeAge - stroke.at) * stroke.decay);
           if (value > glow) glow = value;
-          if (stroke.channel && !stroke.fired) { stroke.fired = true; spawnLightning(stroke.span); live = stroke; }
+          if (!stroke.fired) {
+            stroke.fired = true;
+            if (stroke.channel) { spawnLightning(stroke.span, stroke.level); live = stroke; }
+            else unheard = Math.max(unheard, stroke.level);      // sheet lightning: heard, never seen
+          }
         }
+        if (unheard > 0) thunderCall(24 + random() * 30, unheard * .55);
         weather.flash = glow;
         if (live) {
           weather.boltFlicker = 5 + random() * 24;   // no two strokes shiver at the same rate
@@ -8992,6 +9022,39 @@
           gain.gain.setValueAtTime(0,t);
           gain.gain.linearRampToValueAtTime(volume,t+.006);
           gain.gain.exponentialRampToValueAtTime(.0006,t+.13);
+        }catch(_){ /* audio is decoration: never let it break the frame */ }
+      }
+      // Thunder. `-64` made the strikes irregular, but with no sound a strike was still just a flicker:
+      // the irregularity was invisible and the sky had no weight. Distance decides the delay (light now,
+      // sound later), the loudness, and how much of the top end survives the trip — close thunder cracks,
+      // far thunder rolls for seconds. The plan itself lives beside the lightning, where the bench can
+      // check it without an AudioContext.
+      function thunderCall(distanceUnits, level){
+        if(!audio||!soundOn)return;
+        try{
+          const plan=thunderPlan(distanceUnits,level),t0=audio.ctx.currentTime+plan.delay;
+          for(const lobe of plan.lobes){
+            const src=audio.ctx.createBufferSource();src.buffer=audio.buffer;src.loop=true;
+            const low=audio.ctx.createBiquadFilter();low.type='lowpass';low.Q.value=.7;
+            low.frequency.setValueAtTime(Math.min(6000,lobe.cutoff*2.2),t0+lobe.at);
+            low.frequency.exponentialRampToValueAtTime(Math.max(50,lobe.cutoff*.45),t0+lobe.at+lobe.decay*1.6);
+            const gain=audio.ctx.createGain();
+            src.connect(low).connect(gain).connect(audio.master);
+            src.start(t0+lobe.at,Math.random()*1.4);
+            gain.gain.setValueAtTime(0,t0+lobe.at);
+            gain.gain.linearRampToValueAtTime(Math.min(.8,lobe.level*.42),t0+lobe.at+.05);
+            gain.gain.exponentialRampToValueAtTime(.0005,t0+lobe.at+lobe.decay);
+            src.stop(t0+lobe.at+lobe.decay+.06);
+          }
+          if(plan.crack>.05){
+            const osc=audio.ctx.createOscillator(),g=audio.ctx.createGain();
+            osc.type='sawtooth';
+            osc.frequency.setValueAtTime(150,t0);osc.frequency.exponentialRampToValueAtTime(46,t0+.24);
+            g.gain.setValueAtTime(0,t0);
+            g.gain.linearRampToValueAtTime(.24*plan.crack,t0+.012);
+            g.gain.exponentialRampToValueAtTime(.0005,t0+.32);
+            osc.connect(g).connect(audio.master);osc.start(t0);osc.stop(t0+.36);
+          }
         }catch(_){ /* audio is decoration: never let it break the frame */ }
       }
       function updateAudioMix(daylight,surface){
