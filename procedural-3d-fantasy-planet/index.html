@@ -4546,11 +4546,14 @@
               // picked for the levelest footing, which quietly funnels several of them onto the same
               // tile. So spacing gets a vote — and among the spots that are far enough from the
               // others, the levelest one still wins, because a bell on broken ground floats a hoof.
-              const tooClose = p => bell.some(o => o.pos.angleTo(p) * R < .012);
+              // Spacing is measured in whole animals, not in the old .012: a bell is 34 mm across the
+              // lip, so two of them 12 mm apart were literally inside one another — the user saw "几只重叠
+              // 在一起" and they were. A body and a half is the least that reads as two animals.
+              const tooClose = p => bell.some(o => o.pos.angleTo(p) * R < .046);
               if (tooClose(spot)) {
                 let best = null, bestRough = Infinity;
-                for (let k = 0; k < 90; k++) {
-                  const a = rng() * TAU, r = .012 + rng() * .034;
+                for (let k = 0; k < 160; k++) {
+                  const a = rng() * TAU, r = .016 + rng() * .062;
                   dwE.set(1, 0, 0).cross(home);
                   if (dwE.lengthSq() < 1e-8) dwE.set(0, 0, 1).cross(home);
                   dwE.normalize();
@@ -4571,7 +4574,7 @@
                 if (best) spot = best;
               }
               const d = {
-                center: spot.toArray(), home: home.clone(), pos: spot,
+                center: spot.toArray(), home: home.clone(), pos: spot, goto: spot.clone(),
                 up: bellNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
                 world: new THREE.Vector3(), mode: 'graze', timer: .8 + rng() * 2.6,
                 phase: rng() * TAU, stride: .18, headTilt: 1, speed: 0,
@@ -6944,7 +6947,10 @@
         const worked = Math.max(debt.sky, debt.air, debt.light, debt.growth, debt.fauna);
         // Anything further off than a stone's throw is skipped before it costs a ground sample: the
         // angle is the same test at a tenth of the price.
-        const inRange = Math.cos(.10);
+        // Everything within about nine metres thinks. It used to be .10 rad — 420 mm of world — which
+        // is close enough that half a herd fell asleep while you stood looking at it, and an animal that
+        // is not moving reads as a prop, not as an animal.
+        const inRange = Math.cos(.14);
         for (let i = 0; i < bell.length; i++) {
           const d = bell[i];
           if (d.pos.dot(state.direction) < inRange) {
@@ -6954,7 +6960,7 @@
           }
           d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
           const dist = d.world.distanceTo(dwPlayer);
-          if (dist > .42) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
+          if (dist > .55) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
           d.awake = true;
           if (d.mode !== 'flee' && dist < (calm ? .020 : .045)) {
             // Bolt. Crouching and standing still is the only way to be close to one of these.
@@ -6990,26 +6996,79 @@
             d.speed = 0; d.stride = 0;
             d.headTilt += (-.52 - d.headTilt) * (1 - Math.exp(-dt * 3));
           } else if (d.mode === 'walk') {
-            d.speed = .048; d.stride = .20;
+            d.speed = .075; d.stride = .20;
             d.headTilt += (.30 - d.headTilt) * (1 - Math.exp(-dt * 5));
             d.timer -= dt;
-            aimBell(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
-            if (d.timer <= 0 || d.pos.angleTo(d.home) < .010) {
+            aimBell(d, dwTarget.copy(d.goto).multiplyScalar(R + heightAt(d.goto)));
+            // Stop only if one of them has walked into the *way*, not merely nearby: the herd stands a
+            // body apart, so "someone is within a body length" is true almost all the time and every
+            // walk cancelled itself on the first frame.
+            for (const o of bell) {
+              if (o === d) continue;
+              dwProbe.copy(o.pos).sub(d.pos);
+              const along = dwProbe.dot(d.fwd);
+              if (along <= 0 || along * R > .070) continue;        // behind, or too far to matter
+              dwProbe.addScaledVector(d.fwd, -along);
+              if (dwProbe.length() * R < .036) { d.timer = 0; break; }
+            }
+            if (d.timer <= 0 || d.pos.angleTo(d.goto) < .008) {
               d.mode = 'graze';
-              d.timer = 1.2 + .9 * (1 + Math.sin(d.seedPhase * 1.7));
+              d.timer = 1.0 + .7 * (1 + Math.sin(d.seedPhase * 1.7));
             }
           } else {
             d.speed = 0; d.stride = 0;
             d.headTilt += (1 - d.headTilt) * (1 - Math.exp(-dt * 5));
             d.timer -= dt;
             if (d.timer <= 0) {
-              d.mode = 'walk';
-              d.timer = 2.2 + .9 * (1 + Math.cos(d.seedPhase * 2.9));
-              // A new line, turned by a deterministic angle: nothing here draws from the world's
-              // random stream, or the weather and the events downstream of it would move as well.
-              d.fwd.applyAxisAngle(d.up, Math.sin(elapsed * .61 + d.seedPhase) * 2.1);
-              d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
-              if (d.fwd.lengthSq() > 1e-8) d.fwd.normalize();
+              d.timer = 3.4 + 1.6 * Math.cos(d.seedPhase * 2.9);
+              // Where the next mouthful is. The old version only turned the animal and let the walk
+              // end the moment it was within .010 rad of its home — which every herd member already
+              // was, so "walk" lasted exactly one frame and the herd stood still for ever. Now it
+              // picks a patch of moss 60-160 mm away and actually walks to it. The angle is a
+              // deterministic sine: nothing here draws from the world's random stream, or the
+              // weather and the events downstream of it would move as well.
+              const turn = Math.sin(elapsed * .61 + d.seedPhase) * 2.1;
+              const reach = (.014 + .011 * (1 + Math.sin(elapsed * .37 + d.seedPhase * 1.9))) * (.5 + .5 * Math.abs(Math.cos(turn)));
+              dwE.set(1, 0, 0).cross(d.pos);
+              if (dwE.lengthSq() < 1e-8) dwE.set(0, 0, 1).cross(d.pos);
+              dwE.normalize();
+              dwN.crossVectors(d.pos, dwE);
+              // A patch of moss with nobody standing on it. Choosing the destination without looking
+              // at the rest of the herd is how five animals end up walking into the same square metre:
+              // the bench caught two of them 2 mm apart after a minute of walking.
+              let clear = false;
+              for (let tryAngle = 0; tryAngle < 8 && !clear; tryAngle++) {
+                const a2 = turn + tryAngle * .785 * (tryAngle % 2 ? -1 : 1);
+                d.goto.copy(d.pos).addScaledVector(dwE, Math.cos(a2) * reach).addScaledVector(dwN, Math.sin(a2) * reach).normalize();
+                // It never wanders far from its own patch of moss: past 200 mm, it heads home instead.
+                if (d.goto.angleTo(d.home) > .048) d.goto.copy(d.home);
+                clear = !bell.some(o => o !== d && o.pos.angleTo(d.goto) * R < .042);
+              }
+              // The last resort: if the whole herd has taken the ground there is anywhere to go, walk
+              // away from whoever is nearest rather than stand there pretending to graze.
+              if (!clear) {
+                let nearest = null, best = Infinity;
+                for (const o of bell) {
+                  if (o === d) continue;
+                  const away = o.pos.angleTo(d.pos);
+                  if (away < best) { best = away; nearest = o; }
+                }
+                if (nearest) {
+                  dwProbe.copy(d.pos).sub(nearest.pos).addScaledVector(d.pos, -dwProbe.dot(d.pos) * 0 + 0);
+                  dwProbe.copy(d.pos).sub(nearest.pos);
+                  dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
+                  if (dwProbe.lengthSq() > 1e-10) {
+                    d.goto.copy(d.pos).addScaledVector(dwProbe.normalize(), .020).normalize();
+                    clear = true;
+                  }
+                }
+              }
+              if (clear) {
+                d.mode = 'walk';
+                aimBell(d, dwTarget.copy(d.goto).multiplyScalar(R + heightAt(d.goto)));
+              } else {
+                d.timer = 1.2;                 // nowhere to go: keep grazing, look again in a moment
+              }
             }
           }
           if (d.speed > 1e-4) {
