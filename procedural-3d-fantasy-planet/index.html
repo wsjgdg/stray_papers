@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-58">
+  <meta name="aetheris-build" content="pennants-59">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-58';
+    const BUILD_ID = 'pennants-59';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3498,7 +3498,13 @@
       understoryMaterial.customProgramCacheKey = () => 'aetheris-understory-glow-' + BUILD_ID;
       const fern = new THREE.InstancedMesh(buildFernGeometry(), understoryMaterial, compact ? 160 : 420);
       const flowers = new THREE.InstancedMesh(buildFlowerGeometry(), understoryMaterial, compact ? 70 : 190);
-      const groundStones = new THREE.InstancedMesh(rockGeometry(.055, 2, 17), rockMaterial, compact ? 34 : 90);
+      const stoneGeo = rockGeometry(.055, 2, 17);
+      stoneGeo.computeBoundingBox();
+      // The scatter's own model, so a stone is as wide as the rock you can see: half of a 55 mm rock,
+      // its real height, and nothing guessed.
+      const stoneBox = stoneGeo.boundingBox;
+      const stoneHalf = Math.max(-stoneBox.min.x, stoneBox.max.x, -stoneBox.min.z, stoneBox.max.z);
+      const groundStones = new THREE.InstancedMesh(stoneGeo, rockMaterial, compact ? 34 : 90);
       const underCapacity = fern.count;
       for (const detail of [fern, flowers, groundStones]) { detail.visible = false; detail.castShadow = true; detail.receiveShadow = true; scene.add(detail); }
       const flowerCapacity = flowers.count, stoneCapacity = groundStones.count;
@@ -3568,15 +3574,24 @@
         if (flowers.instanceColor) flowers.instanceColor.needsUpdate = true;
         flowers.computeBoundingSphere();
       }
+      // Stones are solid now, so one laid where the walker is standing would come up through their feet
+      // and shove them out. The scatter keeps out of the body's own footprint instead: the stones you
+      // walk up to are the ones you cannot walk through.
+      const stoneSolids = [];
       function dressStones(center, rng) {
         let stoneCount = 0;
+        stoneSolids.length = 0;
         for (let attempt = 0; stoneCount < stoneCapacity && attempt < stoneCapacity * 12; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .2), h = heightAt(n);
           if (h < .028 || h > .36) continue;
+          const sx = .35 + rng() * .75, sy = .3 + rng() * .5, sz = .35 + rng() * .7;
+          const half = Math.max(sx, sz) * stoneHalf;
+          if (n.angleTo(center) * R < half + .018) continue;                       // not under the walker
           transform.position.copy(n).multiplyScalar(R + h + .003);
           transform.quaternion.setFromUnitVectors(UP, n); transform.rotateY(rng() * TAU);
-          transform.scale.set(.35 + rng() * .75, .3 + rng() * .5, .35 + rng() * .7); transform.updateMatrix();
+          transform.scale.set(sx, sy, sz); transform.updateMatrix();
           groundStones.setMatrixAt(stoneCount++, transform.matrix);
+          stoneSolids.push({ dir: n, r: half, top: R + h + .003 + stoneBox.max.y * sy });
         }
         groundStones.count = stoneCount; groundStones.instanceMatrix.needsUpdate = true;
         groundStones.computeBoundingSphere();
@@ -4327,7 +4342,7 @@
       // the last thing the walker could pass through, and they are the largest one — a first-person
       // camera going through the side of a cottage is the same bug as going through a trunk, only
       // bigger. The herd never needs these: it keeps clear of whole towns.
-      const townSolids = [];
+      const walkBoxes = [];
       // ---- The mossbell: the ground's own animal -------------------------------------------------
       // The mantas own the sky and the raft owns the shallows; this is what walks. It is not a bell.
       // Everything that made the last version a bell was a vertebrate: a barrel, a neck, a face, four
@@ -4343,6 +4358,9 @@
       const BELL_SIZE = 1.45;
       const BELL_HIP_Y = .0300, BELL_NECK_Y = .0300, BELL_NECK_Z = .0122;
       // One leg forward, two back. The forward leg takes the weight when the tube is down and grazing.
+      // What the shell measures, for the walker's collision: half its width, and how far its tallest
+      // point sits above the ground. Read from the model so the two stay in step.
+      let BELL_HALF_WIDE = .024, BELL_BODY_TOP = .040;
       const BELL_LEGS = [[0, .0212], [-.0182, -.0134], [.0182, -.0134]];
       const bell = [];
       let bellBodyMesh = null, bellHeadMesh = null, bellLegMesh = null;
@@ -4445,6 +4463,11 @@
         return join(parts);
       }
       const bellGeo = { body: bellBodyPart(), head: bellHeadPart(), leg: bellLegPart() };
+      // ...and what the walker's collision needs from it, measured rather than assumed.
+      bellGeo.body.computeBoundingBox();
+      BELL_HALF_WIDE = .5 * Math.max(bellGeo.body.boundingBox.max.x - bellGeo.body.boundingBox.min.x,
+        bellGeo.body.boundingBox.max.z - bellGeo.body.boundingBox.min.z);
+      BELL_BODY_TOP = bellGeo.body.boundingBox.max.y;
       // How wide a planted thing is where an animal would meet it, read off its own model rather than
       // invented: everything the ground up to `hardBand()` high holds, which is the band of air the
       // animal's own body occupies. A tree gives only its trunk there — its boughs and canopy are air it
@@ -4790,6 +4813,9 @@
               }
               d.fwd.normalize();
               d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
+              // ...and the body's own volume, at this animal's scale: a bell you can walk through is a
+              // prop, and the point of the last four builds is that it is not one.
+              d.hit = { r: BELL_HALF_WIDE * d.scale, top: d.world.length() + BELL_BODY_TOP * d.scale, bottom: -Infinity };
               bell.push(d);
             }
           }
@@ -5025,6 +5051,11 @@
       reefGeo.body.computeBoundingBox();
       const REEF_HALF_DEEP = -reefGeo.body.boundingBox.min.y;
       const REEF_HALF_LEN = reefGeo.body.boundingBox.max.z, REEF_HALF_WIDE = reefGeo.body.boundingBox.max.x;
+      // For the walker: the raft is as wide as it is long, so one disc covers it, and it has a top and
+      // a bottom because it floats — you swim under it, not through it.
+      const REEF_HALF_LONG = Math.max(REEF_HALF_LEN, REEF_HALF_WIDE);
+      const REEF_HALF_UP = reefGeo.body.boundingBox.max.y;
+      const REEF_HALF_DOWN = REEF_HALF_DEEP;
       const reefMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .78, metalness: .02 });
       const reefPlumeMat = new THREE.MeshStandardMaterial({
         vertexColors: true, roughness: .55, metalness: 0, transparent: true, opacity: .62, depthWrite: false
@@ -5236,7 +5267,6 @@
         }
         settlementDirs.length = 0;
         for (const id of Object.keys(sites)) for (const site of sites[id]) settlementDirs.push(site);
-        townSolids.length = 0;
 
         const buckets = new Map();
         const push = (geo, mat, position, quat, scale) => {
@@ -5669,17 +5699,6 @@
               // floor instead, so what stands in the shallows is a stone base with a house on it.
               if (lifted) floor = Math.max(floor, (SEA - site.h) / TOWN_SCALE + .008);
               (site.kinds = site.kinds || new Set()).add(kind);
-              // The wall the walker cannot pass. Half-extents in world units, and the house's own two
-              // axes so the box turns with the plot instead of becoming a circle round it: a circle
-              // big enough to hold the corners of a longhouse blocks the lane beside it.
-              const yc = Math.cos(yaw), ys = Math.sin(yaw);
-              townSolids.push({
-                dir: dirAt(lx, lz),
-                ex: ax.clone().multiplyScalar(yc).addScaledVector(az, -ys),   // the plot's own x, in world
-                ez: ax.clone().multiplyScalar(ys).addScaledVector(az, yc),    // ...and its z
-                hw: (kind === 'tower' ? w * .86 : w) * .5 * TOWN_SCALE,
-                hd: d * .5 * TOWN_SCALE
-              });
               house(lx, lz, yaw, kind === 'tower' ? w * .86 : w, d, h, kind, floor, low);
             };
             // ---- cliff colony ------------------------------------------------------------------
@@ -6569,6 +6588,47 @@
           const r = item.r !== undefined ? item.r : hardFloraRadius(item.type) * item.size;
           if (r > .002) hardProps.push({ dir: item.dir, r });
         }
+        // ---- every built thing the walker can hit -----------------------------------------------
+        // Not a curated list: every instance in every bucket is measured, because "which pieces are
+        // walls" is a question the geometry can answer. Two filters make it a list of walls rather
+        // than a list of objects:
+        //   * it has to stand on the ground (a roof, an awning or a balcony hangs above; the wall
+        //     under it is already in the list, and blocking the overhang would narrow every lane by
+        //     its eaves);
+        //   * it has to come up to the walker's chest (a step, a kerb, a paving slab is something you
+        //     walk over, and walling those off would close the sanctuaries' own stairs).
+        // Boxes, because a town is made of boxes: each piece keeps the yaw it was built with, and its
+        // extents come from the model's own bounding box times the instance's scale — `platform` is a
+        // plate eight hundredths of its scale tall, so assuming scale = size would turn a step into
+        // a tower.
+        walkBoxes.length = 0;
+        for (const [key, list] of buckets) {
+          if (!list.length || key.startsWith('shard|')) continue;   // crystal is a circle already
+          const [geoKey] = key.split('|');
+          const geo = provinceGeo[geoKey];
+          if (!geo) continue;
+          if (!geo.boundingBox) geo.computeBoundingBox();
+          const bb = geo.boundingBox;
+          for (const item of list) {
+            const dir = item.origin.clone().normalize();
+            const r0 = item.origin.length();
+            const base = r0 + bb.min.y * item.scale.y;
+            const top = r0 + bb.max.y * item.scale.y;
+            const ground = R + heightAt(dir);
+            if (base > ground + .012) continue;                 // hangs above the ground
+            if (top < ground + .060) continue;                  // low enough to walk over
+            const ex = new THREE.Vector3(1, 0, 0).applyQuaternion(item.quat);
+            const ez = new THREE.Vector3(0, 0, 1).applyQuaternion(item.quat);
+            ex.addScaledVector(dir, -ex.dot(dir));
+            ez.addScaledVector(dir, -ez.dot(dir));
+            if (ex.lengthSq() < 1e-6 || ez.lengthSq() < 1e-6) continue;      // upright: no footprint
+            walkBoxes.push({
+              dir, top, ex: ex.normalize(), ez: ez.normalize(),
+              hx: Math.max(-bb.min.x, bb.max.x) * item.scale.x,
+              hz: Math.max(-bb.min.z, bb.max.z) * item.scale.z
+            });
+          }
+        }
         for (const [key, list] of buckets) {
           const [geoKey, matKey] = key.split('|');
           const inst = new THREE.InstancedMesh(provinceGeo[geoKey], provinceMat[matKey], list.length);
@@ -7210,6 +7270,7 @@
             continue;
           }
           d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
+          d.hit.top = d.world.length() + BELL_BODY_TOP * d.scale;
           const dist = d.world.distanceTo(dwFeet);
           if (dist > .62 && !herdNear) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
           d.awake = true;
@@ -7497,6 +7558,11 @@
           wwN.crossVectors(w.pos, wwE);
           w.fwd.copy(wwE).multiplyScalar(-Math.sin(w.angle) * w.dir).addScaledVector(wwN, Math.cos(w.angle) * w.dir).normalize();
           w.world.copy(w.pos).multiplyScalar(R + SEA - w.depth);
+          // What the swimmer bumps into: the plate's own half-length, and the band of water it takes up.
+          const hit = w.hit || (w.hit = { r: 0, top: 0, bottom: 0 });
+          hit.r = REEF_HALF_LONG * w.scale;
+          hit.top = w.world.length() + REEF_HALF_UP * w.scale;
+          hit.bottom = w.world.length() - REEF_HALF_DOWN * w.scale;
           // It leans into the circle, and rolls a little as it works.
           const bankNow = w.dir * .12 + Math.sin(elapsed * .37 + w.eye) * .04;
           w.bank += (bankNow - w.bank) * (1 - Math.exp(-dt * 1.2));
@@ -7672,66 +7738,89 @@
         state.moveVelocity.addScaledVector(state.direction,-state.moveVelocity.dot(state.direction));
         if (state.moveVelocity.lengthSq()<1e-9) state.moveVelocity.set(0,0,0);
 
-        // A trunk or a boulder is not decoration. Resolved on where the body actually is rather than on
-        // how far it meant to go, so the answer does not change with the frame rate: a body that has
-        // stepped inside one is put back on its surface, and the part of the velocity aimed into it is
-        // dropped, so the next step slides along the bark instead of pressing into it.
-        if (hardProps.length) {
-          walkProbe.copy(state.direction);
-          for (let i=0;i<hardProps.length;i++) {
-            const prop=hardProps[i];
+        // ---- solids ------------------------------------------------------------------------------
+        // Three kinds of thing stop the walker, and all three are answered the same way: on where the
+        // body actually is, not where it meant to go, so neither the frame rate nor the walking speed
+        // changes the answer. A trunk, a boulder, a crate of crystal or a stone the ground pass just
+        // laid is a post; a wall is a box; a creature is a post that moves.
+        // The height test in each is what keeps a stone under a swimmer, and the roof over a lane, out
+        // of the way: a solid only counts if it comes up past the body's feet.
+        const feetRadius = R + (state.water ? Math.max(elevation, SEA - state.depth) : elevation);
+        walkProbe.copy(state.direction);
+        for (let list = 0; list < 2; list++) {
+          const posts = list ? stoneSolids : hardProps;
+          for (let i = 0; i < posts.length; i++) {
+            const post = posts[i];
+            if (post.top !== undefined && post.top <= feetRadius) continue;
             // Cheap reject on the chord angle only; the exact test is the distance below. A tight dot
             // cut-off here is wrong: it depends on the planet's radius, and the scene is built at one
             // scale while the harness runs it at another.
-            if (prop.dir.dot(walkProbe)<.9) continue;
-            // in-plane offset from the prop's own up axis to the body
-            walkBump.copy(state.direction).addScaledVector(prop.dir,-prop.dir.dot(state.direction));
-            const dist=walkBump.length()*R, need=prop.r+WALKER_RADIUS;
-            if (dist>=need||dist<1e-6) continue;
+            if (post.dir.dot(walkProbe) < .9) continue;
+            walkBump.copy(state.direction).addScaledVector(post.dir, -post.dir.dot(state.direction));
+            const dist = walkBump.length() * R, need = post.r + WALKER_RADIUS;
+            if (dist >= need || dist < 1e-6) continue;
             walkBump.normalize();
-            // back onto the surface at the height the body was walking at
-            const along=prop.dir.dot(state.direction);
-            state.direction.copy(prop.dir).multiplyScalar(along).addScaledVector(walkBump,need/R).normalize();
-            const into=-state.moveVelocity.dot(walkBump);
-            if (into>0) state.moveVelocity.addScaledVector(walkBump,into);
+            const along = post.dir.dot(state.direction);
+            state.direction.copy(post.dir).multiplyScalar(along).addScaledVector(walkBump, need / R).normalize();
+            const into = -state.moveVelocity.dot(walkBump);
+            if (into > 0) state.moveVelocity.addScaledVector(walkBump, into);
             walkProbe.copy(state.direction);
           }
         }
-        // The same for the walls of a house, which are boxes rather than posts: the body's offset from
-        // the plot is taken in the plot's own two axes, and if it has stepped inside the footprint
-        // (widened by the body) it is put back out through the nearest face. Circles were not good
-        // enough here — a circle that holds the corners of a longhouse reaches into the lane beside it.
-        // ...and three passes, because the houses in a town are often built one against the other:
-        // pushed out of one box the body can land inside its neighbour, and only a second pass puts
-        // it back on the street. One pass left it up to 35 mm inside a wall.
-        if (townSolids.length) {
+        // Boxes, because a town is made of boxes: the body's offset is taken in the plot's own two axes,
+        // and if it has stepped inside the footprint it goes back out through the nearest face. Three
+        // passes, because the houses of a town are often built one against the other: pushed out of one
+        // box the body can land inside its neighbour.
+        if (walkBoxes.length) {
           walkProbe.copy(state.direction);
-          for (let pass=0;pass<3;pass++) {
-            let moved=false;
-            for (let i=0;i<townSolids.length;i++) {
-              const box=townSolids[i];
-              if (box.dir.dot(walkProbe)<.9) continue;
+          for (let pass = 0; pass < 3; pass++) {
+            let moved = false;
+            for (let i = 0; i < walkBoxes.length; i++) {
+              const box = walkBoxes[i];
+              if (box.top <= feetRadius) continue;
+              if (box.dir.dot(walkProbe) < .9) continue;
               walkBump.copy(state.direction).sub(box.dir).multiplyScalar(R);
-              const u=walkBump.dot(box.ex), v=walkBump.dot(box.ez);
-              const ex=box.hw+WALKER_RADIUS, ez=box.hd+WALKER_RADIUS;
-              if (Math.abs(u)>=ex||Math.abs(v)>=ez) continue;
+              const u = walkBump.dot(box.ex), v = walkBump.dot(box.ez);
+              const ex = box.hx + WALKER_RADIUS, ez = box.hz + WALKER_RADIUS;
+              if (Math.abs(u) >= ex || Math.abs(v) >= ez) continue;
               // Out through whichever face is nearest, so a body never gets pushed across a room.
-              if (ex-Math.abs(u)<=ez-Math.abs(v)) {
-                const face=u<0?-1:1;
-                walkBump.copy(box.ex).multiplyScalar(face*ex).addScaledVector(box.ez,v).multiplyScalar(1/R);
-                const along=state.moveVelocity.dot(box.ex);
-                if (along*face<0) state.moveVelocity.addScaledVector(box.ex,-along);
+              if (ex - Math.abs(u) <= ez - Math.abs(v)) {
+                const face = u < 0 ? -1 : 1;
+                walkBump.copy(box.ex).multiplyScalar(face * ex).addScaledVector(box.ez, v).multiplyScalar(1 / R);
+                const along = state.moveVelocity.dot(box.ex);
+                if (along * face < 0) state.moveVelocity.addScaledVector(box.ex, -along);
               } else {
-                const face=v<0?-1:1;
-                walkBump.copy(box.ez).multiplyScalar(face*ez).addScaledVector(box.ex,u).multiplyScalar(1/R);
-                const along=state.moveVelocity.dot(box.ez);
-                if (along*face<0) state.moveVelocity.addScaledVector(box.ez,-along);
+                const face = v < 0 ? -1 : 1;
+                walkBump.copy(box.ez).multiplyScalar(face * ez).addScaledVector(box.ex, u).multiplyScalar(1 / R);
+                const along = state.moveVelocity.dot(box.ez);
+                if (along * face < 0) state.moveVelocity.addScaledVector(box.ez, -along);
               }
               state.direction.copy(box.dir).add(walkBump).normalize();
               walkProbe.copy(state.direction);
-              moved=true;
+              moved = true;
             }
             if (!moved) break;
+          }
+        }
+        // ...and the creatures. They are posts that move, with a bottom as well as a top: a raft riding
+        // the surface is something you swim under, and a bell is something you walk into. The sky
+        // pennants are not in here — they are four hundred millimetres up, which is the whole point.
+        for (let list = 0; list < 2; list++) {
+          const bodies = list ? reefs : bell;
+          for (let i = 0; i < bodies.length; i++) {
+            const body = bodies[i];
+            const hit = body.hit;
+            if (!hit || hit.top <= feetRadius || hit.bottom > feetRadius + .085) continue;
+            if (body.pos.dot(walkProbe) < .95) continue;
+            walkBump.copy(state.direction).addScaledVector(body.pos, -body.pos.dot(state.direction));
+            const dist = walkBump.length() * R, need = hit.r + WALKER_RADIUS;
+            if (dist >= need || dist < 1e-6) continue;
+            walkBump.normalize();
+            const along = body.pos.dot(state.direction);
+            state.direction.copy(body.pos).multiplyScalar(along).addScaledVector(walkBump, need / R).normalize();
+            const into = -state.moveVelocity.dot(walkBump);
+            if (into > 0) state.moveVelocity.addScaledVector(walkBump, into);
+            walkProbe.copy(state.direction);
           }
         }
 
