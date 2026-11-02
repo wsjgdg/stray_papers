@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-63">
+  <meta name="aetheris-build" content="pennants-64">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -594,7 +594,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-63';
+    const BUILD_ID = 'pennants-64';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -2121,8 +2121,8 @@
       // Everything the archive calls an operation is something this net did; during one, the panels
       // overhead come up, so the light in the sky has a source you can point at.
       const latticeRings = [
-        { radius: 8.45, tilt: .36, yaw: .55, spin: .00270, count: compact ? 30 : 78, size: .050 },
-        { radius: 9.40, tilt: -.22, yaw: 2.15, spin: -.00214, count: compact ? 20 : 54, size: .042 }
+        { radius: 8.45, tilt: .36, yaw: .55, spin: .00270, count: compact ? 30 : 96, size: .095 },
+        { radius: 9.40, tilt: -.22, yaw: 2.15, spin: -.00214, count: compact ? 20 : 68, size: .078 }
       ];
       const latticePanels = [];
       const latticePlane = new THREE.PlaneGeometry(1, 1);
@@ -2143,6 +2143,17 @@
         mesh.frustumCulled = false;
         mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
         ring.frame.add(mesh);
+        // A mirror at this range is a mark a few pixels wide, and a row of hard squares reads as dead
+        // pixels rather than as a chain. Every panel gets the same additive halo, so the band is a line of
+        // light with structure in it instead of a scatter of dots.
+        const glowMesh = new THREE.InstancedMesh(latticePlane, new THREE.MeshBasicMaterial({
+          map: softGlow, side: THREE.DoubleSide, fog: false, transparent: true,
+          depthWrite: false, blending: THREE.AdditiveBlending
+        }), ring.count);
+        glowMesh.frustumCulled = false;
+        glowMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+        ring.frame.add(glowMesh);
+        ring.glowMesh = glowMesh;
         const place = new THREE.Object3D(), radial = new THREE.Vector3(), spin = new THREE.Quaternion();
         // Both bands re-aim, but each one re-aims as a band: a shared axis, a shared rate, and only a
         // little wander panel to panel. Aligned panels catch the sun over a whole arc at once — which is
@@ -2163,28 +2174,50 @@
           place.updateMatrix();
           mesh.setMatrixAt(i, place.matrix);
           mesh.setColorAt(i, new THREE.Color(0, 0, 0));
+          place.scale.set(w * 4.4, w * 4.4, 1);       // square, so the halo stays round whatever the plate's tilt
+          place.updateMatrix();
+          glowMesh.setMatrixAt(i, place.matrix);
+          glowMesh.setColorAt(i, new THREE.Color(0, 0, 0));
           // Panels that hold one attitude for ever would flash once and then be dark for hours. A real
           // array tracks the sun; these re-aim slowly on their own, so the band keeps catching light.
           latticePanels.push({
             mesh, ring, local: place.position.clone(), index: i,
             normal: new THREE.Vector3(0, 0, 1).applyQuaternion(place.quaternion),
-            aimAxis: ring.aimAxis, aimRate: ring.aimRate, aimPhase: (latticeRandom() - .5) * .26
+            // Every panel idles a little, because the lattice holding it up is the ley network and a
+            // working machine is never quite dark. The scatter is what keeps the band from reading as a
+            // string of identical lamps.
+            idle: .075 + latticeRandom() * .125,
+            aimAxis: ring.aimAxis, aimRate: ring.aimRate, aimPhase: (latticeRandom() - .5) * 2.1
           });
         }
         mesh.instanceMatrix.needsUpdate = true;
         mesh.instanceColor.needsUpdate = true;
+        glowMesh.instanceMatrix.needsUpdate = true;
+        glowMesh.instanceColor.needsUpdate = true;
         ring.mesh = mesh;
       }
       const latticeWorld = new THREE.Vector3(), latticeNormal = new THREE.Vector3(), latticeQuat = new THREE.Quaternion();
       const latticeSunDir = new THREE.Vector3(), latticeEye = new THREE.Vector3(), latticeHalf = new THREE.Vector3();
-      const latticeShadow = new THREE.Vector3(), latticePlaneWorld = new THREE.Vector3(), latticeMoonDir = new THREE.Vector3(), latticeTint = new THREE.Color();
+      const latticeShadow = new THREE.Vector3(), latticePlaneWorld = new THREE.Vector3(), latticeMoonDir = new THREE.Vector3(), latticeTint = new THREE.Color(), latticeHalo = new THREE.Color();
       const latticeAim = new THREE.Quaternion();
       // One panel: is the sun above its own horizon, is the planet between it and the sun, and does its
       // face throw the sun at this eye? A hundred and thirty-two panels, one loop, no draw call each.
       function updateLattice(elapsed, dayAmount, cloud, eyeDir, operation) {
         // Daylight and cloud wash the bands out. A mirror you can see at noon is a lie; one you can
         // just about catch at noon is a satellite.
-        const visibility = clamp(1 - dayAmount * .945, .03, 1) * (1 - cloud * .5);
+        const visibility = clamp(1 - dayAmount * .78, .16, 1) * (1 - cloud * .5);
+        // By day the net does not glow, it shades: a mirror facing the planet throws the ground's own
+        // colour back at it, so the band crosses a bright sky as a chain of dull flecks — which is exactly
+        // how a whole population manages to look at the directorate's machinery and not see it. Additive
+        // light cannot go darker than the sky, so the day version switches the material to plain blending.
+        const daylight = dayAmount > .5;
+        for (const ring of latticeRings) {
+          if (ring.mesh.material.userData.daylight === daylight) continue;
+          ring.mesh.material.userData.daylight = daylight;
+          ring.mesh.material.blending = daylight ? THREE.NormalBlending : THREE.AdditiveBlending;
+          ring.mesh.material.needsUpdate = true;
+          ring.glowMesh.visible = !daylight;
+        }
         latticeSunDir.copy(sun).normalize();
         latticeMoonDir.copy(moon.position).normalize();
         for (const ring of latticeRings) {
@@ -2211,18 +2244,36 @@
           latticeNormal.copy(panel.normal).applyQuaternion(latticeQuat).applyQuaternion(latticeAim).normalize();
           latticeEye.copy(camera.position).sub(latticeWorld).normalize();
           latticeHalf.copy(latticeSunDir).add(latticeEye).normalize();
-          const flare = Math.pow(Math.max(0, latticeNormal.dot(latticeHalf)), 14);
+          const flare = Math.pow(Math.max(0, latticeNormal.dot(latticeHalf)), 11);
           // ...and the moon does the same thing, fainter and colder. Without this the bands vanish at
           // local midnight, when every panel overhead is facing the night side of the planet.
           latticeHalf.copy(latticeMoonDir).add(latticeEye).normalize();
           const moonFlare = Math.pow(Math.max(0, latticeNormal.dot(latticeHalf)), 16) * .62;
           const overhead = eyeDir ? Math.max(0, eyeDir.dot(latticeWorld) / latticeWorld.length()) : 0;
           const working = Math.min(1, Math.pow(overhead, 9) * 2.6 + (panel === node ? .85 : 0)) * operation;
-          const brightness = visibility * lit * (.045 + flare * 1.5 + moonFlare + working * .5);
-          latticeTint.setRGB(.60 + working * .30, .68 + working * .24, .78 + working * .14).multiplyScalar(brightness);
+          // The idle glow does not care about the planet's shadow — that is why the band is still there
+          // at midnight, when every panel overhead is in eclipse and a pure mirror would be black. What
+          // the shadow does take away is the sun: a flaring panel is only possible on the day side.
+          // Idle light is a dull plate; a glint is what blooms. The halo is fed by the second only, so the
+          // band reads as machinery with the sun in it rather than as a string of lamps.
+          const glare = visibility * (flare * 1.35 * lit + moonFlare + working * .5);
+          const night = visibility * panel.idle + glare;
+          const brightness = daylight ? Math.max(.05, night * .55) : night;
+          panel.glare = glare;
+          if (daylight) latticeTint.setRGB(.55 + working * .2, .60 + working * .18, .66 + working * .12).multiplyScalar(brightness);
+          else latticeTint.setRGB(.60 + working * .30, .68 + working * .24, .78 + working * .14).multiplyScalar(brightness);
           panel.mesh.setColorAt(panel.index, latticeTint);
+          // The halo carries a third of the plate's light: enough to give the chain a body, not enough to
+          // turn the sky into a screen of lamps.
+          // Even a dull plate has a little bloom in the eye at this distance; a glint has a lot. That
+          // ratio is the whole difference between a chain of faint lights and a chain of lamps.
+          if (!daylight) latticeHalo.copy(latticeTint).multiplyScalar(.16 + (glare > .004 ? .42 * glare / Math.max(.001, brightness) : 0));
+          panel.ring.glowMesh.setColorAt(panel.index, latticeHalo);
         }
-        for (const ring of latticeRings) ring.mesh.instanceColor.needsUpdate = true;
+        for (const ring of latticeRings) {
+          ring.mesh.instanceColor.needsUpdate = true;
+          ring.glowMesh.instanceColor.needsUpdate = true;
+        }
       }
 
       // Sky-derived image-based lighting: metals, crystal and wet ground pick up believable reflections.
@@ -7003,7 +7054,8 @@
         id: 'clear', def: WEATHER_DEFS.clear, intensity: 1, auto: true, autoTimer: 24 + random() * 16,
         now: { fog: 1, cloud: .5, rain: 0, light: 1, wind: .55, tintAmount: 0, rainSpeed: 1 },
         tint: new THREE.Color(WEATHER_DEFS.clear.tint), targetTint: new THREE.Color(WEATHER_DEFS.clear.tint),
-        flash: 0, bolt: 7 + random() * 5, boltLife: 0, announced: true,
+        flash: 0, bolt: 7 + random() * 5, boltLife: 0, boltSpan: .22, boltFlicker: 9, flickerPhase: 0,
+        strokes: [], strikeAge: 0, strikeSpan: 0, announced: true,
         time: 0, shaderTime: 0, flashWritten: '', downLocal: new THREE.Vector3(0, -1, 0)
       };
       const weatherToast = document.getElementById('weatherToast');
@@ -7112,7 +7164,7 @@
       lightningBolt.renderOrder = 22;
       scene.add(lightningBolt);
       const lightningStart = new THREE.Vector3(), lightningPoint = new THREE.Vector3(), lightningForward = new THREE.Vector3(), lightningSide = new THREE.Vector3();
-      function spawnLightning() {
+      function spawnLightning(span = .22) {
         lightningForward.set(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
         lightningSide.set(1, 0, 0).applyQuaternion(camera.quaternion).normalize();
         lightningStart.copy(camera.position).addScaledVector(lightningForward, 5 + random() * 4).addScaledVector(state.direction, 5.5 + random() * 2.5).addScaledVector(lightningSide, (random() - .5) * 5);
@@ -7128,9 +7180,66 @@
         lightningGeo.attributes.position.needsUpdate = true;
         lightningBolt.visible = true;
         lightningBolt.material.opacity = .96;
-        weather.boltLife = .22;
+        // How long this stroke is drawn for is the stroke's own business: a close strike holds the channel
+        // for a fifth of a second, a far one is gone before the eye finds it.
+        weather.boltLife = span;
+        weather.boltSpan = span;
       }
       weatherFlash.style.opacity = '0';
+
+      // ---- Lightning: composing a discharge (begin) -----------------------------------------------
+      // A strike is not one flash. It is a burst of return strokes, each of its own brightness and its
+      // own fade, sometimes with the channel drawn and sometimes without — sheet lightning, the flash of a
+      // bolt you never find. And the silences between bursts are not a constant either: the sky arrives in
+      // drumrolls and then holds its breath. Composing both is the difference between a strobe and weather.
+      function beginStrike(forced) {
+        const roll = forced !== undefined ? forced : random();
+        const count = roll < .5 ? 1 : roll < .82 ? 2 : roll < .95 ? 3 : 4;
+        const strokes = [];
+        let at = 0;
+        for (let i = 0; i < count; i++) {
+          const span = .07 + random() * .46;
+          strokes.push({
+            at,
+            level: (i === 0 ? .74 : .40) + random() * .46,
+            decay: 3.2 + random() * 15.5,          // every stroke fades at its own rate
+            channel: random() < .72,               // and some of them you only hear
+            span, fired: false
+          });
+          at += .035 + random() * (count > 2 ? .30 : .12);
+        }
+        weather.strokes = strokes;
+        weather.strikeAge = 0;
+        weather.strikeSpan = at + 3.2;             // long enough for the slowest tail to be spent
+        return strokes;
+      }
+      function nextStrikeGap() {
+        // Two exponential draws, not one: a single exponential piles every gap onto its own floor and the
+        // storm turns metronomic again. The sum has a hump in the middle and a long tail on both sides.
+        const drumroll = .8 - Math.log(1 - random() * .97) * 2.2 - Math.log(1 - random() * .97) * 2.2;
+        const lull = random() < .18 ? 5 + random() * 11 : 0;          // and now and then the sky just waits
+        // Soft ceiling, so a long breath is cut down smoothly instead of piling up on one number.
+        const gap = drumroll + lull;
+        return 27 * (1 - Math.exp(-gap / 27));
+      }
+      function updateStrike(dt) {
+        if (!weather.strokes.length) { weather.flash *= Math.exp(-dt * 6.5); return; }
+        weather.strikeAge += dt;
+        let glow = 0, live = null;
+        for (const stroke of weather.strokes) {
+          if (weather.strikeAge < stroke.at) continue;
+          const value = stroke.level * Math.exp(-(weather.strikeAge - stroke.at) * stroke.decay);
+          if (value > glow) glow = value;
+          if (stroke.channel && !stroke.fired) { stroke.fired = true; spawnLightning(stroke.span); live = stroke; }
+        }
+        weather.flash = glow;
+        if (live) {
+          weather.boltFlicker = 5 + random() * 24;   // no two strokes shiver at the same rate
+          weather.flickerPhase = random() * TAU;
+        }
+        if (weather.strikeAge > weather.strikeSpan) weather.strokes = [];
+      }
+      // ---- Lightning: composing a discharge (end) ---------------------------------------------------
 
       // ---- Special events: definitions, scheduler and the two pieces of world geometry
       // they animate (a ley shockwave ring and a solar veil disc).
@@ -8171,15 +8280,19 @@
         if (storm && !reducedMotion) {
           weather.bolt -= dt;
           if (weather.bolt <= 0) {
-            weather.flash = .65 + random() * .35;
-            weather.bolt = 3.5 + random() * 8;
-            spawnLightning();
+            beginStrike();
+            weather.bolt = nextStrikeGap();
           }
+          updateStrike(dt);
+        } else if (weather.strokes.length) {
+          weather.strokes = [];
+          weather.flash *= Math.exp(-dt * 6.5);
         }
-        weather.flash *= Math.exp(-dt * 7);
         if (weather.boltLife > 0) {
           weather.boltLife -= dt;
-          lightningBolt.material.opacity = Math.max(0, weather.boltLife / .22) * (.7 + random() * .3);
+          const left = Math.max(0, weather.boltLife / Math.max(.001, weather.boltSpan));
+          const shiver = .62 + .38 * Math.abs(Math.sin(weather.flickerPhase + weather.time * weather.boltFlicker));
+          lightningBolt.material.opacity = left * shiver * (.78 + random() * .22);
           if (weather.boltLife <= 0) lightningBolt.visible = false;
         }
         const flashOpacity = weather.flash > .004 ? (weather.flash * .72).toFixed(3) : '0';
