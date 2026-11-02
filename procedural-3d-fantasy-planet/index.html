@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="whale-flukes-45">
+  <meta name="aetheris-build" content="whale-silhouette-46">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,7 +584,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'whale-flukes-45';
+    const BUILD_ID = 'whale-silhouette-46';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4649,21 +4649,27 @@
       // The tail stock and the flukes, with the pivot where the stock leaves the body.
       function whaleTailPart() {
         const parts = [];
-        const stock = new THREE.CylinderGeometry(.0042, .0108, .0170, 8, 2, false);
-        stock.rotateX(Math.PI / 2);
-        stock.translate(0, 0, -.0085);
+        // The peduncle, thick where it leaves the body and drawn down to a wrist at the flukes. The
+        // radii were the other way round before: it flared as it went back, so from the side the tail
+        // read as a trumpet with a needle in it rather than as a tail.
+        const stock = new THREE.CylinderGeometry(.0072, .0028, .0190, 9, 2, false);
+        stock.rotateX(Math.PI / 2);            // axis down the body: .0072 at the body, .0028 at the wrist
+        stock.scale(.86, 1, 1);                // a peduncle is a tall oval, not a tube
+        stock.translate(0, 0, -.0092);
+        stock.computeVertexNormals();
         parts.push(partTint(stock, '#5f6b72', .07));
-        // Flukes: two flat blades swept back from the notch, each tipped a little.
+        // Flukes: one horizontal blade either side of the notch — thick at the root so the edge reads
+        // from the side, swept back and thinning, with the tips lifted a little.
         for (const sx of [-1, 1]) {
-          const blade = new THREE.BoxGeometry(.0190, .0026, .0110, 2, 1, 1);
-          blade.translate(sx * .0104, 0, -.0150);
+          const blade = new THREE.BoxGeometry(.0200, .0044, .0130, 3, 1, 2);
           const bpos = blade.attributes.position;
           for (let i = 0; i < bpos.count; i++) {
-            const u = clamp((bpos.getX(i) * sx + .0010) / .0200, 0, 1);
-            bpos.setZ(i, bpos.getZ(i) - u * u * .0090);       // swept back
-            bpos.setY(i, bpos.getY(i) * (1 - u * .35));
+            const u = clamp((bpos.getX(i) * sx + .0100) / .0200, 0, 1);   // 0 root, 1 tip
+            bpos.setZ(i, bpos.getZ(i) * (1 - u * .55) - .0224 - u * u * .0100);  // back, and swept
+            bpos.setY(i, bpos.getY(i) * (1 - u * .62) + u * .0036);      // thinner, and lifted
           }
           blade.computeVertexNormals();
+          blade.translate(sx * .0104, 0, 0);
           parts.push(partTint(blade, '#5a666d', .07));
         }
         return join(parts);
@@ -4671,15 +4677,19 @@
       // One flipper, pivot at the shoulder, hanging back and down the way a whale's does.
       function whaleFinPart() {
         const parts = [];
-        const fin = new THREE.BoxGeometry(.0190, .0028, .0086, 3, 1, 1);
+        const fin = new THREE.BoxGeometry(.0225, .0032, .0128, 4, 1, 2);
         const fpos = fin.attributes.position;
         for (let i = 0; i < fpos.count; i++) {
-          const u = clamp((fpos.getX(i) + .0095) / .0190, 0, 1);
-          fpos.setZ(i, fpos.getZ(i) * (1 - u * .45) - u * .0032);
-          fpos.setY(i, fpos.getY(i) * (1 - u * .3));
+          const u = clamp((fpos.getX(i) + .01125) / .0225, 0, 1);
+          // A flipper is a wing: it narrows, thins and trails back toward the tip.
+          fpos.setZ(i, fpos.getZ(i) * (1 - u * .50) - u * .0048);
+          fpos.setY(i, fpos.getY(i) * (1 - u * .58));
         }
         fin.computeVertexNormals();
-        fin.translate(.0095, 0, 0);
+        // Held at a droop, not flat: a horizontal blade is edge-on from the side and reads as a stick,
+        // which is exactly what the first pass looked like.
+        fin.rotateX(.62);
+        fin.translate(.0112, 0, 0);
         parts.push(partTint(fin, '#5d6970', .07));
         return join(parts);
       }
@@ -4737,7 +4747,7 @@
           // rise and fall together and neither one lies inside the body.
           wwLocal.makeRotationZ(sx * (-.10 + beat * .9));
           if (sx < 0) wwLocal.multiply(wwSpin);
-          wwLocal.setPosition(sx * .0112, -.0030, .0340);
+          wwLocal.setPosition(sx * .0100, -.0052, .0270);
           wwPart.multiplyMatrices(wwFrame.matrix, wwLocal);
           whaleFinMesh.setMatrixAt(i * 2 + f, wwPart);
         }
