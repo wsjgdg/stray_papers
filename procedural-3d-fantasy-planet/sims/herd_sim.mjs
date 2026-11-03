@@ -30,7 +30,12 @@ const animalClearance = (pos, radius) => {
   for (const box of walkBoxes) {
     if (box.top <= feet || (box.bottom !== undefined && box.bottom > feet + .020) || box.dir.dot(pos) < .9) continue;
     const off = box.dir.clone().sub(pos).multiplyScalar(R);
-    const gap = Math.min(box.hx + radius - Math.abs(off.dot(box.ex)), box.hz + radius - Math.abs(off.dot(box.ez)));
+    const u = Math.abs(off.dot(box.ex)), v = Math.abs(off.dot(box.ez));
+    // Only boxes the body is actually at: `.dot > .9` is a fifth of a radian, which on a planet of radius
+    // 4.2 is three quarters of a unit — a town two streets away used to be measured as if it were on top of
+    // the animal, and it only stopped mattering because the walls' bottoms were (wrongly) above every foot.
+    if (u > box.hx + radius + .02 || v > box.hz + radius + .02) continue;
+    const gap = Math.min(box.hx + radius - u, box.hz + radius - v);
     worst = Math.min(worst, gap);
   }
   return worst;

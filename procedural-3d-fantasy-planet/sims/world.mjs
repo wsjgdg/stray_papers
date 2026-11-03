@@ -183,6 +183,7 @@ export function loadPage(file = PAGE) {
       globalThis.__world = {
         THREE, scene, camera, renderer, state,
         R, SEA, WATER, TAU, EYE, WALKER_RADIUS, WALK_SPEED, SPRINT_SPEED, SWIM_SPEED,
+        DIVE_SPEED, RISE_SPEED, MAX_DIVE, SWIM_EYE, CROUCH_EYE,
         BELL_SIZE, REEF_S, BELL_HALF_WIDE, BELL_BODY_TOP, keys, joystick, stoneSolids, groundPose, dwFeet,
         heightAt, provinceAt, biomeAt, nearestLand, seeded, hash, noise, waterAt, depthMeters,
         provinceDressing, physicsStep, updateBell, updateReefs, updateCamera, updateWeather, updateLattice,
