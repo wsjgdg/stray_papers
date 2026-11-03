@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-70">
+  <meta name="aetheris-build" content="pennants-71">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,7 +595,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-70';
+    const BUILD_ID = 'pennants-71';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3381,6 +3381,10 @@
         return (axis * 2 + (v[axis] > 0 ? 1 : 0)) * 4 + (v[(axis + 1) % 3] > 0 ? 1 : 0) + (v[(axis + 2) % 3] > 0 ? 2 : 0);
       }
       function plant(type, n, height, size, rng) {
+        // Nothing is planted where the player opens their eyes. The landing is a clearing wide enough for the
+        // plant's own width plus a body: the near-landing passes used to keep only the *point* clear, and a
+        // boulder 206 mm across laid 30 mm from that point had the player standing inside it on frame one.
+        if (n.distanceTo(landing) < .115 + size * .5) return;
         const sink = type === CRAG ? -.022 : -.005;
         transform.position.copy(n).multiplyScalar(R + height + sink);
         transform.quaternion.setFromUnitVectors(UP, n); transform.rotateY(rng() * TAU);
@@ -3432,7 +3436,10 @@
           const n = nearSpot ? nearDirection(landing, forestRandom() * TAU, .035 + Math.sqrt(forestRandom()) * .16) : randomDirection(forestRandom);
           const h = heightAt(n);
           if (h < rule.min || h > rule.max) continue;
-          if (n.dot(landing) > .99955) continue;
+          // A clearing where you land, in chords and in full: the old test was a dot product, which only
+          // keeps the *point* clear — and a boulder 103 mm across, laid 30 mm from it, opened the game with
+          // the player standing inside one.
+          if (n.distanceTo(landing) < .12) continue;
           if (rule.biomes && !rule.biomes.includes(biomeAt(n, h))) continue;
           // Concentrate 3D alpine crags along rugged mountain spines and cliff shoulders.
           if (rule.crag && Math.abs(noise(n.x * 8.5 + 17, n.y * 8.5 - 9, n.z * 8.5 + 4)) > .36) continue;
@@ -3452,7 +3459,7 @@
           // The handful nearest the landing site first, so the first view is dressed.
           for (let attempt = 0; province === landingProvince && placed < rule.near && attempt < 60; attempt++) {
             const n = nearDirection(landing, forestRandom() * TAU, .035 + Math.sqrt(forestRandom()) * .16);
-            if (n.dot(landing) > .99955 || provinceAt(n) !== province) continue;
+            if (n.distanceTo(landing) < .12 || provinceAt(n) !== province) continue;
             const h = heightAt(n);
             if (h < rule.min || h > rule.max) continue;
             plant(type, n, h, rule.size[0] + forestRandom() * (rule.size[1] - rule.size[0]), forestRandom);
@@ -3753,6 +3760,11 @@
       // and shove them out. The scatter keeps out of the body's own footprint instead: the stones you
       // walk up to are the ones you cannot walk through.
       const stoneSolids = [];
+      // Declared here rather than with the herd below, because the ground is dressed before the herd is built and
+      // the stones have to be able to see it (a stone may not be laid where an animal is standing).
+      // Declared here rather than with the herd below, because the ground is dressed before the herd is built and
+      // the stones have to be able to see it: a stone may not be laid where an animal is standing.
+      const bell = [];
       function dressStones(center, rng) {
         let stoneCount = 0;
         stoneSolids.length = 0;
@@ -3761,7 +3773,16 @@
           if (h < .028 || h > .36) continue;
           const sx = .35 + rng() * .75, sy = .3 + rng() * .5, sz = .35 + rng() * .7;
           const half = Math.max(sx, sz) * stoneHalf;
-          if (n.angleTo(center) * R < half + .018) continue;                       // not under the walker
+          // Not under the walker. In chords, like the half-width it is compared against: `angleTo * R` is an
+          // arc, 4.2 times longer at this radius, so the old test passed stones that were thirty millimetres
+          // inside the body — and the first frame of the game shoved the player out of one.
+          if (n.distanceTo(center) < half + .018) continue;
+          // ...and not under an animal either. The ground is re-dressed around the walker every few metres, and
+          // a stone laid where a bell is standing puts 20 mm of rock inside a body for as long as it takes the
+          // animal to walk out — which is exactly what the herd bench measured as 穿模.
+          let onAnimal = false;
+          for (const b of bell) if (n.distanceTo(b.pos) * R < half + b.hit.r + .004) { onAnimal = true; break; }
+          if (onAnimal) continue;
           transform.position.copy(n).multiplyScalar(R + h + .003);
           transform.quaternion.setFromUnitVectors(UP, n); transform.rotateY(rng() * TAU);
           transform.scale.set(sx, sy, sz); transform.updateMatrix();
@@ -4537,7 +4558,6 @@
       // point sits above the ground. Read from the model so the two stay in step.
       let BELL_HALF_WIDE = .024, BELL_BODY_TOP = .040;
       const BELL_LEGS = [[0, .0212], [-.0182, -.0134], [.0182, -.0134]];
-      const bell = [];
       let bellBodyMesh = null, bellHeadMesh = null, bellLegMesh = null;
       // A bone between two points, in the animal's own units: legs, the grazing tube and every rim spine
       // are the same call.
@@ -4683,7 +4703,7 @@
       const bellMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .92, metalness: .02 });
       // Scratch, reused by every pose: no allocation inside the frame loop.
       const dwFrame = new THREE.Object3D(), dwLocal = new THREE.Matrix4(), dwPart = new THREE.Matrix4();
-      const dwAhead = new THREE.Vector3(), dwPlayer = new THREE.Vector3(), dwE = new THREE.Vector3();
+      const dwAhead = new THREE.Vector3(), dwPlayer = new THREE.Vector3(), dwE = new THREE.Vector3(), dwShore = new THREE.Vector3();
       const dwN = new THREE.Vector3(), dwProbe = new THREE.Vector3(), dwCol = new THREE.Color();
       const dwTmp = new THREE.Vector3();          // bellNormal() must not write into its own argument
       const dwFeet = new THREE.Vector3();          // where the walker stands, not where the eye is
@@ -5391,6 +5411,10 @@
         const trySite = (dir, bulk, limit, shore = false) => {
           const h = heightAt(dir);
           if (h < .03 || h > .26) return false;
+          // A town's houses reach about .07 from its centre, and the player opens their eyes at the landing.
+          // The old first-town offset was .043-.071 — the houses of the town you land beside could be built
+          // around the spot you arrive on, and the first frame of the game shoved the player out of a wall.
+          if (dir.distanceTo(landing) < .13) return false;
           const id = provinceAt(dir, h);
           if (sites[id].length >= limit(id)) return false;
           // Towns are ~.40 units across, so two of them closer than .26 would share a platform.
@@ -5402,7 +5426,7 @@
         // 1. The town you land beside: something to walk into on the very first descent.
         //    Offsets are retried because the first pick can land on a cliff or in the surf.
         for (let i = 0; i < 14; i++) {
-          if (trySite(nearDirection(landing, rng() * TAU, .043 + rng() * .028), 1.3, () => 999)) break;
+          if (trySite(nearDirection(landing, rng() * TAU, .145 + rng() * .03), 1.3, () => 999)) break;
         }
         // 2. Two settlements under every sanctuary: you always arrive somewhere inhabited.
         landmarks.forEach(landmark => {
@@ -7617,7 +7641,9 @@
             d.stride = .60;
             d.headTilt += (-.10 - d.headTilt) * (1 - Math.exp(-dt * 14));
             if (d.timer <= 0 || d.speed < .02) {
-              d.mode = 'walk'; d.timer = 1.6; d.speed = .05; d.headTilt = .30;
+              // The head comes up out of the bolt at the walk branch's own 5-a-second ease: assigning .30 here
+              // was a .22 rad snap between two frames, which the eye catches as a flinch even at a distance.
+              d.mode = 'walk'; d.timer = 1.6; d.speed = .05;
             }
           } else if (d.mode === 'alert') {
             // It looks first, then gives ground. Standing perfectly still while somebody walks up to it
@@ -7667,7 +7693,10 @@
               dwE.addScaledVector(dwProbe.normalize(), 1 / Math.max(gap + .006, .006));
             }
             {
-              const gap = d.pos.angleTo(state.direction) * R - d.hit.r - WALKER_RADIUS - .010;
+              // Chords, like the radii it is compared against. `angleTo * R` is an arc — 4.2 times longer at
+              // this radius — so the avoidance thought it was keeping 30 mm of daylight and kept seven, and an
+              // animal could stand a body's width inside the player without ever noticing.
+              const gap = d.pos.distanceTo(state.direction) - d.hit.r - WALKER_RADIUS - .010;
               if (gap < .055) {
                 dwProbe.copy(d.pos).sub(state.direction);
                 dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
@@ -7719,7 +7748,11 @@
               d.timer = 1.0 + .7 * (1 + Math.sin(d.seedPhase * 1.7));
             }
           } else {
-            d.speed = 0; d.stride = 0;
+            // A stop is a slowing, not a switch: the leg animation and the body both read `speed`, so zeroing it
+            // in the frame the bolt ends is the animal freezing mid-stride. Whatever it was doing, it coasts down
+            // at 7 a second and is only called stopped when there is nothing left to animate.
+            d.speed = d.speed > .004 ? d.speed * Math.exp(-dt * 7) : 0;
+            if (!d.speed) d.stride = 0;
             d.headTilt += (1 - d.headTilt) * (1 - Math.exp(-dt * 5));
             d.timer -= dt;
             if (d.timer <= 0) {
@@ -7830,7 +7863,7 @@
             // A boulder, or a house: the same two questions, asked of the next few centimetres.
             const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) * R < (sv.wr || .20) + .028 * BELL_SIZE)
               && !propAhead(d, .038)
-              && p2.angleTo(state.direction) * R > d.hit.r + .030 * BELL_SIZE;   // the walker is in the way too
+              && p2.distanceTo(state.direction) > d.hit.r + WALKER_RADIUS + .030 * BELL_SIZE;   // the walker is in the way too
             dwProbe.copy(d.pos).addScaledVector(d.fwd, .035).normalize();
             if (!walkableAt(dwProbe) || !clearAhead(dwProbe)) {
               let turned = false;
@@ -7900,6 +7933,13 @@
                   }
                 }
               }
+              // ...and if even that fails there is no way out, so it stops — but a stop is a slowing: the
+              // decision to stop is a third of the speed a frame, and `d.vel` chases it at 12 a second. Zeroing
+              // the decision outright was one frame of an animal walking at full pace and the next of an animal
+              // rooted, which is the freeze the user called 突兀.
+              // The *decision* to stop may be instant; the body is not, because `d.vel` chases it at 12 a second.
+              // Coasting the decision as well was tried and made it worse: an animal still nominally walking
+              // with no way out stayed in 'walk' for 3.7 s, which is the frozen-in-a-walking-mode bug.
               if (!turned) { d.speed = 0; d.mode = 'graze'; d.timer = 1.4; }
             }
             d.pos.addScaledVector(d.fwd, d.vel * dt / R).normalize();
@@ -7989,6 +8029,66 @@
             a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos));
             b.world.copy(b.pos).multiplyScalar(R + heightAt(b.pos));
           }
+        }
+        // ---- the waterline, as a net --------------------------------------------------------------
+        // The walk gate asks about the next 35 mm and the shoulders ask about every nudge, but a bolting
+        // animal still gets carried a step past the tideline along a beach, and four of the thirty-one were
+        // found standing 36 to 59 mm under the sea, grazing, for a whole minute. Whatever the path in, the
+        // invariant is the point: nothing below the waterline stays there.
+        //
+        // Two things this may not do. It may not walk the animal into a boulder to get it out of the water —
+        // the first version did, and the herd bench found a body 69 mm inside a stone, which is a worse bug
+        // than wet feet. And it may not hold an animal in 'walk' while it stands still: extending the timer
+        // every frame kept one pinned at the foot of a cliff for 3.7 s, frozen in a walking mode. So a step is
+        // taken only if it is both uphill *and* clear, and if there is no such step this frame the animal stays
+        // where it is and tries again on the next one.
+        for (let i = 0; i < bell.length; i++) {
+          const a = bell[i];
+          if (heightAt(a.pos) >= SEA + .004) continue;
+          dwE.set(1, 0, 0).cross(a.pos);
+          if (dwE.lengthSq() < 1e-8) dwE.set(0, 0, 1).cross(a.pos);
+          dwE.normalize();
+          dwN.crossVectors(a.pos, dwE);
+          let best = null, bestH = heightAt(a.pos);
+          // Three rings of reach: a step, then a stride, then a bound. On a boulder-strewn beach every two-and-a-half
+          // millimetre step can be blocked while the animal is standing in water it has to leave, so the search
+          // widens rather than giving up — and past the first ring it asks only for dry ground that is not crowded,
+          // because being out of the sea outranks being clear of a rock.
+          outer: for (const reach of [.0025, .006, .012]) for (let k = 0; k < 24; k++) {
+            const ang = k / 24 * TAU;
+            const side = dwProbe.copy(a.pos).addScaledVector(dwE, Math.cos(ang) * reach).addScaledVector(dwN, Math.sin(ang) * reach).normalize();
+            const hh = heightAt(side);
+            if (hh <= bestH) continue;
+            if (reach === .0025 && propAhead(a, .014, dwShore.copy(side).sub(a.pos).normalize())) continue;
+            let inside = false;
+            for (const box of walkBoxes) {
+              if (box.dir.dot(side) < .995) continue;
+              if (box.bottom > hh + R + .013) continue;
+              const off = dwShore.copy(side).sub(box.dir).multiplyScalar(R);
+              if (Math.abs(off.dot(box.ex)) < box.hx && Math.abs(off.dot(box.ez)) < box.hz) { inside = true; break; }
+            }
+            if (inside) continue;
+            // ...and not into a neighbour: this pass runs after the shoulder relaxation, so a body pushed out of
+            // the sea must not arrive inside the animal standing on the shore. It waits a frame instead.
+            let crowded = false;
+            for (const o of bell) {
+              if (o === a) continue;
+              if (side.distanceTo(o.pos) * R < (a.hit.r + o.hit.r)) { crowded = true; break; }
+            }
+            if (crowded) continue;
+            bestH = hh; best = side.clone(); break outer;
+          }
+          if (!best) {
+            // Nowhere dry and clear to step: it stands in the shallows for a frame and tries again. What it may
+            // not do is keep a 'walk' tag while standing still — that is the frozen-in-a-walking-mode bug.
+            a.speed = 0;
+            if (a.mode === 'walk') { a.mode = 'graze'; a.timer = Math.max(a.timer, .4); }
+            continue;
+          }
+          a.pos.copy(best);
+          a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos));
+          bellNormal(a.pos, a.up);
+          if (a.speed < .004) { a.speed = .030; a.mode = 'walk'; a.timer = Math.max(a.timer, .8); }
         }
         bellBodyMesh.instanceMatrix.needsUpdate = true;
         bellHeadMesh.instanceMatrix.needsUpdate = true;
@@ -8618,7 +8718,10 @@
         const standEye=mix(EYE,CROUCH_EYE,state.crouch);
         // The floor is the actual terrain, not the water plane: clamping it to SEA used to make
         // the camera jump by exactly the water depth the moment the flag flipped.
-        const footRadius=R+elevation, eyeHeight=state.water ? SWIM_EYE : standEye;
+        // The floor is the ground the body is *over*, read after the solids have finished moving it — not the
+        // sample taken before them. With the stale one, a push out of a bush put the eyes up to nine millimetres
+        // inside a slope for a frame before the next clamp noticed.
+        const footRadius=state.feetRadius, eyeHeight=state.water ? SWIM_EYE : standEye;
         if (state.water) {
           // Wading and swimming are two ends of one curve. Standing on the seabed puts the eye at
           // ground+standEye; floating puts it at the waterline+SWIM_EYE. Those two meet exactly at

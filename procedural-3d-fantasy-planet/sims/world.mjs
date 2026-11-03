@@ -54,7 +54,7 @@ const elements = new Map();
 const makeElement = (tag = 'div') => {
   const el = {
     tagName: String(tag).toUpperCase(),
-    style: new Proxy({}, { get: (t, k) => (k in t ? t[k] : (k === 'setProperty' ? () => {} : '')), set: (t, k, v) => (t[k] = v, true) }),
+    style: new Proxy({}, { get: (t, k) => (k in t ? t[k] : (k === 'setProperty' ? () => {} : '')), set: (t, k, v) => { t[k] = v; return true; } }),
     dataset: {}, children: [], parentNode: null, hidden: false, disabled: false,
     textContent: '', innerHTML: '', innerText: '', value: '', id: '', className: '',
     width: 0, height: 0, clientWidth: 1280, clientHeight: 720, offsetWidth: 1280, offsetHeight: 720,
@@ -189,6 +189,7 @@ export function loadPage(file = PAGE) {
         provinceDressing, physicsStep, updateBell, updateReefs, updateCamera, updateWeather, updateLattice,
         bell, reefs, landmarks, settlementDirs, walkBoxes, hardProps, floraHard, groundStones,
         provinceGeo, provinceMat, hardBand, hardWidthOf, provinceWet, smokeWind, overlapAt,
+        weather, latticeRings, setWeather, cycleWeather, WEATHER_DEFS, nextStrikeGap, thunderPlan, beginStrike,
         resetGroundMotion, clearInput, propUnder, hardBand, BELL_HALF_WIDE, propAhead, bellNormal
       };
 `;
