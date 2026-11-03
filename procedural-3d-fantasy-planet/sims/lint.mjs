@@ -15,7 +15,7 @@ const scratch = path.join(here, '.lint-page.mjs');
 fs.writeFileSync(scratch, html.slice(open + '<script type="module">'.length, close));
 
 const eslint = new ESLint({ cwd: here });
-const results = await eslint.lintFiles(['.lint-page.mjs', '*.mjs']);
+const results = await eslint.lintFiles(['.lint-page.mjs', '*.mjs', 'browser/*.mjs']);
 fs.unlinkSync(scratch);
 
 let errors = 0, warnings = 0;

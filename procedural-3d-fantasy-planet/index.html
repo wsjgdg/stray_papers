@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-74">
+  <meta name="aetheris-build" content="pennants-75">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,7 +595,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-74';
+    const BUILD_ID = 'pennants-75';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -8580,7 +8580,7 @@
         state.transition = {
           from, fromRotation, to: targetPosition.clone(), toRotation: targetRotation.clone(),
           fromNormal: from.clone().normalize(), arc: new THREE.Quaternion().setFromUnitVectors(from.clone().normalize(),targetPosition.clone().normalize()),
-          time: 0, duration: reducedMotion ? .45 : 1.8
+          time: 0, duration: reducedMotion ? .45 : 1.8, wallLastMs: performance.now()
         };
         document.body.dataset.mode = state.mode;
         document.body.classList.add('transitioning');
@@ -8796,15 +8796,15 @@
                   walkBump.copy(box.ex).multiplyScalar(face * ex).addScaledVector(box.ez, v);
                   chord = walkBump.length();
                   walkBump.multiplyScalar(1 / Math.max(chord, 1e-9));
-                  const along = state.moveVelocity.dot(box.ex);
-                  if (along * face < 0) { state.moveVelocity.addScaledVector(box.ex, -along); if (-along > state.bump) state.bump = -along; }
+                  const along = state.moveVelocity.dot(box.ex), into = -along * face;
+                  if (into > 0) { state.moveVelocity.addScaledVector(box.ex, -along); if (into > state.bump) state.bump = into; }
                 } else {
                   const face = v < 0 ? -1 : 1;
                   walkBump.copy(box.ez).multiplyScalar(face * ez).addScaledVector(box.ex, u);
                   chord = walkBump.length();
                   walkBump.multiplyScalar(1 / Math.max(chord, 1e-9));
-                  const along = state.moveVelocity.dot(box.ez);
-                  if (along * face < 0) { state.moveVelocity.addScaledVector(box.ez, -along); if (-along > state.bump) state.bump = -along; }
+                  const along = state.moveVelocity.dot(box.ez), into = -along * face;
+                  if (into > 0) { state.moveVelocity.addScaledVector(box.ez, -along); if (into > state.bump) state.bump = into; }
                 }
                 placeAtChord(box.dir, walkBump, chord);
                 walkProbe.copy(state.direction);
@@ -9056,9 +9056,16 @@
         const stillAirborne = state.water && !state.grounded && state.radius - standEye > R + SEA + .001;
         state.feetRadius = state.water && !stillAirborne ? footRadius : Math.max(footRadius, state.radius - standEye);
       }
-      function updateCamera(dt) {
+      function updateCamera(dt, frameTimestamp) {
         if (state.transition) {
-          const t=state.transition; t.time+=dt;
+          const t=state.transition;
+          // Physics stays capped and fixed-step, but a camera flight is a wall-clock animation. At a
+          // slow render rate a 1.8-second descent used to take minutes because every frame counted only
+          // 50 ms. Use the actual frame interval; manual/headless stepping can still supply dt alone.
+          if (Number.isFinite(frameTimestamp) && Number.isFinite(t.wallLastMs)) {
+            t.time += Math.max(0, frameTimestamp - t.wallLastMs) / 1000;
+            t.wallLastMs = Math.max(t.wallLastMs, frameTimestamp);
+          } else t.time += dt;
           const progress=smooth(0,1,t.time/t.duration);
           pathRotation.slerpQuaternions(identity,t.arc,progress);
           pathNormal.copy(t.fromNormal).applyQuaternion(pathRotation);
@@ -9074,7 +9081,11 @@
           orbitPose(); camera.position.lerp(targetPosition,1-Math.exp(-dt*9)); camera.quaternion.slerp(targetRotation,1-Math.exp(-dt*9));
         } else {
           physicsTime+=dt;
-          while(physicsTime>=1/120){physicsStep(1/120);physicsTime-=1/120;}
+          // A frame may contain several fixed steps. Preserve the hardest impact for the sound pass;
+          // otherwise the next, gentler substep clears state.bump before updateWorld can hear it.
+          let frameBump=0;
+          while(physicsTime>=1/120){physicsStep(1/120);physicsTime-=1/120;frameBump=Math.max(frameBump,state.bump);}
+          state.bump=frameBump;
           // Keyboard look: frame-rate independent, and it cancels the sanctuary auto-turn.
           const lookYaw=(keys.has('KeyJ')?1:0)-(keys.has('KeyL')?1:0);
           const lookPitch=(keys.has('KeyI')?1:0)-(keys.has('KeyK')?1:0);
@@ -9730,7 +9741,7 @@
         state.transition = {
           from, fromRotation, to: targetPosition.clone(), toRotation: targetRotation.clone(),
           fromNormal: from.clone().normalize(), arc: new THREE.Quaternion().setFromUnitVectors(from.clone().normalize(), targetPosition.clone().normalize()),
-          time: 0, duration: reducedMotion ? .4 : 1.3
+          time: 0, duration: reducedMotion ? .4 : 1.3, wallLastMs: performance.now()
         };
         document.body.dataset.mode = 'ground';
         document.body.classList.add('transitioning', 'teleporting');
@@ -9985,14 +9996,19 @@
           note: '那不是虫子，是晶体磨下来的屑。它自己以为自己活着，而灵脉读数会同意它。' }
       ];
       CODEX.forEach(entry => { entry.seen = false; entry.fresh = false; });
-      // Seen means: close enough that it is a thing and not a speck, and inside the cone you are looking
-      // down. Distance is the chord across the sphere — the same measure the animals' own senses use.
+      // Range is the chord between surface directions, as in collision. The sight cone is different:
+      // it runs from the *eye* to the actual animal, not from the planet centre to its unit direction.
+      // The latter cannot see a nearby creature and also throws away a flying animal's altitude.
       const CODEX_SIGHT_COS = .74;                       // a 42° cone, roughly the middle of the screen
-      function inSight(dir, eyeDir, forward, range) {
-        return dir.angleTo(eyeDir) * R <= range && dir.dot(forward) > CODEX_SIGHT_COS;
-      }
-      const codexDir = new THREE.Vector3();
+      const codexDir = new THREE.Vector3(), codexNormal = new THREE.Vector3(), codexRay = new THREE.Vector3();
       const codexForward = new THREE.Vector3();
+      function inSight(target, eyeDir, forward, range) {
+        if (target.lengthSq() < 1e-6) return false;       // an unplaced instance is not visible
+        codexNormal.copy(target).normalize();
+        if (codexNormal.distanceTo(eyeDir) * R > range) return false;
+        codexRay.copy(target).sub(camera.position);
+        return codexRay.lengthSq() > 1e-12 && codexRay.normalize().dot(forward) > CODEX_SIGHT_COS;
+      }
       let codexClock = 0;
       function codexScan(eyeDir, forward) {
         let found = 0;
@@ -10000,13 +10016,18 @@
           if (entry.seen) continue;
           let hit = false;
           if (entry.province) hit = provinceAt(eyeDir) === entry.province;
-          else if (entry.id === 'bell') { for (let i = 0; i < bell.length && !hit; i++) hit = inSight(bell[i].pos, eyeDir, forward, entry.range); }
-          else if (entry.id === 'reef') { for (let i = 0; i < reefs.length && !hit; i++) hit = inSight(reefs[i].pos, eyeDir, forward, entry.range); }
-          else if (entry.id === 'flock') {
+          else if (entry.id === 'bell') {
+            for (let i = 0; i < bell.length && !hit; i++) {
+              const animal = bell[i];
+              codexDir.copy(animal.world).addScaledVector(animal.pos, (animal.hit.top - animal.world.length()) * .5);
+              hit = inSight(codexDir, eyeDir, forward, entry.range);
+            }
+          } else if (entry.id === 'reef') {
+            for (let i = 0; i < reefs.length && !hit; i++) hit = inSight(reefs[i].world, eyeDir, forward, entry.range);
+          } else if (entry.id === 'flock') {
             for (let i = 0; i < flocks.length && !hit; i++) {
               codexDir.set(flockWorld[i * 3], flockWorld[i * 3 + 1], flockWorld[i * 3 + 2]);
-              if (codexDir.lengthSq() < 1e-6) continue;    // not placed yet this frame
-              hit = inSight(codexDir.normalize(), eyeDir, forward, entry.range);
+              hit = inSight(codexDir, eyeDir, forward, entry.range);
             }
           }
           if (hit) { entry.seen = true; entry.fresh = true; found++; }
@@ -10269,9 +10290,15 @@
         resizeQueued=true;
         requestAnimationFrame(()=>{resizeQueued=false;applyViewportSize();if(worldMapOpen){mapWorldSize();mapWorldDraw();}});
       });
-      document.addEventListener('visibilitychange',()=>{lastFrame=0;clearInput();quality.cooldown=5;});
+      // A hidden tab or lost context pauses the flight. Do not count that absence as a camera jump
+      // when the next frame arrives, even though visible frames use wall time for the animation.
+      function rebaseFrameClock() {
+        lastFrame=0;
+        if (state.transition) state.transition.wallLastMs=performance.now();
+      }
+      document.addEventListener('visibilitychange',()=>{rebaseFrameClock();clearInput();quality.cooldown=5;});
       canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;status.hidden=false;statusText.textContent='RESTORING THE WORLD';clearInput();});
-      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;lastFrame=0;renderer.shadowMap.needsUpdate=true;status.hidden=true;});
+      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;rebaseFrameClock();renderer.shadowMap.needsUpdate=true;status.hidden=true;});
       orbitPose();camera.position.copy(targetPosition);camera.quaternion.copy(targetRotation);
       applyQuality();
       function updateWorld(dt) {
@@ -10359,7 +10386,7 @@
         waterUniforms.uMoon.value.copy(moon.position).normalize();
         // The mirror lattice: lit panels burn through the night sky, and an operation lights the ones
         // overhead. Dimmed by daylight and cloud, because a mirror you can see at noon is a lie.
-        updateLattice(elapsed, dayAmount, weatherNow.cloud, state.mode === 'walk' ? state.direction : null, eventFx.glow);
+        updateLattice(elapsed, dayAmount, weatherNow.cloud, surface ? state.direction : null, eventFx.glow);
         if(surface)desiredShadowFocus.copy(state.direction).multiplyScalar(state.radius);else desiredShadowFocus.set(0,0,0);
         shadowFocus.lerp(desiredShadowFocus,1-Math.exp(-dt*4));
         sunlight.position.copy(shadowFocus).addScaledVector(sun,18);sunlight.target.position.copy(shadowFocus);
@@ -10418,7 +10445,7 @@
         // The list. Twice a second is plenty for something that has to walk into view, and it only
         // counts while you are on your feet — you cannot see a mossbell from orbit.
         codexClock += dt;
-        if (codexClock > .5 && state.mode === 'walk' && !state.transition) {
+        if (codexClock > .5 && surface) {
           codexClock = 0;
           camera.getWorldDirection(codexForward);
           if (codexScan(state.direction, codexForward)) {
@@ -10429,7 +10456,7 @@
         // Feet. The walk cycle crosses a step every pi radians, counted in the physics step; the sound
         // is the province underfoot — moss, sand, snow, wet moss, stone — and water when wading. Quiet
         // on purpose: a footfall you notice is a footfall too loud.
-        if (state.mode === 'walk' && !state.transition) {
+        if (surface) {
           if (state.footfalls !== state.lastFootfall) {
             state.lastFootfall = state.footfalls;
             if (state.speed > .03) {
@@ -10496,6 +10523,12 @@
         lanternMaterial.emissiveIntensity=(1.8+nightAmount*1.55)*(1+leyBoost*1.1)*lightDim;
         updateLeyRing();
         updateVeilDisc();
+        // Phasing changes collision immediately, so its HUD indicator must not wait for the slower
+        // 12-frame housekeeping pass (which can take seconds on a very slow renderer).
+        if (!state.transition) {
+          const mode=(surface?(state.submerged?'SURFACE / DIVING':state.water?'SURFACE / SWIMMING':state.crouch>.5?'SURFACE / CROUCHING':'SURFACE / WALKING'):'ORBIT / FLYING')+(surface&&state.ghost?' / PHASING':'');
+          if(modeLabel.textContent!==mode)modeLabel.textContent=mode;
+        }
         if(frame%12===0){
           for(const chunk of floraChunks){
             const close=surface&&camera.position.distanceTo(chunk.center)-chunk.radius<[.9,.65,.45][quality.tier];
@@ -10515,8 +10548,6 @@
             diveButton.textContent=inWater?'DIVE':'CROUCH';
           }
           document.body.classList.toggle('submerged',surface&&state.submerged);
-          const mode=(surface?(state.submerged?'SURFACE / DIVING':state.water?'SURFACE / SWIMMING':state.crouch>.5?'SURFACE / CROUCHING':'SURFACE / WALKING'):'ORBIT / FLYING')+(surface&&state.ghost?' / PHASING':'');
-          if(modeLabel.textContent!==mode)modeLabel.textContent=mode;
           // Sea life only exists while you are under it.
           const underwater=surface&&state.submerged;
           if(jellies.points.visible!==underwater){jellies.points.visible=underwater;marineSnow.points.visible=underwater;}
@@ -10622,7 +10653,7 @@
         try {
           const raw=lastFrame?(timestamp-lastFrame)/1000:1/60;lastFrame=timestamp;
           const dt=Math.min(raw,.05);elapsed+=dt;frame++;
-          updateCamera(dt);updateWorld(dt);
+          updateCamera(dt,timestamp);updateWorld(dt);
           // Re-center the walking patch over several frames instead of one long stall.
           advanceGroundRefresh(Math.min(2.6, Math.max(1.4, dt * 150)));
           updateQuality(raw,dt);renderScene();

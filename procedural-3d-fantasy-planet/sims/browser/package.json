@@ -1,0 +1,15 @@
+{
+  "name": "aetheris-browser-smoke",
+  "private": true,
+  "type": "module",
+  "description": "Optional real Chromium/WebGL/WebAudio smoke test; the browser itself is supplied separately.",
+  "scripts": {
+    "test": "node smoke.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "25.16.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

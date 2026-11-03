@@ -78,7 +78,8 @@ const makeElement = (tag = 'div') => {
     cloneNode() { return makeElement(this.tagName.toLowerCase()); },
     addEventListener() {}, removeEventListener() {}, dispatchEvent() { return true; },
     focus() {}, blur() {}, click() {}, scrollIntoView() {}, remove() {},
-    querySelector: () => null, querySelectorAll: () => [],
+    querySelector(selector) { if (selector === 'em' && this.innerHTML.includes('<em')) return (this._em ||= makeElement('em')); return null; },
+    querySelectorAll: () => [],
     getBoundingClientRect: () => ({ x: 0, y: 0, width: 1280, height: 720, top: 0, left: 0, right: 1280, bottom: 720 }),
     getContext(type) {
       if (String(type).startsWith('2d')) { this._ctx ||= makeContext2D(this); return this._ctx; }
@@ -186,7 +187,14 @@ export function loadPage(file = PAGE) {
         DIVE_SPEED, RISE_SPEED, MAX_DIVE, SWIM_EYE, CROUCH_EYE,
         BELL_SIZE, REEF_S, BELL_HALF_WIDE, BELL_BODY_TOP, keys, joystick, stoneSolids, groundPose, dwFeet,
         heightAt, provinceAt, biomeAt, nearestLand, landing, seeded, hash, noise, waterAt, depthMeters,
-        provinceDressing, physicsStep, updateBell, updateReefs, updateCamera, updateWeather, updateLattice,
+        provinceDressing, physicsStep, updateBell, updateReefs, updateCamera, updateWorld, updateWeather, updateLattice,
+        CODEX, codexScan, codexHTML, inSight, flockWorld, archiveChip, modeLabel, setArchive, eventFx, triggerEvent, sun,
+        getCodexHTML: () => document.getElementById('codexSection').innerHTML,
+        teleportTo, mapAnchors, rebaseFrameClock: typeof rebaseFrameClock === 'undefined' ? null : rebaseFrameClock,
+        // Run the page's frame order and clock without requiring a drawing GPU.
+        advanceFrame: dt => { elapsed += dt; frame++; updateCamera(dt); updateWorld(dt); },
+        get elapsed() { return elapsed; }, get frame() { return frame; },
+        setAudioContext: Ctx => { window.AudioContext = Ctx; }, toggleSound, getAudio: () => audio,
         bell, reefs, landmarks, settlementDirs, walkBoxes, hardProps, floraHard, groundStones,
         provinceGeo, provinceMat, hardBand, hardWidthOf, provinceWet, smokeWind, overlapAt,
         fern, fernLandingExtent: typeof fernLandingExtent === 'undefined' ? null : fernLandingExtent, dressFerns,
@@ -240,12 +248,21 @@ export async function buildWorld(options = {}) {
   const started = Date.now();
   // The page decides its compact layout from the real viewport at boot. Permit a mobile-sized build
   // without leaking its globals into other worlds subsequently built by the same process.
-  const prev = [windowStub.innerWidth, windowStub.innerHeight, globalThis.innerWidth, globalThis.innerHeight];
+  const prev = [windowStub.innerWidth, windowStub.innerHeight, globalThis.innerWidth, globalThis.innerHeight,
+    windowStub.matchMedia, globalThis.matchMedia];
   if (options.width !== undefined) windowStub.innerWidth = globalThis.innerWidth = options.width;
   if (options.height !== undefined) windowStub.innerHeight = globalThis.innerHeight = options.height;
+  if (options.reducedMotion !== undefined) {
+    const original = windowStub.matchMedia;
+    windowStub.matchMedia = globalThis.matchMedia = q => ({ ...original(q),
+      matches: q === '(prefers-reduced-motion: reduce)' ? options.reducedMotion : original(q).matches });
+  }
   let world;
   try { world = await loadPage(options.file); }
-  finally { [windowStub.innerWidth, windowStub.innerHeight, globalThis.innerWidth, globalThis.innerHeight] = prev; }
+  finally {
+    [windowStub.innerWidth, windowStub.innerHeight, globalThis.innerWidth, globalThis.innerHeight,
+      windowStub.matchMedia, globalThis.matchMedia] = prev;
+  }
   if (!world) throw new Error('the page never finished building a world: ' + JSON.stringify(globalThis.__startup?.error || null));
   world.buildMs = Date.now() - started;
   return world;
