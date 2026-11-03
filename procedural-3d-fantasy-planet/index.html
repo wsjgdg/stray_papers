@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-69">
+  <meta name="aetheris-build" content="pennants-70">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -549,6 +549,7 @@
         <span><b>MOUSE / IJKL</b> LOOK</span><span class="hint-separator"></span>
         <span class="hint-jump"><b>SPACE</b> JUMP · <b>C</b> CROUCH</span><span class="hint-separator hint-jump"></span>
         <span class="hint-swim"><b>C</b> DIVE · <b>SPACE</b> RISE</span><span class="hint-separator hint-swim"></span>
+        <span><b>H</b> PHASE</span><span class="hint-separator"></span>
         <span><b>R</b> WEATHER</span><span class="hint-separator"></span><span><b>E</b> EVENT</span>
       </div>
       <button id="switchButton" class="switch-button" type="button" aria-label="Switch between orbit and ground perspective">
@@ -594,7 +595,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-69';
+    const BUILD_ID = 'pennants-70';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -7515,6 +7516,7 @@
         composition: compact ? 0 : 1, compositionTarget: compact ? 0 : 1,
         direction: landing.clone(), radius: groundRadius(landing) + EYE,
         heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false, depth: 0, submerged: false, crouch: 0, swimBlend: 0,
+        ghost: false,                     // holding H: nothing built or growing stops the body; the ground still does
         transition: null, solarOffset: 0, solarTarget: 0, walkPhase: 0, footfalls: 0,
         moveVelocity: new THREE.Vector3(), speed: 0, slope: 1, lastFootfall: 0, footstepsAt: -9,
         coyote: 0, jumpBuffer: 0, landDip: 0, roll: 0
@@ -8400,7 +8402,14 @@
         state.feetRadius = feetRadius;         // the harness measures the body against the same feet as the page
         state.pushed = 0;                 // how far a creature moved the body this frame (tests read this)
         state.bump = 0;                   // hardest the body was stopped this step, for the knock you hear
+        // Hold H to walk through things. Everything below this line is the world saying no: walls, trunks,
+        // boulders, crystal, sea stones, the animals and the step that would end inside one of them. It is
+        // not a god mode — the ground is *above* this line (the vertical clamp is what keeps the body on the
+        // terrain), so a ghost can walk through a house but not into a hill, and cannot fall through the
+        // planet. It exists because the walls became solid again and a lane can be too narrow to leave.
+        state.ghost = keys.has('KeyH');
         walkProbe.copy(state.direction);
+        if (!state.ghost) {
         // Two kinds of solid, and one order is not enough: the body can be pushed out of a wall and into a
         // boulder leaning on it, or the other way round. The props and the boxes are resolved in turn, and the
         // round repeats while either is still moving the body — it settles in one pass nearly everywhere, which
@@ -8591,6 +8600,7 @@
             }
             state.moveVelocity.set(0, 0, 0);
           }
+        }
         }
         state.speed=state.moveVelocity.length();
 
@@ -10133,7 +10143,7 @@
             diveButton.textContent=inWater?'DIVE':'CROUCH';
           }
           document.body.classList.toggle('submerged',surface&&state.submerged);
-          const mode=surface?(state.submerged?'SURFACE / DIVING':state.water?'SURFACE / SWIMMING':state.crouch>.5?'SURFACE / CROUCHING':'SURFACE / WALKING'):'ORBIT / FLYING';
+          const mode=(surface?(state.submerged?'SURFACE / DIVING':state.water?'SURFACE / SWIMMING':state.crouch>.5?'SURFACE / CROUCHING':'SURFACE / WALKING'):'ORBIT / FLYING')+(surface&&state.ghost?' / PHASING':'');
           if(modeLabel.textContent!==mode)modeLabel.textContent=mode;
           // Sea life only exists while you are under it.
           const underwater=surface&&state.submerged;
@@ -10249,7 +10259,7 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,ghost:state.ghost,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,

@@ -128,5 +128,64 @@ const mm = v => (v * 1000).toFixed(1) + ' mm';
     ' finish inside a neighbour, because those boulders were built in clusters');
 }
 
+// ---- H, the way out -----------------------------------------------------------------------------------
+// The walls are solid, and a lane can be too narrow to leave: the user asked for a key that walks through
+// everything except the ground. This is that key, measured — and measured against the same walk without it,
+// so the pair proves the wall was there in the first place.
+{
+  const dt = 1 / 120;
+  // A wall whose two sides are on the same footing, so the walk is a walk and not a fall off a ledge.
+  let wall = null;
+  for (const box of walkBoxes) {
+    const centre = R + heightAt(box.dir);
+    if (box.bottom > centre + .013 || box.top < centre + .06) continue;
+    const out = box.ex.clone().multiplyScalar((box.hx + .045) / R);
+    const front = box.dir.clone().add(out).normalize();
+    const back = box.dir.clone().addScaledVector(out, -1).normalize();
+    if (heightAt(front) < SEA + .004 || heightAt(back) < SEA + .004) continue;
+    if (Math.abs(heightAt(front) - heightAt(back)) > .010) continue;
+    if (overlapAt(front, R + heightAt(front)) > 0 || overlapAt(back, R + heightAt(back)) > 0) continue;
+    wall = { box, front, back };
+    break;
+  }
+  const walk = (ghost, frames) => {
+    resetGroundMotion();
+    keys.clear(); joystick.x = joystick.y = 0;
+    state.mode = 'ground'; state.transition = null;
+    state.direction.copy(wall.front);
+    state.radius = R + heightAt(wall.front) + EYE;
+    // face the wall: the tangent from here to the far side
+    state.heading.copy(wall.back).sub(state.direction);
+    state.heading.addScaledVector(state.direction, -state.heading.dot(state.direction)).normalize();
+    state.water = false; state.depth = 0; state.swimBlend = 0; state.submerged = false; state.crouch = 0;
+    state.velocity = 0; state.grounded = true; state.moveVelocity.set(0, 0, 0); state.ghost = ghost;
+    state.feetRadius = R + heightAt(wall.front);
+    if (ghost) keys.add('KeyH');
+    keys.add('KeyW');
+    let after = 0, worstEye = Infinity;
+    for (let f = 0; f < frames; f++) {
+      physicsStep(dt);
+      worstEye = Math.min(worstEye, state.radius - R - heightAt(state.direction));
+    }
+    // which side of the wall the body is on, in the box's own axis
+    const off = wall.box.dir.clone().sub(state.direction).multiplyScalar(R);
+    after = off.dot(wall.box.ex);
+    keys.clear();
+    state.ghost = false;
+    return { after, half: wall.box.hx, moved: wall.front.angleTo(state.direction) * R, worstEye };
+  };
+  const solid = wall ? walk(false, 120) : null;
+  const ghost = wall ? walk(true, 120) : null;
+  ok('a wall stops a walker who is not phasing', !!wall && solid.after < -solid.half,
+    wall ? 'walked at the face for a second and stopped ' + mm(-solid.after - solid.half) +
+      ' outside it — its own radius to the millimetre — having covered ' + mm(solid.moved) +
+      ' of the ' + mm(2 * (solid.half + .045)) + ' it had to cross' : 'no wall found to test');
+  ok('and holding H walks straight through it', !!ghost && ghost.after > ghost.half,
+    wall ? 'the same second of walking with H held carried the body ' + mm(ghost.after - ghost.half) +
+      ' past the far face (' + mm(ghost.moved) + ' covered)' : 'no wall found to test');
+  ok('and the ground still holds a ghost up', !!ghost && ghost.worstEye > EYE - .003,
+    ghost ? 'the eye never came closer than ' + mm(ghost.worstEye) + ' to the ground it was walking on' : '');
+}
+
 console.log('\n' + pass + ' PASS / ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);
