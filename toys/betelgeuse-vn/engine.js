@@ -26,7 +26,10 @@
  *     .vn-topbar > button.vn-btn[data-act=backlog|save|load|auto|speed|
  *                                  title|settings|audio]
  *     .vn-backlog > .vn-backlog-list > .vn-backlog-line > b.vn-backlog-name + span.vn-backlog-text
- *     .vn-menu > .vn-menu-title + button.vn-slot > .vn-slot-info + button.vn-close
+ *     .vn-menu > .vn-menu-title + button.vn-slot > .vn-slot-thumb? +
+ *                                  .vn-slot-info + button.vn-close
+ *       (.vn-slot-thumb = optional <img> from the save payload's thumb data
+ *        URL, load-mode slots only, rebuilt on every refreshSlots)
  *     .vn-settings > .vn-settings-title + .vn-setting-row (label + input.vn-range
  *                                  + span.vn-range-val) x2 + button.vn-close
  *     .vn-title > .vn-title-name + .vn-title-sub + .vn-endings +
@@ -114,6 +117,9 @@
   var BACKLOG_LIMIT = 100; // keep only the last N displayed lines
   var SLOT_COUNT = 3; // vn-save-1 .. vn-save-3
   var SAVE_PREFIX = "vn-save-";
+  var THUMB_W = 160; // save-slot thumbnail box (16:9, cover-fit crop)
+  var THUMB_H = 90;
+  var THUMB_JPEG_Q = 0.5; // quality passed to offscreen toDataURL("image/jpeg")
   var ENDINGS_KEY = "vn-endings"; // 结局收集 persistence key
   var SETTINGS_KEY = "vn-settings"; // settings persistence key (volume + autoDelay)
   var SETTINGS_VOLUME_MIN = 0; // volume clamp, matches VN_AUDIO.setVolume
@@ -248,7 +254,7 @@
         slot.addEventListener("click", function () {
           onSlotClick(n);
         });
-        slots.push({ info: info });
+        slots.push({ el: slot, info: info, thumb: null });
       })(i);
     }
     var menuClose = h("button", "vn-close", menu);
@@ -1690,6 +1696,48 @@
 
   /* -------------------------------------------------------------- save/load */
 
+  // Snapshot of the active scene canvas for save-slot thumbnails. Locates the
+  // live <canvas class="vn-bg-canvas"> (canvasScene.canvas — the element
+  // activateCanvasScene appended to .vn-bg-fx), draws it cover-fit onto an
+  // offscreen THUMB_WxTHUMB_H canvas and returns a jpeg data URL. Returns
+  // null when there is no active canvas scene or anything in the chain
+  // fails — thumbnails are read-only display data and must never break a save.
+  function captureThumb() {
+    try {
+      var src = canvasScene.active ? canvasScene.canvas : null;
+      if (!src) return null;
+      var sw = src.width;
+      var sh = src.height;
+      if (!(sw > 0) || !(sh > 0)) return null; // unsized buffer: nothing to draw
+      var off = document.createElement("canvas");
+      if (!off || typeof off.getContext !== "function") return null;
+      off.width = THUMB_W;
+      off.height = THUMB_H;
+      var tctx = off.getContext("2d");
+      if (!tctx) return null;
+      // cover-fit: scale the thumb box up until it covers the source, then
+      // center-crop the overflow (drawImage source rect)
+      var scale = Math.max(THUMB_W / sw, THUMB_H / sh);
+      var dw = THUMB_W / scale;
+      var dh = THUMB_H / scale;
+      tctx.drawImage(
+        src,
+        (sw - dw) / 2,
+        (sh - dh) / 2,
+        dw,
+        dh,
+        0,
+        0,
+        THUMB_W,
+        THUMB_H,
+      );
+      var url = off.toDataURL("image/jpeg", THUMB_JPEG_Q);
+      return typeof url === "string" && url ? url : null;
+    } catch (err) {
+      return null; // no canvas API / capture failed: save proceeds without a thumb
+    }
+  }
+
   function writeSlot(n) {
     if (!state.scene) {
       toast("暂无进度");
@@ -1703,12 +1751,27 @@
       title: S.meta && S.meta.title != null ? String(S.meta.title) : "",
       bg: state.bg,
     };
+    var thumb = captureThumb(); // display-only: omitted when no canvas / capture failed
+    if (thumb) data.thumb = thumb;
     try {
       localStorage.setItem(slotKey(n), JSON.stringify(data));
     } catch (err) {
-      console.warn("[VN] failed to write save: " + err);
-      toast("保存失败");
-      return;
+      // Write failed (typically quota — a thumb adds ~8-15KB per slot).
+      // Graceful degradation: retry ONCE without the thumb before giving up.
+      if (thumb) {
+        delete data.thumb;
+        try {
+          localStorage.setItem(slotKey(n), JSON.stringify(data));
+        } catch (err2) {
+          console.warn("[VN] failed to write save: " + err2);
+          toast("保存失败");
+          return;
+        }
+      } else {
+        console.warn("[VN] failed to write save: " + err);
+        toast("保存失败");
+        return;
+      }
     }
     toast("已保存");
     audioHook("ui", "save"); // save-written blip
@@ -1797,10 +1860,37 @@
     els.menu.classList.add("vn-hidden");
   }
 
+  // Swaps a slot button's thumbnail in/out. The img sits before the info
+  // text (insertBefore in real DOMs); stub environments without insertBefore
+  // fall back to appendChild so tests keep working. `slot.el` is the button.
+  function setSlotThumb(slot, thumb) {
+    if (slot.thumb && slot.thumb.parentNode === slot.el) {
+      slot.el.removeChild(slot.thumb);
+    }
+    slot.thumb = null;
+    if (!thumb) return;
+    var img;
+    try {
+      img = document.createElement("img");
+    } catch (err) {
+      return; // thumbnail is display-only: a DOM hiccup must not break the menu
+    }
+    img.className = "vn-slot-thumb";
+    img.setAttribute("alt", "");
+    img.src = thumb;
+    slot.thumb = img;
+    if (typeof slot.el.insertBefore === "function") {
+      slot.el.insertBefore(img, slot.info);
+    } else {
+      slot.el.appendChild(img);
+    }
+  }
+
   function refreshSlots() {
     els.slots.forEach(function (slot, i) {
       var n = i + 1;
       var label = n + " · 空";
+      var thumb = null;
       var raw = readSlotRaw(n);
       if (raw) {
         var data = null;
@@ -1816,8 +1906,18 @@
             (fmtTs(data.ts) || "?") +
             " · " +
             (data.scene != null ? String(data.scene) : "?");
+          // Load mode only: a saved payload may carry a jpeg data URL of the
+          // scene canvas at save time. Save-mode and empty slots show no img.
+          if (
+            state.menuMode !== "save" &&
+            typeof data.thumb === "string" &&
+            data.thumb
+          ) {
+            thumb = data.thumb;
+          }
         }
       }
+      setSlotThumb(slot, thumb);
       slot.info.textContent = label;
     });
   }

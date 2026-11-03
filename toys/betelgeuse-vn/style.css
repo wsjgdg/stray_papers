@@ -774,6 +774,18 @@ button.vn-slot:last-of-type {
   color: var(--vn-text-faint);
 }
 
+/* Save-slot scene thumbnail (load mode only): fixed 16:9 box, cover-cropped.
+   Slot rows grow naturally; 96px still fits the 320px .vn-menu (92% + padding). */
+.vn-slot-thumb {
+  display: block;
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--vn-border);
+  margin-bottom: 6px;
+}
+
 button.vn-close {
   position: absolute;
   top: 12px;
