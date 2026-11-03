@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-73">
+  <meta name="aetheris-build" content="pennants-74">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,7 +595,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-73';
+    const BUILD_ID = 'pennants-74';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3681,6 +3681,10 @@
       };
       understoryMaterial.customProgramCacheKey = () => 'aetheris-understory-glow-' + BUILD_ID;
       const fern = new THREE.InstancedMesh(buildFernGeometry(), understoryMaterial, compact ? 160 : 420);
+      // Ferns are decorative rather than colliders, but a wide frond at eye height can still fill the
+      // landing view. A conservative bound includes the model, its offset, tilt and maximum 1.07 scale.
+      fern.geometry.computeBoundingSphere();
+      const fernLandingExtent = 1.07 * (fern.geometry.boundingSphere.radius + fern.geometry.boundingSphere.center.length());
       const flowers = new THREE.InstancedMesh(buildFlowerGeometry(), understoryMaterial, compact ? 70 : 190);
       const stoneGeo = rockGeometry(.055, 2, 17);
       stoneGeo.computeBoundingBox();
@@ -3728,7 +3732,9 @@
         let fernCount = 0;
         for (let attempt = 0; fernCount < underCapacity && attempt < underCapacity * 12; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .2), h = heightAt(n);
-          if (h < .032 || h > .29) continue;
+          // Re-scattering also respects the original clearing: move the actual candidates, not just their
+          // rendering, so broad fronds cannot reach into the open landing or mask the court from the eye.
+          if (h < .032 || h > .29 || n.distanceTo(landing) * R < LANDING_CLEAR + fernLandingExtent) continue;
           const style = groundStyle(n);
           if (style.fern <= 0 || rng() > style.fern) continue;
           transform.position.copy(n).multiplyScalar(R + h - .002);
@@ -7603,6 +7609,9 @@
       // boundary exactly leaves the next step's test deciding inside-or-outside on floating point, and the
       // guard below then refuses steps that were already clear. A fifth of a millimetre of daylight.
       const WALK_SKIN = .0002;
+      // Feet resting on a solid top can round a few ulps below it when eye height changes. This is
+      // one nanometre in world units, not a traversable gap or a change to the collision margin.
+      const SOLID_TOP_EPS = 1e-9;
       // Swimming: dive with C, rise with SPACE, and stay where you left it when you let go. There is no
       // buoyancy pulling the eye back to the surface: the first version drifted up at 16 mm/s, which
       // meant you could not stop at a column to look at it — you had to hold C the whole time, and the
@@ -8437,8 +8446,36 @@
       const moveTarget = new THREE.Vector3(), slopeProbe = new THREE.Vector3();
       const walkProbe = new THREE.Vector3(), walkBump = new THREE.Vector3(), walkTmp = new THREE.Vector3(),
         walkPrev = new THREE.Vector3();
+      // An escape target is kept only while a body that started inside static geometry is being freed.
+      // It is reset on mode changes and invalidated if the target becomes obstructed.
+      let walkEscapeGoal = null;
+      const escapeFeetAt = dir => {
+        const floor=R+(state.water ? Math.max(heightAt(dir),SEA-state.depth) : heightAt(dir));
+        const feet=state.radius-mix(EYE,CROUCH_EYE,state.crouch);
+        const airOverWater=state.water && !state.grounded && feet>R+SEA+.001;
+        return state.water && !airOverWater ? floor : Math.max(floor,feet);
+      };
+      // A three-way pinch can have a local minimum: every small nudge goes deeper into a neighbour.
+      // Look for a genuinely clear endpoint in expanding rings, but approach it gradually below.
+      const findEscapeGoal = start => {
+        const east = new THREE.Vector3(0, 1, 0).cross(start);
+        if (east.lengthSq() < 1e-12) east.set(1, 0, 0).cross(start);
+        east.normalize();
+        const north = new THREE.Vector3().crossVectors(start, east).normalize();
+        const test = new THREE.Vector3(), tangent = new THREE.Vector3();
+        for (let reach = .004; reach <= 1.0241; reach *= 2) {
+          const angle = 2 * Math.asin(Math.min(1, reach / (2 * R)));
+          for (let k = 0; k < 32; k++) {
+            const a = TAU * k / 32;
+            tangent.copy(east).multiplyScalar(Math.cos(a)).addScaledVector(north, Math.sin(a));
+            test.copy(start).multiplyScalar(Math.cos(angle)).addScaledVector(tangent, Math.sin(angle)).normalize();
+            if (overlapAt(test, escapeFeetAt(test)) <= 1e-8) return test.clone();
+          }
+        }
+        return null;
+      };
       // How far inside a wall, a trunk, a boulder or a stone the body is at a given direction, in metres.
-      // Zero means clear; the guards above and below are the only callers, so it may use walkTmp.
+      // Zero means clear. It uses walkTmp, so callers must not pass that scratch vector as the position.
       // Measured as a chord, like everything else that resolves a collision here: the placements above put a
       // body exactly `need` metres of chord from the thing it was pushed out of, so a test in another metric
       // (the angle, or the offset's component across the surface) disagrees with its own answer by a tenth of
@@ -8449,7 +8486,7 @@
           const posts = list ? stoneSolids : hardProps;
           for (let i = 0; i < posts.length; i++) {
             const post = posts[i];
-            if (post.top !== undefined && post.top <= feet) continue;
+            if (post.top !== undefined && post.top <= feet + SOLID_TOP_EPS) continue;
             if (post.dir.dot(dir) < .9) continue;
             const gap = post.r + WALKER_RADIUS - dir.distanceTo(post.dir) * R;
             if (gap > worst) worst = gap;
@@ -8457,7 +8494,7 @@
         }
         for (let i = 0; i < walkBoxes.length; i++) {
           const box = walkBoxes[i];
-          if (box.top <= feet || box.bottom > feet + .020 || box.dir.dot(dir) < .9) continue;
+          if (box.top <= feet + SOLID_TOP_EPS || box.bottom > feet + .020 || box.dir.dot(dir) < .9) continue;
           walkTmp.copy(box.dir).sub(dir).multiplyScalar(R);
           const gap = Math.min(box.hx + WALKER_RADIUS - Math.abs(walkTmp.dot(box.ex)),
             box.hz + WALKER_RADIUS - Math.abs(walkTmp.dot(box.ez)));
@@ -8511,6 +8548,7 @@
       function resetGroundMotion() {
         state.moveVelocity.set(0, 0, 0); state.speed = 0; state.slope = 1;
         state.coyote = 0; state.jumpBuffer = 0; state.landDip = 0; state.roll = 0;
+        walkEscapeGoal = null;
       }
       function explore() { state.compositionTarget = 0; state.faceTarget = null; document.body.classList.add('exploring'); }
       state.faceTarget = null;
@@ -8576,6 +8614,21 @@
         if (state.mode !== 'orbit' || state.transition) return;
         state.distance=clamp(state.distance*factor,6.4,32); explore();
       }
+      // A body above a stone or a roof can land on its top; without this, measuring real airborne feet
+      // only defers the sideways shove until the first frame below the top. H deliberately skips support.
+      function walkSupportAt(dir, feet, floor) {
+        for (const post of stoneSolids) {
+          if (!(post.top > floor && post.top <= feet + SOLID_TOP_EPS)) continue;
+          if (post.dir.distanceTo(dir) * R < post.r + WALKER_RADIUS) floor = post.top;
+        }
+        for (const box of walkBoxes) {
+          if (!(box.top > floor && box.top <= feet + SOLID_TOP_EPS) || box.dir.dot(dir) < .9) continue;
+          walkTmp.copy(box.dir).sub(dir).multiplyScalar(R);
+          if (Math.abs(walkTmp.dot(box.ex)) < box.hx + WALKER_RADIUS &&
+              Math.abs(walkTmp.dot(box.ez)) < box.hz + WALKER_RADIUS) floor = box.top;
+        }
+        return floor;
+      }
       function physicsStep(dt) {
         const forward = Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown'))-joystick.y;
         const lateral = Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'))+joystick.x;
@@ -8589,7 +8642,13 @@
         // Still in the water while the body is still standing up out of it: the pose blend below runs
         // on its own clock, and handing the eye over to the walking rig before it has finished is what
         // made stepping out of the shallows a 20 mm snap.
-        state.water=elevation<SEA-.006||state.swimBlend>.02;
+        const wetGround=elevation<SEA-.006||state.swimBlend>.02;
+        const physicalFeet=state.radius-mix(EYE,CROUCH_EYE,state.crouch);
+        // A roof or rock can be dry even over submerged terrain. Switching to the swimming pose while
+        // on it would drop the body through the surface and deep into the wall in a single frame.
+        const drySupport=wetGround&&!keys.has('KeyH') &&
+          walkSupportAt(state.direction, physicalFeet, R+elevation) > R+Math.max(elevation, SEA)+1e-6;
+        state.water=wetGround&&!drySupport;
 
         // Terrain grade under the intended path: uphill bleeds speed, downhill returns a little.
         let grade=1;
@@ -8659,10 +8718,13 @@
         // laid is a post; a wall is a box; a creature is a post that moves.
         // The height test in each is what keeps a stone under a swimmer, and the roof over a lane, out
         // of the way: a solid only counts if it comes up past the body's feet.
-        // Sampled here, not at the top of the step: walking off a ledge drops the ground under the
-        // body, and with last frame's reading a plinth that has just come up past the feet was skipped
-        // for a frame — the body stood 200 mm inside it and was shoved out sideways on the next one.
-        const feetRadius = R + (state.water ? Math.max(elevation, SEA - state.depth) : heightAt(state.direction));
+        // Use both the terrain at the proposed position and the body's actual feet. Ground alone is
+        // too low for an airborne walker: a stone beneath it can suddenly look like a 37 mm sideways
+        // collision. The swimmer's existing waterline/depth rule still applies once the body reaches water.
+        const groundCollisionRadius = R + (state.water ? Math.max(elevation, SEA - state.depth) : heightAt(state.direction));
+        const actualFeet = state.radius - mix(EYE, CROUCH_EYE, state.crouch);
+        const airOverWater = state.water && !state.grounded && actualFeet > R + SEA + .001;
+        const feetRadius = state.water && !airOverWater ? groundCollisionRadius : Math.max(groundCollisionRadius, actualFeet);
         state.feetRadius = feetRadius;         // the harness measures the body against the same feet as the page
         state.pushed = 0;                 // how far a creature moved the body this frame (tests read this)
         state.bump = 0;                   // hardest the body was stopped this step, for the knock you hear
@@ -8672,6 +8734,7 @@
         // terrain), so a ghost can walk through a house but not into a hill, and cannot fall through the
         // planet. It exists because the walls became solid again and a lane can be too narrow to leave.
         state.ghost = keys.has('KeyH');
+        if (state.ghost) walkEscapeGoal = null;
         walkProbe.copy(state.direction);
         if (!state.ghost) {
         // Two kinds of solid, and one order is not enough: the body can be pushed out of a wall and into a
@@ -8692,7 +8755,7 @@
               const posts = list ? stoneSolids : hardProps;
               for (let i = 0; i < posts.length; i++) {
                 const post = posts[i];
-                if (post.top !== undefined && post.top <= feetRadius) continue;
+                if (post.top !== undefined && post.top <= feetRadius + SOLID_TOP_EPS) continue;
                 // Cheap reject on the chord angle only; the exact test is the distance below. A tight dot
                 // cut-off here is wrong: it depends on the planet's radius, and the scene is built at one
                 // scale while the harness runs it at another.
@@ -8720,7 +8783,7 @@
               let moved = false;
               for (let i = 0; i < walkBoxes.length; i++) {
                 const box = walkBoxes[i];
-                if (box.top <= feetRadius || box.bottom > feetRadius + .020) continue;
+                if (box.top <= feetRadius + SOLID_TOP_EPS || box.bottom > feetRadius + .020) continue;
                 if (box.dir.dot(walkProbe) < .9) continue;
                 walkBump.copy(state.direction).sub(box.dir).multiplyScalar(R);
                 const u = walkBump.dot(box.ex), v = walkBump.dot(box.ez);
@@ -8804,7 +8867,7 @@
             const posts = list ? stoneSolids : hardProps;
             for (let i = 0; i < posts.length; i++) {
               const post = posts[i];
-              if (post.top !== undefined && post.top <= feetRadius) continue;
+              if (post.top !== undefined && post.top <= feetRadius + SOLID_TOP_EPS) continue;
               if (post.dir.dot(state.direction) < .9) continue;
               const gap = post.r + WALKER_RADIUS - state.direction.distanceTo(post.dir) * R;
               if (gap <= 0) continue;
@@ -8822,7 +8885,7 @@
           }
               for (let i = 0; i < walkBoxes.length; i++) {
                 const box = walkBoxes[i];
-                if (box.top <= feetRadius || box.bottom > feetRadius + .020 || box.dir.dot(state.direction) < .9) continue;
+                if (box.top <= feetRadius + SOLID_TOP_EPS || box.bottom > feetRadius + .020 || box.dir.dot(state.direction) < .9) continue;
                 walkTmp.copy(box.dir).sub(state.direction).multiplyScalar(R);
                 const u = walkTmp.dot(box.ex), v = walkTmp.dot(box.ez);
                 const outX = box.hx + WALKER_RADIUS - Math.abs(u), outZ = box.hz + WALKER_RADIUS - Math.abs(v);
@@ -8868,6 +8931,34 @@
             state.moveVelocity.set(0, 0, 0);
           }
         }
+        // A person already inside static geometry (e.g. after releasing H) needs an exit, not a large
+        // sideways teleport. Keep a clear goal through local overlap minima and approach it at a bounded rate.
+        const maxRecovery = .9 * dt;
+        const maxClearStep = SPRINT_SPEED * 1.18 * dt + .0016;
+        const moved = walkPrev.distanceTo(state.direction) * R;
+        const needsCheck = walkEscapeGoal || inside > 1e-8 || moved > maxRecovery;
+        const startedInside = needsCheck && overlapAt(walkPrev, escapeFeetAt(walkPrev)) > 1e-8;
+        if (startedInside) {
+          if (walkEscapeGoal && overlapAt(walkEscapeGoal, escapeFeetAt(walkEscapeGoal)) > 1e-8) walkEscapeGoal = null;
+          if (!walkEscapeGoal) {
+            walkEscapeGoal = overlapAt(state.direction, escapeFeetAt(state.direction)) <= 1e-8
+              ? state.direction.clone() : findEscapeGoal(walkPrev);
+          }
+          // If the bounded search finds no clear endpoint, even the partial solver result must be
+          // rate-limited; an impossible pocket is not permission to teleport the body out of it.
+          const destination = walkEscapeGoal || state.direction.clone();
+          const gap = walkPrev.distanceTo(destination) * R;
+          walkProbe.copy(destination).addScaledVector(walkPrev, -destination.dot(walkPrev));
+          if (gap <= maxRecovery) { state.direction.copy(destination); walkEscapeGoal = null; }
+          else if (walkProbe.lengthSq() > 1e-12) placeAtChord(walkPrev, walkProbe.normalize(), maxRecovery);
+          else state.direction.copy(walkPrev);
+          state.moveVelocity.set(0, 0, 0); state.pushed = 0;
+        } else {
+          walkEscapeGoal = null;
+          // A clear walker must never be expelled across a room by a collider whose bottom has just
+          // crossed its feet on a rising slope. Refuse that step at the last genuinely clear position.
+          if (moved > maxClearStep) { state.direction.copy(walkPrev); state.moveVelocity.set(0, 0, 0); state.pushed = 0; }
+        }
         }
         state.speed=state.moveVelocity.length();
 
@@ -8891,9 +8982,13 @@
         // A collision can move the body sideways onto higher or lower ground after the earlier collision
         // height sample. Resample at the resolved position before clamping the eye and exposing the feet.
         const finalElevation=heightAt(state.direction);
-        const footRadius=R+(state.water ? Math.max(finalElevation,SEA-state.depth) : finalElevation);
-        state.feetRadius=footRadius;
+        let footRadius=R+(state.water ? Math.max(finalElevation,SEA-state.depth) : finalElevation);
         const eyeHeight=state.water ? SWIM_EYE : standEye;
+        // Standing up changes the eye height before the vertical clamp. The prior physical feet are
+        // still on the roof; using only the new eye height would drop them below it and eject the walker.
+        if (!state.water && !state.ghost) footRadius = walkSupportAt(state.direction,
+          Math.max(physicalFeet, state.radius - eyeHeight), footRadius);
+        state.feetRadius=footRadius;
         if (state.water) {
           // Wading and swimming are two ends of one curve. Standing on the seabed puts the eye at
           // ground+standEye; floating puts it at the waterline+SWIM_EYE. Those two meet exactly at
@@ -8921,8 +9016,8 @@
           // ...and the fall is only for a body that is genuinely in the air above the water: a jump, or a step
           // off a ledge. Wading down a slope is not falling — the eye goes where the pose says, however fast
           // the ground drops under it, and the slope is a slope.
-          if (state.radius>pose+.001&&state.velocity<-.05) {
-            // Still falling toward the sea: keep the fall, break the surface once.
+          if (state.radius>pose+.001&&(state.velocity<-.05||(!state.grounded&&state.radius-standEye>R+SEA+.001))) {
+            // Still airborne above the sea: keep the arc and break the surface once.
             state.velocity-=GRAVITY*dt;
             state.radius+=state.velocity*dt;
             if (state.radius<=pose) {
@@ -8958,6 +9053,8 @@
             state.coyote=Math.max(0,state.coyote-dt);
           }
         }
+        const stillAirborne = state.water && !state.grounded && state.radius - standEye > R + SEA + .001;
+        state.feetRadius = state.water && !stillAirborne ? footRadius : Math.max(footRadius, state.radius - standEye);
       }
       function updateCamera(dt) {
         if (state.transition) {

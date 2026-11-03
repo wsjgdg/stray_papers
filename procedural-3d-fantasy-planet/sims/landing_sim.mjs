@@ -13,7 +13,7 @@ for (const [label, viewport] of [['desktop', {}], ['compact', { width: 390, heig
   const w = await buildWorld(viewport);
   const { THREE, R, EYE, SEA, WALKER_RADIUS, landing, heightAt, settlementDirs, scene, provinceGeo,
     walkBoxes, hardProps, stoneSolids, bell, state, keys, seeded, dressStones, switchMode, physicsStep,
-    updateBell, resetGroundMotion, overlapAt } = w;
+    updateBell, resetGroundMotion, overlapAt, fern, fernLandingExtent, dressFerns } = w;
   const site = settlementDirs.find(s => s.welcome);
   const nearest = settlementDirs.slice().sort((a, b) => a.dir.angleTo(landing) - b.dir.angleTo(landing))[0];
   const distance = site ? site.dir.angleTo(landing) * R : Infinity;
@@ -103,6 +103,32 @@ for (const [label, viewport] of [['desktop', {}], ['compact', { width: 390, heig
     'initial nearest ' + initial.kind + ' edge ' + mm(initial.best) + '; worst after 3 re-dresses ' +
       mm(worst.best) + '; nearest stone outside town footprint ' + mm(closestTownStone));
   dressStones(landing, seeded(82341));
+
+  // Ferns have no collider, but their real, broad fronds were blocking the whole first-person view.
+  // Read the actual instance matrices and conservatively subtract the geometry's max-scaled sphere,
+  // including after three re-dresses from different centres. Plants remain present outside the clearing.
+  const fernEdge = () => {
+    let closestEdge = Infinity;
+    const position = new THREE.Vector3(), transform = new THREE.Matrix4();
+    for (let i = 0; i < fern.count; i++) {
+      fern.getMatrixAt(i, transform);
+      position.setFromMatrixPosition(transform).normalize();
+      closestEdge = Math.min(closestEdge, position.distanceTo(landing) * R - fernLandingExtent);
+    }
+    return { count: fern.count, edge: closestEdge };
+  };
+  const ferns = [fernEdge()];
+  for (let i = 0; i < 3; i++) {
+    const centre = landing.clone().addScaledVector(east, (i - 1) * .12).normalize();
+    dressFerns(centre, seeded(9050 + i));
+    ferns.push(fernEdge());
+  }
+  const nearestFern = Math.min(...ferns.map(sample => sample.edge));
+  const fewestFerns = Math.min(...ferns.map(sample => sample.count));
+  ok(label + ': visible fern fronds stay outside the landing clearing after re-dressing',
+    Number.isFinite(fernLandingExtent) && fewestFerns > 0 && nearestFern >= .12 * R - 1e-6,
+    'initial ' + ferns[0].count + ' real fern instances, fewest after 3 re-dresses ' + fewestFerns +
+      '; conservative nearest frond edge ' + mm(nearestFern) + ' (clearing ' + mm(.12 * R) + ')');
 
   // Use the page's real orbit-to-ground transition, including its initial view direction, then the real
   // frame order (two 120 Hz physics steps and one 60 Hz herd update). No teleport to the court is involved.

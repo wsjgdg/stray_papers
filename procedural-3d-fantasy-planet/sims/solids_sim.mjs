@@ -81,7 +81,8 @@ const mm = v => (v * 1000).toFixed(1) + ' mm';
 // top of it. Then let the page resolve it. This is the invariant the user feels as "不许穿模".
 {
   const dt = 1 / 120;
-  let tried = 0, worst = Infinity, stuck = 0, stillInAny = 0, deepestAny = 0;
+  let tried = 0, worst = Infinity, stuck = 0, insideAtTenth = 0, deepestAtTenth = 0;
+  let stillInAny = 0, deepestAny = 0, maxStep = 0, latestExit = 0, reentered = 0;
   let seed = 424242;
   const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   for (let attempt = 0; attempt < 4000 && tried < 100; attempt++) {
@@ -107,25 +108,37 @@ const mm = v => (v * 1000).toFixed(1) + ' mm';
     state.feetRadius = feet;
     if (overlapAt(state.direction, state.feetRadius) <= 0) continue;      // not actually inside anything
     tried++;
-    // How deep it started, so the answer can be "it got out" rather than "it got out of everything", which in
-    // a cluster of boulders built one against the other is not a place that exists.
+    // Keep the original tenth-of-a-second progress requirement. A bounded escape through a cluster can
+    // take longer, so also measure every solid at 0.2 s and every intervening frame's displacement.
     const inside0 = post.r + WALKER_RADIUS - post.dir.distanceTo(state.direction) * R;
-    for (let f = 0; f < 12; f++) physicsStep(dt);
-    // Two questions, and they are different. Out of the trunk it was standing in: that is the promise, and
-    // it has to hold. Out of *everything*: in a cluster of three overlapping boulders there may be no point
-    // that is outside all of them within a step's reach, and the body ends up in the widest gap instead.
-    const gap = post.dir.distanceTo(state.direction) * R - post.r - WALKER_RADIUS;
-    if (gap < worst) worst = gap;
-    // The promise: a body dropped inside a boulder is most of the way out of it within a tenth of a second,
-    // whatever else is built against it.
-    if (gap < -inside0 * .35) stuck++;
-    const any = overlapAt(state.direction, state.feetRadius);
-    if (any > 0) { stillInAny++; deepestAny = Math.max(deepestAny, any); }
+    let firstClear = 0, returnedInside = false;
+    for (let f = 0; f < 24; f++) {
+      const before = state.direction.clone();
+      physicsStep(dt);
+      maxStep = Math.max(maxStep, before.distanceTo(state.direction) * R);
+      const any = overlapAt(state.direction, state.feetRadius);
+      if (any <= 1e-7 && !firstClear) firstClear = f + 1;
+      if (any > 1e-7 && firstClear) returnedInside = true;
+      if (f === 11) {
+        const gap = post.dir.distanceTo(state.direction) * R - post.r - WALKER_RADIUS;
+        worst = Math.min(worst, gap);
+        if (gap < -inside0 * .35) stuck++;
+        if (any > 1e-7) { insideAtTenth++; deepestAtTenth = Math.max(deepestAtTenth, any); }
+      }
+      if (f === 23 && any > 1e-7) { stillInAny++; deepestAny = Math.max(deepestAny, any); }
+    }
+    if (returnedInside) reentered++;
+    latestExit = Math.max(latestExit, firstClear || 25);
   }
-  ok('a body put inside a solid is pushed out of that solid', tried > 20 && stuck === 0,
-    tried + ' bodies stood inside trunks and boulders; a tenth of a second later the deepest still inside the one it was in is ' + mm(Math.max(0, -worst)) +
-    ' — ' + (tried - stuck) + ' of ' + tried + ' are most of the way out, and ' + stillInAny +
-    ' finish inside a neighbour (deepest ' + mm(deepestAny) + '), because those boulders were built in clusters');
+  ok('a body put inside a solid is most of the way out within a tenth of a second', tried === 100 && stuck === 0,
+    tried + ' bodies; ' + (tried - stuck) + ' made the original 65% progress, deepest in the original solid ' +
+    mm(Math.max(0, -worst)) + '; ' + insideAtTenth + ' still overlap any solid at 0.1 s (deepest ' + mm(deepestAtTenth) + ')');
+  ok('and clears every static solid without re-entry within 0.2 seconds',
+    tried === 100 && stillInAny === 0 && reentered === 0,
+    stillInAny + ' of ' + tried + ' remain embedded (deepest ' + mm(deepestAny) + '); ' + reentered +
+    ' re-entered after clearing, latest exit at ' + (latestExit * dt * 1000).toFixed(1) + ' ms');
+  ok('and no forced escape teleports the body in one frame', maxStep <= .9 * dt + 1e-6,
+    'largest of ' + (tried * 24) + ' steps ' + mm(maxStep) + ' at 120 Hz, bound ' + mm(.9 * dt));
 }
 
 // ---- H, the way out -----------------------------------------------------------------------------------

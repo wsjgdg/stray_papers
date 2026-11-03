@@ -249,11 +249,17 @@ const ways = settlementDirs.map((_, i) => wayIn(i));
   // And then walk it, the way a person does: stand outside the door, look at the open ground behind it, hold
   // forward. This is as close as the bench gets to the user's complaint, so it is asked of the five tightest.
   const order = ways.map((w, i) => ({ w, i })).filter(x => x.w.door > 0).sort((a, b) => a.w.door - b.w.door).slice(0, 5);
-  const results = [];
-  let worstMiss = 0;
-  for (const { w, i } of order) {
+  // Town 54 was the real blocked approach before nearby-town platforms were included. It is not
+  // currently among the five tightest, so retain its own physical walk rather than silently dropping it.
+  const selected = [...order];
+  if (!selected.some(({ i }) => i === 54)) selected.push({ w: ways[54], i: 54 });
+  const results = new Map();
+  for (const { w, i } of selected) {
     const site = settlementDirs[i];
-    if (!w.target || !w.mouth) { results.push(i + ': no door'); continue; }
+    if (!w || !site || !w.target || !w.mouth) {
+      results.set(i, { miss: Infinity, text: i + ': no door' });
+      continue;
+    }
     resetGroundMotion(); keys.clear(); joystick.x = joystick.y = 0;
     state.mode = 'ground'; state.transition = null; state.ghost = false;
     const outward = w.mouth.clone().sub(site.dir.clone().multiplyScalar(R));
@@ -276,11 +282,15 @@ const ways = settlementDirs.map((_, i) => wayIn(i));
       closest = Math.min(closest, state.direction.distanceTo(aim) * R);
     }
     keys.clear();
-    worstMiss = Math.max(worstMiss, closest);
-    results.push(i + ': ' + mm(start) + ' → ' + mm(closest) + ' through a ' + mm(w.door) + ' door');
+    results.set(i, { miss: closest, text: i + ': ' + mm(start) + ' → ' + mm(closest) + ' through a ' + mm(w.door) + ' door' });
   }
-  ok('and a body that walks at the door ends up inside the town', worstMiss < .025,
-    'the five tightest towns, walked straight at the gap for six seconds: ' + results.join(' · '));
+  const tightest = order.map(({ i }) => results.get(i));
+  const worstMiss = Math.max(...tightest.map(result => result.miss));
+  ok('and a body that walks at the door ends up inside the town', order.length === 5 && worstMiss < .025,
+    'the five tightest towns, walked straight at the gap for six seconds: ' + tightest.map(result => result.text).join(' · '));
+  const formerBlocked = results.get(54);
+  ok('and the previously blocked town 54 is also physically walkable', !!formerBlocked && formerBlocked.miss < .025,
+    formerBlocked ? formerBlocked.text : 'town 54 is missing');
 }
 
 // ---- towns keep to themselves --------------------------------------------------------------------------

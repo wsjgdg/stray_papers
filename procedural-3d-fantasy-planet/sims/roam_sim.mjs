@@ -6,7 +6,7 @@
 import { buildWorld } from './world.mjs';
 
 const world = await buildWorld();
-const { THREE, R, SEA, EYE, WALKER_RADIUS, heightAt, state, keys, joystick, physicsStep, walkBoxes, hardProps, stoneSolids, bell, reefs, overlapAt, resetGroundMotion } = world;
+const { THREE, R, SEA, EYE, WALKER_RADIUS, SPRINT_SPEED, heightAt, state, keys, joystick, physicsStep, walkBoxes, hardProps, stoneSolids, bell, reefs, overlapAt, resetGroundMotion } = world;
 
 // Every walk starts from the page's own idea of a settled body. The bench used to leave the motion state
 // over from the previous walk, and a jump buffer or a coyote-time left behind made the next body leap as
@@ -102,6 +102,7 @@ const spawn = () => {
 
 const dt = 1 / 120;
 let deepest = Infinity, deepestCreature = Infinity, worstAt = null, minTravelled = Infinity, framesInWater = 0, frames = 0, stuckRuns = 0, stalled = 0;
+let maxStep = 0, maxStepAt = null;
 
 for (let run = 0; run < 24; run++) {
   const start = spawn();
@@ -124,6 +125,8 @@ for (let run = 0; run < 24; run++) {
     }
     const before = state.direction.clone();
     physicsStep(dt);
+    const stepDistance = before.distanceTo(state.direction) * R;
+    if (stepDistance > maxStep) { maxStep = stepDistance; maxStepAt = { run, step, water: state.water }; }
     travelled += before.angleTo(state.direction) * R;
     frames++;
     if (state.water) framesInWater++;
@@ -184,14 +187,17 @@ for (let run = 0; run < 24; run++) {
   minTravelled = Math.min(minTravelled, travelled);
 }
 
-// OPEN ITEM, measured: 3.1 mm, and only once in 57 600 steps — the walker's cylinder grazed the 30 mm-thick corner
-// of a marker post (hx .079 × hz .015). The wall resolution puts it back outside, but the frame that ends the step
-// is inside by those three millimetres. It is in the worklog; the bound here is "no more than a graze".
-ok('the body never ends a step inside a wall, a trunk, a boulder or a stone', deepest >= -.004,
+// Ordinary walks start clear, unlike the deliberate forced-embedding tests. They must stay clear of
+// every static collider; allow only a micron of floating-point error, not the former 4 mm graze.
+ok('the body never ends a step inside a wall, a trunk, a boulder or a stone', deepest >= -1e-6,
   'closest it came: ' + (deepest * 1000).toFixed(1) + ' mm of margin, over ' + frames + ' steps' +
   (worstAt ? ' (run ' + worstAt.run + ', step ' + worstAt.step + (worstAt.water ? ', in water' : '') + '; ' + worstAt.tag + ')' : ''));
 ok('and the only thing that ever overlaps it is a living body doing the pushing', deepestCreature >= -.09,
   'the closest a bell or a raft came was ' + (deepestCreature * 1000).toFixed(1) + ' mm (contact with a creature is by design; a wall is not)');
+const maxAllowedStep = SPRINT_SPEED * 1.18 * dt + .0016;
+ok('and no frame is a sideways teleport on any of those walks', maxStep <= maxAllowedStep + 1e-6,
+  'largest step ' + (maxStep * 1000).toFixed(2) + ' mm at 120 Hz, bound ' + (maxAllowedStep * 1000).toFixed(2) +
+  ' mm' + (maxStepAt ? ' (run ' + maxStepAt.run + ', step ' + maxStepAt.step + (maxStepAt.water ? ', water' : '') + ')' : ' (no movement)'));
 ok('and no walk is ever trapped', stuckRuns === 0,
   stuckRuns + ' walks spent two seconds without moving (' + stalled + ' times a wall stopped the walk and it went round another way)');
 ok('every walk got somewhere', minTravelled > .20,

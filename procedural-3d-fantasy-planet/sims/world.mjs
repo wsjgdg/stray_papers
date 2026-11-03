@@ -189,6 +189,7 @@ export function loadPage(file = PAGE) {
         provinceDressing, physicsStep, updateBell, updateReefs, updateCamera, updateWeather, updateLattice,
         bell, reefs, landmarks, settlementDirs, walkBoxes, hardProps, floraHard, groundStones,
         provinceGeo, provinceMat, hardBand, hardWidthOf, provinceWet, smokeWind, overlapAt,
+        fern, fernLandingExtent: typeof fernLandingExtent === 'undefined' ? null : fernLandingExtent, dressFerns,
         weather, latticeRings, setWeather, cycleWeather, WEATHER_DEFS, nextStrikeGap, thunderPlan, beginStrike,
         resetGroundMotion, clearInput, switchMode, propUnder, hardBand, BELL_HALF_WIDE, propAhead, bellNormal,
         refreshBellProps, dressStones

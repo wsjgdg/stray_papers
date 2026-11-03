@@ -190,15 +190,28 @@ if (!flat || !gentle || !steep || !track) {
   const obstacle = { dir: steep.dir.clone().addScaledVector(uphill, -.010 / R).normalize(), r: .025 };
   hardProps.push(obstacle);
   const before = state.direction.clone(), beforeHeight = heightAt(before);
-  physicsStep(dt);
-  const ground = R + heightAt(state.direction), rise = heightAt(state.direction) - beforeHeight;
-  const eyeError = state.radius - ground - EYE, feetError = state.feetRadius - ground;
+  let maxEyeError = 0, maxFeetError = 0, maxBelowGround = 0, maxStep = 0, groundedFrames = 0;
+  // The old one-frame assertion required a >10 mm sideways snap. Check the same uphill resampling on
+  // every frame instead, retain the >10 mm cumulative displacement, and now also enforce a bounded step.
+  for (let f = 0; f < 6; f++) {
+    const previous = state.direction.clone();
+    physicsStep(dt);
+    const ground = R + heightAt(state.direction);
+    maxStep = Math.max(maxStep, previous.distanceTo(state.direction) * R);
+    if (state.grounded) {
+      groundedFrames++;
+      maxEyeError = Math.max(maxEyeError, Math.abs(state.radius - ground - EYE));
+    }
+    maxBelowGround = Math.max(maxBelowGround, ground + EYE - state.radius);
+    maxFeetError = Math.max(maxFeetError, Math.abs(state.feetRadius - Math.max(ground, state.radius - EYE)));
+  }
+  const rise = heightAt(state.direction) - beforeHeight;
   hardProps.splice(hardProps.indexOf(obstacle), 1);
-  ok('a solid pushing a walker uphill resamples the ground at the resolved position',
-    state.direction.distanceTo(before) * R > .01 && rise > .0005 && state.grounded &&
-    Math.abs(eyeError) < .0005 && Math.abs(feetError) < .0005,
+  ok('a solid pushing a walker uphill resamples the ground on every bounded step',
+    state.direction.distanceTo(before) * R > .01 && rise > .0005 && groundedFrames >= 3 &&
+    maxStep <= .9 * dt + 1e-6 && maxEyeError < .0005 && maxBelowGround < .0005 && maxFeetError < .0005,
     'horizontal push ' + mm(state.direction.distanceTo(before) * R) + ', ground rose ' + mm(rise) +
-    ', eye error ' + mm(eyeError) + ', feet error ' + mm(feetError));
+    ', largest frame ' + mm(maxStep) + ', worst eye error ' + mm(maxEyeError) + ', feet error ' + mm(maxFeetError));
 }
 
 // ---- the speed -------------------------------------------------------------------------------------------
