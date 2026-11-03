@@ -191,6 +191,10 @@
 
 `-71` 里我把鹿对玩家的避让从 `d.pos.angleTo(state.direction) * R` 改成了 `d.pos.distanceTo(state.direction)`（在 `updateBell` 的两处，`~7684` 与 `~7847`），**这是一次回归**：探针当时看到的「玩家被推停在 4 倍身体半径之外」正是它的症状，而我把它误读成了「动物在等玩家后退」。`contact_sim` 里所有 `-21.9 mm`、`0.0 mm` 的读数也因此是**单位空间**的数，不是毫米。
 
+**已核对（2026-11-03，`R = 4.2`）**：两只钵行者之间 `angleTo*R = 311.48 mm`、`distanceTo = 74.14 mm`、`distanceTo*R = 311.41 mm`——`distanceTo` 就是世界距离 ÷ 4.2，上面的判断是真的，不是推测。
+
+**新沙箱第一件事**：`sims/` 里没有 `node_modules`（不入快照），先 `cd sims && npm install`（只依赖 `three@0.174.0`，`sims/package.json` 里 `npm test` = `node run.mjs`）。
+
 修法（四处）：
 
 1. `index.html` 两处避让比较改回 **`distanceTo(...) * R`**（比 `angleTo*R` 更好读，也对弦长精确）；
