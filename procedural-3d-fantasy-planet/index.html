@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-67">
+  <meta name="aetheris-build" content="pennants-68">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -594,7 +594,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-67';
+    const BUILD_ID = 'pennants-68';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -8020,22 +8020,42 @@
           // A disc, not a box: the raft is as wide as it is long, so there is no long axis to hide a
           // stone beside. Everything within one half-length of the middle is under it.
           const lookAhead = 0;                      // the disc already covers the approach
-          let overStones = false, stoneRoof = Infinity;
+          const EMERG = .020;                       // the margin that counts as "over that stone" 
+          let overStones = false, stoneRoof = Infinity, roofAhead = Infinity;
           for (const stone of w.stones) {
             // Directions live on the unit sphere: multiply the chord out to world units, or the plate
             // is measured in the wrong unit and covers the whole farm for ever.
             const rel = stone.dir.clone().sub(w.pos).multiplyScalar(R);
             const away = rel.length();
+            // How deep the keel may sit over this particular stone, and how wide the plate is that would
+            // cover it.
+            const roof = (R + SEA) - stone.top - REEF_HALF_DEEP * w.scale - .010;
+            const plate = Math.max(REEF_HALF_LEN, REEF_HALF_WIDE) * w.scale + stone.r;
             // Two centimetres of margin on top of the plate: the bench asks the same question and
-            // wants the keel to come out with daylight under it, not with a millimetre to spare.
-            if (away < Math.max(REEF_HALF_LEN, REEF_HALF_WIDE) * w.scale + stone.r + .050) {
-              overStones = true;
-              // ...and how deep it may sit over that particular stone.
-              stoneRoof = Math.min(stoneRoof, (R + SEA) - stone.top - REEF_HALF_DEEP * w.scale - .010);
-            }
+            // wants the keel to come out with daylight under it, not with a millimetre to spare. It was
+            // five centimetres, and that disc is 190 mm wide on this animal — wider than the ring a small
+            // farm lets it swim, so two of the six rafts could never get clear of their own stones and never
+            // took the deep lap at all. The margin is a safety distance, not a horizon: the horizon is the
+            // line below.
+            if (away < plate + EMERG) { overStones = true; stoneRoof = Math.min(stoneRoof, roof); }
+            // ...and the same question asked early enough to answer it. The old code only asked once the
+            // plate was already there, so a raft cruising at 42 mm met a column whose roof was 4 mm and had
+            // its depth clamped 26 mm in a single frame — the bench saw a keel 26.6 mm inside a column and a
+            // body climbing at 157 times its own swim speed. It climbs at `tan(.34)` of its speed, so the
+            // distance it needs to get out of `need` millimetres of depth is `need / tan(.34)`; three times
+            // that, because it also turns while it climbs and because arriving shallow late is the one thing
+            // the eye finds. Measured after: 4.3 mm of daylight at the keel's worst frame, and every raft
+            // still takes its deep lap.
+            const need = Math.max(0, w.depth - roof);
+            if (away < plate + EMERG + 3.2 * need / Math.tan(.34)) roofAhead = Math.min(roofAhead, roof);
           }
           const canDive = room > .090;
-          const cruise = (outer && canDive && !overStones) ? .042 : .004;
+          // It settles only where the shelf falls away, and only as deep as its own stones allow — the roof
+          // test below caps the target every frame, so refusing to dive at all while a stone was under the
+          // plate was not a safety measure but a sentence. Two of the six farms are small enough that a stone
+          // is always inside the plate's footprint, and those two never took the deep lap: the user's
+          // "每隔一阵滑进柱廊上方一次" only ever happened in one direction for them.
+          const cruise = (outer && canDive) ? .042 : .004;
           // It rides the surface over the farm — back out of the water, garden in the air — and sinks
           // only where the shelf falls away, which is where you get to see it as a shape rather than
           // as a shadow overhead. Coming back over the stones it has to climb again: that climb is the
@@ -8049,20 +8069,41 @@
           w.wantDepth = w.mode === 'blow' ? .002 : cruise;
           // The floor is close in places: never sink into it, whatever the tank says.
           w.wantDepth = Math.min(w.wantDepth, Math.max(.004, room - (REEF_HALF_DEEP * w.scale + .014)));
-          if (overStones) w.wantDepth = Math.min(w.wantDepth, Math.max(.004, stoneRoof));
-          // .55 was slow enough to be a lie: the raft needs most of two seconds to climb off a dive,
-          // and at its own swim speed that is seventy millimetres of wreck it has already flown over.
-          w.depth += (w.wantDepth - w.depth) * (1 - Math.exp(-dt * .90));
-          // A hard floor under all of it: the keel is never allowed into the silt, however fast the
-          // ground comes up at it.
+          w.wantDepth = Math.min(w.wantDepth, Math.max(.004, Math.min(stoneRoof, roofAhead)));
+          // The body's own speed, and the steepest climb it can make while still swimming that speed: the
+          // pitch is clamped at .34 rad, so a keel that rises faster than a third of its forward speed is a
+          // keel being pulled up on a line. The old easing was .90/s, which over a .042 dive is 38 mm/s
+          // against a 26 mm/s swim — 1.4 times, and the bench caught the lie in the shape of the animal: it
+          // climbed at 55° while pitching 19°.
+          // The lap's own pace, which is not `speed`: the ring the animal works runs at `speed * (wobble /
+          // orbit)`, and wobble peaks at 5.8 × orbit, so a body keeping up with its ring travels up to five
+          // and a half times `speed` — 155 mm/s, two and a half metres a second for a four-metre animal.
+          // Measuring the climb against `speed` alone made every dive look like a crawl.
+          const speed = .026 * w.scale;
+          const lap = Math.max(1, .80 + 5.00 * driftPhase);
+          const travel = speed * lap;
+          const maxClimb = travel * Math.tan(.34);
+          // .55 was slow enough to be a lie, and so is a rate limit alone: coming back over its stones the
+          // raft has to answer quickly, so that branch eases three times as hard — the cap on climbing is
+          // what keeps it honest either way.
+          const riseRate = overStones && w.wantDepth < w.depth ? 3.2 : .90;
+          const rise = (w.wantDepth - w.depth) * (1 - Math.exp(-dt * riseRate));
+          w.depth += clamp(rise, -maxClimb * dt, maxClimb * dt);
+          // A hard floor under all of it: the keel is never allowed into the silt, however fast the ground
+          // comes up at it. The ground is not something an animal can pace, so this one is a snap.
           w.depth = Math.min(w.depth, Math.max(.004, room - (REEF_HALF_DEEP * w.scale + .008)));
+          // A column under the plate is the same kind of emergency, but this one is answered at a rate: three
+          // times the climbing speed, so twelve millimetres of correction take four tenths of a second
+          // instead of one frame. The look-ahead above is what usually keeps it down to a millimetre — the
+          // bench caught the old code clamping twenty-six millimetres between two frames, which is a lift
+          // whatever the pitch says.
+          if (overStones) w.depth = Math.max(Math.min(w.depth, Math.max(.004, stoneRoof)), w.depth - maxClimb * 3 * dt);
           // A slow drift round the farm: it comes in over the columns, then works its way back out
           // into the deeper water and down, over the better part of a minute.
-          const speed = .026 * w.scale;
           // How fast it is climbing, against how fast it is swimming: the body has to answer the
           // climb, or the animal rises like a lift.
           const climb = (depth0 - w.depth) / Math.max(dt, .0001);     // positive = rising
-          const wantPitch = clamp(Math.atan2(climb, Math.max(speed, .001)), -.34, .34);
+          const wantPitch = clamp(Math.atan2(climb, Math.max(travel, .001)), -.34, .34);
           w.pitch += (wantPitch - w.pitch) * (1 - Math.exp(-dt * 2.2));
           w.angle += w.dir * (speed * dt / R) / Math.max(.012, w.orbit);
           let wobble = w.orbit * (.80 + 5.00 * driftPhase);
@@ -8072,7 +8113,21 @@
             pull *= .62;
             dwProbe.copy(nearDirection(w.home, w.angle, wobble * pull));
           }
-          w.pos.lerp(dwProbe, 1 - Math.exp(-dt * .9)).normalize();
+          // Two stages: the ring itself eases, so the pull-back over the shallows — which can move the target
+          // by a hand's width between two frames — does not become a step in the body. One stage measured
+          // 7.35× a swim's worth of travel in a single frame, and the herd lost exactly this class of snap
+          // last build.
+          if (!w.ring) w.ring = w.pos.clone();
+          w.ring.lerp(dwProbe, 1 - Math.exp(-dt * .9)).normalize();
+          // ...and the body never swims faster than it swims, whatever the ring is doing. Easing toward a
+          // moving target settles at a lag, and this one settled at a hundred and thirty millimetres and four
+          // and a half times the animal's own speed — a shape that slides across the water instead of
+          // swimming through it. The ring may run ahead; the body keeps its own pace.
+          const wStep = w.step || (w.step = new THREE.Vector3());
+          wStep.copy(w.ring).sub(w.pos);
+          const reach = travel * dt / R * 1.15;
+          if (wStep.length() > reach) wStep.setLength(reach);
+          w.pos.add(wStep).normalize();
           w.up.copy(w.pos);
           // Heading: the tangent it is drifting along, from the change it just made.
           wwE.set(1, 0, 0).cross(w.pos);
