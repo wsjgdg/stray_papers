@@ -32,7 +32,7 @@ def main() -> None:
     html = (
         "<!doctype html>\n"
         '<html lang="zh">\n<head>\n<meta charset="utf-8">\n'
-        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
         '<meta name="description" content="参宿四还亮着 — 深夜天文台、三年前的'
         '定时邮件、一个 AI 关于记忆备份的追问。零依赖网页视觉小说，三种结局。">\n'
         '<meta property="og:title" content="参宿四还亮着 · 视觉小说">\n'

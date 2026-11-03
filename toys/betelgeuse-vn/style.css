@@ -1625,6 +1625,107 @@ input.vn-range {
 }
 
 /* --------------------------------------------------------------------------
+   ---- mobile pass ---- (touch usability, additive + scoped)
+
+   Everything here targets touch phones only; pointer: fine desktop rendering
+   is unchanged (coarse-pointer rules never match a mouse, and max() with
+   env() falls back to the existing offsets wherever the inset resolves to 0).
+   Rules are ordered after section 15 so the small-screen restatements below
+   win the cascade where both blocks apply. Safe-area insets additionally
+   require viewport-fit=cover in the HTML viewport meta to report non-zero
+   on iOS — CSS is ready either way.
+   -------------------------------------------------------------------------- */
+
+/* tap behavior: no grey tap flash on the app surface, no double-tap zoom
+   while playing. touch-action: manipulation keeps pan + pinch-zoom working
+   (backlog scrolling, accessibility zoom) and only kills the double-tap
+   delay/zoom; the button reset above already carried the tap highlight. */
+#vn-app {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+#vn-app button {
+  touch-action: manipulation;
+}
+
+/* safe areas: lift the dialog off the home indicator and the topbar chips
+   out from under the notch. max() keeps the existing offsets as the floor,
+   so desktop (env = 0) is pixel-identical; the 0px fallback degrades
+   gracefully where env() is unknown. The 480px restatements preserve
+   section 15's tighter offsets as the floor on small screens. */
+#vn-app .vn-dialog {
+  margin-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+}
+
+#vn-app .vn-topbar {
+  top: max(14px, env(safe-area-inset-top, 0px));
+  right: max(14px, env(safe-area-inset-right, 0px));
+}
+
+@media (max-width: 480px) {
+  #vn-app .vn-dialog {
+    margin-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  }
+
+  #vn-app .vn-topbar {
+    top: max(10px, env(safe-area-inset-top, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+  }
+}
+
+/* hit targets: 40px+ chips and close button, 44px+ slot/choice rows on
+   touch devices. height: auto + min-height lets the fixed 32px chip grow;
+   padding restores the pill shape at the larger size. */
+@media (pointer: coarse) {
+  button.vn-btn {
+    height: auto;
+    min-height: 40px;
+    min-width: 40px;
+    padding: 10px 14px;
+  }
+
+  button.vn-close {
+    width: 40px;
+    height: 40px;
+  }
+
+  button.vn-slot {
+    min-height: 44px;
+  }
+
+  button.vn-choice {
+    min-height: 44px;
+  }
+}
+
+/* legibility at small widths: .vn-text already renders 16px here (>= the
+   15px floor), so only the chapter title tracking needs relief — 0.42em
+   spacing overflows ~10-character titles on a 360px screen. text-indent
+   moves with it to keep the centered CJK compensation in step. */
+@media (max-width: 480px) {
+  .vn-chapter-text {
+    letter-spacing: 0.2em;
+    text-indent: 0.2em;
+  }
+}
+
+/* landscape phones (short viewports): slimmer sprites (height scales with
+   width, so heads clear the top too) and a narrower dialog so the portraits
+   clear the name plate. Declared after section 15 so this width also wins
+   where the <=640px sprite clamp would apply. */
+@media (max-height: 480px) {
+  .vn-sprite {
+    width: clamp(140px, 22vw, 220px);
+  }
+
+  #vn-app .vn-dialog {
+    width: min(92%, 560px);
+    max-width: 560px;
+  }
+}
+
+/* --------------------------------------------------------------------------
    16. Reduced motion — kills every new animation; grain and star field
    freeze in place (static texture is fine), transitions collapse.
    -------------------------------------------------------------------------- */
