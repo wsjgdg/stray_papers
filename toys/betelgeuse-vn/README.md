@@ -44,7 +44,8 @@ self-contained, ~72 KB, no server or network needed.
   sounds; toggle in the top bar, preference persisted. One-shot events are
   scheduled with a Web Audio-clock lookahead scheduler (25ms timer, 0.1s
   ahead of `ctx.currentTime`) for jitter-free timing.
-- 3 save slots (localStorage) + full backlog history
+- 3 save slots (localStorage) + full backlog history; save slots carry a
+  live scene snapshot thumbnail
 - Skip mode: topbar toggle or hold `S` — steps lines at ~12/s, stops
   itself at choices and endings, mutually exclusive with auto mode
 - Keyboard: Space/Enter advance, `S` hold-to-skip, Esc closes overlays
