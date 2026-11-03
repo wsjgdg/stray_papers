@@ -1,0 +1,12 @@
+{
+  "name": "aetheris-sims",
+  "private": true,
+  "type": "module",
+  "description": "The bench: the page's own world, built headlessly, walked and measured.",
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "dependencies": {
+    "three": "0.174.0"
+  }
+}

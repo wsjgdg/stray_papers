@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-65">
+  <meta name="aetheris-build" content="pennants-66">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -594,7 +594,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-65';
+    const BUILD_ID = 'pennants-66';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -6816,8 +6816,12 @@
             ex.normalize();
             ez.addScaledVector(ex, -ez.dot(ex));
             if (ez.lengthSq() < 1e-6) continue;
+            // A wall has a bottom as well as a top, and the bottom is what keeps a town built on a ledge out
+            // of the way of somebody walking the beach under it. Without it, a plot's walls are solids for
+            // every body on the planet whose feet are below their eaves — including the ones a hundred and
+            // ninety millimetres down a cliff, who are then shoved out of a wall they are nowhere near.
             walkBoxes.push({
-              dir, top, ex: ex.normalize(), ez: ez.normalize(),
+              dir, top, bottom: R + base, ex: ex.normalize(), ez: ez.normalize(),
               hx: Math.max(-bb.min.x, bb.max.x) * item.scale.x,
               hz: Math.max(-bb.min.z, bb.max.z) * item.scale.z
             });
@@ -7482,6 +7486,10 @@
       // How wide the walker is where it meets a tree: a torso, not a point. Trunks and boulders are
       // solid now — the herd walks round them, and so does the player.
       const WALKER_RADIUS = .010;
+      // The body is pushed out to `radius + skin`, not to the radius itself: a push that lands on the
+      // boundary exactly leaves the next step's test deciding inside-or-outside on floating point, and the
+      // guard below then refuses steps that were already clear. A fifth of a millimetre of daylight.
+      const WALK_SKIN = .0002;
       // Swimming: dive with C, rise with SPACE, and stay where you left it when you let go. There is no
       // buoyancy pulling the eye back to the surface: the first version drifted up at 16 mm/s, which
       // meant you could not stop at a column to look at it — you had to hold C the whole time, and the
@@ -7631,9 +7639,21 @@
               const along = dwProbe.dot(d.fwd);
               if (along <= 0 || along * R > .070 * BELL_SIZE) continue;   // behind, or too far to matter
               dwProbe.addScaledVector(d.fwd, -along);
-              if (dwProbe.length() * R < .042 * BELL_SIZE) { d.timer = 0; break; }
+              // Someone in the way ahead. Giving up on the walk here was the other half of the frozen bell:
+              // the herd stands shoulder to shoulder (75 mm), and this test cancels any walk with a herd-mate
+              // inside 61 mm — so the animal left 'graze', arrived in 'walk', and cancelled on the first frame,
+              // every time, for ever. Now the walk continues at a shuffle and the heading turns away from the
+              // body in the way, which is what an animal in a herd actually does.
+              if (dwProbe.length() * R < .042 * BELL_SIZE) {
+                d.timer = Math.min(d.timer, .30);
+                d.fwd.addScaledVector(dwProbe.normalize(), -.45);
+                d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
+                if (d.fwd.lengthSq() < 1e-8) d.fwd.copy(d.up).cross(d.pos).normalize();
+                d.fwd.normalize();
+                break;
+              }
             }
-            if (d.timer <= 0 || d.pos.angleTo(d.goto) < .008) {
+            if (d.timer <= 0 || d.pos.angleTo(d.goto) < .004) {
               d.mode = 'graze';
               d.timer = 1.0 + .7 * (1 + Math.sin(d.seedPhase * 1.7));
             }
@@ -7683,14 +7703,23 @@
                   dwProbe.copy(d.pos).sub(nearest.pos).addScaledVector(d.pos, -dwProbe.dot(d.pos) * 0 + 0);
                   dwProbe.copy(d.pos).sub(nearest.pos);
                   dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
+                  // Far enough to be a walk. It used to be .020 — twenty millimetres — which is *inside* the
+                  // "have I arrived" test below (.008 rad ≈ 34 mm), so the animal set off and cancelled on the
+                  // same frame, every 1.2 s, for ever: a bell in a tight herd standing perfectly still while
+                  // its neighbours walked past it. That was the frozen animal the herd test found.
                   if (dwProbe.lengthSq() > 1e-10) {
-                    d.goto.copy(d.pos).addScaledVector(dwProbe.normalize(), .020).normalize();
+                    d.goto.copy(d.pos).addScaledVector(dwProbe.normalize(), .055).normalize();
                     clear = true;
                   }
                 }
               }
               if (clear) {
+                // The timer, or the walk cancels itself on its first frame: the grazing branch has just run
+                // `d.timer` down to zero to get here, and the walk branch ends when the timer is spent. That is
+                // the frozen bell the herd test found — it left 'graze', arrived in 'walk' with a spent timer,
+                // and went straight back, 1.2 s at a time, for the whole minute.
                 d.mode = 'walk';
+                d.timer = 1.0 + .9 * Math.abs(Math.cos(d.seedPhase * 1.3));
                 aimBell(d, dwTarget.copy(d.goto).multiplyScalar(R + heightAt(d.goto)));
               } else {
                 d.timer = 1.2;                 // nowhere to go: keep grazing, look again in a moment
@@ -7755,6 +7784,46 @@
                       d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize();
                     }
                     if (turn > .45) d.speed *= .55;             // turning hard: walk, do not run
+                    turned = true; break;
+                  }
+                }
+              }
+              // ...and if that fails, ask again with a shorter step. A boulder a hand's width away blocks a
+              // 35 mm look-ahead in every direction, but the animal is only 55 mm wide and a 12 mm step may
+              // well be free — and standing still is the one thing this animal may not do, because a frozen
+              // animal in a moving herd is what the user called a bug. It browses out slowly instead.
+              if (!turned) {
+                for (let k = 0; k <= 6 && !turned; k++) {
+                  for (const sgn of [0, 1, -1]) {
+                    dwE.copy(d.fwd).applyAxisAngle(d.pos, sgn * .35 * k).normalize();
+                    dwProbe.copy(d.pos).addScaledVector(dwE, .012).normalize();
+                    // Downhill is always walkable, however steep: the slope test is there to stop an animal
+                    // climbing a cliff face, and refusing to let it *descend* one is how a bell on a steep
+                    // patch ended up rooted — every direction too steep, including the ones that only go down.
+                    const downhill = heightAt(dwProbe) < heightAt(d.pos) - .0002 && heightAt(dwProbe) >= SEA + .006;
+                    if ((!walkableAt(dwProbe) && !downhill) || propAhead(d, .014, dwE)) continue;
+                    d.fwd.copy(dwE);
+                    d.speed = .030;
+                    d.mode = 'walk';
+                    d.timer = .6;
+                    turned = true; break;
+                  }
+                }
+              }
+              // ...and if even that fails, the animal browses anyway: eight millimetres of step, only asking
+              // that it does not walk into a stone's width. A bell standing in a pocket of boulders will nudge
+              // its way out over a few seconds rather than stand there for the whole minute — which is what the
+              // herd test found, and what the user's rule ("an animal that does not move is a bug") forbids.
+              if (!turned) {
+                for (let k = 0; k <= 7 && !turned; k++) {
+                  for (const sgn of [0, 1, -1]) {
+                    dwE.copy(d.fwd).applyAxisAngle(d.pos, sgn * .785 * k).normalize();
+                    dwProbe.copy(d.pos).addScaledVector(dwE, .008).normalize();
+                    if (propAhead(d, .010, dwE) || heightAt(dwProbe) < SEA + .006) continue;
+                    d.fwd.copy(dwE);
+                    d.speed = .022;
+                    d.mode = 'walk';
+                    d.timer = .5;
                     turned = true; break;
                   }
                 }
@@ -7977,7 +8046,48 @@
       const targetPosition = new THREE.Vector3(), targetRotation = new THREE.Quaternion(), lookMatrix = new THREE.Matrix4();
       const aim = new THREE.Vector3(), right = new THREE.Vector3(), move = new THREE.Vector3(), orbitNormal = new THREE.Vector3();
       const moveTarget = new THREE.Vector3(), slopeProbe = new THREE.Vector3();
-      const walkProbe = new THREE.Vector3(), walkBump = new THREE.Vector3();
+      const walkProbe = new THREE.Vector3(), walkBump = new THREE.Vector3(), walkTmp = new THREE.Vector3(),
+        walkPrev = new THREE.Vector3();
+      // How far inside a wall, a trunk, a boulder or a stone the body is at a given direction, in metres.
+      // Zero means clear; the guards above and below are the only callers, so it may use walkTmp.
+      // Measured as a chord, like everything else that resolves a collision here: the placements above put a
+      // body exactly `need` metres of chord from the thing it was pushed out of, so a test in another metric
+      // (the angle, or the offset's component across the surface) disagrees with its own answer by a tenth of
+      // a millimetre and reverts steps that were already clear.
+      const overlapAt = (dir, feet) => {
+        let worst = 0;
+        for (let list = 0; list < 2; list++) {
+          const posts = list ? stoneSolids : hardProps;
+          for (let i = 0; i < posts.length; i++) {
+            const post = posts[i];
+            if (post.top !== undefined && post.top <= feet) continue;
+            if (post.dir.dot(dir) < .9) continue;
+            const gap = post.r + WALKER_RADIUS - dir.distanceTo(post.dir) * R;
+            if (gap > worst) worst = gap;
+          }
+        }
+        for (let i = 0; i < walkBoxes.length; i++) {
+          const box = walkBoxes[i];
+          if (box.top <= feet || box.bottom > feet + .020 || box.dir.dot(dir) < .9) continue;
+          walkTmp.copy(box.dir).sub(dir).multiplyScalar(R);
+          const gap = Math.min(box.hx + WALKER_RADIUS - Math.abs(walkTmp.dot(box.ex)),
+            box.hz + WALKER_RADIUS - Math.abs(walkTmp.dot(box.ez)));
+          if (gap > worst) worst = gap;
+        }
+        return worst;
+      };
+      // A body pushed out to `need` metres of chord has to land at the *angle* whose chord is `need`: building
+      // the point as `centre·cosθ + tangent·need/R` and letting normalize() finish the job shortens the chord
+      // by the length of the un-normalised sum — a couple of millimetres at this radius, which is exactly the
+      // amount a shoulder came to sit inside a boulder in the roam test. This turns the chord into the angle,
+      // so the body lands where the test measures it.
+      const placeAtChord = (centre, tangent, need) => {
+        walkTmp.copy(tangent).addScaledVector(centre, -centre.dot(tangent));
+        if (walkTmp.lengthSq() < 1e-12) return;
+        walkTmp.normalize();
+        const angle = 2 * Math.asin(Math.min(1, need / (2 * R)));
+        state.direction.copy(centre).multiplyScalar(Math.cos(angle)).addScaledVector(walkTmp, Math.sin(angle)).normalize();
+      };
       const rollAxis = new THREE.Vector3(0, 0, 1), rollQuat = new THREE.Quaternion();
       const viewNormal = new THREE.Vector3(), pathNormal = new THREE.Vector3(), pathRotation = new THREE.Quaternion();
       const identity = new THREE.Quaternion(), shadowFocus = new THREE.Vector3(), desiredShadowFocus = new THREE.Vector3();
@@ -8128,6 +8238,10 @@
         if (state.moveVelocity.lengthSq()<1e-9) state.moveVelocity.set(0,0,0);
 
         state.speed=state.moveVelocity.length();
+        // Where the body stood before this step walked it anywhere: the place the last step left it, which
+        // is the only place in the world that is known to be clear (it was resolved at the end of that step,
+        // or refused and kept). The guard at the foot of the collision pass sends the body back here.
+        walkPrev.copy(state.direction);
         if (state.speed>.004) {
           state.faceTarget=null;
           state.direction.multiplyScalar(state.radius).addScaledVector(state.moveVelocity,dt).normalize();
@@ -8157,63 +8271,87 @@
         // body, and with last frame's reading a plinth that has just come up past the feet was skipped
         // for a frame — the body stood 200 mm inside it and was shoved out sideways on the next one.
         const feetRadius = R + (state.water ? Math.max(elevation, SEA - state.depth) : heightAt(state.direction));
+        state.feetRadius = feetRadius;         // the harness measures the body against the same feet as the page
         state.pushed = 0;                 // how far a creature moved the body this frame (tests read this)
         state.bump = 0;                   // hardest the body was stopped this step, for the knock you hear
         walkProbe.copy(state.direction);
-        for (let list = 0; list < 2; list++) {
-          const posts = list ? stoneSolids : hardProps;
-          for (let i = 0; i < posts.length; i++) {
-            const post = posts[i];
-            if (post.top !== undefined && post.top <= feetRadius) continue;
-            // Cheap reject on the chord angle only; the exact test is the distance below. A tight dot
-            // cut-off here is wrong: it depends on the planet's radius, and the scene is built at one
-            // scale while the harness runs it at another.
-            if (post.dir.dot(walkProbe) < .9) continue;
-            walkBump.copy(state.direction).addScaledVector(post.dir, -post.dir.dot(state.direction));
-            const dist = walkBump.length() * R, need = post.r + WALKER_RADIUS;
-            if (dist >= need || dist < 1e-6) continue;
-            walkBump.normalize();
-            const along = post.dir.dot(state.direction);
-            state.direction.copy(post.dir).multiplyScalar(along).addScaledVector(walkBump, need / R).normalize();
-            const into = -state.moveVelocity.dot(walkBump);
-            if (into > 0) { state.moveVelocity.addScaledVector(walkBump, into); if (into > state.bump) state.bump = into; }
-            walkProbe.copy(state.direction);
-          }
-        }
-        // Boxes, because a town is made of boxes: the body's offset is taken in the plot's own two axes,
-        // and if it has stepped inside the footprint it goes back out through the nearest face. Three
-        // passes, because the houses of a town are often built one against the other: pushed out of one
-        // box the body can land inside its neighbour.
-        if (walkBoxes.length) {
-          walkProbe.copy(state.direction);
+        // Two kinds of solid, and one order is not enough: the body can be pushed out of a wall and into a
+        // boulder leaning on it, or the other way round. The props and the boxes are resolved in turn, and the
+        // round repeats while either is still moving the body — it settles in one pass nearly everywhere, which
+        // is why the extra pass costs nothing.
+        for (let round = 0; round < 3; round++) {
+          let movedAny = false;
+          // Three passes, like the boxes below, and for a plainer reason: half the world's props touch each
+          // other — a boulder sits against a boulder, a trunk against a rock — and the body cannot be outside
+          // both at once. Pushed out of the last one it was measured against, it can still be inside the one
+          // before it, so it is walked out again, and the leftover is a fraction of a millimetre instead of
+          // three. Nothing here is allowed to move the body into a start it did not come from: each pass only
+          // pushes out of solids, and the walker slips in at under a millimetre a step, so it is never far.
           for (let pass = 0; pass < 3; pass++) {
-            let moved = false;
-            for (let i = 0; i < walkBoxes.length; i++) {
-              const box = walkBoxes[i];
-              if (box.top <= feetRadius) continue;
-              if (box.dir.dot(walkProbe) < .9) continue;
-              walkBump.copy(state.direction).sub(box.dir).multiplyScalar(R);
-              const u = walkBump.dot(box.ex), v = walkBump.dot(box.ez);
-              const ex = box.hx + WALKER_RADIUS, ez = box.hz + WALKER_RADIUS;
-              if (Math.abs(u) >= ex || Math.abs(v) >= ez) continue;
-              // Out through whichever face is nearest, so a body never gets pushed across a room.
-              if (ex - Math.abs(u) <= ez - Math.abs(v)) {
-                const face = u < 0 ? -1 : 1;
-                walkBump.copy(box.ex).multiplyScalar(face * ex).addScaledVector(box.ez, v).multiplyScalar(1 / R);
-                const along = state.moveVelocity.dot(box.ex);
-                if (along * face < 0) { state.moveVelocity.addScaledVector(box.ex, -along); if (-along > state.bump) state.bump = -along; }
-              } else {
-                const face = v < 0 ? -1 : 1;
-                walkBump.copy(box.ez).multiplyScalar(face * ez).addScaledVector(box.ex, u).multiplyScalar(1 / R);
-                const along = state.moveVelocity.dot(box.ez);
-                if (along * face < 0) { state.moveVelocity.addScaledVector(box.ez, -along); if (-along > state.bump) state.bump = -along; }
+            let touched = false;
+            for (let list = 0; list < 2; list++) {
+              const posts = list ? stoneSolids : hardProps;
+              for (let i = 0; i < posts.length; i++) {
+                const post = posts[i];
+                if (post.top !== undefined && post.top <= feetRadius) continue;
+                // Cheap reject on the chord angle only; the exact test is the distance below. A tight dot
+                // cut-off here is wrong: it depends on the planet's radius, and the scene is built at one
+                // scale while the harness runs it at another.
+                if (post.dir.dot(walkProbe) < .9) continue;
+                walkBump.copy(state.direction).addScaledVector(post.dir, -post.dir.dot(state.direction));
+                const dist = walkBump.length() * R, need = post.r + WALKER_RADIUS + WALK_SKIN;
+                if (dist >= need || dist < 1e-6) continue;
+                walkBump.normalize();
+                placeAtChord(post.dir, walkBump, need);
+                const into = -state.moveVelocity.dot(walkBump);
+                if (into > 0) { state.moveVelocity.addScaledVector(walkBump, into); if (into > state.bump) state.bump = into; }
+                walkProbe.copy(state.direction);
+                touched = true; movedAny = true;
               }
-              state.direction.copy(box.dir).add(walkBump).normalize();
-              walkProbe.copy(state.direction);
-              moved = true;
             }
-            if (!moved) break;
+            if (!touched) break;
           }
+          // Boxes, because a town is made of boxes: the body's offset is taken in the plot's own two axes,
+          // and if it has stepped inside the footprint it goes back out through the nearest face. Three
+          // passes, because the houses of a town are often built one against the other: pushed out of one
+          // box the body can land inside its neighbour.
+          if (walkBoxes.length) {
+            walkProbe.copy(state.direction);
+            for (let pass = 0; pass < 3; pass++) {
+              let moved = false;
+              for (let i = 0; i < walkBoxes.length; i++) {
+                const box = walkBoxes[i];
+                if (box.top <= feetRadius || box.bottom > feetRadius + .020) continue;
+                if (box.dir.dot(walkProbe) < .9) continue;
+                walkBump.copy(state.direction).sub(box.dir).multiplyScalar(R);
+                const u = walkBump.dot(box.ex), v = walkBump.dot(box.ez);
+                const ex = box.hx + WALKER_RADIUS + WALK_SKIN, ez = box.hz + WALKER_RADIUS + WALK_SKIN;
+                if (Math.abs(u) >= ex || Math.abs(v) >= ez) continue;
+                // Out through whichever face is nearest, so a body never gets pushed across a room.
+                let chord = 0;
+                if (ex - Math.abs(u) <= ez - Math.abs(v)) {
+                  const face = u < 0 ? -1 : 1;
+                  walkBump.copy(box.ex).multiplyScalar(face * ex).addScaledVector(box.ez, v);
+                  chord = walkBump.length();
+                  walkBump.multiplyScalar(1 / Math.max(chord, 1e-9));
+                  const along = state.moveVelocity.dot(box.ex);
+                  if (along * face < 0) { state.moveVelocity.addScaledVector(box.ex, -along); if (-along > state.bump) state.bump = -along; }
+                } else {
+                  const face = v < 0 ? -1 : 1;
+                  walkBump.copy(box.ez).multiplyScalar(face * ez).addScaledVector(box.ex, u);
+                  chord = walkBump.length();
+                  walkBump.multiplyScalar(1 / Math.max(chord, 1e-9));
+                  const along = state.moveVelocity.dot(box.ez);
+                  if (along * face < 0) { state.moveVelocity.addScaledVector(box.ez, -along); if (-along > state.bump) state.bump = -along; }
+                }
+                placeAtChord(box.dir, walkBump, chord);
+                walkProbe.copy(state.direction);
+                moved = true; movedAny = true;
+              }
+              if (!moved) break;
+            }
+          }
+          if (!movedAny) break;
         }
         // ...and the creatures. They are posts that move, with a bottom as well as a top: a raft riding
         // the surface is something you swim under, and a bell is something you walk into. The sky
@@ -8226,18 +8364,71 @@
             if (!hit || hit.top <= feetRadius || hit.bottom > feetRadius + .085) continue;
             if (body.pos.dot(walkProbe) < .95) continue;
             walkBump.copy(state.direction).addScaledVector(body.pos, -body.pos.dot(state.direction));
-            const dist = walkBump.length() * R, need = hit.r + WALKER_RADIUS;
+            const dist = walkBump.length() * R, need = hit.r + WALKER_RADIUS + WALK_SKIN;
             if (dist >= need || dist < 1e-6) continue;
             walkBump.normalize();
             state.pushed += need - dist;
-            const along = body.pos.dot(state.direction);
-            state.direction.copy(body.pos).multiplyScalar(along).addScaledVector(walkBump, need / R).normalize();
+            placeAtChord(body.pos, walkBump, need);
             const into = -state.moveVelocity.dot(walkBump);
             if (into > 0) { state.moveVelocity.addScaledVector(walkBump, into); if (into > state.bump) state.bump = into; }
             walkProbe.copy(state.direction);
           }
         }
-
+        // A step that cannot be resolved is not taken. Two things leave the body inside: a creature, which
+        // is a post that moves and pushes from where it stands, and a corner where a boulder overlaps a wall,
+        // where the body is squeezed into a bite with no spot outside both — the push out of one is the push
+        // into the other, for ever. So the step is measured once more, and if it would end inside anything
+        // solid the body stays where it was, which was clear. Only when that is an improvement: a bell that
+        // has been standing on the body has it inside already, and then it is the push, not the refusal,
+        // that walks it back out.
+        let inside = overlapAt(state.direction, feetRadius);
+        if (inside > 0) {
+          const was = overlapAt(walkPrev, feetRadius);
+          if (was <= 0) {
+            // Refused: the body stays where it was, which was clear. A person does the same in a gap too
+            // narrow to pass — and it is what makes the promise exact rather than approximate.
+            state.direction.copy(walkPrev);
+            state.moveVelocity.set(0, 0, 0);
+            state.pushed = 0;
+          } else {
+            // Both ends inside: the body was carried, not walked — a transition between ground and water
+            // follows its own path and does not ask the collision pass first. It cannot be refused, so it is
+            // walked out along the sum of everything it is in. That is also the way out of a bite between two
+            // overlapping solids, where pushing out of one is pushing into the other: sideways, along the
+            // bisector, where both stop resisting at once.
+            for (let escape = 0; escape < 8 && inside > 0; escape++) {
+              walkBump.set(0, 0, 0);
+          for (let list = 0; list < 2; list++) {
+            const posts = list ? stoneSolids : hardProps;
+            for (let i = 0; i < posts.length; i++) {
+              const post = posts[i];
+              if (post.top !== undefined && post.top <= feetRadius) continue;
+              if (post.dir.dot(state.direction) < .9) continue;
+              const gap = post.r + WALKER_RADIUS - state.direction.distanceTo(post.dir) * R;
+              if (gap <= 0) continue;
+              walkTmp.copy(state.direction).addScaledVector(post.dir, -state.direction.dot(post.dir));
+              if (walkTmp.lengthSq() < 1e-12) continue;
+              walkBump.addScaledVector(walkTmp.normalize(), gap);
+            }
+          }
+              for (let i = 0; i < walkBoxes.length; i++) {
+                const box = walkBoxes[i];
+                if (box.top <= feetRadius || box.dir.dot(state.direction) < .9) continue;
+                walkTmp.copy(box.dir).sub(state.direction).multiplyScalar(R);
+                const u = walkTmp.dot(box.ex), v = walkTmp.dot(box.ez);
+                const outX = box.hx + WALKER_RADIUS - Math.abs(u), outZ = box.hz + WALKER_RADIUS - Math.abs(v);
+                if (outX <= 0 || outZ <= 0) continue;
+                if (outX <= outZ) walkTmp.copy(box.ex).multiplyScalar((u < 0 ? -1 : 1) * outX);
+                else walkTmp.copy(box.ez).multiplyScalar((v < 0 ? -1 : 1) * outZ);
+                walkBump.add(walkTmp);
+              }
+              if (walkBump.lengthSq() < 1e-12) break;
+              placeAtChord(state.direction, walkBump.normalize(), inside + WALK_SKIN);
+              inside = overlapAt(state.direction, feetRadius);
+            }
+            state.moveVelocity.set(0, 0, 0);
+          }
+        }
         state.speed=state.moveVelocity.length();
 
         // Vertical: buffered jump, coyote time, gravity, landing impact.
