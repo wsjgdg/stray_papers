@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-75">
+  <meta name="aetheris-build" content="pennants-76">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,7 +595,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-75';
+    const BUILD_ID = 'pennants-76';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4882,17 +4882,17 @@
         // A player who never meets one has been given no animal at all. The crystal basin the walker
         // comes down in has no plants, so the nearest green province gets one herd pulled toward it —
         // and if the landing itself is green, that is where the first herd goes.
-        let green = null, aim = null, gap = Infinity;
+        let green = null, gap = Infinity;
         for (let i = 0; i < 260; i++) {
           const dir = nearDirection(landing, rng() * TAU, .02 + rng() * .40);
           const here = provinceAt(dir);
           if (!coats[here] || dir.distanceTo(landing) * R < LANDING_CLEAR + .04 * BELL_SIZE) continue;
           const d = dir.angleTo(landing);
-          if (d < gap) { gap = d; green = here; aim = dir.clone(); }
+          if (d < gap) { gap = d; green = here; }
         }
         const near = packs.find(p => p.id === green);
-        if (near) { near.near = true; near.aim = aim; }
-        else if (green) packs.unshift({ id: green, packs: 1, near: true, aim });
+        if (near) near.near = true;
+        else if (green) packs.unshift({ id: green, packs: 1, near: true });
         for (const pack of packs) pack.tint = coats[pack.id];
         const centre = new THREE.Vector3(), up = new THREE.Vector3();
         const flatEnough = dir => {
@@ -4905,22 +4905,36 @@
           !landmarks.some(l => l.direction.angleTo(dir) < .17) &&
           ![hardProps, stoneSolids].some(list => list.some(p2 =>
             p2.dir.distanceTo(dir) * R < p2.r + .026 * BELL_SIZE));
+        // Sample a real annulus around the landing, in world chords. The former tiny cap was mostly
+        // inside the clearing, the court or the sea; its first pass found no site and silently sent the
+        // entire first herd to the other side of the planet. Keep every existing land/obstacle gate.
+        const nearMin = 2 * Math.asin(Math.min(1, (LANDING_CLEAR + .04 * BELL_SIZE) / (2 * R)));
+        const nearMax = 2 * Math.asin(Math.min(1, Math.max(1.6, LANDING_CLEAR + .04 * BELL_SIZE) / (2 * R)));
+        const nearCosMin = Math.cos(nearMin), nearCosMax = Math.cos(nearMax);
         for (const pack of packs) {
           for (let h = 0; h < pack.packs; h++) {
-            let found = null, levelest = Infinity;
+            let found = null, levelest = Infinity, nearestGood = Infinity;
             for (let pass = 0; pass < 2 && !(found && levelest < .008); pass++) {
-              // The first herd, in the province the walker comes down in, is drawn from a cap around
-              // the landing rather than from the whole planet — a uniform sample would all but never
-              // land inside it.
               const nearLanding = pack.near && h === 0 && pass === 0;
               for (let i = 0; i < 900; i++) {
-                if (nearLanding) centre.copy(nearDirection(pack.aim, rng() * TAU, Math.sqrt(rng()) * .055));
-                else centre.copy(randomDirection(rng));
+                if (nearLanding) {
+                  // Uniform area on the spherical annulus, not a random point followed by a tiny cap.
+                  const distance = Math.acos(mix(nearCosMin, nearCosMax, rng()));
+                  centre.copy(nearDirection(landing, rng() * TAU, distance));
+                } else centre.copy(randomDirection(rng));
                 if (provinceAt(centre) !== pack.id) continue;
                 if (heightAt(centre) < SEA + .012) continue;
                 if (!freeOf(centre) || !flatEnough(centre)) continue;
                 const rough = bellRough(centre, 1);
-                if (rough < levelest) { levelest = rough; found = centre.clone(); }
+                if (nearLanding) {
+                  // Once footing is good enough for a tripod, prefer the nearest valid site rather
+                  // than sending it farther away for an imperceptibly flatter patch.
+                  const dist = centre.distanceTo(landing) * R;
+                  if ((rough < .008 && dist < nearestGood) || (nearestGood === Infinity && rough < levelest)) {
+                    if (rough < .008) nearestGood = dist;
+                    levelest = rough; found = centre.clone();
+                  }
+                } else if (rough < levelest) { levelest = rough; found = centre.clone(); }
               }
             }
             if (!found) continue;
@@ -7696,10 +7710,9 @@
         const worked = Math.max(debt.sky, debt.air, debt.light, debt.growth, debt.fauna);
         // Anything further off than a stone's throw is skipped before it costs a ground sample: the
         // angle is the same test at a tenth of the price.
-        // Everything you can see thinks. .18 rad is 750 mm of surface, and the horizon from an eye 100 mm
-        // off a planet of radius 4.2 is 917 mm away — so a band of ground between eleven and fifteen metres
-        // was in plain sight and asleep, which is a herd standing perfectly still in the open. That is the
-        // "the deer are stuck" the user reported. .42 rad is 1.76 world units, a little past the horizon.
+        // Wake through .42 rad (about 1.75 world units in chord), past the roughly 917 mm bare-sphere
+        // ground horizon from a 100 mm eye. This reduces nearby frozen herds; it is not a visibility test,
+        // because real sightlines also depend on animal height, terrain, structures and vegetation.
         const inRange = Math.cos(.42);
         refreshBellProps.age += dt;
         if (bellPropsDirty || refreshBellProps.age >= .15) { refreshBellProps.age = 0; refreshBellProps(); }
@@ -9126,11 +9139,14 @@
         if(local&&!groundJob.active&&patchUniforms.center.value.dot(state.direction)<Math.cos(.095))requestGroundRefresh(state.direction);
       }
 
-      const quality={mode:'auto',tier:0,average:1/60,slow:0,fast:0,cooldown:5};
+      const quality={mode:'auto',tier:0,average:1/60,slow:0,fast:0,cooldown:5,severeFrames:0,severeTime:0,
+        fps:60,fpsTime:0,fpsFrames:0};
       const tierNames=['HIGH','BALANCED','SMOOTH'];
       function applyQuality() {
         const ratio=Math.min(devicePixelRatio||1,compact?1.4:1.85,Math.sqrt((compact?1900000:4200000)/(innerWidth*innerHeight)));
-        const floor=Math.min(ratio,compact ? .85 : 1);
+        // A one-times display also needs room to adapt: a floor of 1 kept all three desktop tiers at
+        // the same resolution. Never raise an already lower pixel budget just to meet this floor.
+        const floor=Math.min(ratio,compact ? .70 : .75);
         renderer.setPixelRatio(Math.max(floor,ratio*[1,.92,.82][quality.tier]));
         renderer.setSize(innerWidth,innerHeight);
         sporeUniforms.uRatio.value=renderer.getPixelRatio();
@@ -9142,7 +9158,7 @@
         weatherParticles.points.geometry.setDrawRange(0, Math.round(weatherParticles.count * [1, .74, .5][quality.tier]));
         qualityButton.textContent=(quality.mode==='auto'?'AUTO / ':'LOCKED / ')+tierNames[quality.tier];
         qualityButton.setAttribute('aria-label',`Render quality: ${quality.mode}, ${tierNames[quality.tier].toLowerCase()}. Click to change.`);
-        quality.cooldown=8; quality.slow=quality.fast=0;
+        quality.cooldown=8; quality.slow=quality.fast=quality.severeFrames=quality.severeTime=0;
         renderer.shadowMap.needsUpdate=true;
       }
       function cycleQuality() {
@@ -9151,13 +9167,30 @@
         else{quality.mode='auto';quality.tier=0;}
         applyQuality();
       }
-      function updateQuality(rawDt,dt) {
-        if(rawDt<=0||rawDt>.15||document.hidden)return;
-        quality.average+=(rawDt-quality.average)*(1-Math.exp(-dt*1.4));
-        quality.cooldown=Math.max(0,quality.cooldown-dt);
-        if(quality.mode!=='auto'||quality.cooldown>0||state.transition)return;
-        quality.slow=quality.average>.022?quality.slow+dt:0;
-        quality.fast=quality.average<.0176?quality.fast+dt:0;
+      function updateQuality(rawDt) {
+        if(!Number.isFinite(rawDt)||rawDt<=0||document.hidden)return;
+        // The old >150 ms rejection also rejected every frame on the slowest renderers. Use visible
+        // frame time, not the physics clamp, but limit a single stall's influence on the average and
+        // normal cooldown. The estimate is deliberately capped at 500 ms per sample.
+        const qualityDt=Math.min(rawDt,.25), sample=Math.min(rawDt,.5);
+        quality.average+=(sample-quality.average)*(1-Math.exp(-qualityDt*1.4));
+        quality.cooldown=Math.max(0,quality.cooldown-qualityDt);
+        // Diagnostics use an uncapped one-second frame-count window, not the bounded decision sample:
+        // a renderer taking several seconds per frame must not claim it is running at 2 or 36 fps.
+        if(rawDt>=1){quality.fps=1/rawDt;quality.fpsTime=quality.fpsFrames=0;}
+        else{
+          quality.fpsTime+=rawDt;quality.fpsFrames++;
+          if(quality.fpsTime>=1){quality.fps=quality.fpsFrames/quality.fpsTime;quality.fpsTime=quality.fpsFrames=0;}
+        }
+        if(rawDt>.15){quality.severeFrames++;quality.severeTime+=Math.min(rawDt,1);}
+        else{quality.severeFrames=0;quality.severeTime=0;}
+        if(quality.mode!=='auto'||state.transition)return;
+        // At <6.7 fps even the cooldown can last many wall-clock seconds. Two or more consecutive
+        // slow frames, covering at least 1.5 s, justify an earlier step down; a lone pause cannot.
+        if(quality.severeFrames>=2&&quality.severeTime>=1.5&&quality.tier<2){quality.tier++;applyQuality();return;}
+        if(quality.cooldown>0)return;
+        quality.slow=quality.average>.022?quality.slow+qualityDt:0;
+        quality.fast=quality.average<.0176?quality.fast+qualityDt:0;
         if(quality.slow>3&&quality.tier<2){quality.tier++;applyQuality();}
         else if(quality.fast>12&&quality.tier>0){quality.tier--;applyQuality();}
       }
@@ -10295,8 +10328,11 @@
       function rebaseFrameClock() {
         lastFrame=0;
         if (state.transition) state.transition.wallLastMs=performance.now();
+        // Evidence from before a hidden tab or lost context is not a run of consecutive slow frames.
+        quality.average=1/60;quality.slow=quality.fast=quality.severeFrames=quality.severeTime=0;quality.cooldown=5;
+        quality.fps=60;quality.fpsTime=quality.fpsFrames=0;
       }
-      document.addEventListener('visibilitychange',()=>{rebaseFrameClock();clearInput();quality.cooldown=5;});
+      document.addEventListener('visibilitychange',()=>{rebaseFrameClock();clearInput();});
       canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;status.hidden=false;statusText.textContent='RESTORING THE WORLD';clearInput();});
       canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;rebaseFrameClock();renderer.shadowMap.needsUpdate=true;status.hidden=true;});
       orbitPose();camera.position.copy(targetPosition);camera.quaternion.copy(targetRotation);
@@ -10656,13 +10692,13 @@
           updateCamera(dt,timestamp);updateWorld(dt);
           // Re-center the walking patch over several frames instead of one long stall.
           advanceGroundRefresh(Math.min(2.6, Math.max(1.4, dt * 150)));
-          updateQuality(raw,dt);renderScene();
+          updateQuality(raw);renderScene();
         } catch (error) {
           stopped=true;renderer.setAnimationLoop(null);clearInput();reportFailure(error);
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,ghost:state.ghost,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,ghost:state.ghost,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Number(quality.fps.toFixed(2)),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,

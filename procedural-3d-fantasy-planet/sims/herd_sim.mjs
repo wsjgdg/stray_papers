@@ -170,10 +170,10 @@ ok('and no animal stops dead between two frames', worstDrop < .25,
   'the hardest single-frame cut was ' + (worstDrop * 100).toFixed(1) + '% of its speed of the frame before (' +
   worstDropAt.mode + ', from ' + (worstDropAt.prevVel * 1000).toFixed(1) + ' mm/s)');
 
-// You should never see a herd that is not thinking: the wake radius was 620 mm (10.5 m) and the horizon from an
-// eye 100 mm above a planet of radius 4.2 is 917 mm (15.6 m), so a band of ground was in plain sight and asleep.
+// Test the specific animal at this range, not merely that some other animal woke up. No terrain or
+// vegetation occlusion is checked here, so range/awake is not evidence that this animal is visible.
 {
-  const target = bell[0].pos;
+  const animal = bell[0], target = animal.pos.clone();
   const side = new THREE.Vector3(1, 0, 0).cross(target);
   if (side.lengthSq() < 1e-8) side.set(0, 0, 1).cross(target);
   side.normalize();
@@ -186,8 +186,9 @@ ok('and no animal stops dead between two frames', worstDrop < .25,
   bell.forEach(d => { d.awake = false; });
   for (let f = 0; f < 4; f++) { updateBell(dt, f * dt); updateReefs(dt, f * dt); }
   const awake = bell.filter(d => d.awake).length;
-  ok('and a herd 1.2 world units away — in plain sight — is awake', awake > 0,
-    awake + ' of ' + bell.length + ' bells are thinking at 20 m, past the horizon of the eye');
+  ok('and the selected animal about 1.2 world units away is awake', animal.awake,
+    'target distance ' + (animal.pos.distanceTo(spot) * R * 1000).toFixed(1) + ' mm; ' +
+      awake + ' of ' + bell.length + ' awake; visibility and occlusion not checked');
 }
 
 ok('a walker standing still beside a herd is not shovelled along', worstExcess < .004 && pushedFrames === 0,

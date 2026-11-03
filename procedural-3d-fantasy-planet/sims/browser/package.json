@@ -4,7 +4,9 @@
   "type": "module",
   "description": "Optional real Chromium/WebGL/WebAudio smoke test; the browser itself is supplied separately.",
   "scripts": {
-    "test": "node smoke.mjs"
+    "test": "node smoke.mjs",
+    "test:adaptive": "node smoke.mjs --adaptive",
+    "test:fauna": "node fauna.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "25.16.0"

@@ -186,20 +186,25 @@ export function loadPage(file = PAGE) {
         R, SEA, WATER, TAU, EYE, WALKER_RADIUS, WALK_SPEED, SPRINT_SPEED, SWIM_SPEED,
         DIVE_SPEED, RISE_SPEED, MAX_DIVE, SWIM_EYE, CROUCH_EYE,
         BELL_SIZE, REEF_S, BELL_HALF_WIDE, BELL_BODY_TOP, keys, joystick, stoneSolids, groundPose, dwFeet,
-        heightAt, provinceAt, biomeAt, nearestLand, landing, seeded, hash, noise, waterAt, depthMeters,
+        heightAt, provinceAt, biomeAt, nearestLand, nearDirection, landing, seeded, hash, noise, waterAt, depthMeters,
         provinceDressing, physicsStep, updateBell, updateReefs, updateCamera, updateWorld, updateWeather, updateLattice,
         CODEX, codexScan, codexHTML, inSight, flockWorld, archiveChip, modeLabel, setArchive, eventFx, triggerEvent, sun,
         getCodexHTML: () => document.getElementById('codexSection').innerHTML,
         teleportTo, mapAnchors, rebaseFrameClock: typeof rebaseFrameClock === 'undefined' ? null : rebaseFrameClock,
+        quality, updateQuality, applyQuality, cycleQuality, qualityButton,
+        getDiagnostics: () => window.aetheris.diagnostics(),
+        qualityVisuals: () => ({ bloom: bloomOn, highCloud: clouds[1].visible,
+          weatherCount: weatherParticles.points.geometry.drawRange.count }),
+        setDocumentHidden: value => { document.hidden = value; },
         // Run the page's frame order and clock without requiring a drawing GPU.
         advanceFrame: dt => { elapsed += dt; frame++; updateCamera(dt); updateWorld(dt); },
         get elapsed() { return elapsed; }, get frame() { return frame; },
         setAudioContext: Ctx => { window.AudioContext = Ctx; }, toggleSound, getAudio: () => audio,
-        bell, reefs, landmarks, settlementDirs, walkBoxes, hardProps, floraHard, groundStones,
+        bell, bellBodyMesh, bellLegMesh, reefs, landmarks, settlementDirs, walkBoxes, hardProps, floraHard, groundStones,
         provinceGeo, provinceMat, hardBand, hardWidthOf, provinceWet, smokeWind, overlapAt,
         fern, fernLandingExtent: typeof fernLandingExtent === 'undefined' ? null : fernLandingExtent, dressFerns,
         weather, latticeRings, setWeather, cycleWeather, WEATHER_DEFS, nextStrikeGap, thunderPlan, beginStrike,
-        resetGroundMotion, clearInput, switchMode, propUnder, hardBand, BELL_HALF_WIDE, propAhead, bellNormal,
+        resetGroundMotion, clearInput, switchMode, propUnder, hardBand, BELL_HALF_WIDE, propAhead, bellNormal, bellRough,
         refreshBellProps, dressStones
       };
 `;

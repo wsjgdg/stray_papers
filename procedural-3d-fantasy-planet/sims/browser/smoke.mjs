@@ -28,7 +28,8 @@ if (!Array.isArray(extraArgs) || extraArgs.some(arg => typeof arg !== 'string'))
   throw new Error('CHROME_ARGS must be a JSON array of Chromium argument strings.');
 }
 
-let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const adaptiveTest = process.argv.includes('--adaptive');
+let html = fs.readFileSync(process.env.BROWSER_PAGE_HTML || path.join(root, 'index.html'), 'utf8');
 const cdn = 'https://cdn.jsdelivr.net/npm/three@0.174.0/';
 if (html.split(cdn).length !== 3) throw new Error('Unexpected three.js imports; inspect the browser proxy mapping.');
 html = html.split(cdn).join('/__three/');
@@ -36,7 +37,16 @@ html = html.replace(/\s*<link\b[^>]*href="https:\/\/fonts\.(?:googleapis|gstatic
 const anchor = '      window.aetheris={';
 if (html.split(anchor).length !== 2) throw new Error('Cannot find the unique observability insertion point.');
 html = html.replace(anchor,
-  '      window.__browserProbe={state,landing,CODEX,renderer,getAudio:()=>audio};\n' + anchor);
+  '      window.__browserProbe={state,landing,CODEX,renderer,quality,getAudio:()=>audio};\n' + anchor);
+if (adaptiveTest) {
+  // Test-only artificial work in the actual RAF callback: consecutive frame timestamps genuinely
+  // become slow. The production controller and its renderer/UI effects are not called or replaced.
+  const frameAnchor = '          const raw=lastFrame?(timestamp-lastFrame)/1000:1/60;lastFrame=timestamp;';
+  if (html.split(frameAnchor).length !== 2) throw new Error('Cannot find the unique frame clock.');
+  html = html.replace(frameAnchor,
+    '          if(window.__slowFrameTest){const end=performance.now()+window.__slowFrameTest.delay;' +
+    'while(performance.now()<end){}window.__slowFrameTest.count++;}\n' + frameAnchor);
+}
 
 // Listen only on loopback: this isolated test server is not the user's preview on port 8080.
 const server = http.createServer((req, res) => {
@@ -189,6 +199,44 @@ try {
   await page.waitForFunction(() => window.__browserProbe.getAudio().master.gain.value < .1, { timeout, polling: 500 });
   const muted = await page.evaluate(() => document.getElementById('soundButton').getAttribute('aria-pressed'));
   check('real M key turns the sound down again', muted === 'false');
+
+  if (adaptiveTest) {
+    // Observe actual Q events after the page handler, not delayed protocol reads that could race
+    // with the next slow frame. The stall is artificial and proves wiring, not GPU performance.
+    await page.evaluate(() => {
+      window.__qualityKeyStates = [];
+      window.addEventListener('keydown', event => {
+        if (event.code !== 'KeyQ' || event.repeat) return;
+        const q = window.__browserProbe.quality;
+        window.__qualityKeyStates.push({ mode: q.mode, tier: q.tier });
+      });
+    });
+    await page.keyboard.press('q');
+    await page.evaluate(() => { window.__slowFrameTest = { delay: 200, count: 0 }; });
+    await page.waitForFunction(() => window.__slowFrameTest.count >= 12, { timeout, polling: 500 });
+    const locked = await page.evaluate(() => ({ first: window.__qualityKeyStates[0],
+      mode: window.__browserProbe.quality.mode, tier: window.__browserProbe.quality.tier,
+      frames: window.__slowFrameTest.count }));
+    check('real Q locks HIGH despite sustained artificially slow frames', locked.first?.mode === 'high' &&
+      locked.first.tier === 0 && locked.mode === 'high' && locked.tier === 0,
+    locked.frames + ' delayed frames');
+    await page.keyboard.press('q'); // locked balanced
+    await page.keyboard.press('q'); // auto high
+    await page.evaluate(() => { window.__slowFrameTest.count = 0; });
+    await page.waitForFunction(() => window.__slowFrameTest.count >= 15, { timeout, polling: 500 });
+    const adapted = await page.evaluate(() => {
+      const q = window.__browserProbe.quality, keys = window.__qualityKeyStates.slice();
+      const result = { keys, mode: q.mode, tier: q.tier, frames: window.__slowFrameTest.count,
+        label: document.getElementById('qualityStatus').textContent,
+        fps: window.aetheris.diagnostics().estimatedFps };
+      window.__slowFrameTest = null;
+      return result;
+    });
+    check('the real animation loop downgrades AUTO after sustained slow frames',
+      adapted.keys[1]?.mode === 'balanced' && adapted.keys[2]?.mode === 'auto' &&
+      adapted.mode === 'auto' && adapted.tier > 0 && /^AUTO \/ (BALANCED|SMOOTH)$/.test(adapted.label),
+    adapted.frames + ' delayed frames; ' + adapted.label + ', observed ' + adapted.fps + ' fps');
+  }
   check('no page or console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
   if (process.env.BROWSER_SCREENSHOT) {

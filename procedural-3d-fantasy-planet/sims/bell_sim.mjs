@@ -17,6 +17,18 @@ const ok = (name, cond, info = '') => {
 const mm = v => (v * 1000).toFixed(1) + ' mm';
 const dt = 1 / 120;
 
+// A wall's tangent axes describe a local rectangle. Projecting an antipodal animal onto those axes
+// produces nearly zero too, so a whole planet's width away can otherwise look like an overlap.
+const wallOffset = new THREE.Vector3();
+const insideWall = (dir, radius, feet, box) => {
+  if (box.dir.dot(dir) < .9 || box.top <= feet || box.bottom > feet + .020) return false;
+  wallOffset.copy(box.dir).sub(dir).multiplyScalar(R);
+  // Full body radius, with only the same 2 mm numerical allowance used by the 60-second herd test.
+  const margin = Math.max(0, radius - .002);
+  return Math.abs(wallOffset.dot(box.ex)) < box.hx + margin &&
+    Math.abs(wallOffset.dot(box.ez)) < box.hz + margin;
+};
+
 const stand = (dir, heading = null) => {
   resetGroundMotion(); keys.clear(); joystick.x = joystick.y = 0;
   state.mode = 'ground'; state.transition = null; state.ghost = false;
@@ -158,37 +170,49 @@ const hub = bell.reduce((best, d) => {
   const spot = beside(hub, .126);
   stand(spot);
   const before = bell.map(d => d.pos.clone());
-  const awakeFrames = new Array(bell.length).fill(0);
   let wet = 0, inWall = 0, worstPair = Infinity, groundErr = 0;
   for (let f = 0; f < 120 * 20; f++) {
     updateBell(dt, f * dt);
     state.radius = R + heightAt(state.direction) + EYE;
     state.speed = 0;
+    // Measure water, footing and body separation at every step, not just at the final snapshot.
+    for (let i = 0; i < bell.length; i++) {
+      const d = bell[i], h = heightAt(d.pos);
+      if (h <= SEA) wet++;
+      groundErr = Math.max(groundErr, Math.abs(d.world.length() - (R + h)));
+      for (let j = i + 1; j < bell.length; j++) {
+        worstPair = Math.min(worstPair, d.pos.distanceTo(bell[j].pos) * R - (d.hit.r + bell[j].hit.r));
+      }
+    }
   }
-  let moved = 0, stillAwake = 0;
+  let moved = 0;
   for (let i = 0; i < bell.length; i++) {
     const d = bell[i];
     if (d.pos.distanceTo(before[i]) * R > .002) moved++;
-    if (heightAt(d.pos) <= SEA) wet++;
-    groundErr = Math.max(groundErr, Math.abs(d.world.length() - (R + heightAt(d.pos))));
-    for (const box of walkBoxes) {
-      if (box.bottom > heightAt(d.pos) + R + .013) continue;
-      const off = box.dir.clone().sub(d.pos).multiplyScalar(R);
-      if (Math.abs(off.dot(box.ex)) < box.hx + d.hit.r * .5 && Math.abs(off.dot(box.ez)) < box.hz + d.hit.r * .5) inWall++;
-    }
-    for (let j = i + 1; j < bell.length; j++) {
-      worstPair = Math.min(worstPair, d.pos.distanceTo(bell[j].pos) * R - (d.hit.r + bell[j].hit.r));
-    }
+    const feet = R + heightAt(d.pos);
+    for (const box of walkBoxes) if (insideWall(d.pos, d.hit.r, feet, box)) inWall++;
   }
   ok('twenty seconds of a herd: they move, and none of them goes into the water', moved >= 6 && wet === 0,
-    moved + ' of the ' + bell.length + ' animals shifted their feet over twenty seconds, and none ended up below ' +
-    'the waterline (' + wet + ')');
+    moved + ' of the ' + bell.length + ' animals shifted their feet; ' + wet + ' animal-steps below the waterline');
   ok('and they walk on the ground, not through it or in the air', groundErr < .001,
-    'the worst animal sat ' + mm(groundErr) + ' off the ground under its own feet');
+    'the worst animal sat ' + mm(groundErr) + ' off the ground under its own feet during the 2400 steps');
   ok('and two bodies never share a spot in motion', worstPair > 0,
     'over twenty seconds the closest pair came to ' + mm(worstPair) + ' of daylight between their cylinders');
-  ok('and none of them walks into a wall', inWall === 0,
-    inWall + ' animal-frames with a body inside a wall\'s footprint');
+  ok('after twenty seconds no body penetrates a nearby wall by more than 2 mm', inWall === 0,
+    inWall + ' animal/wall pairs exceed the 2 mm allowance in the final snapshot');
+}
+
+// Exercise the broad phase on a deliberately antipodal local rectangle, and the same rectangle at
+// its own centre as a positive control. Its tangent projection alone claims both points are inside.
+{
+  const dir = walkBoxes[0].dir.clone();
+  const ex = new THREE.Vector3(1, 0, 0).cross(dir);
+  if (ex.lengthSq() < 1e-10) ex.set(0, 0, 1).cross(dir);
+  ex.normalize();
+  const ez = new THREE.Vector3().crossVectors(dir, ex).normalize();
+  const box = { dir, ex, ez, hx: .05, hz: .05, bottom: -Infinity, top: Infinity };
+  ok('wall-footprint check distinguishes a real overlap from its antipode',
+    insideWall(dir, .025, R, box) && !insideWall(dir.clone().negate(), .025, R, box));
 }
 
 // ---- the person is not the one that gets moved -----------------------------------------------------------
