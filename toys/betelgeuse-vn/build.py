@@ -21,10 +21,25 @@ def main() -> None:
     scenes_b = scenes_b.replace("</script>", "<\\/script>")
     audio = audio.replace("</script>", "<\\/script>")
     engine = engine.replace("</script>", "<\\/script>")
+    favicon = (
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
+        "viewBox='0 0 32 32'%3E%3Crect width='32' height='32' "
+        "fill='%230a1122'/%3E%3Ccircle cx='16' cy='14' r='5' "
+        "fill='%23ff8c5a'/%3E%3Ccircle cx='16' cy='14' r='9' "
+        "fill='%23ff8c5a' opacity='0.25'/%3E%3Cpath d='M4 28 L28 28' "
+        "stroke='%233a4a6b' stroke-width='2'/%3E%3C/svg%3E"
+    )
     html = (
         "<!doctype html>\n"
         '<html lang="zh">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '<meta name="description" content="参宿四还亮着 — 深夜天文台、三年前的'
+        '定时邮件、一个 AI 关于记忆备份的追问。零依赖网页视觉小说，三种结局。">\n'
+        '<meta property="og:title" content="参宿四还亮着 · 视觉小说">\n'
+        '<meta property="og:description" content="深夜天文台、三年前的定时邮件、'
+        '一个 AI 关于记忆备份的追问。三种结局，等你回收。">\n'
+        '<meta property="og:type" content="website">\n'
+        f'<link rel="icon" href="{favicon}">\n'
         "<title>参宿四还亮着 · 视觉小说</title>\n"
         f"<style>\n{css}\n</style>\n</head>\n<body>\n"
         f"<script>\n{scenario}\n</script>\n"
