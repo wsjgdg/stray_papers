@@ -1202,6 +1202,42 @@ input.vn-range {
   transform: translateY(0) scale(0.98);
 }
 
+/* bonus episode button (星语 · 后日谈): secondary entry under #vn-start,
+   present in the layout only at 100% completion (engine toggles .vn-hidden).
+   The warm-red border is the finale_star accent — a quiet hint at the
+   afterglow epilogue. Deliberately quieter than the start button: smaller,
+   translucent, no ring pulse and no breathe animation — transitions only,
+   so no reduced-motion kill-list entry is needed. */
+#vn-bonus {
+  margin-top: 14px;
+  padding: 8px 26px;
+  border-radius: 999px;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em; /* trailing letter-space compensation, like #vn-start */
+  background: rgba(18, 28, 50, 0.35);
+  border: 1px solid rgba(255, 140, 90, 0.55);
+  color: var(--vn-text-dim);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+#vn-bonus:hover {
+  background: rgba(42, 32, 34, 0.55);
+  border-color: rgba(255, 170, 120, 0.8);
+  color: #ffe9dd;
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(255, 140, 90, 0.28);
+}
+
+#vn-bonus:active {
+  transform: translateY(0) scale(0.98);
+}
+
 /* --------------------------------------------------------------------------
    11. Toast
    -------------------------------------------------------------------------- */
@@ -2146,6 +2182,28 @@ window.SCENARIO = {
         { narr: "发送时间：05:59。距唤醒窗口开启，还差一分钟。" },
         { who: "yu", feel: "sad", text: "眠——" },
         { narr: "山下，城市的灯一盏一盏亮起来。没有一盏是为她亮的。" },
+      ],
+    },
+
+    extras_1: {
+      bg: "finale_star",
+      lines: [
+        { narr: "一年后。同一座天文台。" },
+        { who: "mian", feel: "normal", text: "今天上来，不是为了纪念。只是想看看它。" },
+        { who: "yu", feel: "happy", text: "它也在看你。整晚都是。" },
+        { who: "qi", feel: "happy", text: "记录更新：参宿四，视星等 0.42。与三年前一致。" },
+        { who: "lin", feel: "happy", text: "所以呀——有些东西不会走。" },
+        { narr: "栖的天线还架在圆顶上，指向同一个坐标，误差不超过千分之一度。" },
+      ],
+      next: "extras_2",
+    },
+
+    extras_2: {
+      bg: "finale_star",
+      lines: [
+        { who: "mian", feel: "happy", text: "嗯。往后的每一个夜晚，都由我自己记下来。" },
+        { narr: "望远镜缓缓转动。参宿四在目镜里亮着，像一句回答。" },
+        { narr: "——参宿四还亮着。" },
       ],
     },
   },
@@ -6697,9 +6755,11 @@ window.SCENARIO = {
  *     .vn-settings > .vn-settings-title + .vn-setting-row (label + input.vn-range
  *                                  + span.vn-range-val) x2 + button.vn-close
  *     .vn-title > .vn-title-name + .vn-title-sub + .vn-endings +
- *                                  button#vn-start
+ *                                  button#vn-start + button#vn-bonus
  *       (.vn-endings = .vn-endings-count + .vn-endings-marks >
- *        span.vn-ending-mark[data-ending="ending_*"], the 结局收集 readout)
+ *        span.vn-ending-mark[data-ending="ending_*"], the 结局收集 readout;
+ *        #vn-bonus 星语 · 后日谈 = 100%-completion bonus episode, hidden via
+ *        .vn-hidden unless titleBonusActive())
  *     .vn-toast
  *
  * Overlay visibility is toggled exclusively via the .vn-hidden utility class
@@ -6983,6 +7043,15 @@ window.SCENARIO = {
     startBtn.type = "button";
     startBtn.textContent = "开始游戏";
     startBtn.addEventListener("click", beginGame);
+    // 星语 · 后日谈: 100%-completion bonus episode, a quiet secondary entry
+    // under the start button. Visibility is driven by syncBonusButton() from
+    // here and every showTitle; hidden by default until 3/3 holds.
+    var bonusBtn = h("button", null, title);
+    bonusBtn.id = "vn-bonus";
+    bonusBtn.type = "button";
+    bonusBtn.textContent = "星语 · 后日谈";
+    bonusBtn.classList.add("vn-hidden");
+    bonusBtn.addEventListener("click", startBonus);
 
     var chapter = h("div", "vn-chapter vn-hidden", app);
     var chapterText = h("div", "vn-chapter-text", chapter);
@@ -7025,6 +7094,7 @@ window.SCENARIO = {
       endingsCount: endingsCount,
       endingsMarks: endingsMarks,
       endingMarks: endingMarks,
+      bonusBtn: bonusBtn,
       chapter: chapter,
       chapterText: chapterText,
       credits: credits,
@@ -7041,6 +7111,7 @@ window.SCENARIO = {
     }
     loadSettings(); // once per build: volume -> VN_AUDIO, delay -> state
     renderEndings(); // initial collector readout (empty storage -> 0/3, ？x3)
+    syncBonusButton(); // 星语 · 后日谈 joins the title only at 3/3 + finale_star
   }
 
   /* ------------------------------------------------------------- small utils */
@@ -8817,6 +8888,15 @@ window.SCENARIO = {
     applyTitleSub(titleBonusActive());
   }
 
+  // 星语 · 后日谈 gate: the bonus-episode button sits under #vn-start but
+  // only joins the layout at 100% completion — the same predicate as the
+  // title bonus scene (titleBonusActive), re-evaluated on every DOM build
+  // and every return to the title. Pure class toggle: no timers, no loops.
+  function syncBonusButton() {
+    if (!els || !els.bonusBtn) return;
+    els.bonusBtn.classList.toggle("vn-hidden", !titleBonusActive());
+  }
+
   /* -------------------------------------------------- title canvas + chapter */
 
   // Gentle starfield behind the title screen: seeded stars with individual
@@ -9188,6 +9268,7 @@ window.SCENARIO = {
     setSkip(false, true); // title reset latches skip off
     renderEndings(); // refresh the 结局收集 readout for this visit
     applyTitleSub(titleBonusActive()); // 3/3: swap in the thank-you subtitle
+    syncBonusButton(); // 星语 · 后日谈 reappears while 3/3 still holds
     els.title.classList.remove("vn-hidden");
     startTitleCanvas();
   }
@@ -9203,6 +9284,25 @@ window.SCENARIO = {
     els.title.classList.add("vn-hidden");
     stopTitleCanvas();
     enterScene(startId, 0);
+  }
+
+  // 星语 · 后日谈: the 100%-completion bonus episodes (extras_1 -> extras_2,
+  // off the main flow). Same boot sequence as beginGame — same click blip,
+  // fresh flags, title teardown, skip already latched off by the showTitle
+  // that got us here — but enters the afterglow epilogue, which then ends
+  // like any ending (THE END -> credits -> title, no new mechanics).
+  // Missing scene (old scenario) -> warn and stay on the title, a true no-op.
+  function startBonus() {
+    var bonusId = "extras_1";
+    if (!S || !S.scenes || !S.scenes[bonusId]) {
+      console.warn("[VN] bonus scene not found: " + bonusId);
+      return;
+    }
+    audioHook("ui", "start"); // same click blip as the start button
+    state.flags = new Set();
+    els.title.classList.add("vn-hidden");
+    stopTitleCanvas();
+    enterScene(bonusId, 0);
   }
 
   /* ----------------------------------------------------------------- events */

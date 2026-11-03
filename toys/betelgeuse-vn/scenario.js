@@ -407,5 +407,27 @@ window.SCENARIO = {
         { narr: "山下，城市的灯一盏一盏亮起来。没有一盏是为她亮的。" },
       ],
     },
+
+    extras_1: {
+      bg: "finale_star",
+      lines: [
+        { narr: "一年后。同一座天文台。" },
+        { who: "mian", feel: "normal", text: "今天上来，不是为了纪念。只是想看看它。" },
+        { who: "yu", feel: "happy", text: "它也在看你。整晚都是。" },
+        { who: "qi", feel: "happy", text: "记录更新：参宿四，视星等 0.42。与三年前一致。" },
+        { who: "lin", feel: "happy", text: "所以呀——有些东西不会走。" },
+        { narr: "栖的天线还架在圆顶上，指向同一个坐标，误差不超过千分之一度。" },
+      ],
+      next: "extras_2",
+    },
+
+    extras_2: {
+      bg: "finale_star",
+      lines: [
+        { who: "mian", feel: "happy", text: "嗯。往后的每一个夜晚，都由我自己记下来。" },
+        { narr: "望远镜缓缓转动。参宿四在目镜里亮着，像一句回答。" },
+        { narr: "——参宿四还亮着。" },
+      ],
+    },
   },
 };

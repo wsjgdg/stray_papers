@@ -33,9 +33,11 @@
  *     .vn-settings > .vn-settings-title + .vn-setting-row (label + input.vn-range
  *                                  + span.vn-range-val) x2 + button.vn-close
  *     .vn-title > .vn-title-name + .vn-title-sub + .vn-endings +
- *                                  button#vn-start
+ *                                  button#vn-start + button#vn-bonus
  *       (.vn-endings = .vn-endings-count + .vn-endings-marks >
- *        span.vn-ending-mark[data-ending="ending_*"], the 结局收集 readout)
+ *        span.vn-ending-mark[data-ending="ending_*"], the 结局收集 readout;
+ *        #vn-bonus 星语 · 后日谈 = 100%-completion bonus episode, hidden via
+ *        .vn-hidden unless titleBonusActive())
  *     .vn-toast
  *
  * Overlay visibility is toggled exclusively via the .vn-hidden utility class
@@ -319,6 +321,15 @@
     startBtn.type = "button";
     startBtn.textContent = "开始游戏";
     startBtn.addEventListener("click", beginGame);
+    // 星语 · 后日谈: 100%-completion bonus episode, a quiet secondary entry
+    // under the start button. Visibility is driven by syncBonusButton() from
+    // here and every showTitle; hidden by default until 3/3 holds.
+    var bonusBtn = h("button", null, title);
+    bonusBtn.id = "vn-bonus";
+    bonusBtn.type = "button";
+    bonusBtn.textContent = "星语 · 后日谈";
+    bonusBtn.classList.add("vn-hidden");
+    bonusBtn.addEventListener("click", startBonus);
 
     var chapter = h("div", "vn-chapter vn-hidden", app);
     var chapterText = h("div", "vn-chapter-text", chapter);
@@ -361,6 +372,7 @@
       endingsCount: endingsCount,
       endingsMarks: endingsMarks,
       endingMarks: endingMarks,
+      bonusBtn: bonusBtn,
       chapter: chapter,
       chapterText: chapterText,
       credits: credits,
@@ -377,6 +389,7 @@
     }
     loadSettings(); // once per build: volume -> VN_AUDIO, delay -> state
     renderEndings(); // initial collector readout (empty storage -> 0/3, ？x3)
+    syncBonusButton(); // 星语 · 后日谈 joins the title only at 3/3 + finale_star
   }
 
   /* ------------------------------------------------------------- small utils */
@@ -2153,6 +2166,15 @@
     applyTitleSub(titleBonusActive());
   }
 
+  // 星语 · 后日谈 gate: the bonus-episode button sits under #vn-start but
+  // only joins the layout at 100% completion — the same predicate as the
+  // title bonus scene (titleBonusActive), re-evaluated on every DOM build
+  // and every return to the title. Pure class toggle: no timers, no loops.
+  function syncBonusButton() {
+    if (!els || !els.bonusBtn) return;
+    els.bonusBtn.classList.toggle("vn-hidden", !titleBonusActive());
+  }
+
   /* -------------------------------------------------- title canvas + chapter */
 
   // Gentle starfield behind the title screen: seeded stars with individual
@@ -2524,6 +2546,7 @@
     setSkip(false, true); // title reset latches skip off
     renderEndings(); // refresh the 结局收集 readout for this visit
     applyTitleSub(titleBonusActive()); // 3/3: swap in the thank-you subtitle
+    syncBonusButton(); // 星语 · 后日谈 reappears while 3/3 still holds
     els.title.classList.remove("vn-hidden");
     startTitleCanvas();
   }
@@ -2539,6 +2562,25 @@
     els.title.classList.add("vn-hidden");
     stopTitleCanvas();
     enterScene(startId, 0);
+  }
+
+  // 星语 · 后日谈: the 100%-completion bonus episodes (extras_1 -> extras_2,
+  // off the main flow). Same boot sequence as beginGame — same click blip,
+  // fresh flags, title teardown, skip already latched off by the showTitle
+  // that got us here — but enters the afterglow epilogue, which then ends
+  // like any ending (THE END -> credits -> title, no new mechanics).
+  // Missing scene (old scenario) -> warn and stay on the title, a true no-op.
+  function startBonus() {
+    var bonusId = "extras_1";
+    if (!S || !S.scenes || !S.scenes[bonusId]) {
+      console.warn("[VN] bonus scene not found: " + bonusId);
+      return;
+    }
+    audioHook("ui", "start"); // same click blip as the start button
+    state.flags = new Set();
+    els.title.classList.add("vn-hidden");
+    stopTitleCanvas();
+    enterScene(bonusId, 0);
   }
 
   /* ----------------------------------------------------------------- events */

@@ -1190,6 +1190,42 @@ input.vn-range {
   transform: translateY(0) scale(0.98);
 }
 
+/* bonus episode button (星语 · 后日谈): secondary entry under #vn-start,
+   present in the layout only at 100% completion (engine toggles .vn-hidden).
+   The warm-red border is the finale_star accent — a quiet hint at the
+   afterglow epilogue. Deliberately quieter than the start button: smaller,
+   translucent, no ring pulse and no breathe animation — transitions only,
+   so no reduced-motion kill-list entry is needed. */
+#vn-bonus {
+  margin-top: 14px;
+  padding: 8px 26px;
+  border-radius: 999px;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em; /* trailing letter-space compensation, like #vn-start */
+  background: rgba(18, 28, 50, 0.35);
+  border: 1px solid rgba(255, 140, 90, 0.55);
+  color: var(--vn-text-dim);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+#vn-bonus:hover {
+  background: rgba(42, 32, 34, 0.55);
+  border-color: rgba(255, 170, 120, 0.8);
+  color: #ffe9dd;
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(255, 140, 90, 0.28);
+}
+
+#vn-bonus:active {
+  transform: translateY(0) scale(0.98);
+}
+
 /* --------------------------------------------------------------------------
    11. Toast
    -------------------------------------------------------------------------- */
