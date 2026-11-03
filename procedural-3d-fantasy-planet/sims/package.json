@@ -4,9 +4,13 @@
   "type": "module",
   "description": "The bench: the page's own world, built headlessly, walked and measured.",
   "scripts": {
-    "test": "node run.mjs"
+    "test": "node run.mjs",
+    "lint": "node lint.mjs"
   },
   "dependencies": {
     "three": "0.174.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.14.0"
   }
 }

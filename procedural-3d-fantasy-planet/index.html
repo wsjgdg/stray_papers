@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-71">
+  <meta name="aetheris-build" content="pennants-72">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,7 +595,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-71';
+    const BUILD_ID = 'pennants-72';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3760,10 +3760,9 @@
       // and shove them out. The scatter keeps out of the body's own footprint instead: the stones you
       // walk up to are the ones you cannot walk through.
       const stoneSolids = [];
-      // Declared here rather than with the herd below, because the ground is dressed before the herd is built and
-      // the stones have to be able to see it (a stone may not be laid where an animal is standing).
-      // Declared here rather than with the herd below, because the ground is dressed before the herd is built and
-      // the stones have to be able to see it: a stone may not be laid where an animal is standing.
+      // Re-dressing replaces the stones, so the animals' local collision caches must be rebuilt immediately.
+      let bellPropsDirty = true;
+      // The stones can see the herd when the ground is subsequently dressed around the walker.
       const bell = [];
       function dressStones(center, rng) {
         let stoneCount = 0;
@@ -3791,6 +3790,7 @@
         }
         groundStones.count = stoneCount; groundStones.instanceMatrix.needsUpdate = true;
         groundStones.computeBoundingSphere();
+        bellPropsDirty = true;
       }
       function dressGround(center) {
         const rng = seeded(82341);
@@ -4728,75 +4728,47 @@
       const dfE = new THREE.Vector3(), dfN = new THREE.Vector3(), dfP = new THREE.Vector3(), dfQ = new THREE.Vector3();
       // Each hoof is planted on the ground under it: a bell standing across a ridge in this country
       // would otherwise hang by two legs. Offsets are in the animal's own units, before its scale.
-      // Fill the prop cache from whatever the ground pass has laid down near the player.
+      // Each animal has its own local shortlist, including the *actual* ground-stone collision records.
+      // Matrix column lengths are scale factors, not rock radii: treating half a scale as a radius made a
+      // 20 mm stone look 400 mm wide to the herd, while the relaxation pass never saw the stone at all.
       const refreshBellProps = () => {
-        const props = refreshBellProps.props;
-        let n = 0;
-        // The stones are the ground pass's; a build without one (the offline checks) has none, and the
-        // list is left as the test filled it.
-        for (let s = 0; typeof groundStones !== 'undefined' && groundStones && s < groundStones.count; s++) {
-          groundStones.getMatrixAt(s, dwPart);
-          const e = dwPart.elements;
-          dwProp.set(e[12], e[13], e[14]);
-          if (dwProp.lengthSq() < 1e-10) continue;            // an unset slot, not a stone
-          const dir = (props[n] || (props[n] = { dir: new THREE.Vector3(), r: 0 })).dir;
-          dir.copy(dwProp).normalize();
-          // The stone's own size, off its matrix: a boulder is a metre wide, a pebble is not.
-          props[n].r = .5 * Math.max(
-            Math.hypot(e[0], e[1], e[2]), Math.hypot(e[4], e[5], e[6]), Math.hypot(e[8], e[9], e[10]));
-          n++;
-        }
-        if (typeof groundStones !== 'undefined' && groundStones) props.length = n;
-        // Each animal keeps the few hard props within 336 mm of it, so walking costs a handful of dot
-        // products a frame instead of fifteen hundred. Rebuilt with the stones, three times a second;
-        // in twenty frames a bell covers 25 mm, nothing can slip in unseen.
-        const nearCos = Math.cos(.08);
-        for (let i = 0; i < bell.length; i++) {
-          const d = bell[i], near = d.near || (d.near = []);
+        for (const d of bell) {
+          const near = d.near || (d.near = []);
           near.length = 0;
-          for (let h = 0; h < hardProps.length; h++) {
-            const p2 = hardProps[h];
-            if (p2.dir.dot(d.pos) > nearCos && p2.dir.angleTo(d.pos) * R < p2.r + .05) near.push(p2);
+          for (const list of [hardProps, stoneSolids]) for (const post of list) {
+            // .45 world units covers the longest look-ahead (.038 rad plus padding), plus a fast animal's
+            // travel between .15 s refreshes. Each post's own radius is added, not treated as an angle.
+            const reach = (post.r + .45) / R;
+            if (post.dir.distanceToSquared(d.pos) < reach * reach) near.push(post);
           }
         }
+        bellPropsDirty = false;
       };
-      refreshBellProps.props = [];
-      refreshBellProps.age = 99;
-      // Would a step in `dirIn` (default: its own heading) put it into a prop? `reach` is how far ahead
-      // to look in radians, `margin` the clearance wanted beyond the prop's own radius.
-      const propAhead = (d, reach, dirIn, margin = .014 * BELL_SIZE) => {
-        const props = refreshBellProps.props;
-        const fwd = dirIn || d.fwd;
-        // The stones, then the trunks and boulders on its own short list. Both loops are the same test.
-        const test = (p2) => {
-          const away = p2.dir.angleTo(d.pos);
-          if (away > reach + p2.r / R + .02) return false;
-          // Already standing in it: only walking *further* in is blocked, so it can always get out.
-          if (away < p2.r / R + .006) {
-            if (dwProp.copy(p2.dir).sub(d.pos).dot(fwd) > 0) return true;
-            return false;
-          }
-          dwProp.copy(p2.dir).sub(d.pos);
-          const along = dwProp.dot(fwd);
-          if (along <= 0) return false;
-          dwProp.addScaledVector(fwd, -along);
-          if (dwProp.length() * R < p2.r + margin) return true;
-          return false;
-        };
-        for (let i = 0; i < props.length; i++) if (test(props[i])) return true;
-        const near = d.near;
-        if (near) for (let i = 0; i < near.length; i++) if (test(near[i])) return true;
+      refreshBellProps.age = Infinity;
+      // Would a direction take the animal into a nearby post? Both positions are unit directions and
+      // both collision radii are world lengths; a body already inside may always take a step out.
+      const propAhead = (d, reach, dirIn, margin = .004 * BELL_SIZE) => {
+        const fwd = dirIn || d.fwd, near = d.near || [];
+        const feet = R + heightAt(d.pos);
+        for (const post of near) {
+          if (post.top !== undefined && post.top <= feet) continue;
+          const dist = post.dir.distanceTo(d.pos) * R;
+          const need = post.r + d.hit.r + margin;
+          if (dist > reach * R + need) continue;
+          dwProp.copy(post.dir).sub(d.pos);
+          const along = dwProp.dot(fwd) * R;
+          if (along <= 0) continue;
+          if (dist < need) return true;
+          dwProp.addScaledVector(fwd, -along / R);
+          if (dwProp.length() * R < need) return true;
+        }
         return false;
       };
-      // The prop it is actually standing inside, if any.
       const propUnder = (d) => {
-        const props = refreshBellProps.props;
-        for (let i = 0; i < props.length; i++) {
-          if (props[i].dir.angleTo(d.pos) < props[i].r / R + .004) return props[i];
-        }
-        const near = d.near;
-        if (near) for (let i = 0; i < near.length; i++) {
-          if (near[i].dir.angleTo(d.pos) < near[i].r / R + .004) return near[i];
+        const feet = R + heightAt(d.pos);
+        for (const post of d.near || []) {
+          if (post.top !== undefined && post.top <= feet) continue;
+          if (post.dir.distanceTo(d.pos) * R < post.r + d.hit.r) return post;
         }
         return null;
       };
@@ -4917,7 +4889,8 @@
         // …and not inside a trunk or a boulder: the flora pass planted those long before this ran.
         const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) * R < (s.wr || .20) + .034 * BELL_SIZE) &&
           !landmarks.some(l => l.direction.angleTo(dir) < .17) &&
-          !hardProps.some(p2 => p2.dir.angleTo(dir) * R < p2.r + .026 * BELL_SIZE);
+          ![hardProps, stoneSolids].some(list => list.some(p2 =>
+            p2.dir.distanceTo(dir) * R < p2.r + .026 * BELL_SIZE));
         for (const pack of packs) {
           for (let h = 0; h < pack.packs; h++) {
             let found = null, levelest = Infinity;
@@ -4964,7 +4937,8 @@
                 // So an animal with good footing and no neighbour was placed inside a crystal and stayed
                 // there: the harness found one 42 mm in.
                 if (rough < .012 / BELL_SIZE && rough < levelest &&
-                  !hardProps.some(p2 => p2.dir.angleTo(dwProbe) * R < p2.r + .026 * BELL_SIZE)) {
+                  ![hardProps, stoneSolids].some(list => list.some(p2 =>
+                    p2.dir.distanceTo(dwProbe) * R < p2.r + .026 * BELL_SIZE))) {
                   levelest = rough; spot = dwProbe.clone();
                 }
               }
@@ -5481,10 +5455,13 @@
         for (const id of Object.keys(sites)) for (const site of sites[id]) settlementDirs.push(site);
 
         const buckets = new Map();
+        // Keep a piece's kind and origin: the shrine fitter needs `geo` to distinguish paving from walls,
+        // and the collision bench must be able to tell a sanctuary gate from an abandoned house.
+        let partSource = null;
         const push = (geo, mat, position, quat, scale) => {
           const key = geo + '|' + mat;
           if (!buckets.has(key)) buckets.set(key, []);
-          buckets.get(key).push({ origin: position, quat: quat.clone(), scale });
+          buckets.get(key).push({ geo, source: partSource, origin: position, quat: quat.clone(), scale });
         };
         const mesh = new THREE.Matrix4(), axis = new THREE.Vector3();
         // ---- Towns ---------------------------------------------------------------------------
@@ -5538,6 +5515,7 @@
         const lampPoints = [], chimneyPoints = [];
         for (const id of Object.keys(sites)) {
           for (const site of sites[id]) {
+            partSource = { kind: 'town', direction: site.dir, site };
             const k = site.bulk, yaw0 = rng() * TAU, s = STYLE[id];
             const origin = site.dir.clone().multiplyScalar(R + site.h);
             const qBase = new THREE.Quaternion().setFromUnitVectors(UP, site.dir);
@@ -6472,6 +6450,7 @@
           return pick || east;
         };
         for (const landmark of landmarks) {
+          partSource = { kind: 'sanctuary', direction: landmark.direction };
           const altar = landmark.direction.clone().normalize();
           if (!dry(altar)) continue;                           // an altar over open water has no shore
           const mat = 'shrine';
@@ -6552,7 +6531,9 @@
           }
           spots.sort((a, b) => b.score - a.score);
           let gate = null, gateAway = null, flank = null, lone = false, gateClear = 0;
-          if (spots.length) {
+          // A score of -99 is the explicit "pair cannot stand level" sentinel, not a poor but usable
+          // candidate. Picking it anyway made a 230 mm threshold wall under a gate on a steep slope.
+          if (spots.length && spots[0].score > -99) {
             const pick = spots[0];
             gate = pick.dir; gateAway = openBearing(pick.dir, altar); flank = pick.side; gateClear = pick.clear;
           }
@@ -6593,6 +6574,7 @@
           // standing proud on the low one, the way the step into a shrine is built on a hillside.
           const at = seats.map(s => s.at);
           const seatTop = seats.length ? Math.max(...at) : 0, seatLow = seats.length ? Math.min(...at) : 0;
+          landmark.wayGate = { direction: gate.clone(), shafts: seats.length, seatDrop: seatTop - seatLow };
           const gateGround = Math.max(heightAt(gate), SEA);
           if (seats.length === 2 && seatTop - seatLow > .006)
             putGround('steps', mat, gate, seatLow - gateGround - .014, bearing(gate, flank),
@@ -6721,6 +6703,7 @@
           const yawQ = new THREE.Quaternion();
           ruinSpots.forEach((spot, ruinIndex) => {
             const n = spot.dir;
+            partSource = { kind: 'sea', direction: n };
             const east = new THREE.Vector3(1, 0, 0).cross(n).normalize();
             const north = new THREE.Vector3().crossVectors(n, east).normalize();
             const qBase = new THREE.Quaternion().setFromUnitVectors(UP, n);
@@ -6853,6 +6836,7 @@
               // because "the body never ends a step inside anything" is trivially true when the walls are not
               // there. Found by reading the list back in `solids_sim`.
               dir, top, bottom: base, ex: ex.normalize(), ez: ez.normalize(),
+              source: item.source, geometry: geoKey,
               hx: Math.max(-bb.min.x, bb.max.x) * item.scale.x,
               hz: Math.max(-bb.min.z, bb.max.z) * item.scale.z
             });
@@ -7559,6 +7543,37 @@
         d.aim.addScaledVector(d.pos, -d.aim.dot(d.pos));
         if (d.aim.lengthSq() > 1e-10) d.aim.normalize();
       };
+      // Velocity eases even when a turn is blocked. Test the *actual* next step as well as the longer
+      // look-ahead: otherwise a bolting animal can coast several millimetres into a rock or a neighbour
+      // while its chosen speed is already zero. A body already inside may move only out, never deeper.
+      const bellCanStep = (d, next) => {
+        const r2 = R * R, feet = R + heightAt(next);
+        for (const post of d.near) {
+          if (post.top !== undefined && post.top <= feet) continue;
+          const need = post.r + d.hit.r;
+          const after = post.dir.distanceToSquared(next) * r2;
+          if (after < need * need && after < post.dir.distanceToSquared(d.pos) * r2 - 1e-10) return false;
+        }
+        for (const other of bell) {
+          if (other === d) continue;
+          const need = other.hit.r + d.hit.r, after = other.pos.distanceToSquared(next) * r2;
+          if (after < need * need && after < other.pos.distanceToSquared(d.pos) * r2 - 1e-10) return false;
+        }
+        if (state.mode === 'ground') {
+          const need = d.hit.r + WALKER_RADIUS, after = state.direction.distanceToSquared(next) * r2;
+          if (after < need * need && after < state.direction.distanceToSquared(d.pos) * r2 - 1e-10) return false;
+        }
+        for (const box of walkBoxes) {
+          if (box.dir.dot(next) < .995 || box.top <= feet || box.bottom > feet + .020) continue;
+          const gapAt = pos => {
+            const off = dwProp.copy(pos).sub(box.dir).multiplyScalar(R);
+            return Math.max(Math.abs(off.dot(box.ex)) - box.hx, Math.abs(off.dot(box.ez)) - box.hz) - d.hit.r;
+          };
+          const after = gapAt(next);
+          if (after < 0 && after < gapAt(d.pos) - 1e-7) return false;
+        }
+        return true;
+      };
       function updateBell(dt, elapsed) {
         if (!bellBodyMesh) return;
         dt = Math.min(dt, .05);                      // a tab that was asleep must not teleport the herd
@@ -7579,7 +7594,8 @@
         // was in plain sight and asleep, which is a herd standing perfectly still in the open. That is the
         // "the deer are stuck" the user reported. .42 rad is 1.76 world units, a little past the horizon.
         const inRange = Math.cos(.42);
-        if (++refreshBellProps.age > 20) { refreshBellProps.age = 0; refreshBellProps(); }
+        refreshBellProps.age += dt;
+        if (bellPropsDirty || refreshBellProps.age >= .15) { refreshBellProps.age = 0; refreshBellProps(); }
         // A herd wakes as a herd. One of them close enough is enough for all of them: half a herd
         // grazing and half frozen a few centimetres away reads as broken animals, not as animals.
         // (Their world positions are last frame's, which is a sixteenth of a millimetre out.)
@@ -7693,10 +7709,9 @@
               dwE.addScaledVector(dwProbe.normalize(), 1 / Math.max(gap + .006, .006));
             }
             {
-              // Chords, like the radii it is compared against. `angleTo * R` is an arc — 4.2 times longer at
-              // this radius — so the avoidance thought it was keeping 30 mm of daylight and kept seven, and an
-              // animal could stand a body's width inside the player without ever noticing.
-              const gap = d.pos.distanceTo(state.direction) - d.hit.r - WALKER_RADIUS - .010;
+              // Positions are unit directions; convert their chord to world units before subtracting the
+              // two world-space collision radii. `angleTo * R` is the nearly equal arc, not 4.2 times this.
+              const gap = d.pos.distanceTo(state.direction) * R - d.hit.r - WALKER_RADIUS - .010;
               if (gap < .055) {
                 dwProbe.copy(d.pos).sub(state.direction);
                 dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
@@ -7863,7 +7878,7 @@
             // A boulder, or a house: the same two questions, asked of the next few centimetres.
             const clearAhead = (p2) => !settlementDirs.some(sv => sv.dir.angleTo(p2) * R < (sv.wr || .20) + .028 * BELL_SIZE)
               && !propAhead(d, .038)
-              && p2.distanceTo(state.direction) > d.hit.r + WALKER_RADIUS + .030 * BELL_SIZE;   // the walker is in the way too
+              && p2.distanceTo(state.direction) * R > d.hit.r + WALKER_RADIUS + .030 * BELL_SIZE;   // the walker is in the way too
             dwProbe.copy(d.pos).addScaledVector(d.fwd, .035).normalize();
             if (!walkableAt(dwProbe) || !clearAhead(dwProbe)) {
               let turned = false;
@@ -7871,7 +7886,8 @@
                 for (const sgn of [1, -1]) {
                   dwE.copy(d.fwd).applyAxisAngle(d.pos, sgn * .55 * k).normalize();
                   dwProbe.copy(d.pos).addScaledVector(dwE, .035).normalize();
-                  if (walkableAt(dwProbe) && !propAhead(d, .038, dwE)) {
+                  if (walkableAt(dwProbe) && !propAhead(d, .038, dwE) &&
+                    dwProbe.distanceTo(state.direction) * R > d.hit.r + WALKER_RADIUS + .030 * BELL_SIZE) {
                     // Turn toward the way round instead of snapping onto it. Copying the heading outright
                     // was a 30–95° change in one frame, which reads as a twitch even though it is not the
                     // 180° flip of `-51`. Turning at a rate, and slowing while doing it, costs nothing.
@@ -7906,7 +7922,8 @@
                     // climbing a cliff face, and refusing to let it *descend* one is how a bell on a steep
                     // patch ended up rooted — every direction too steep, including the ones that only go down.
                     const downhill = heightAt(dwProbe) < heightAt(d.pos) - .0002 && heightAt(dwProbe) >= SEA + .006;
-                    if ((!walkableAt(dwProbe) && !downhill) || propAhead(d, .014, dwE)) continue;
+                    if ((!walkableAt(dwProbe) && !downhill) || propAhead(d, .014, dwE) ||
+                      dwProbe.distanceTo(state.direction) * R < d.hit.r + WALKER_RADIUS) continue;
                     d.fwd.copy(dwE);
                     d.speed = .030;
                     d.mode = 'walk';
@@ -7924,7 +7941,8 @@
                   for (const sgn of [0, 1, -1]) {
                     dwE.copy(d.fwd).applyAxisAngle(d.pos, sgn * .785 * k).normalize();
                     dwProbe.copy(d.pos).addScaledVector(dwE, .008).normalize();
-                    if (propAhead(d, .010, dwE) || heightAt(dwProbe) < SEA + .006) continue;
+                    if (propAhead(d, .010, dwE) || heightAt(dwProbe) < SEA + .006 ||
+                      dwProbe.distanceTo(state.direction) * R < d.hit.r + WALKER_RADIUS) continue;
                     d.fwd.copy(dwE);
                     d.speed = .022;
                     d.mode = 'walk';
@@ -7942,13 +7960,19 @@
               // with no way out stayed in 'walk' for 3.7 s, which is the frozen-in-a-walking-mode bug.
               if (!turned) { d.speed = 0; d.mode = 'graze'; d.timer = 1.4; }
             }
-            d.pos.addScaledVector(d.fwd, d.vel * dt / R).normalize();
-            d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
-            if (d.fwd.lengthSq() < 1e-8) aimBell(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
-            else d.fwd.normalize();
-            bellNormal(d.pos, d.up);
-            d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
-            d.phase += dt * (d.vel > .25 ? 12 : d.vel > .06 ? 6.4 : 3.2);
+            dwAhead.copy(d.pos).addScaledVector(d.fwd, d.vel * dt / R).normalize();
+            if (bellCanStep(d, dwAhead)) {
+              d.pos.copy(dwAhead);
+              d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
+              if (d.fwd.lengthSq() < 1e-8) aimBell(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
+              else d.fwd.normalize();
+              bellNormal(d.pos, d.up);
+              d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
+              d.phase += dt * (d.vel > .25 ? 12 : d.vel > .06 ? 6.4 : 3.2);
+            } else {
+              d.speed = 0;
+              if (d.mode === 'walk') { d.mode = 'graze'; d.timer = 1.4; }
+            }
           }
           if (d.moved || d.vel > 1e-4) { plantFeet(d); d.moved = d.vel > 1e-4; }
           if (d.vel > 1e-4) d.still = 0; else d.still = Math.min(3, d.still + dt);
@@ -7965,21 +7989,11 @@
         for (let i = 0; i < bell.length; i++) {
           const a = bell[i];
           if (!a.awake) continue;
-          // the walker first: a body that overlaps you moves, you do not
-          const playerGap = a.pos.angleTo(state.direction) * R;
-          if (playerGap < a.hit.r + WALKER_RADIUS + .004 * BELL_SIZE) {
-            dwProbe.copy(a.pos).addScaledVector(state.direction, -state.direction.dot(a.pos));
-            if (dwProbe.lengthSq() > 1e-12) {
-              dwProbe.normalize();
-              a.pos.addScaledVector(dwProbe, .0015 / R).normalize();
-              a.fwd.addScaledVector(a.pos, -a.fwd.dot(a.pos));
-              if (a.fwd.lengthSq() > 1e-8) a.fwd.normalize();
-              a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos));
-            }
-          }
+          // Off the furniture first; the walker gets the final say after furniture, walls and other animals
+          // have all moved, or any one of those corrections can put a body straight back into the player.
           // ...and off the furniture. Placement steers round trunks and boulders, but walking brushes
           // them, and a shoulder inside a trunk is the same bug as a shoulder inside another animal.
-          const bodyR = BELL_HALF_WIDE * BELL_SIZE;
+          const bodyR = a.hit.r;
           for (let h = 0; h < a.near.length; h++) {
             const post = a.near[h];
             const gap = a.pos.angleTo(post.dir) * R - post.r - bodyR;
@@ -7988,7 +8002,7 @@
             dwProbe.addScaledVector(a.pos, -dwProbe.dot(a.pos));
             if (dwProbe.lengthSq() < 1e-12) continue;
             const stepped = a.pos.clone().addScaledVector(dwProbe.normalize(), Math.min(.0015, -gap) / R).normalize();
-            if (heightAt(stepped) >= SEA + .006) { a.pos.copy(stepped); a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos)); }
+            if (heightAt(stepped) >= SEA + .006) { a.pos.copy(stepped); a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos)); a.relaxed = true; }
           }
           // A wall is a box, and the same relaxation applies: step out through the nearest face.
           for (let h = 0; h < walkBoxes.length; h++) {
@@ -8007,7 +8021,7 @@
               off.copy(box.ez).multiplyScalar(face * (ez + .0004)).addScaledVector(box.ex, u).multiplyScalar(1 / R);
             }
             const stepped = box.dir.clone().add(off).normalize();
-            if (heightAt(stepped) >= SEA + .006) { a.pos.copy(stepped); a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos)); }
+            if (heightAt(stepped) >= SEA + .006) { a.pos.copy(stepped); a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos)); a.relaxed = true; }
           }
           for (let j = i + 1; j < bell.length; j++) {
             const b = bell[j];
@@ -8021,10 +8035,10 @@
             dwProbe.normalize();
             const push = Math.min(.0015, (shoulder - gap) * (b.awake ? .5 : 1)) / R;
             const moved = a.pos.clone().addScaledVector(dwProbe, push).normalize();
-            if (heightAt(moved) >= SEA + .006) a.pos.copy(moved);
+            if (heightAt(moved) >= SEA + .006) { a.pos.copy(moved); a.relaxed = true; }
             if (b.awake) {
               const movedB = b.pos.clone().addScaledVector(dwProbe, -push).normalize();
-              if (heightAt(movedB) >= SEA + .006) b.pos.copy(movedB);
+              if (heightAt(movedB) >= SEA + .006) { b.pos.copy(movedB); b.relaxed = true; }
             }
             a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos));
             b.world.copy(b.pos).multiplyScalar(R + heightAt(b.pos));
@@ -8085,10 +8099,59 @@
             if (a.mode === 'walk') { a.mode = 'graze'; a.timer = Math.max(a.timer, .4); }
             continue;
           }
-          a.pos.copy(best);
+          a.pos.copy(best); a.relaxed = true;
           a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos));
           bellNormal(a.pos, a.up);
           if (a.speed < .004) { a.speed = .030; a.mode = 'walk'; a.timer = Math.max(a.timer, .8); }
+        }
+        // A person is not a moving post. If a shoulder is touching them, the animal gives ground after all
+        // other relaxations. Try the outward direction and a few oblique ones, but never escape through a
+        // rock, a wall, the sea or another body. A bounded, dt-scaled step and a stride keep it from teleporting
+        // or sliding; the physics fallback below holds a stationary player still while the animal makes room.
+        for (const a of bell) {
+          if (!a.awake) continue;
+          const gap = a.pos.distanceTo(state.direction) * R;
+          const need = a.hit.r + WALKER_RADIUS + .015;
+          if (gap < need && state.mode === 'ground') {
+            const away = a.pos.clone().addScaledVector(state.direction, -state.direction.dot(a.pos));
+            if (away.lengthSq() < 1e-12) away.copy(a.fwd);
+            away.addScaledVector(a.pos, -away.dot(a.pos)).normalize();
+            const step = Math.min(need - gap + .0002, .15 * dt);
+            for (const turn of [0, .55, -.55, 1.0, -1.0]) {
+              const dir = away.clone().applyAxisAngle(a.pos, turn);
+              const next = a.pos.clone().addScaledVector(dir, step / R).normalize();
+              if (heightAt(next) < SEA + .006 || next.distanceTo(state.direction) <= a.pos.distanceTo(state.direction)) continue;
+              let blocked = false;
+              for (const post of a.near) {
+                const before = post.dir.distanceTo(a.pos) * R - post.r - a.hit.r;
+                const after = post.dir.distanceTo(next) * R - post.r - a.hit.r;
+                if (after < 0 && after < before - 1e-7) { blocked = true; break; }
+              }
+              if (blocked) continue;
+              for (const box of walkBoxes) {
+                if (box.dir.dot(next) < .995 || box.top <= R + heightAt(next) || box.bottom > R + heightAt(next) + .020) continue;
+                const before = a.pos.clone().sub(box.dir).multiplyScalar(R);
+                const after = next.clone().sub(box.dir).multiplyScalar(R);
+                const gapAt = off => Math.max(Math.abs(off.dot(box.ex)) - box.hx, Math.abs(off.dot(box.ez)) - box.hz) - a.hit.r;
+                if (gapAt(after) < 0 && gapAt(after) < gapAt(before) - 1e-7) { blocked = true; break; }
+              }
+              if (blocked || bell.some(b => b !== a && next.distanceTo(b.pos) * R < a.hit.r + b.hit.r &&
+                next.distanceTo(b.pos) < a.pos.distanceTo(b.pos))) continue;
+              a.pos.copy(next); a.relaxed = true;
+              a.aim.copy(dir);
+              a.speed = Math.max(a.speed, .09); a.stride = Math.max(a.stride, .18);
+              a.phase += dt * 3.2;
+              break;
+            }
+          }
+          if (a.relaxed) {
+            a.world.copy(a.pos).multiplyScalar(R + heightAt(a.pos));
+            a.hit.top = a.world.length() + BELL_BODY_TOP * a.scale;
+            a.fwd.addScaledVector(a.pos, -a.fwd.dot(a.pos)).normalize();
+            bellNormal(a.pos, a.up); plantFeet(a);
+            poseBell(a, bell.indexOf(a), Math.abs(Math.sin(a.phase)) * .0011 * (a.stride / .2));
+            a.relaxed = false;
+          }
         }
         bellBodyMesh.instanceMatrix.needsUpdate = true;
         bellHeadMesh.instanceMatrix.needsUpdate = true;
@@ -8598,6 +8661,9 @@
             const hit = body.hit;
             if (!hit || hit.top <= feetRadius || hit.bottom > feetRadius + .085) continue;
             if (body.pos.dot(walkProbe) < .95) continue;
+            // A moving bell must give way to a standing walker, not shovel the camera sideways while its
+            // bounded retreat catches up. Intentional movement still collides normally; reefs are unchanged.
+            if (list === 0 && !wantsInput && state.speed <= .004) continue;
             walkBump.copy(state.direction).addScaledVector(body.pos, -body.pos.dot(state.direction));
             const dist = walkBump.length() * R, need = hit.r + WALKER_RADIUS + WALK_SKIN;
             if (dist >= need || dist < 1e-6) continue;
@@ -8721,13 +8787,18 @@
         // The floor is the ground the body is *over*, read after the solids have finished moving it — not the
         // sample taken before them. With the stale one, a push out of a bush put the eyes up to nine millimetres
         // inside a slope for a frame before the next clamp noticed.
-        const footRadius=state.feetRadius, eyeHeight=state.water ? SWIM_EYE : standEye;
+        // A collision can move the body sideways onto higher or lower ground after the earlier collision
+        // height sample. Resample at the resolved position before clamping the eye and exposing the feet.
+        const finalElevation=heightAt(state.direction);
+        const footRadius=R+(state.water ? Math.max(finalElevation,SEA-state.depth) : finalElevation);
+        state.feetRadius=footRadius;
+        const eyeHeight=state.water ? SWIM_EYE : standEye;
         if (state.water) {
           // Wading and swimming are two ends of one curve. Standing on the seabed puts the eye at
           // ground+standEye; floating puts it at the waterline+SWIM_EYE. Those two meet exactly at
           // waterDepth = standEye - SWIM_EYE, so as the floor drops away there is no step in the
           // camera — it only changes slope, which is what stepping into deep water should feel like.
-          const waterDepth=SEA-elevation;
+          const waterDepth=SEA-finalElevation;
           // The blend from standing to floating runs the whole way from the waterline (where the two
           // poses are literally the same height) to well past the depth at which the feet leave the
           // bottom. It used to be a narrow band, which compressed the eye's 90 mm of surfacing into ten
@@ -8738,7 +8809,7 @@
           // ...and the pose change itself is rate-limited: the raw fraction is what the physics asks
           // for, but the body takes about a quarter second to actually stand up or lie down in it.
           state.swimBlend+=clamp(floating-state.swimBlend,-dt*3.0,dt*3.0);
-          const standR=R+elevation+standEye;
+          const standR=R+finalElevation+standEye;
           const floatR=R+SEA+SWIM_EYE-state.depth;
           // One pose, and the body is *at* it. This used to be `restR = max(standR, floatR)` for the fall test
           // and `mix(standR, floatR, blend)` for the height, which are two different numbers as soon as the

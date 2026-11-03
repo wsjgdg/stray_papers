@@ -19,13 +19,15 @@ const dt = 1 / 120;
 
 // How far inside a solid an animal's body is, in metres of chord: the same measure the walker's collision
 // uses, with the animal's own width instead of the walker's.
+let clearanceReason = '';
 const animalClearance = (pos, radius) => {
   const feet = R + heightAt(pos);
   let worst = Infinity;
-  for (const list of [hardProps, stoneSolids]) for (const post of list) {
+  for (const [kind, list] of [['prop', hardProps], ['stone', stoneSolids]]) for (const [index, post] of list.entries()) {
     if (post.top !== undefined && post.top <= feet) continue;
     if (post.dir.dot(pos) < .95) continue;
-    worst = Math.min(worst, post.dir.distanceTo(pos) * R - post.r - radius);
+    const gap = post.dir.distanceTo(pos) * R - post.r - radius;
+    if (gap < worst) { worst = gap; clearanceReason = kind + ' ' + index; }
   }
   for (const box of walkBoxes) {
     if (box.top <= feet || (box.bottom !== undefined && box.bottom > feet + .020) || box.dir.dot(pos) < .9) continue;
@@ -35,8 +37,10 @@ const animalClearance = (pos, radius) => {
     // 4.2 is three quarters of a unit — a town two streets away used to be measured as if it were on top of
     // the animal, and it only stopped mattering because the walls' bottoms were (wrongly) above every foot.
     if (u > box.hx + radius + .02 || v > box.hz + radius + .02) continue;
-    const gap = Math.min(box.hx + radius - u, box.hz + radius - v);
-    worst = Math.min(worst, gap);
+    // Negative is inside both expanded faces; outside either face is positive. The former minimum of
+    // (extent - coordinate) had the opposite sign, so a body *inside* a wall was reported as clear.
+    const gap = Math.max(u - box.hx, v - box.hz) - radius;
+    if (gap < worst) { worst = gap; clearanceReason = 'wall ' + walkBoxes.indexOf(box); }
   }
   return worst;
 };
@@ -60,9 +64,9 @@ stand(bell[0].pos, .30);
 const started = bell.map(d => d.pos.clone());
 let worstDrop = 0, worstDropAt = null;
 let moved = bell.map(() => 0), woke = bell.map(() => false), awakeFrames = bell.map(() => 0),
-  travel = bell.map(() => 0), last = bell.map(d => d.pos.clone()), idle = bell.map(() => 0),
+  travel = bell.map(() => 0), last = bell.map(d => d.pos.clone()), idle = bell.map(() => 0), idleMax = 0,
   lastVel = bell.map(d => d.vel || 0),
-  bodyGap = Infinity, solidGap = Infinity, broken = null;
+  bodyGap = Infinity, solidGap = Infinity, solidAt = '', broken = null;
 try {
   for (let frame = 0; frame < 7200; frame++) {
     updateBell(dt, frame * dt);
@@ -92,9 +96,12 @@ try {
         // Standing still is what grazing *is*, and a bell in 'watch' or 'alert' is looking at you. The mode that
         // must move is 'walk': an animal that has decided to go somewhere and does not is a bug.
         if (d.mode === 'walk' && step < 5e-5) idle[i]++;
-      }
+        else idle[i] = 0;
+        idleMax = Math.max(idleMax, idle[i]);
+      } else idle[i] = 0;
       last[i].copy(d.pos);
-      solidGap = Math.min(solidGap, animalClearance(d.pos, d.hit.r));
+      const gap = animalClearance(d.pos, d.hit.r);
+      if (gap < solidGap) { solidGap = gap; solidAt = 'bell ' + i + ', frame ' + frame + ', ' + clearanceReason; }
       for (let j = i + 1; j < bell.length; j++) {
         if (d.pos.dot(bell[j].pos) < .95) continue;
         bodyGap = Math.min(bodyGap, d.pos.distanceTo(bell[j].pos) * R - d.hit.r - bell[j].hit.r);
@@ -112,46 +119,49 @@ ok('sixty seconds of the page\'s own animal frames runs without throwing', !brok
 // the last frame has had no time to go anywhere, so the question is put to the ones that had the time: did
 // every bell that was awake for five seconds or more actually walk?
 const walked = travel.filter((_, i) => awakeFrames[i] >= 600);
-const idleWorst = Math.max(...idle);
-// OPEN ITEM, measured: 3.66 s. One animal wedged against something the walk gate cannot get it round keeps being
-// re-tagged 'walk' by the stone-under-it branch, so its mode says walking while its body is stationary. The bound
-// is four seconds so the suite prints the reading rather than hiding it; the fix is on the worklog's open list.
-ok('and no animal is ever frozen in a walking mode', idleWorst < 480,
+const idleWorst = idleMax;
+// Count consecutive, not accumulated, still frames: adding scattered slow frames and calling the sum "the
+// longest standstill" made a creature that kept moving look frozen for ten seconds.
+ok('and no animal is ever frozen in a walking mode', idleWorst < 240,
   'the longest an awake bell spent in walk without moving a twentieth of a millimetre: ' +
   (idleWorst / 120).toFixed(2) + ' s');
 ok('and the herd you stand with actually walks', walked.filter(m => m > .025).length >= 3,
   walked.length + ' bells were awake for five seconds or more, ' + walked.filter(m => m > .025).length +
   ' of them walked; the most covered ' + (Math.max(...walked) * 1000).toFixed(0) + ' mm in 60 s');
 
-// OPEN ITEM, measured not wished for: the page relaxes shoulders at its own `shoulder` gap, which is a centre
-// distance of about 14 mm — smaller than two collision radii (2 × 26.5 mm), so two crowded animals CAN overlap.
-// In this world the worst pair came to -2.6 mm over sixty seconds; before the spawn-clearance shift it never got
-// past zero. The bound here is the page's own nudge per frame, and the reading is in the worklog as an open item.
-ok('and no two bodies are ever inside each other', bodyGap >= -.006,
+// The cylinders are measured in world chords. A two-millimetre numerical allowance covers the tangent-box
+// approximation, not a body-width of penetration; every one of the 7200 frames is included.
+ok('and no two bodies are ever inside each other', bodyGap >= -.002,
   'closest pair over the whole minute: ' + (bodyGap * 1000).toFixed(1) + ' mm of daylight');
-
-// A few millimetres, and for a stated reason: an animal's shortlist of nearby props is rebuilt three times a
-// second, and at its walking speed that is up to five millimetres of travel between two rebuilds. Nothing here
-// is a hole in a wall — it is the width of the animal's own memory of where the rocks were.
-// OPEN ITEM: 19.9 mm, and it is in `hardProps` rather than a ground stone (a stone may no longer be laid under an
-// animal — that fix is in this build and it moved nothing here). The shortlist that the walk gate consults is
-// rebuilt three times a second, so the animal can be a stride past the point where it knew where the trunk was.
-ok('and no animal is ever properly inside a tree, a boulder, a stone or a wall', solidGap >= -.020,
-  'closest it came: ' + (solidGap * 1000).toFixed(1) + ' mm (the prop shortlist is rebuilt 3 times a second)');
+ok('and no animal is ever properly inside a tree, a boulder, a stone or a wall', solidGap >= -.002,
+  'closest it came: ' + (solidGap * 1000).toFixed(1) + ' mm (' + solidAt + ')');
 
 // ---- a walker standing still in a herd ----------------------------------------------------------------
 // The animals are posts that move, and they must not shovel a standing person out of the way: a body that
 // walks into you and keeps walking is a body that has not noticed you, which is exactly the design.
-let worstShove = 0, checked = 0;
+let worstShove = 0, worstControl = 0, worstExcess = -Infinity, pushedFrames = 0, checked = 0;
 for (const d of bell.slice(0, 4)) {
-  stand(d.pos, .060);
-  // A body placed on the surface is a body that has not settled yet — the first frames are it dropping the
-  // last hundredth of a millimetre onto the ground and turning its feet, and counting that as a shove is
-  // counting the test's own placement.
+  // Run the *same* ground twice. Remove the creatures for the control, but keep the real slope, walls and
+  // stones: their own settling must not be attributed to an animal. Restore the same objects afterwards.
+  const target = d.pos.clone();
+  const savedBell = bell.splice(0), savedReefs = reefs.splice(0);
+  stand(target, .060);
+  for (let frame = 0; frame < 240; frame++) physicsStep(dt);
+  const controlStart = state.direction.clone();
+  for (let frame = 240; frame < 1140; frame++) physicsStep(dt);
+  const control = controlStart.angleTo(state.direction) * R;
+  bell.push(...savedBell); reefs.push(...savedReefs);
+  stand(target, .060);
   for (let frame = 0; frame < 240; frame++) { updateBell(dt, frame * dt); updateReefs(dt, frame * dt); physicsStep(dt); }
   const at = state.direction.clone();
-  for (let frame = 240; frame < 1140; frame++) { updateBell(dt, frame * dt); updateReefs(dt, frame * dt); physicsStep(dt); }
-  worstShove = Math.max(worstShove, at.angleTo(state.direction) * R);
+  for (let frame = 240; frame < 1140; frame++) {
+    updateBell(dt, frame * dt); updateReefs(dt, frame * dt); physicsStep(dt);
+    if (state.pushed > 0) pushedFrames++;
+  }
+  const drift = at.angleTo(state.direction) * R;
+  worstShove = Math.max(worstShove, drift);
+  worstControl = Math.max(worstControl, control);
+  worstExcess = Math.max(worstExcess, drift - control);
   checked++;
 }
 // "停住有点突兀" — the stopping was a switch: a walk ended between two frames and the body was simply
@@ -180,9 +190,10 @@ ok('and no animal stops dead between two frames', worstDrop < .25,
     awake + ' of ' + bell.length + ' bells are thinking at 20 m, past the horizon of the eye');
 }
 
-ok('a walker standing still beside a herd is not shovelled along', worstShove < .004,
-  'over the 7.5 s after it had settled, the standing body moved ' + (worstShove * 1000).toFixed(2) +
-  ' mm (' + checked + ' herds tried; the herd resolves around the walker, it does not lean on it)');
+ok('a walker standing still beside a herd is not shovelled along', worstExcess < .004 && pushedFrames === 0,
+  'over 7.5 s at ' + checked + ' positions, the worst herd drift was ' + (worstShove * 1000).toFixed(2) +
+  ' mm; its same-ground controls reached ' + (worstControl * 1000).toFixed(2) + ' mm, worst paired excess ' +
+  (worstExcess * 1000).toFixed(2) + ' mm, creature-push frames ' + pushedFrames);
 
 console.log('\n' + pass + ' PASS / ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);

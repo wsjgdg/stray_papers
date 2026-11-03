@@ -185,12 +185,13 @@ export function loadPage(file = PAGE) {
         R, SEA, WATER, TAU, EYE, WALKER_RADIUS, WALK_SPEED, SPRINT_SPEED, SWIM_SPEED,
         DIVE_SPEED, RISE_SPEED, MAX_DIVE, SWIM_EYE, CROUCH_EYE,
         BELL_SIZE, REEF_S, BELL_HALF_WIDE, BELL_BODY_TOP, keys, joystick, stoneSolids, groundPose, dwFeet,
-        heightAt, provinceAt, biomeAt, nearestLand, seeded, hash, noise, waterAt, depthMeters,
+        heightAt, provinceAt, biomeAt, nearestLand, landing, seeded, hash, noise, waterAt, depthMeters,
         provinceDressing, physicsStep, updateBell, updateReefs, updateCamera, updateWeather, updateLattice,
         bell, reefs, landmarks, settlementDirs, walkBoxes, hardProps, floraHard, groundStones,
         provinceGeo, provinceMat, hardBand, hardWidthOf, provinceWet, smokeWind, overlapAt,
         weather, latticeRings, setWeather, cycleWeather, WEATHER_DEFS, nextStrikeGap, thunderPlan, beginStrike,
-        resetGroundMotion, clearInput, propUnder, hardBand, BELL_HALF_WIDE, propAhead, bellNormal
+        resetGroundMotion, clearInput, propUnder, hardBand, BELL_HALF_WIDE, propAhead, bellNormal,
+        refreshBellProps, dressStones
       };
 `;
   body = body.slice(0, endOfStartWorld) + expose + body.slice(endOfStartWorld);

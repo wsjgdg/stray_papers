@@ -7,7 +7,7 @@ import { buildWorld } from './world.mjs';
 
 const world = await buildWorld();
 const { THREE, R, SEA, camera, scene, state, keys, joystick, physicsStep, updateBell, updateReefs, updateWeather, settlementDirs,
-  updateLattice, latticeRings, resetGroundMotion, heightAt, nearestLand, EYE } = world;
+  updateLattice, latticeRings, resetGroundMotion, heightAt, landing, EYE } = world;
 
 let pass = 0, fail = 0;
 const ok = (name, cond, info = '') => {
@@ -18,8 +18,7 @@ const mm = v => (v * 1000).toFixed(1) + ' mm';
 const dt = 1 / 120;
 
 // A heading that gives a long walk rather than an immediate wall: the middle of the first province.
-const heading = new THREE.Vector3(Math.sin(1.16) * Math.sin(.42), Math.cos(1.16), Math.sin(1.16) * Math.cos(.42));
-heading.copy(nearestLand(heading));
+const heading = landing.clone();
 // The same standing pose steps_sim uses: every field physicsStep reads has to be set, or the walker's radius
 // turns into nonsense on the first frame.
 const stand = (dir) => {
@@ -38,23 +37,23 @@ stand(heading);
 keys.add('KeyW');
 keys.add('ShiftLeft');
 
-// ---- one full frame, ten times a second for ten seconds ----------------------------------------------------
+// ---- one full frame, 120 times a second for ten seconds ----------------------------------------------------
 {
   let frames = 0, worstSink = 0, nanFrames = 0, belowGroundFrames = 0;
   let minEye = Infinity, maxSpeed = 0;
   let last = state.direction.clone();
   const m = new THREE.Matrix4();
   for (let f = 0; f < 120 * 10; f++) {
-    // The page's frame: weather, then the net, then the animals and the reefs, then the walker, then the camera.
+    // The page runs updateCamera (and its fixed-step walker) before updateWorld. Then the weather and net
+    // advance, followed by the herd and rafts. Reversing these hides one-frame contact-order regressions.
+    physicsStep(dt);
+    camera.position.copy(state.direction).multiplyScalar(state.radius);
+    camera.lookAt(new THREE.Vector3().copy(camera.position).add(new THREE.Vector3(0, 1, 0)));
+    camera.updateMatrixWorld(true);
     updateWeather(dt);
     updateLattice(f * dt, 1, 0, state.direction, 0);
     updateBell(dt, f * dt);
     updateReefs(dt, f * dt);
-    physicsStep(dt);
-    // The camera is placed by the page from the walker's radius and direction; do the same thing it does.
-    camera.position.copy(state.direction).multiplyScalar(state.radius);
-    camera.lookAt(new THREE.Vector3().copy(camera.position).add(new THREE.Vector3(0, 1, 0)));
-    camera.updateMatrixWorld(true);
     frames++;
 
     const ground = Math.max(heightAt(state.direction), SEA);
@@ -65,7 +64,7 @@ keys.add('ShiftLeft');
     if (sink > .001) belowGroundFrames++;
     if (!Number.isFinite(camera.position.x + camera.position.y + camera.position.z) ||
         !Number.isFinite(state.radius) || !Number.isFinite(state.direction.length())) nanFrames++;
-    maxSpeed = Math.max(maxSpeed, last.distanceTo(state.direction) / dt);
+    maxSpeed = Math.max(maxSpeed, last.distanceTo(state.direction) * R / dt);
     last.copy(state.direction);
   }
   ok('ten seconds of a real frame leaves no NaN anywhere', nanFrames === 0,

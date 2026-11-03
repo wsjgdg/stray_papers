@@ -9,7 +9,7 @@ import { buildWorld } from './world.mjs';
 
 const world = await buildWorld();
 const { THREE, R, SEA, EYE, CROUCH_EYE, WALK_SPEED, SPRINT_SPEED, WALKER_RADIUS, heightAt, state, keys, joystick,
-  physicsStep, resetGroundMotion, walkBoxes, hardProps } = world;
+  physicsStep, resetGroundMotion, walkBoxes, hardProps, stoneSolids, bell } = world;
 
 let pass = 0, fail = 0;
 const ok = (name, cond, info = '') => {
@@ -24,14 +24,16 @@ function slopeAt(dir) {
   const ex = new THREE.Vector3(1, 0, 0).cross(dir).normalize();
   const ez = new THREE.Vector3().crossVectors(dir, ex).normalize();
   const e = .002;
-  const hx = heightAt(dir.clone().addScaledVector(ex, e)) - heightAt(dir.clone().addScaledVector(ex, -e));
-  const hz = heightAt(dir.clone().addScaledVector(ez, e)) - heightAt(dir.clone().addScaledVector(ez, -e));
-  return Math.hypot(hx, hz) / (2 * e);
+  const hx = heightAt(dir.clone().addScaledVector(ex, e).normalize()) - heightAt(dir.clone().addScaledVector(ex, -e).normalize());
+  const hz = heightAt(dir.clone().addScaledVector(ez, e).normalize()) - heightAt(dir.clone().addScaledVector(ez, -e).normalize());
+  return Math.hypot(hx, hz) / (2 * e * R);
 }
 // A spot on dry land with a slope near `want`, looking for it at random so the four kinds of ground are real
 // terrain and not a synthetic ramp.
 const clear = (dir, reach = .09) => {
-  for (const p of hardProps) if (p.dir.dot(dir) > .995 && p.dir.distanceTo(dir) - p.r < reach) return false;
+  for (const list of [hardProps, stoneSolids]) for (const p of list)
+    if (p.dir.dot(dir) > .995 && p.dir.distanceTo(dir) * R - p.r < reach) return false;
+  for (const d of bell) if (d.pos.distanceTo(dir) * R - d.hit.r < reach) return false;
   for (const box of walkBoxes) {
     if (box.dir.dot(dir) < .995) continue;
     const off = box.dir.clone().sub(dir).multiplyScalar(R);
@@ -44,11 +46,20 @@ const find = (want, tolerance = .2, tries = 60000) => {
   for (let i = 0; i < tries; i++) {
     const y = 1 - (i * 2 + 1) / tries, a = i * Math.PI * (3 - Math.sqrt(5)), r = Math.sqrt(1 - y * y);
     const d = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
-    if (heightAt(d) < SEA + .02) continue;
+    // Leave room to walk downhill without the dry-ground eye test becoming a water-blend test.
+    if (heightAt(d) < SEA + .12) continue;
     const s = slopeAt(d);
-    if (Math.abs(s - want) > tolerance) continue;
-    if (!clear(d)) continue;
-    return { dir: d, slope: s };
+    if (Math.abs(s - want) > tolerance || !clear(d)) continue;
+    const heading = new THREE.Vector3(0, 0, 1).cross(d).normalize();
+    let last = heightAt(d), safe = true;
+    for (let step = 1; step <= 16; step++) {
+      const point = d.clone().multiplyScalar(R).addScaledVector(heading, step * .025).normalize();
+      const h = heightAt(point);
+      // Avoid walking off a cliff, into water or into an obstacle halfway through a slope test.
+      if (h < SEA + .025 || Math.abs(h - last) / .025 > .5 || !clear(point, .025)) { safe = false; break; }
+      last = h;
+    }
+    if (safe) return { dir: d, slope: s };
   }
   return null;
 };
@@ -82,7 +93,9 @@ function walk(spot, opts = {}) {
     rec.speed.push(state.speed);
     // The page's own promise: a grounded body is *at* the floor. That is exact to the millimetre, and it is
     // the invariant that a slope, a step or a shove would break.
-    if (state.grounded) { rec.groundedFrames++; rec.sink = Math.min(rec.sink, eye - EYE); rec.float = Math.max(rec.float, eye - EYE); }
+    // A wader can still report grounded while the walking pose blends into the swimming pose. The 100 mm
+    // eye invariant applies to dry land, not to that deliberate water transition.
+    if (state.grounded && !state.water) { rec.groundedFrames++; rec.sink = Math.min(rec.sink, eye - EYE); rec.float = Math.max(rec.float, eye - EYE); }
     const d = last.angleTo(state.direction) * R;
     rec.travelled += d;
     rec.jump.push(d);
@@ -101,9 +114,39 @@ function walk(spot, opts = {}) {
   return rec;
 }
 
-const flat = find(.05, .10), gentle = find(.45, .20), steep = find(1.10, .35);
-if (!flat || !gentle || !steep) {
-  console.log('  FAIL the world has no flat, gentle and steep ground clear enough to walk on');
+// A spot's initial gradient does not describe the whole walk: even the old "flat" sample immediately
+// climbed a hill. Find an unobstructed, dry, genuinely level 400 mm path before asking for nominal speed.
+function levelTrack(tries = 60000) {
+  const posts = [...hardProps, ...stoneSolids];
+  for (let i = 0; i < tries; i++) {
+    const y = 1 - (i * 2 + 1) / tries, a = i * Math.PI * (3 - Math.sqrt(5)), r = Math.sqrt(1 - y * y);
+    const dir = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+    const heading = new THREE.Vector3(0, 0, 1).cross(dir).normalize();
+    let last = heightAt(dir), clearPath = last > SEA + .04;
+    const points = [];
+    for (let step = 0; clearPath && step <= 16; step++) {
+      const point = dir.clone().multiplyScalar(R).addScaledVector(heading, step * .025).normalize();
+      const h = heightAt(point);
+      if (h < SEA + .025 || Math.abs(h - last) / .025 > .09) clearPath = false;
+      last = h; points.push(point);
+    }
+    for (const point of points) {
+      if (!clearPath) break;
+      if (posts.some(p => p.dir.dot(point) > .99 && p.dir.distanceTo(point) * R < p.r + .025) ||
+          bell.some(d => d.pos.distanceTo(point) * R < d.hit.r + .025) ||
+          walkBoxes.some(box => {
+            if (box.dir.dot(point) < .99) return false;
+            const off = box.dir.clone().sub(point).multiplyScalar(R);
+            return Math.abs(off.dot(box.ex)) < box.hx + .025 && Math.abs(off.dot(box.ez)) < box.hz + .025;
+          })) clearPath = false;
+    }
+    if (clearPath) return { dir, heading };
+  }
+  return null;
+}
+const flat = find(.05, .10), gentle = find(.45, .20), steep = find(1.10, .35), track = levelTrack();
+if (!flat || !gentle || !steep || !track) {
+  console.log('  FAIL the world has no flat, gentle and steep ground and level track clear enough to walk on');
   process.exit(1);
 }
 
@@ -111,7 +154,7 @@ if (!flat || !gentle || !steep) {
 {
   const a = walk(flat);
   ok('on flat ground a grounded body is exactly 100 mm up, to the millimetre',
-    Math.abs(a.sink) < .0005 && Math.abs(a.float) < .0005,
+    a.groundedFrames > 30 && Math.abs(a.sink) < .0005 && Math.abs(a.float) < .0005,
     'on ' + a.groundedFrames + ' grounded frames the eye was ' + mm(a.sink) + ' to ' + mm(a.float) +
     ' off its nominal height; over the whole walk it measured ' + mm(a.minEye) + ' to ' + mm(a.maxEye) +
     ' (a body that steps off a ledge floats for a few frames, which is the only reason that range is not flat)');
@@ -119,7 +162,7 @@ if (!flat || !gentle || !steep) {
 {
   const b = walk(gentle);
   ok('and on a slope it is the same height, not a different one',
-    Math.abs(b.sink) < .0005 && Math.abs(b.float) < .0005 && b.maxEye < EYE + .060,
+    b.groundedFrames > 30 && Math.abs(b.sink) < .0005 && Math.abs(b.float) < .0005 && b.maxEye < EYE + .060,
     'slope ' + gentle.slope.toFixed(2) + ' at the start: ' + b.groundedFrames + ' grounded frames, ' +
     mm(b.sink) + ' to ' + mm(b.float) + ' off nominal; the highest the eye ever floated was ' + mm(b.maxEye) +
     ' (stepping off a rise)');
@@ -128,16 +171,40 @@ if (!flat || !gentle || !steep) {
   const c = walk(steep);
   // Walking down a slope the body is briefly airborne and lands again — that is a walker, not a bug. What would
   // be a bug is the eye going *under* the ground it is standing on, so that is the assertion.
-  ok('on a steep slope the eye never goes under the ground', Math.abs(c.sink) < .0005,
+  ok('on a steep dry slope the eye never goes under the ground', c.groundedFrames > 20 && Math.abs(c.sink) < .0005,
     'slope ' + steep.slope.toFixed(2) + ': the eye went at most ' + mm(Math.max(0, -c.sink)) +
     ' below its own height over the ground, and rose at most ' + mm(c.float) + ' over it on ' +
     c.groundedFrames + ' grounded frames');
 }
 
+// A solid can push the body uphill after the first terrain sample in physicsStep. Its grounded eye and
+// exported feet must use the height under the resolved direction, not the abandoned pre-collision point.
+{
+  stand(steep.dir);
+  const east = new THREE.Vector3(1, 0, 0).cross(steep.dir).normalize();
+  const north = new THREE.Vector3().crossVectors(steep.dir, east).normalize();
+  const e = .002;
+  const dx = heightAt(steep.dir.clone().addScaledVector(east, e).normalize()) - heightAt(steep.dir.clone().addScaledVector(east, -e).normalize());
+  const dz = heightAt(steep.dir.clone().addScaledVector(north, e).normalize()) - heightAt(steep.dir.clone().addScaledVector(north, -e).normalize());
+  const uphill = east.clone().multiplyScalar(dx).addScaledVector(north, dz).normalize();
+  const obstacle = { dir: steep.dir.clone().addScaledVector(uphill, -.010 / R).normalize(), r: .025 };
+  hardProps.push(obstacle);
+  const before = state.direction.clone(), beforeHeight = heightAt(before);
+  physicsStep(dt);
+  const ground = R + heightAt(state.direction), rise = heightAt(state.direction) - beforeHeight;
+  const eyeError = state.radius - ground - EYE, feetError = state.feetRadius - ground;
+  hardProps.splice(hardProps.indexOf(obstacle), 1);
+  ok('a solid pushing a walker uphill resamples the ground at the resolved position',
+    state.direction.distanceTo(before) * R > .01 && rise > .0005 && state.grounded &&
+    Math.abs(eyeError) < .0005 && Math.abs(feetError) < .0005,
+    'horizontal push ' + mm(state.direction.distanceTo(before) * R) + ', ground rose ' + mm(rise) +
+    ', eye error ' + mm(eyeError) + ', feet error ' + mm(feetError));
+}
+
 // ---- the speed -------------------------------------------------------------------------------------------
 {
-  const a = walk(flat);
-  ok('and the walk is the speed the page says it is', Math.abs(a.meanSpeed - WALK_SPEED) < WALK_SPEED * .06,
+  const a = walk(track, { heading: track.heading });
+  ok('and on a level clear track the walk is the speed the page says it is', Math.abs(a.meanSpeed - WALK_SPEED) < WALK_SPEED * .06,
     'mean ' + mm(a.meanSpeed) + '/s against a nominal WALK_SPEED of ' + mm(WALK_SPEED) + '/s; it covered ' +
     mm(a.travelled) + ' in ' + SECONDS + ' s');
 }

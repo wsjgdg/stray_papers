@@ -7,7 +7,7 @@
 import { buildWorld } from './world.mjs';
 
 const world = await buildWorld();
-const { THREE, R, SEA, EYE, WALKER_RADIUS, heightAt, provinceAt, nearestLand, hardProps, stoneSolids, floraHard,
+const { R, SEA, EYE, WALKER_RADIUS, heightAt, provinceAt, landing, hardProps, stoneSolids, floraHard,
   walkBoxes, reefs, overlapAt } = world;
 
 let pass = 0, fail = 0;
@@ -17,7 +17,6 @@ const ok = (name, cond, info = '') => {
 };
 const mm = v => (v * 1000).toFixed(1) + ' mm';
 const all = [...hardProps, ...stoneSolids];
-const landing = nearestLand(new THREE.Vector3(Math.sin(1.16) * Math.sin(.42), Math.cos(1.16), Math.sin(1.16) * Math.cos(.42)));
 
 // ---- shape ---------------------------------------------------------------------------------------------
 {
@@ -63,8 +62,8 @@ const landing = nearestLand(new THREE.Vector3(Math.sin(1.16) * Math.sin(.42), Ma
     const a = hardProps[i];
     for (let j = i + 1; j < hardProps.length; j++) {
       const b = hardProps[j];
-      if (a.dir.dot(b.dir) < .9975) continue;                 // more than a tenth of a unit apart
-      const chord = a.dir.distanceTo(b.dir);
+      if (a.dir.dot(b.dir) < .995) continue;                  // beyond even the two widest collision radii
+      const chord = a.dir.distanceTo(b.dir) * R;
       const gap = chord - a.r - b.r;
       if (chord < .002 && Math.abs(a.r - b.r) < .002) twins++;
       if (gap < 0) { touching++; worst = Math.max(worst, -gap); }
@@ -102,15 +101,17 @@ const landing = nearestLand(new THREE.Vector3(Math.sin(1.16) * Math.sin(.42), Ma
   // This is the bug the suite was written for. The near-landing scatter kept only the *point* clear, and a
   // boulder 206 mm across laid 30 mm from that point left the player standing inside it: on frame one the
   // escape code shoved them sideways, before they had touched a key.
-  const gaps = all.map(p => landing.distanceTo(p.dir) - p.r).sort((a, b) => a - b);
-  const plants = floraHard.map(p => landing.distanceTo(p.dir) - p.size * .5).sort((a, b) => a - b);
+  const gaps = all.map(p => landing.distanceTo(p.dir) * R - p.r).sort((a, b) => a - b);
+  // `size` is a model scale, not its world radius: report plant centres rather than subtracting half of it.
+  const plants = floraHard.map(p => landing.distanceTo(p.dir) * R).sort((a, b) => a - b);
   const walls = walkBoxes.map(box => {
     const off = box.dir.clone().sub(landing).multiplyScalar(R);
-    return Math.max(Math.abs(off.dot(box.ex)) - box.hx, Math.abs(off.dot(box.ez)) - box.hz);
+    const u = Math.abs(off.dot(box.ex)) - box.hx, v = Math.abs(off.dot(box.ez)) - box.hz;
+    return u < 0 && v < 0 ? Math.max(u, v) : Math.hypot(Math.max(u, 0), Math.max(v, 0));
   }).sort((a, b) => a - b);
   const overlap = overlapAt(landing, R + heightAt(landing));
   ok('the player opens their eyes in a clearing, not inside a boulder', overlap === 0 && gaps[0] > .012,
-    'nearest solid ' + mm(gaps[0]) + ', nearest plant ' + mm(plants[0]) + ', nearest wall face ' + mm(walls[0]) +
+    'nearest solid edge ' + mm(gaps[0]) + ', nearest plant centre ' + mm(plants[0]) + ', nearest wall face ' + mm(walls[0]) +
     '; the body at the spawn point overlaps nothing (' + overlap.toFixed(4) + ' of a body inside a solid)');
 }
 
@@ -139,15 +140,17 @@ const landing = nearestLand(new THREE.Vector3(Math.sin(1.16) * Math.sin(.42), Ma
 // ---- the reefs' own stones ------------------------------------------------------------------------------
 {
   let off = 0, worst = 0;
-  for (const w of reefs) {
-    for (const stone of w.stones) {
-      const gap = Math.abs(stone.dir.distanceTo(w.home) - (w.ring || 0)) - (stone.r || 0);
-      if (gap > .05) { off++; worst = Math.max(worst, gap); }
-    }
+  for (const w of reefs) for (const stone of w.stones) {
+    // `w.ring` is a moving Vector3, not the radius of a ring. Subtracting it produced NaN, so the former
+    // "on its ring" test could never fail. The farm generator's furthest x/z offset is .13/2 on the unit
+    // sphere, or at most sqrt(2)*.065*R in world units.
+    const distance = stone.dir.distanceTo(w.home) * R;
+    if (!Number.isFinite(distance) || distance > Math.SQRT2 * .065 * R + .005) off++;
+    worst = Math.max(worst, distance);
   }
-  const rings = reefs.reduce((s, w) => s + w.stones.length, 0);
-  ok('every reef keeps its stones on its own ring', off === 0,
-    rings + ' reef stones across ' + reefs.length + ' reefs' + (off ? '; ' + off + ' sit ' + mm(worst) + ' off their ring' : ''));
+  const count = reefs.reduce((sum, w) => sum + w.stones.length, 0);
+  ok('every reef keeps its own farm stones', off === 0 && count > 0,
+    count + ' stones across ' + reefs.length + ' reefs; furthest centre ' + mm(worst) + ', outside the farm ' + off);
 }
 
 console.log('\n' + pass + ' PASS / ' + fail + ' FAIL');

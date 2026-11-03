@@ -8,7 +8,7 @@ import { buildWorld } from './world.mjs';
 
 const world = await buildWorld();
 const { THREE, R, SEA, EYE, WALKER_RADIUS, BELL_HALF_WIDE, heightAt, state, keys, joystick, physicsStep,
-  updateBell, updateReefs, resetGroundMotion, bell, reefs, walkBoxes, hardProps } = world;
+  updateBell, updateReefs, resetGroundMotion, bell, reefs, walkBoxes, hardProps, stoneSolids, overlapAt } = world;
 
 let pass = 0, fail = 0;
 const ok = (name, cond, info = '') => {
@@ -45,8 +45,8 @@ const stand = (dir, heading = null) => {
     const a = attempt * 1.1, d = .075 + attempt * .002;
     const candidate = host.clone().addScaledVector(side, Math.cos(a) * d / R).addScaledVector(north, Math.sin(a) * d / R).normalize();
     if (heightAt(candidate) < SEA + .01) continue;
-    if (bell.some(b => b.pos.dot(candidate) > .9999 && b.pos.distanceTo(candidate) < HALF(b) + WALKER_RADIUS + .010)) continue;
-    if (hardProps.some(p => p.dir.distanceTo(candidate) < p.r + WALKER_RADIUS + .006)) continue;
+    if (bell.some(b => b.pos.dot(candidate) > .9999 && b.pos.distanceTo(candidate) * R < HALF(b) + WALKER_RADIUS + .010)) continue;
+    if (hardProps.some(p => p.dir.distanceTo(candidate) * R < p.r + WALKER_RADIUS + .006)) continue;
     spot = candidate;
   }
   stand(spot);
@@ -64,16 +64,15 @@ const stand = (dir, heading = null) => {
       // Only a body the walker's own height would meet counts: a bell standing lower down the slope is one you
       // step past, exactly as the collision pass decides.
       if (!b.hit || b.hit.top <= feet + .02 || (b.hit.bottom !== null && b.hit.bottom > feet + .085)) continue;
-      closest = Math.min(closest, b.pos.distanceTo(state.direction) - HALF(b) - WALKER_RADIUS);
+      closest = Math.min(closest, b.pos.distanceTo(state.direction) * R - HALF(b) - WALKER_RADIUS);
     }
   }
   ok('a standing body is never shovelled by the herd', worstPush === 0 && worstDrift < .0005,
     'sixty seconds standing in a herd that was awake for ' + awakeSeen + ' animal-frames: the body moved ' +
     mm(worstDrift) + ', and no animal moved it at all');
-  // Measured, and reported as measured: the animals do not shove the player (above), but an animal can close to
-  // within a body's width of one and the page's answer is to refuse the player's *step*, not to stop the animal.
-  // A firmer berth is the next thing to do here, and it is written up in the worklog.
-  ok('and an animal never closes on the body by more than its own width', closest > -.030,
+  // The old threshold allowed a whole body to overlap, and the old number was a unit-sphere chord rather than
+  // a world distance. The margin is now measured in the same world chord as the actual collision radii.
+  ok('and an animal does not enter the standing body', closest > -.002,
     'the nearest any animal body came to the player\'s own was ' + (closest === Infinity ? 'never within sight' : mm(closest)) +
     ' — measured edge to edge against the page\'s own collision post, so a positive number is daylight');
 }
@@ -90,12 +89,12 @@ const stand = (dir, heading = null) => {
       const a = attempt * 0.9;
       const start = candidate.pos.clone().addScaledVector(side, Math.cos(a) * .075 / R).addScaledVector(north, Math.sin(a) * .075 / R).normalize();
       if (heightAt(start) < SEA + .01) continue;
-      if (hardProps.some(p => p.dir.distanceTo(start) < p.r + .02)) continue;
+      if (hardProps.some(p => p.dir.distanceTo(start) * R < p.r + .02)) continue;
       if (!candidate.hit || candidate.hit.top <= R + heightAt(start) + .05) continue;   // one you would walk over
       let clearPath = true;
       for (let k = 1; k <= 8; k++) {
         const along = start.clone().lerp(candidate.pos, k / 8).normalize();
-        if (hardProps.some(p => p.dir.distanceTo(along) < p.r + .012) || walkBoxes.some(b => {
+        if (hardProps.some(p => p.dir.distanceTo(along) * R < p.r + .012) || walkBoxes.some(b => {
           const off = b.dir.clone().sub(along).multiplyScalar(R);
           return Math.abs(off.dot(b.ex)) < b.hx && Math.abs(off.dot(b.ez)) < b.hz;
         })) { clearPath = false; break; }
@@ -111,6 +110,7 @@ const stand = (dir, heading = null) => {
     stand(fromBest, chosen.pos.clone().sub(fromBest).normalize());
     keys.add('KeyW');
     let closest = Infinity, met = 0;
+    const animalStart = chosen.pos.clone(), phaseStart = chosen.phase;
     for (let f = 0; f < 120 * 3; f++) {
       updateBell(dt, f * dt);
       physicsStep(dt);
@@ -119,13 +119,59 @@ const stand = (dir, heading = null) => {
       const feet = R + heightAt(state.direction);
       if (!chosen.hit || chosen.hit.top <= feet + .02) continue;
       met++;
-      closest = Math.min(closest, chosen.pos.distanceTo(state.direction) - HALF(chosen) - WALKER_RADIUS);
+      closest = Math.min(closest, chosen.pos.distanceTo(state.direction) * R - HALF(chosen) - WALKER_RADIUS);
     }
     keys.clear();
-    ok('the walker cannot walk through an animal', met > 0 && closest > -.030,
+    ok('the walker cannot walk through an animal', met > 0 && closest > -.002,
       met === 0 ? 'the animal was never at the walker\'s height, so there was nothing to walk into'
         : 'on ' + met + ' frames of standing at it, the closest the body came to the animal\'s edge was ' +
           mm(closest));
+    const travelled = animalStart.distanceTo(chosen.pos) * R, stride = chosen.phase - phaseStart;
+    ok('the animal makes room with a walking stride when approached', travelled > .020 && stride > .5,
+      'the approached animal moved ' + mm(travelled) + ' and advanced its stride by ' + stride.toFixed(2) + ' rad');
+  }
+}
+
+// A controlled contact, deliberately 4 mm inside an animal, with the real frame order: physics first,
+// then the animals. It catches the old behaviour where an animal shuffled into a stationary body and the
+// physics pass shoved the camera away. The animal has to retreat and animate; suppressing push alone is not enough.
+{
+  let chosen = null, spot = null;
+  for (const d of bell) {
+    const east = new THREE.Vector3(1, 0, 0).cross(d.pos).normalize();
+    const north = new THREE.Vector3().crossVectors(d.pos, east).normalize();
+    for (let k = 0; k < 24; k++) {
+      const a = k * Math.PI / 12, reach = d.hit.r + WALKER_RADIUS - .004;
+      const p = d.pos.clone().addScaledVector(east, Math.cos(a) * reach / R)
+        .addScaledVector(north, Math.sin(a) * reach / R).normalize();
+      const feet = R + heightAt(p);
+      if (heightAt(p) < SEA + .010 || d.hit.top <= feet || overlapAt(p, feet) > 0) continue;
+      if (bell.some(o => o !== d && o.pos.distanceTo(p) * R < o.hit.r + WALKER_RADIUS + .015)) continue;
+      if (stoneSolids.some(x => x.dir.distanceTo(p) * R < x.r + WALKER_RADIUS + .005)) continue;
+      chosen = d; spot = p; break;
+    }
+    if (chosen) break;
+  }
+  if (!chosen) ok('a stationary walker is held while the overlapping animal steps away', false, 'no clear contact site');
+  else {
+    stand(spot);
+    chosen.speed = 0; chosen.vel = 0; chosen.mode = 'graze'; chosen.timer = 2;
+    const playerStart = state.direction.clone(), animalStart = chosen.pos.clone(), phaseStart = chosen.phase;
+    const initialGap = chosen.pos.distanceTo(state.direction) * R - chosen.hit.r - WALKER_RADIUS;
+    let pushFrames = 0, maxStep = 0, last = chosen.pos.clone();
+    for (let f = 0; f < 60; f++) {
+      for (let step = 0; step < 2; step++) { physicsStep(dt); if (state.pushed > 0) pushFrames++; }
+      updateBell(1 / 60, f / 60);
+      maxStep = Math.max(maxStep, last.distanceTo(chosen.pos) * R); last.copy(chosen.pos);
+    }
+    const finalGap = chosen.pos.distanceTo(state.direction) * R - chosen.hit.r - WALKER_RADIUS;
+    const playerDrift = playerStart.distanceTo(state.direction) * R;
+    const animalTravel = animalStart.distanceTo(chosen.pos) * R, stride = chosen.phase - phaseStart;
+    ok('a stationary walker is held while the overlapping animal steps away',
+      initialGap < -.003 && finalGap > 0 && playerDrift < .001 && pushFrames === 0 && animalTravel > .010 && stride > .3 && maxStep < .020,
+      'gap ' + mm(initialGap) + ' → ' + mm(finalGap) + ', walker drift ' + mm(playerDrift) +
+      ', push frames ' + pushFrames + ', animal travel ' + mm(animalTravel) + ', stride ' + stride.toFixed(2) +
+      ' rad, biggest 60 Hz step ' + mm(maxStep));
   }
 }
 

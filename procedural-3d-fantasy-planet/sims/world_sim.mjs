@@ -15,7 +15,7 @@ const ok = (name, cond, info = '') => {
 const mm = v => (v * 1000).toFixed(1) + ' mm';
 
 const world = await buildWorld();
-const { THREE, R, SEA, MAX_DIVE, heightAt, biomeAt, provinceAt, nearestLand, scene, hardProps, stoneSolids,
+const { THREE, R, SEA, MAX_DIVE, heightAt, biomeAt, provinceAt, landing, scene, hardProps, stoneSolids,
   walkBoxes, floraHard, bell, reefs, settlementDirs, landmarks, groundStones } = world;
 
 // A fingerprint of everything the build decided, so two builds can be compared without guessing which of
@@ -245,17 +245,36 @@ const second = fingerprint(again);
 
 // ---- the spot you land on ------------------------------------------------------------------------------
 {
-  // `landing` is not exported, so this walks the same two functions the page uses at startup and then asks
-  // the page's own helpers about the answer.
-  const landing = nearestLand(new THREE.Vector3(Math.sin(1.16) * Math.sin(.42), Math.cos(1.16), Math.sin(1.16) * Math.cos(.42)));
+  // Read the actual landing chosen by the page, not a reconstructed old seed that could silently disagree.
   const h = heightAt(landing);
   const biome = biomeAt(landing, h);
   const province = provinceAt(landing);
   const nearest = settlementDirs.map(s => s.dir.angleTo(landing) * R).sort((a, b) => a - b)[0];
   ok('the spawn is dry land, in a named province, with a settlement a short walk away',
-    h > SEA + .02 && biome !== 'ocean' && h < .235 && nearest < .30,
+    h > SEA + .02 && biome !== 'ocean' && h < .235 && nearest >= .26 && nearest <= .38,
     'landing on ' + mm(h) + ' of ' + biome + ' ground in ' + province.toUpperCase() + ', the nearest settlement ' +
-    mm(nearest) + ' away (the tallest ground the spawn rule allows is ' + mm(.235) + ')');
+    mm(nearest) + ' away (target 260–380 mm; the tallest ground allowed is ' + mm(.235) + ')');
+}
+
+// The handoff's .12 is a unit-sphere chord: on R=4.2 it asks for a 504 mm clearing. Check the actual
+// collision footprints, not just object centres; this stays red while the design conflict is unresolved.
+{
+  let clearance = Infinity, kind = '';
+  for (const [label, list] of [['prop', hardProps], ['stone', stoneSolids], ['animal', bell]]) for (const item of list) {
+    const dir = item.dir || item.pos, radius = item.r !== undefined ? item.r : item.hit.r;
+    const gap = landing.distanceTo(dir) * R - radius;
+    if (gap < clearance) { clearance = gap; kind = label; }
+  }
+  for (const box of walkBoxes) {
+    if (box.dir.dot(landing) < .9) continue;
+    const off = box.dir.clone().sub(landing).multiplyScalar(R);
+    const u = Math.abs(off.dot(box.ex)) - box.hx, v = Math.abs(off.dot(box.ez)) - box.hz;
+    // For an empty circular clearing, measure the actual distance to the box footprint, including a corner.
+    const gap = u < 0 && v < 0 ? Math.max(u, v) : Math.hypot(Math.max(u, 0), Math.max(v, 0));
+    if (gap < clearance) { clearance = gap; kind = 'wall'; }
+  }
+  ok('the requested .12 unit-chord clearing contains no solid footprint', clearance >= .12 * R,
+    'nearest ' + kind + ' edge ' + mm(clearance) + '; requested radius ' + mm(.12 * R));
 }
 
 // ---- what it costs -------------------------------------------------------------------------------------

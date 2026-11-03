@@ -24,43 +24,51 @@ const ok = (name, cond, info = '') => {
 const mm = v => (v * 1000).toFixed(1) + ' mm';
 
 // ---- which walls belong to which town ------------------------------------------------------------------
-// Nothing in the build records it, and nothing should: a town is a place, not a list. A wall belongs to the
-// town it is nearest to, and one that is nearest to nobody is what the first assertion is about.
-const TOWN_REACH = .120;        // chord units: the radius a town's houses occupy
+// A collision box carries the exact generator that built its visible instance. Distance alone cannot identify
+// a way-stone: shrine entrances are deliberately up to .52 radians away from the altar. The old .15 cutoff
+// called a shrine's tall threshold an abandoned house, and printed a unit-direction chord as millimetres.
+const TOWN_REACH = .120 * R;   // the former .120 was a chord on the unit sphere, i.e. .504 world units
 const owned = new Map(settlementDirs.map((_, i) => [i, []]));
 const nearestTown = dir => {
   let best = 0, bestD = Infinity;
   for (let i = 0; i < settlementDirs.length; i++) {
-    const d = settlementDirs[i].dir.distanceTo(dir);
+    const d = settlementDirs[i].dir.distanceTo(dir) * R;
     if (d < bestD) { bestD = d; best = i; }
   }
   return { index: best, distance: bestD };
 };
-const orphans = [];
 for (const box of walkBoxes) {
   const near = nearestTown(box.dir);
   if (near.distance <= TOWN_REACH) owned.get(near.index).push(box);
-  else orphans.push({ box, distance: near.distance });
 }
-
 {
-  // Whatever is left over should belong to a sanctuary, or be one of the thin marker posts that stand on
-  // peaks of their own. A house-shaped wall belonging to nothing is a wall that was built and then forgotten,
-  // and those are the ones a player walks into in the middle of nowhere.
-  let wet = 0, posts = 0, loose = 0, worst = 0, nearestLandmark = 0;
-  for (const { box } of orphans) {
-    if (heightAt(box.dir) < SEA) { wet++; continue; }
-    const toLandmark = Math.min(...landmarks.map(l => l.direction.distanceTo(box.dir)));
-    nearestLandmark = Math.max(nearestLandmark, toLandmark);
-    if (toLandmark <= .15) continue;                                 // a sanctuary's own wall
-    const thin = Math.max(box.hx, box.hz) <= .012 && box.top - box.bottom >= .15;
-    if (thin) { posts++; continue; }                                  // a marker on a summit
-    loose++; worst = Math.max(worst, toLandmark);
+  let bad = 0, towns = 0, shrines = 0, sea = 0, worstTown = 0, worstShrine = 0;
+  for (const box of walkBoxes) {
+    const source = box.source;
+    if (!source || !source.direction) { bad++; continue; }
+    const distance = source.direction.distanceTo(box.dir) * R;
+    if (source.kind === 'town' && settlementDirs.includes(source.site) && source.site.dir === source.direction) {
+      towns++; worstTown = Math.max(worstTown, distance);
+      if (distance > (source.site.wr || 0) + .08) bad++;
+    } else if (source.kind === 'sanctuary' && landmarks.some(l => l.direction === source.direction)) {
+      shrines++; worstShrine = Math.max(worstShrine, distance);
+      // The candidate gate is within .52 unit-sphere tangent, plus its own apron and two posts.
+      if (distance > .60 * R) bad++;
+    } else if (source.kind === 'sea' && heightAt(box.dir) < SEA && distance < .40 * R) {
+      sea++;
+    } else bad++;
   }
-  ok('every wall belongs to a town, a sanctuary or is a marker post', loose === 0,
-    walkBoxes.length + ' walls: ' + (walkBoxes.length - orphans.length) + ' stand in a town, ' +
-    (orphans.length - wet - posts) + ' on a sanctuary, ' + posts + ' are thin marker posts on high ground, ' +
-    wet + ' are under the waterline; ' + (loose ? loose + ' house-shaped walls stood ' + mm(worst) + ' from anywhere' : 'none are loose'));
+  ok('every wall is attached to the town, sanctuary or drowned ruin that built it', bad === 0,
+    walkBoxes.length + ' boxes: ' + towns + ' town, ' + shrines + ' sanctuary, ' + sea + ' underwater; ' +
+    bad + ' missing or outside their recorded owner; furthest town ' + mm(worstTown) + ', shrine ' + mm(worstShrine));
+}
+{
+  const gates = landmarks.filter(l => l.wayGate).map(l => l.wayGate);
+  const pairs = gates.filter(g => g.shafts === 2), singles = gates.filter(g => g.shafts === 1);
+  const worst = Math.max(0, ...pairs.map(g => g.seatDrop));
+  ok('a paired sanctuary gate only uses level-enough footing', gates.length > 0 && worst <= .050001,
+    gates.length + ' gates, ' + pairs.length + ' pairs and ' + singles.length + ' single way-stones; ' +
+    'the greatest height difference under a pair is ' + mm(worst) + ' (limit 50 mm)');
 }
 
 // ---- same province, different town ---------------------------------------------------------------------
@@ -89,7 +97,7 @@ for (const site of settlementDirs) {
     for (const site of sites) {
       const index = settlementDirs.indexOf(site);
       const walls = owned.get(index);
-      const far = walls.reduce((m, b) => Math.max(m, site.dir.distanceTo(b.dir)), 0);
+      const far = walls.reduce((m, b) => Math.max(m, site.dir.distanceTo(b.dir) * R), 0);
       shapes.add(site.plan + '|' + walls.length + '|' + Math.round(far * 200));
     }
     if (shapes.size < thinnest) { thinnest = shapes.size; thinnestWhere = id; }
@@ -101,7 +109,7 @@ for (const site of settlementDirs) {
 }
 
 // ---- the way in ----------------------------------------------------------------------------------------
-// A widest-path problem on a 2 mm grid laid over the town: every cell gets a clearance (how far its centre is
+// A widest-path problem on a 6 mm grid laid over the town: every cell gets a clearance (how far its centre is
 // from the nearest wall face), and the flood from open country maximises the *minimum* clearance along the way.
 // The door is then found separately, because the maximin path may wander and a person walks at the gap they can
 // see: a straight line from outside the houses to open ground inside, carrying the most clearance.
@@ -113,8 +121,11 @@ function wayIn(index) {
   const ex = new THREE.Vector3(1, 0, 0).cross(site.dir).normalize();
   if (!(Math.abs(ex.length() - 1) < 1e-6)) ex.set(0, 0, 1).cross(site.dir).normalize();
   const ez = new THREE.Vector3().crossVectors(site.dir, ex).normalize();
-  const step = .002;
-  const half = TOWN_REACH + .022;
+  const step = .006;
+  // The grid uses world units, unlike a direction chord. Cover the actual town, not just the central
+  // 142 mm of a town whose walls can extend 400 mm from its centre.
+  const half = Math.max(site.wr || 0, walls.reduce((m, b) =>
+    Math.max(m, site.dir.distanceTo(b.dir) * R + Math.max(b.hx, b.hz)), 0)) + .025;
   const n = Math.ceil(half / step), N = 2 * n + 1;
   const at = (i, j) => base.clone().addScaledVector(ex, (i - n) * step).addScaledVector(ez, (j - n) * step);
   const boxCentre = walls.map(b => ({ ...b, at: b.dir.clone().multiplyScalar(R) }));
@@ -122,10 +133,11 @@ function wayIn(index) {
     const feet = R + Math.max(heightAt(p.clone().normalize()), SEA);
     let clear = 1;
     for (const box of boxCentre) {
-      if (box.top <= feet + .020) continue;
+      if (box.top <= feet + .020 || box.bottom > feet + .020) continue;
       const d = box.at.clone().sub(p);
       const u = Math.abs(d.dot(box.ex)) - box.hx, v = Math.abs(d.dot(box.ez)) - box.hz;
-      const dist = Math.hypot(Math.max(u, 0), Math.max(v, 0));
+      // The walker's boxes are expanded along each axis, not rounded at their corners.
+      const dist = Math.max(0, u, v);
       if (dist < clear) clear = dist;
     }
     return clear;
@@ -206,7 +218,7 @@ function wayIn(index) {
       }
     }
   }
-  return { width: inside * 2, door: door * 2, walls: walls.length, extent: walls.reduce((m, b) => Math.max(m, site.dir.distanceTo(b.dir)), 0), target, mouth };
+  return { width: inside * 2, door: door * 2, walls: walls.length, extent: walls.reduce((m, b) => Math.max(m, site.dir.distanceTo(b.dir) * R), 0), target, mouth };
 }
 
 const ways = settlementDirs.map((_, i) => wayIn(i));
@@ -224,7 +236,7 @@ const ways = settlementDirs.map((_, i) => wayIn(i));
   // at all — a building you look at rather than walk into. They are reported rather than hidden; everything
   // else in the world can be entered.
   ok('every town can be got into, and none is narrower than three bodies',
-    blocked <= 3 && narrowest >= 3 * WALKER_RADIUS,
+    blocked <= 3 && narrowest >= 3 * 2 * WALKER_RADIUS,
     (blocked ? blocked + ' of ' + ways.length + ' towns are a single building with no street inside' : 'every town has a way in') +
     '; among the rest the narrowest way in is ' + mm(narrowest) + ' across (' + (narrowest / (2 * WALKER_RADIUS)).toFixed(1) +
     ' bodies), the widest ' + mm(widths[widths.length - 1]) + ', the median ' + mm(widths[widths.length >> 1]) +
@@ -254,12 +266,12 @@ const ways = settlementDirs.map((_, i) => wayIn(i));
     // `w.mouth` and `w.target` are points on the sphere; the walker's state is a direction. Comparing the two
     // kinds directly is how this measured 3.2 units between two points 130 mm apart.
     const aim = w.target.clone().normalize();
-    const start = state.direction.distanceTo(aim);
+    const start = state.direction.distanceTo(aim) * R;
     keys.add('KeyW');
     let closest = Infinity;
     for (let f = 0; f < 120 * 6; f++) {
       physicsStep(1 / 120);
-      closest = Math.min(closest, state.direction.distanceTo(aim));
+      closest = Math.min(closest, state.direction.distanceTo(aim) * R);
     }
     keys.clear();
     worstMiss = Math.max(worstMiss, closest);
@@ -294,7 +306,7 @@ const ways = settlementDirs.map((_, i) => wayIn(i));
   ok('no town is built into its neighbour', cross === 0,
     cross + ' pairs of walls from different towns overlap' + (cross ? ', worst ' + mm(worst) : '') +
     '; the two closest town centres are ' + mm(Math.min(...settlementDirs.flatMap((a, i) =>
-      settlementDirs.slice(i + 1).map(b => a.dir.distanceTo(b.dir))))) + ' apart');
+      settlementDirs.slice(i + 1).map(b => a.dir.distanceTo(b.dir) * R)))) + ' apart');
 }
 {
   const missing = settlementDirs.filter(s => !s.landmark).length;
