@@ -921,6 +921,8 @@
     w: 0, // css width the canvas was last sized to
     h: 0, // css height the canvas was last sized to
     dpr: 1,
+    dprCap: 2, // adaptive ceiling: sustained slow frames drop it to 1
+    slow: 0, // consecutive over-budget frames (adaptive-quality counter)
   };
   var canvasSceneWarned = {}; // scene ids that already logged a runtime error
 
@@ -1015,7 +1017,7 @@
       dpr = 1;
     }
     if (typeof dpr !== "number" || !isFinite(dpr) || dpr <= 0) dpr = 1;
-    if (dpr > 2) dpr = 2;
+    if (dpr > cs.dprCap) dpr = cs.dprCap;
     if (cssW === cs.w && cssH === cs.h && dpr === cs.dpr) return;
     cs.w = cssW;
     cs.h = cssH;
@@ -1071,6 +1073,18 @@
     if (!isFinite(dt) || dt < 0) dt = 0;
     if (typeof ts === "number") cs.last = ts;
     cs.t += dt;
+    // adaptive quality: sustained slow frames drop the canvas DPR to 1
+    // (once per scene activation; scenes re-render fine at any resolution)
+    if (dt > 0.024 && cs.dpr > 1) {
+      cs.slow += 1;
+      if (cs.slow >= 50) {
+        cs.dprCap = 1;
+        cs.slow = 0;
+        cs.dpr = 0; // force sizeCanvasScene to rebuild the buffer
+      }
+    } else if (cs.slow > 0) {
+      cs.slow -= 1;
+    }
     if (!drawCanvasFrame(cs.t, dt)) return; // scene failed: do not reschedule
     if (!cs.fallback) cs.raf = nextFrame(canvasSceneLoop);
   }
@@ -1223,6 +1237,8 @@
     cs.w = 0;
     cs.h = 0;
     cs.dpr = 1;
+    cs.dprCap = 2; // each scene starts at full quality again
+    cs.slow = 0;
   }
 
   // Reconciles the canvas layer with the bg whose html just synced into
@@ -1278,6 +1294,13 @@
       }, SHAKE_MS);
       return;
     }
+    if (fx === "grade") {
+      // scene color grade: cools and deepens the whole frame while the
+      // line displays (mood shift without a scene change); cleared on
+      // advance like dolly/glitch
+      els.app.classList.add("vn-grade");
+      return;
+    }
     if (fx === "dolly") {
       // emotional peak: push the camera in — the background scales up and
       // softens while the focus sprite leans closer; lasts while the line
@@ -1307,6 +1330,7 @@
     if (els) {
       els.app.classList.remove("vn-shake");
       els.app.classList.remove("vn-dolly");
+      els.app.classList.remove("vn-grade");
     }
   }
 
@@ -1439,7 +1463,10 @@
     state.mode = "line";
     clearAuto();
     clearGlitch(); // fx of the previous line stops here
-    if (els) els.app.classList.remove("vn-dolly");
+    if (els) {
+      els.app.classList.remove("vn-dolly");
+      els.app.classList.remove("vn-grade");
+    }
 
     var speaker = null; // character object, or null for narration
     var speakerId = null;

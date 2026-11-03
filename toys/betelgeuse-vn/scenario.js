@@ -65,7 +65,7 @@ window.SCENARIO = {
         { narr: "二十三点四十七分，雨下得不紧不慢。" },
         { narr: "屏幕是屋里唯一的光，照着不肯睡的人。" },
         { narr: "邮件提示音响起时，我的手指停在半空。" },
-        { who: "yu", feel: "normal", text: "三年前的今天，沈眠失踪。" },
+        { who: "yu", feel: "normal", fx: "grade", text: "三年前的今天，沈眠失踪。" },
         { narr: "发件人：沈眠。主题：定时发送·第三封。" },
         { who: "yu", feel: "normal", text: "定时发送。日期，是三年后的今天。" },
         { who: "yu", feel: "normal", text: "没有人能预知三年后的自己想说什么。" },

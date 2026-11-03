@@ -191,6 +191,16 @@ body {
   transform: scale(1.15) translateY(-4px);
 }
 
+/* scene color grade (fx:"grade"): cools and deepens the frame — a mood
+   shift without changing scenes; cleared on advance like glitch/dolly */
+#vn-app.vn-grade .vn-bg {
+  filter: saturate(0.72) contrast(1.06) brightness(0.88) hue-rotate(-6deg);
+}
+
+#vn-app.vn-grade .vn-grain {
+  opacity: 0.09; /* grain reads heavier under the cooler grade */
+}
+
 /* --------------------------------------------------------------------------
    4. Sprite stage (large waist-up portraits, left + right of the dialog)
    -------------------------------------------------------------------------- */

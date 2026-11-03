@@ -198,6 +198,16 @@ body {
   transform: scale(1.15) translateY(-4px);
 }
 
+/* scene color grade (fx:"grade"): cools and deepens the frame — a mood
+   shift without changing scenes; cleared on advance like glitch/dolly */
+#vn-app.vn-grade .vn-bg {
+  filter: saturate(0.72) contrast(1.06) brightness(0.88) hue-rotate(-6deg);
+}
+
+#vn-app.vn-grade .vn-grain {
+  opacity: 0.09; /* grain reads heavier under the cooler grade */
+}
+
 /* --------------------------------------------------------------------------
    4. Sprite stage (large waist-up portraits, left + right of the dialog)
    -------------------------------------------------------------------------- */
@@ -1779,7 +1789,7 @@ window.SCENARIO = {
         { narr: "二十三点四十七分，雨下得不紧不慢。" },
         { narr: "屏幕是屋里唯一的光，照着不肯睡的人。" },
         { narr: "邮件提示音响起时，我的手指停在半空。" },
-        { who: "yu", feel: "normal", text: "三年前的今天，沈眠失踪。" },
+        { who: "yu", feel: "normal", fx: "grade", text: "三年前的今天，沈眠失踪。" },
         { narr: "发件人：沈眠。主题：定时发送·第三封。" },
         { who: "yu", feel: "normal", text: "定时发送。日期，是三年后的今天。" },
         { who: "yu", feel: "normal", text: "没有人能预知三年后的自己想说什么。" },
@@ -7558,6 +7568,8 @@ window.SCENARIO = {
     w: 0, // css width the canvas was last sized to
     h: 0, // css height the canvas was last sized to
     dpr: 1,
+    dprCap: 2, // adaptive ceiling: sustained slow frames drop it to 1
+    slow: 0, // consecutive over-budget frames (adaptive-quality counter)
   };
   var canvasSceneWarned = {}; // scene ids that already logged a runtime error
 
@@ -7652,7 +7664,7 @@ window.SCENARIO = {
       dpr = 1;
     }
     if (typeof dpr !== "number" || !isFinite(dpr) || dpr <= 0) dpr = 1;
-    if (dpr > 2) dpr = 2;
+    if (dpr > cs.dprCap) dpr = cs.dprCap;
     if (cssW === cs.w && cssH === cs.h && dpr === cs.dpr) return;
     cs.w = cssW;
     cs.h = cssH;
@@ -7708,6 +7720,18 @@ window.SCENARIO = {
     if (!isFinite(dt) || dt < 0) dt = 0;
     if (typeof ts === "number") cs.last = ts;
     cs.t += dt;
+    // adaptive quality: sustained slow frames drop the canvas DPR to 1
+    // (once per scene activation; scenes re-render fine at any resolution)
+    if (dt > 0.024 && cs.dpr > 1) {
+      cs.slow += 1;
+      if (cs.slow >= 50) {
+        cs.dprCap = 1;
+        cs.slow = 0;
+        cs.dpr = 0; // force sizeCanvasScene to rebuild the buffer
+      }
+    } else if (cs.slow > 0) {
+      cs.slow -= 1;
+    }
     if (!drawCanvasFrame(cs.t, dt)) return; // scene failed: do not reschedule
     if (!cs.fallback) cs.raf = nextFrame(canvasSceneLoop);
   }
@@ -7860,6 +7884,8 @@ window.SCENARIO = {
     cs.w = 0;
     cs.h = 0;
     cs.dpr = 1;
+    cs.dprCap = 2; // each scene starts at full quality again
+    cs.slow = 0;
   }
 
   // Reconciles the canvas layer with the bg whose html just synced into
@@ -7915,6 +7941,13 @@ window.SCENARIO = {
       }, SHAKE_MS);
       return;
     }
+    if (fx === "grade") {
+      // scene color grade: cools and deepens the whole frame while the
+      // line displays (mood shift without a scene change); cleared on
+      // advance like dolly/glitch
+      els.app.classList.add("vn-grade");
+      return;
+    }
     if (fx === "dolly") {
       // emotional peak: push the camera in — the background scales up and
       // softens while the focus sprite leans closer; lasts while the line
@@ -7944,6 +7977,7 @@ window.SCENARIO = {
     if (els) {
       els.app.classList.remove("vn-shake");
       els.app.classList.remove("vn-dolly");
+      els.app.classList.remove("vn-grade");
     }
   }
 
@@ -8076,7 +8110,10 @@ window.SCENARIO = {
     state.mode = "line";
     clearAuto();
     clearGlitch(); // fx of the previous line stops here
-    if (els) els.app.classList.remove("vn-dolly");
+    if (els) {
+      els.app.classList.remove("vn-dolly");
+      els.app.classList.remove("vn-grade");
+    }
 
     var speaker = null; // character object, or null for narration
     var speakerId = null;
