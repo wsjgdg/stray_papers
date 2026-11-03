@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-72">
+  <meta name="aetheris-build" content="pennants-73">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,7 +595,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-72';
+    const BUILD_ID = 'pennants-73';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -696,6 +696,8 @@
     async function startWorld(THREE, { mergeGeometries, mergeVertices }, RoundedBoxGeometry, texturePresets) {
       const TAU = Math.PI * 2;
       const R = 4.2;
+      // The landing's .12 is a chord between unit directions, not a world-space distance.
+      const LANDING_CLEAR = .12 * R;
       const SEA = 0.012;
       const WATER = R + SEA;
       // Eye height is deliberately tall for the scale of the ground cover: at 0.10 the camera
@@ -3767,15 +3769,20 @@
       function dressStones(center, rng) {
         let stoneCount = 0;
         stoneSolids.length = 0;
+        // The local patch reaches at most .2 radians from its centre. Only towns that can meet that
+        // patch need to be checked, but their whole built radius must remain free of newly scattered rocks.
+        const patchReach = 2 * R * Math.sin(.2 / 2) + stoneHalf * 1.10 + .025;
+        const nearbyTowns = settlementDirs.filter(site => site.dir.distanceTo(center) * R < (site.wr || .20) + patchReach);
         for (let attempt = 0; stoneCount < stoneCapacity && attempt < stoneCapacity * 12; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .2), h = heightAt(n);
           if (h < .028 || h > .36) continue;
           const sx = .35 + rng() * .75, sy = .3 + rng() * .5, sz = .35 + rng() * .7;
           const half = Math.max(sx, sz) * stoneHalf;
-          // Not under the walker. In chords, like the half-width it is compared against: `angleTo * R` is an
-          // arc, 4.2 times longer at this radius, so the old test passed stones that were thirty millimetres
-          // inside the body — and the first frame of the game shoved the player out of one.
-          if (n.distanceTo(center) < half + .018) continue;
+          // The local scatter may be refreshed later around any player position, but the original landing's
+          // open ground remains clear. Both radii are world lengths; direction chords need the planet radius.
+          if (n.distanceTo(landing) * R < LANDING_CLEAR + half ||
+              n.distanceTo(center) * R < half + .018 ||
+              nearbyTowns.some(site => n.distanceTo(site.dir) * R < (site.wr || .20) + half + .025)) continue;
           // ...and not under an animal either. The ground is re-dressed around the walker every few metres, and
           // a stone laid where a bell is standing puts 20 mm of rock inside a body for as long as it takes the
           // animal to walk out — which is exactly what the herd bench measured as 穿模.
@@ -3796,7 +3803,7 @@
         const rng = seeded(82341);
         dressGrass(center, rng); dressFerns(center, rng); dressFlowers(center, rng); dressStones(center, rng);
       }
-      dressGround(landing);
+      // The first dress waits until the settlements exist, so rocks can keep out of their buildings.
 
       function islandRock(size, seed) {
         const profile = [
@@ -4873,7 +4880,7 @@
         for (let i = 0; i < 260; i++) {
           const dir = nearDirection(landing, rng() * TAU, .02 + rng() * .40);
           const here = provinceAt(dir);
-          if (!coats[here]) continue;
+          if (!coats[here] || dir.distanceTo(landing) * R < LANDING_CLEAR + .04 * BELL_SIZE) continue;
           const d = dir.angleTo(landing);
           if (d < gap) { gap = d; green = here; aim = dir.clone(); }
         }
@@ -4887,7 +4894,8 @@
           return up.dot(dir) > .935;                                  // no cliff faces
         };
         // …and not inside a trunk or a boulder: the flora pass planted those long before this ran.
-        const freeOf = dir => !settlementDirs.some(s => s.dir.angleTo(dir) * R < (s.wr || .20) + .034 * BELL_SIZE) &&
+        const freeOf = dir => dir.distanceTo(landing) * R >= LANDING_CLEAR + .04 * BELL_SIZE &&
+          !settlementDirs.some(s => s.dir.angleTo(dir) * R < (s.wr || .20) + .034 * BELL_SIZE) &&
           !landmarks.some(l => l.direction.angleTo(dir) < .17) &&
           ![hardProps, stoneSolids].some(list => list.some(p2 =>
             p2.dir.distanceTo(dir) * R < p2.r + .026 * BELL_SIZE));
@@ -4925,6 +4933,7 @@
                 // that two bell a hand's width apart can be on either side of a ridge.
                 if (heightAt(dwProbe) < SEA + .008) continue;
                 if (provinceAt(dwProbe) !== pack.id) continue;
+                if (dwProbe.distanceTo(landing) * R < LANDING_CLEAR + .04 * BELL_SIZE) continue;
                 if (!flatEnough(dwProbe)) continue;
                 if (settlementDirs.some(s => s.dir.angleTo(dwProbe) * R < (s.wr || .20) + .028 * BELL_SIZE)) continue;
                 const rough = bellRough(dwProbe, 1);
@@ -5382,26 +5391,56 @@
         const taken = [];
         // A site is legal land at a believable altitude. `limit` keeps the scattered pass from
         // exceeding each province's quota while still letting guaranteed towns through.
-        const trySite = (dir, bulk, limit, shore = false) => {
+        const trySite = (dir, bulk, limit, shore = false, welcome = false) => {
           const h = heightAt(dir);
           if (h < .03 || h > .26) return false;
-          // A town's houses reach about .07 from its centre, and the player opens their eyes at the landing.
-          // The old first-town offset was .043-.071 — the houses of the town you land beside could be built
-          // around the spot you arrive on, and the first frame of the game shoved the player out of a wall.
-          if (dir.distanceTo(landing) < .13) return false;
+          // Ordinary towns have solid cores and reach up to about .55 world units from their centre. The
+          // landing village below is different: it has an open court, with its buildings on the far rim.
+          if (!welcome && dir.distanceTo(landing) * R < LANDING_CLEAR + .65) return false;
           const id = provinceAt(dir, h);
           if (sites[id].length >= limit(id)) return false;
-          // Towns are ~.40 units across, so two of them closer than .26 would share a platform.
+          // Towns are ~.40 units across, so two of them closer than .20 unit chords would share a platform.
           if (taken.some(other => other.distanceTo(dir) < .20)) return false;
           taken.push(dir);
-          sites[id].push({ dir, h, bulk, shore });
+          sites[id].push({ dir, h, bulk, shore, welcome });
           return true;
         };
-        // 1. The town you land beside: something to walk into on the very first descent.
-        //    Offsets are retried because the first pick can land on a cliff or in the surf.
-        for (let i = 0; i < 14; i++) {
-          if (trySite(nearDirection(landing, rng() * TAU, .145 + rng() * .03), 1.3, () => 999)) break;
-        }
+        // 1. An actual open-centred village, not a town marker moved toward the player. Its court is
+        // .36 world units away; four homes and a lookout occupy an arc .46 world units beyond the court.
+        // Choose a bearing on which all five plots and their corners are dry, and avoid cliff-like plots.
+        // This is deterministic and draws no town RNG, so its geometry does not depend on frame timing.
+        const welcomeSite = () => {
+          let best = null;
+          const offsets = [-.90, -.45, 0, .45, .90];
+          for (let i = 0; i < 240; i++) {
+            const dir = nearDirection(landing, i * TAU / 240, .36 / R), h = heightAt(dir);
+            if (h < SEA + .02 || h > .235) continue;
+            const away = dir.clone().multiplyScalar(dir.dot(landing)).sub(landing).normalize();
+            const side = new THREE.Vector3().crossVectors(dir, away).normalize();
+            let worst = 0, valid = true;
+            for (const angle of offsets) {
+              const plot = dir.clone().addScaledVector(away, Math.cos(angle) * .46 / R)
+                .addScaledVector(side, Math.sin(angle) * .46 / R).normalize();
+              let lo = heightAt(plot), hi = lo;
+              for (let j = 0; j < 12; j++) {
+                const a = j * TAU / 12;
+                const sample = plot.clone().addScaledVector(away, Math.cos(a) * .075 / R)
+                  .addScaledVector(side, Math.sin(a) * .075 / R).normalize();
+                const ground = heightAt(sample); lo = Math.min(lo, ground); hi = Math.max(hi, ground);
+              }
+              if (lo <= SEA + .005 || hi - lo > .16) { valid = false; break; }
+              worst = Math.max(worst, hi - lo);
+            }
+            if (!valid) continue;
+            let shrine = Infinity;
+            for (const l of landmarks) shrine = Math.min(shrine, l.direction.distanceTo(dir) * R);
+            const score = worst + Math.max(0, .65 - shrine);
+            if (!best || score < best.score) best = { dir, score };
+          }
+          return best;
+        };
+        const welcome = welcomeSite();
+        if (welcome) trySite(welcome.dir, 1.3, () => 999, false, true);
         // 2. Two settlements under every sanctuary: you always arrive somewhere inhabited.
         landmarks.forEach(landmark => {
           // nearDirection takes an angle in radians, so ~0.11–0.17 rad = 0.46–0.70 world units,
@@ -5440,6 +5479,7 @@
           for (let i = 0; i < 900; i++) {
             const dir = randomDirection(rng), h = heightAt(dir);
             if (h < .052 || h > .225 || provinceAt(dir, h) !== id) continue;
+            if (dir.distanceTo(landing) * R < LANDING_CLEAR + .65) continue;
             if (taken.some(other => other.distanceTo(dir) < .24)) continue;
             let drop = 0;
             for (let a = 0; a < 8; a++) drop = Math.max(drop, h - heightAt(nearDirection(dir, a * TAU / 8, .10)));
@@ -5461,7 +5501,9 @@
         const push = (geo, mat, position, quat, scale) => {
           const key = geo + '|' + mat;
           if (!buckets.has(key)) buckets.set(key, []);
-          buckets.get(key).push({ geo, source: partSource, origin: position, quat: quat.clone(), scale });
+          const item = { geo, source: partSource, origin: position, quat: quat.clone(), scale };
+          buckets.get(key).push(item);
+          return item;
         };
         const mesh = new THREE.Matrix4(), axis = new THREE.Vector3();
         // ---- Towns ---------------------------------------------------------------------------
@@ -5550,8 +5592,13 @@
               if (reach > (site.wr || 0)) site.wr = reach;
               if (geo === 'lamp') lampPoints.push(at.clone());
               if (geo === 'chimney') chimneyPoints.push(at.clone().addScaledVector(site.dir, sy * TOWN_SCALE * .55));
-              push(geo, mat, at, qBase.clone().multiply(yawQuat.setFromAxisAngle(UP, yaw)),
+              const item = push(geo, mat, at, qBase.clone().multiply(yawQuat.setFromAxisAngle(UP, yaw)),
                 new THREE.Vector3(sx * TOWN_SCALE, sy * TOWN_SCALE, sz * TOWN_SCALE));
+              item.layer = layer;
+              if (site.court && (layer === 'house' || layer === 'landmark')) {
+                site.court.structures.push({ geo, layer, origin: item.origin.clone(), scale: item.scale.clone() });
+              }
+              return item;
             };
             // Local offset inside a rotated piece, expressed in the site's own frame.
             const local = (yaw, px, pz) => {
@@ -5804,6 +5851,27 @@
               }
               layer = 'town';
             };
+            let dries = () => true;
+            const clearOfCore = (lx, lz, pad) => {
+              const need = (site.civic || 0) + pad;
+              if (!need) return [lx, lz];
+              const d = Math.hypot(lx, lz);
+              if (d >= need) return [lx, lz];
+              const a0 = d < 1e-4 ? 0 : Math.atan2(lz, lx);
+              // Straight out along the plot's own radius first. On a shore the straight-out direction
+              // is the water, so the row swings along the shoreline instead of walking into the sea —
+              // pushing every plot radially drowned 232 of the 707 shore houses.
+              // Farthest dry ground first; on a small islet nothing is dry at the full distance, so the
+              // plot takes the best it can get rather than going back inside the monument.
+              for (const shrink of [1, .86, .72, .58]) {
+                const r = need * shrink;
+                for (const turn of [0, .26, -.26, .52, -.52, .79, -.79, 1.05, -1.05, 1.31, -1.31, 1.57, -1.57]) {
+                  const a = a0 + turn, x = Math.cos(a) * r, z = Math.sin(a) * r;
+                  if (dries(x, z)) return [x, z];
+                }
+              }
+              return [lx, lz];
+            };
             const houseAt = (lx, lz, yaw, kind, scale = 1, clear = true) => {
               const w = (.044 + rng() * .014) * k * scale;
               const d = (.036 + rng() * .010) * k * scale;
@@ -5885,12 +5953,58 @@
               // taller: past this the house reads as standing on a leg, so the uphill corner is
               // allowed to cut into the slope by a few centimetres instead.
               floor = Math.min(floor, low + .020);
+              // The landing court has no shared raised platform. Keep each house's wall close enough to the
+              // actual ground under its centre to be a physical wall, not a room hovering over a low footing.
+              if (site.welcome) floor = Math.min(floor, standing(lx, lz) + .0015);
               // Out of the water even where the shelf falls away: the footing grows to meet the
               // floor instead, so what stands in the shallows is a stone base with a house on it.
               if (lifted) floor = Math.max(floor, (SEA - site.h) / TOWN_SCALE + .008);
               (site.kinds = site.kinds || new Set()).add(kind);
               house(lx, lz, yaw, kind === 'tower' ? w * .86 : w, d, h, kind, floor, low);
             };
+            // The landing village is centred on a real, paved open court. A lookout and four houses
+            // form the outer arc, facing that court; none is translated away from an imaginary map pin.
+            // The court tiles are walkable surface dressing, not raised collision bodies, so the user's
+            // full 504 mm empty circle remains open at first descent.
+            if (site.welcome) {
+              site.plan = 'open-court'; site.landmark = 'welcome-tower'; site.civic = .055; site.plate = null;
+              site.court = { tiles: [], plots: [], structures: [] };
+              const away = site.dir.clone().multiplyScalar(site.dir.dot(landing)).sub(landing).normalize();
+              const side = new THREE.Vector3().crossVectors(site.dir, away).normalize();
+              const ux = away.dot(ax), uz = away.dot(az), vx = side.dot(ax), vz = side.dot(az);
+              // Tangent coordinates are town units, while the chosen court layout is in world chords.
+              const localDistance = distance => distance * (R + site.h) / R / TOWN_SCALE;
+              const polar = (distance, angle) => {
+                const r = localDistance(distance), c = Math.cos(angle), t = Math.sin(angle);
+                return [r * (ux * c + vx * t), r * (uz * c + vz * t)];
+              };
+              layer = 'paving';
+              const tile = (x, z, size) => {
+                const piece = put('disc', 'road', x, z, standing(x, z) - .0005, 0, size, .06, size, false);
+                site.court.tiles.push({ geo: piece.geo, origin: piece.origin.clone() });
+              };
+              tile(0, 0, .020);
+              for (let i = 0; i < 16; i++) { const [x, z] = polar(.05, i * TAU / 16); tile(x, z, .008); }
+              // A broken line of flush stone connects the court to the houses on its outer side.
+              for (let i = 1; i <= 4; i++) { const [x, z] = polar(.05 + i * .060, 0); tile(x, z, .010); }
+              const [tx, tz] = polar(.46, 0), towerYaw = Math.atan2(ux, uz);
+              const base = standing(tx, tz), towerHeight = .12 * k;
+              layer = 'landmark';
+              put('tower', s.wall, tx, tz, base + .004, towerYaw, .040 * k, towerHeight, .040 * k, false);
+              put('spire', s.roofMat, tx, tz, base + .004 + towerHeight * .96, towerYaw,
+                .050 * k, towerHeight * .46, .050 * k, false);
+              put('lamp', 'lamp', tx, tz, base + .004 + towerHeight * 1.40, towerYaw, .006, .008, .006, false);
+              const kinds = id === 'vaelmar' ? ['cottage', 'longhouse', 'cottage', 'barn'] :
+                id === 'caelth' ? ['round', 'cottage', 'longhouse', 'round'] :
+                  id === 'mirella' ? ['stilt', 'round', 'cottage', 'round'] : ['flat', 'cottage', 'flat', 'round'];
+              for (const [i, angle] of [-.90, -.45, .45, .90].entries()) {
+                const [x, z] = polar(.46, angle), c = Math.cos(angle), t = Math.sin(angle);
+                const facing = Math.atan2(ux * c + vx * t, uz * c + vz * t);
+                houseAt(x, z, facing, kinds[i], 1, false);
+                site.court.plots.push(dirAt(x * TOWN_SCALE, z * TOWN_SCALE));
+              }
+              continue;
+            }
             // ---- cliff colony ------------------------------------------------------------------
             // Where the land falls away faster than a terrace can be cut, the town goes *out*: three
             // decks hung off the face, joined by steps, tied back into the rock above with beams.
@@ -6198,27 +6312,6 @@
             // along its own radius, far enough to clear the landmark plus its own roof.
             // Dry means the whole plot, not just its centre: a house pushed to the edge of a shore
             // still ends up with its downhill wall under the surface.
-            let dries = () => true;
-            const clearOfCore = (lx, lz, pad) => {
-              const need = (site.civic || 0) + pad;
-              if (!need) return [lx, lz];
-              const d = Math.hypot(lx, lz);
-              if (d >= need) return [lx, lz];
-              const a0 = d < 1e-4 ? 0 : Math.atan2(lz, lx);
-              // Straight out along the plot's own radius first. On a shore the straight-out direction
-              // is the water, so the row swings along the shoreline instead of walking into the sea —
-              // pushing every plot radially drowned 232 of the 707 shore houses.
-              // Farthest dry ground first; on a small islet nothing is dry at the full distance, so the
-              // plot takes the best it can get rather than going back inside the monument.
-              for (const shrink of [1, .86, .72, .58]) {
-                const r = need * shrink;
-                for (const turn of [0, .26, -.26, .52, -.52, .79, -.79, 1.05, -1.05, 1.31, -1.31, 1.57, -1.57]) {
-                  const a = a0 + turn, x = Math.cos(a) * r, z = Math.sin(a) * r;
-                  if (dries(x, z)) return [x, z];
-                }
-              }
-              return [lx, lz];
-            };
             // Three sizes: a hamlet of two or three houses, a village, a market town. The tail
             // matters more than the average — equal towns read as a spreadsheet.
             const countFor = base => Math.max(2, base + tier - 1 + (rng() < .30 ? 1 : 0));
@@ -6431,7 +6524,8 @@
           return out.copy(from).applyQuaternion(partial).normalize();
         };
         const probe = new THREE.Vector3(), bearing = (n, d) => { const { east, north } = solveNormal(n); return Math.atan2(d.dot(north), d.dot(east)); };
-        const dry = n => heightAt(n) > SEA + .004;             // paving never crosses open water
+        // Shrines do not put a gate, courtyard or their widest apron into the protected landing circle.
+        const dry = n => heightAt(n) > SEA + .004 && n.distanceTo(landing) * R >= LANDING_CLEAR + .14;
         // Directions are on the unit sphere and pieces are on the ground: measure angles, not raw
         // distances, or every comparison is off by the ground's own altitude.
         const chordTo = (item, dir) => 2 * Math.sin(item.origin.angleTo(dir) / 2);
@@ -6685,6 +6779,7 @@
           for (let i = 0; i < 20000 && ruinSpots.length < 10; i++) {
             const n = randomDirection(seaRng), depth = SEA - heightAt(n);
             if (depth < .090 || depth > .170) continue;        // deep enough to swim, shallow enough to see
+            if (n.distanceTo(landing) * R < LANDING_CLEAR + .43) continue;
             if (ruinSpots.some(s => s.dir.angleTo(n) < .085)) continue;
             if (settlementDirs.some(s => s.dir.angleTo(n) < .11)) continue;   // not in a town's own shallows
             probeE.set(1, 0, 0).cross(n).normalize();
@@ -6836,7 +6931,7 @@
               // because "the body never ends a step inside anything" is trivially true when the walls are not
               // there. Found by reading the list back in `solids_sim`.
               dir, top, bottom: base, ex: ex.normalize(), ez: ez.normalize(),
-              source: item.source, geometry: geoKey,
+              source: item.source, geometry: geoKey, layer: item.layer || null,
               hx: Math.max(-bb.min.x, bb.max.x) * item.scale.x,
               hz: Math.max(-bb.min.z, bb.max.z) * item.scale.z
             });
@@ -6955,6 +7050,9 @@
           lampPools.renderOrder = 7;
           scene.add(lampPools);
         }
+        // With town footprints known, lay the first local scatter before placing any animals. Later
+        // re-dresses use the same keep-clear rule and immediately invalidate the animals' prop caches.
+        dressGround(landing);
         // Bell last, because they have to know where the towns are to stay out of them; the reefs
         // after them, because they live over the drowned farms the towns were kept clear of.
         bellHerd();
@@ -7925,9 +8023,10 @@
                     if ((!walkableAt(dwProbe) && !downhill) || propAhead(d, .014, dwE) ||
                       dwProbe.distanceTo(state.direction) * R < d.hit.r + WALKER_RADIUS) continue;
                     d.fwd.copy(dwE);
-                    d.speed = .030;
-                    d.mode = 'walk';
-                    d.timer = .6;
+                    // A short detour is not the end of a bolt. Keep its timer and intent while it
+                    // negotiates the obstacle; non-bolting animals enter the ordinary slow walk.
+                    if (d.mode === 'flee') d.speed = Math.max(d.speed, .030);
+                    else { d.speed = .030; d.mode = 'walk'; d.timer = .6; }
                     turned = true; break;
                   }
                 }
@@ -7944,9 +8043,8 @@
                     if (propAhead(d, .010, dwE) || heightAt(dwProbe) < SEA + .006 ||
                       dwProbe.distanceTo(state.direction) * R < d.hit.r + WALKER_RADIUS) continue;
                     d.fwd.copy(dwE);
-                    d.speed = .022;
-                    d.mode = 'walk';
-                    d.timer = .5;
+                    if (d.mode === 'flee') d.speed = Math.max(d.speed, .022);
+                    else { d.speed = .022; d.mode = 'walk'; d.timer = .5; }
                     turned = true; break;
                   }
                 }
@@ -8428,7 +8526,10 @@
           resetGroundMotion();
           let closest = landmarks[0], score = -1;
           for (const landmark of landmarks) { const dot = landmark.direction.dot(state.direction); if (dot > score && dot < .9998) { closest = landmark; score = dot; } }
-          headingToward(closest.direction);
+          // On the original landing, show the actual open court rather than a distant unrelated landmark.
+          // Landing from a different orbit angle still points to the nearest landmark as before.
+          const welcome = state.direction.distanceTo(landing) * R < .010 && settlementDirs.find(site => site.welcome);
+          headingToward(welcome ? welcome.dir : closest.direction);
           state.pitch = .13; state.mode = 'ground';
           requestGroundRefresh(state.direction); groundPose();
         } else {
@@ -8721,7 +8822,7 @@
           }
               for (let i = 0; i < walkBoxes.length; i++) {
                 const box = walkBoxes[i];
-                if (box.top <= feetRadius || box.dir.dot(state.direction) < .9) continue;
+                if (box.top <= feetRadius || box.bottom > feetRadius + .020 || box.dir.dot(state.direction) < .9) continue;
                 walkTmp.copy(box.dir).sub(state.direction).multiplyScalar(R);
                 const u = walkTmp.dot(box.ex), v = walkTmp.dot(box.ez);
                 const outX = box.hx + WALKER_RADIUS - Math.abs(u), outZ = box.hz + WALKER_RADIUS - Math.abs(v);
@@ -8750,7 +8851,7 @@
               if (outE.lengthSq() < 1e-12) outE.set(1, 0, 0).cross(state.direction);
               outE.normalize();
               const outN = new THREE.Vector3().crossVectors(state.direction, outE).normalize();
-              for (let reach = 1; reach <= 3; reach *= 2) {
+              for (let reach = 1; reach <= 4; reach *= 2) {
                 for (let k = 0; k < 16; k++) {
                   const a = k * TAU / 16;
                   walkProbe.copy(outE).multiplyScalar(Math.cos(a)).addScaledVector(outN, Math.sin(a));

@@ -6,15 +6,14 @@
 // straight line a body can walk from open country into the middle of the town. That number is the town's
 // narrowest doorway, and it is a property of the plan, not of any one collision bug.
 //
-// Everything is in chord units — straight-line distance through the air between two points on the sphere,
-// which is what the collision code, the house layouts and the player's own step are all made of. The page's
-// `site.wr` is used in the place-and-keep-clear tests as `angleTo * R`, an arc, so it is not used here at all:
-// the town is its houses.
+// Distances are world-space chords — direction-vector distances multiplied by R — as in the collision code.
+// The grid covers `site.wr` and the actual walls, then includes nearby non-town obstacles and the same vertical
+// tests as the player; belonging to a town is taken from the builder's recorded source, not guessed by distance.
 import { buildWorld } from './world.mjs';
 
 const world = await buildWorld();
 const { THREE, R, SEA, EYE, WALKER_RADIUS, heightAt, provinceAt, landmarks, state, keys, joystick, physicsStep,
-  resetGroundMotion, walkBoxes, settlementDirs } = world;
+  resetGroundMotion, walkBoxes, settlementDirs, hardProps, stoneSolids } = world;
 
 let pass = 0, fail = 0;
 const ok = (name, cond, info = '') => {
@@ -27,19 +26,13 @@ const mm = v => (v * 1000).toFixed(1) + ' mm';
 // A collision box carries the exact generator that built its visible instance. Distance alone cannot identify
 // a way-stone: shrine entrances are deliberately up to .52 radians away from the altar. The old .15 cutoff
 // called a shrine's tall threshold an abandoned house, and printed a unit-direction chord as millimetres.
-const TOWN_REACH = .120 * R;   // the former .120 was a chord on the unit sphere, i.e. .504 world units
 const owned = new Map(settlementDirs.map((_, i) => [i, []]));
-const nearestTown = dir => {
-  let best = 0, bestD = Infinity;
-  for (let i = 0; i < settlementDirs.length; i++) {
-    const d = settlementDirs[i].dir.distanceTo(dir) * R;
-    if (d < bestD) { bestD = d; best = i; }
-  }
-  return { index: best, distance: bestD };
-};
 for (const box of walkBoxes) {
-  const near = nearestTown(box.dir);
-  if (near.distance <= TOWN_REACH) owned.get(near.index).push(box);
+  // Use the generator's actual owner. Nearest-centre assignment can put a neighbour's platform into the
+  // wrong town and omit it from its own town, so the route scan would describe a different set of walls.
+  if (box.source?.kind !== 'town') continue;
+  const index = settlementDirs.indexOf(box.source.site);
+  if (index >= 0) owned.get(index).push(box);
 }
 {
   let bad = 0, towns = 0, shrines = 0, sea = 0, worstTown = 0, worstShrine = 0;
@@ -128,17 +121,26 @@ function wayIn(index) {
     Math.max(m, site.dir.distanceTo(b.dir) * R + Math.max(b.hx, b.hz)), 0)) + .025;
   const n = Math.ceil(half / step), N = 2 * n + 1;
   const at = (i, j) => base.clone().addScaledVector(ex, (i - n) * step).addScaledVector(ez, (j - n) * step);
-  const boxCentre = walls.map(b => ({ ...b, at: b.dir.clone().multiplyScalar(R) }));
+  // The walker collides with neighbouring towns, sanctuaries, trunks and stones too, not only with the
+  // walls owned by this site. Include them when searching the approach instead of choosing a door through
+  // somebody else's platform. `top <= feet` is the page's rule; adding 20 mm here hid low walls from the map.
+  const boxCentre = walkBoxes.filter(b => b.dir.distanceTo(site.dir) * R < half + Math.hypot(b.hx, b.hz) + .05)
+    .map(b => ({ ...b, at: b.dir.clone().multiplyScalar(R) }));
+  const posts = [...hardProps, ...stoneSolids].filter(p => p.dir.distanceTo(site.dir) * R < half + p.r + .05);
   const clearanceAt = p => {
-    const feet = R + Math.max(heightAt(p.clone().normalize()), SEA);
+    const dir = p.clone().normalize(), feet = R + Math.max(heightAt(dir), SEA);
     let clear = 1;
     for (const box of boxCentre) {
-      if (box.top <= feet + .020 || box.bottom > feet + .020) continue;
+      if (box.top <= feet || box.bottom > feet + .020) continue;
       const d = box.at.clone().sub(p);
       const u = Math.abs(d.dot(box.ex)) - box.hx, v = Math.abs(d.dot(box.ez)) - box.hz;
       // The walker's boxes are expanded along each axis, not rounded at their corners.
       const dist = Math.max(0, u, v);
       if (dist < clear) clear = dist;
+    }
+    for (const post of posts) {
+      if (post.top !== undefined && post.top <= feet) continue;
+      clear = Math.min(clear, Math.max(0, post.dir.distanceTo(dir) * R - post.r));
     }
     return clear;
   };
@@ -291,9 +293,8 @@ const ways = settlementDirs.map((_, i) => wayIn(i));
     const a = walkBoxes[i];
     for (let j = i + 1; j < walkBoxes.length; j++) {
       const b = walkBoxes[j];
-      if (a.dir.distanceTo(b.dir) > .6) continue;
-      const townA = nearestTown(a.dir).index, townB = nearestTown(b.dir).index;
-      if (townA === townB) continue;
+      if (a.dir.distanceTo(b.dir) > .6 || a.source?.kind !== 'town' || b.source?.kind !== 'town') continue;
+      if (a.source.site === b.source.site) continue;
       if (Math.min(a.top, b.top) - Math.max(a.bottom, b.bottom) <= .010) continue;
       const d = b.dir.clone().multiplyScalar(R).sub(a.dir.clone().multiplyScalar(R));
       const u = d.dot(a.ex), v = d.dot(a.ez);

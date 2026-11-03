@@ -125,7 +125,7 @@ const mm = v => (v * 1000).toFixed(1) + ' mm';
   ok('a body put inside a solid is pushed out of that solid', tried > 20 && stuck === 0,
     tried + ' bodies stood inside trunks and boulders; a tenth of a second later the deepest still inside the one it was in is ' + mm(Math.max(0, -worst)) +
     ' — ' + (tried - stuck) + ' of ' + tried + ' are most of the way out, and ' + stillInAny +
-    ' finish inside a neighbour, because those boulders were built in clusters');
+    ' finish inside a neighbour (deepest ' + mm(deepestAny) + '), because those boulders were built in clusters');
 }
 
 // ---- H, the way out -----------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-// The herd: 钵行者, thirty-one of them, and the four things the user said about animals.
+// The herd: 钵行者, and the four things the user said about animals.
 //
 // 动物必须会动、不许叠在一起 — they must move, they may not stack. Two bodies inside each other is a bug. And an
 // animal is solid, so it may not shove a standing person out of the way. The last one is the page's own rule and
@@ -58,7 +58,9 @@ const hub = bell.reduce((best, d) => {
     if (!Number.isFinite(d.world.length() + d.speed + d.scale)) bad++;
     highest = Math.max(highest, h); lowest = Math.min(lowest, h);
   }
-  ok('thirty-one animals, every one on dry ground', bell.length === 31 && wet === 0 && bad === 0,
+  // Eight packs request 3–5 animals each (and a neighbouring-province pack may be added). The exact
+  // count changes when a redesigned town moves the available sites; land, finiteness and a real herd do not.
+  ok('a full herd, every animal on dry ground', bell.length >= 24 && bell.length <= 45 && wet === 0 && bad === 0,
     bell.length + ' 钵行者, standing between ' + mm(lowest) + ' and ' + mm(highest) + ' above sea level' +
     (wet ? ', but ' + wet + ' of them in the water' : ''));
 }

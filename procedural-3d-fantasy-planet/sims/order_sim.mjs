@@ -7,7 +7,7 @@ import { buildWorld } from './world.mjs';
 
 const world = await buildWorld();
 const { THREE, R, SEA, camera, scene, state, keys, joystick, physicsStep, updateBell, updateReefs, updateWeather, settlementDirs,
-  updateLattice, latticeRings, resetGroundMotion, heightAt, landing, EYE } = world;
+  updateLattice, latticeRings, resetGroundMotion, heightAt, landing, EYE, SPRINT_SPEED } = world;
 
 let pass = 0, fail = 0;
 const ok = (name, cond, info = '') => {
@@ -76,6 +76,12 @@ keys.add('ShiftLeft');
   ok('and the walker went somewhere', state.direction.angleTo(heading) > .01,
     'turned ' + (state.direction.angleTo(heading) * 180 / Math.PI).toFixed(2) + '° from the start heading at up to ' +
     mm(maxSpeed) + '/s, ' + mm(state.radius - R - Math.max(heightAt(state.direction), SEA)) + ' above the ground at the end');
+  // A previous build advanced 37.8 mm in a single 120 Hz step while sprinting near the landing. This checks
+  // the displacement rather than merely printing the implied speed. Allow the maximum 1.18 downhill grade
+  // and 1.6 mm for collision/shoulder correction; it must still be far smaller than the observed jump.
+  const largestStep = maxSpeed * dt, stepBudget = SPRINT_SPEED * 1.18 * dt + .0016;
+  ok('and no sprint frame teleports the body', largestStep < stepBudget,
+    'largest step ' + mm(largestStep) + ' at 120 Hz, downhill sprint plus collision allowance ' + mm(stepBudget));
 }
 
 // ---- the panels are where the camera is looking ----------------------------------------------------------

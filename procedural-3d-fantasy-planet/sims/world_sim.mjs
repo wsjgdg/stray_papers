@@ -38,7 +38,7 @@ function fingerprint(w) {
     flora: w.floraHard.length,
     floraR: sum(w.floraHard.map(p => p.r || 0)),
     grounds: w.groundStones.length,
-    bells: w.bell ? 1 : 0,
+    bells: w.bell.length,
     reefs: w.reefs.length,
     reefR: sum(w.reefs.map(p => p.r || 0)),
     settlements: w.settlementDirs.length,

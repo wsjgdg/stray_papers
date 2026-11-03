@@ -190,7 +190,7 @@ export function loadPage(file = PAGE) {
         bell, reefs, landmarks, settlementDirs, walkBoxes, hardProps, floraHard, groundStones,
         provinceGeo, provinceMat, hardBand, hardWidthOf, provinceWet, smokeWind, overlapAt,
         weather, latticeRings, setWeather, cycleWeather, WEATHER_DEFS, nextStrikeGap, thunderPlan, beginStrike,
-        resetGroundMotion, clearInput, propUnder, hardBand, BELL_HALF_WIDE, propAhead, bellNormal,
+        resetGroundMotion, clearInput, switchMode, propUnder, hardBand, BELL_HALF_WIDE, propAhead, bellNormal,
         refreshBellProps, dressStones
       };
 `;
@@ -237,7 +237,14 @@ function findClosingBrace(text, from) {
 // skip a step the browser would have taken.
 export async function buildWorld(options = {}) {
   const started = Date.now();
-  const world = await loadPage(options.file);
+  // The page decides its compact layout from the real viewport at boot. Permit a mobile-sized build
+  // without leaking its globals into other worlds subsequently built by the same process.
+  const prev = [windowStub.innerWidth, windowStub.innerHeight, globalThis.innerWidth, globalThis.innerHeight];
+  if (options.width !== undefined) windowStub.innerWidth = globalThis.innerWidth = options.width;
+  if (options.height !== undefined) windowStub.innerHeight = globalThis.innerHeight = options.height;
+  let world;
+  try { world = await loadPage(options.file); }
+  finally { [windowStub.innerWidth, windowStub.innerHeight, globalThis.innerWidth, globalThis.innerHeight] = prev; }
   if (!world) throw new Error('the page never finished building a world: ' + JSON.stringify(globalThis.__startup?.error || null));
   world.buildMs = Date.now() - started;
   return world;
