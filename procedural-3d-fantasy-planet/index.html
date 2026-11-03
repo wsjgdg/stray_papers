@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-66">
+  <meta name="aetheris-build" content="pennants-67">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -594,7 +594,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-66';
+    const BUILD_ID = 'pennants-67';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4987,7 +4987,7 @@
                 center: spot.toArray(), home: home.clone(), pos: spot, goto: spot.clone(), aim: spot.clone(), near: [],
                 up: bellNormal(spot, new THREE.Vector3()), fwd: new THREE.Vector3(),
                 world: new THREE.Vector3(), mode: 'graze', timer: .8 + rng() * 2.6,
-                phase: rng() * TAU, stride: .18, headTilt: 1, speed: 0,
+                phase: rng() * TAU, stride: .18, headTilt: 1, speed: 0, vel: 0, still: 0,
                 scale: BELL_SIZE * (.90 + rng() * .24), seedPhase: rng() * TAU, coat: pack.tint, awake: false,
                 foot: BELL_LEGS.map(() => 0)
               };
@@ -7542,27 +7542,28 @@
         const worked = Math.max(debt.sky, debt.air, debt.light, debt.growth, debt.fauna);
         // Anything further off than a stone's throw is skipped before it costs a ground sample: the
         // angle is the same test at a tenth of the price.
-        // Everything within about nine metres thinks. It used to be .10 rad — 420 mm of world — which
-        // is close enough that half a herd fell asleep while you stood looking at it, and an animal that
-        // is not moving reads as a prop, not as an animal.
-        const inRange = Math.cos(.18);
+        // Everything you can see thinks. .18 rad is 750 mm of surface, and the horizon from an eye 100 mm
+        // off a planet of radius 4.2 is 917 mm away — so a band of ground between eleven and fifteen metres
+        // was in plain sight and asleep, which is a herd standing perfectly still in the open. That is the
+        // "the deer are stuck" the user reported. .42 rad is 1.76 world units, a little past the horizon.
+        const inRange = Math.cos(.42);
         if (++refreshBellProps.age > 20) { refreshBellProps.age = 0; refreshBellProps(); }
         // A herd wakes as a herd. One of them close enough is enough for all of them: half a herd
         // grazing and half frozen a few centimetres away reads as broken animals, not as animals.
         // (Their world positions are last frame's, which is a sixteenth of a millimetre out.)
         let herdNear = false;
-        for (let i = 0; i < bell.length; i++) if (bell[i].world.distanceTo(dwFeet) < .62) { herdNear = true; break; }
+        for (let i = 0; i < bell.length; i++) if (bell[i].world.distanceTo(dwFeet) < 1.76) { herdNear = true; break; }
         for (let i = 0; i < bell.length; i++) {
           const d = bell[i];
           if (d.pos.dot(state.direction) < inRange) {
             d.awake = false;
-            if (d.speed) { d.speed = 0; poseBell(d, i); }
+            if (d.speed || d.vel) { d.speed = 0; d.vel = 0; poseBell(d, i); }
             continue;
           }
           d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
           d.hit.top = d.world.length() + BELL_BODY_TOP * d.scale;
           const dist = d.world.distanceTo(dwFeet);
-          if (dist > .62 && !herdNear) { d.awake = false; if (d.speed) { d.speed = 0; poseBell(d, i); } continue; }
+          if (dist > 1.76 && !herdNear) { d.awake = false; if (d.speed || d.vel) { d.speed = 0; d.vel = 0; poseBell(d, i); } continue; }
           d.awake = true;
           if (d.mode !== 'flee' && dist < (calm ? .020 : .045)) {
             // Bolt. Crouching and standing still is the only way to be close to one of these.
@@ -7575,7 +7576,10 @@
           } else if (d.mode === 'flee') {
             // Nothing else matters to a bolting animal for the first half second.
           } else if (dist < .120) {
-            if (d.mode !== 'alert') { d.mode = 'alert'; d.timer = 0; }
+            // ...but not out of a browse: an animal walking itself out of a pocket keeps walking, and the
+            // browse's own push already keeps it off the walker. Letting this line take the mode back reset the
+            // look-before-giving-ground timer every frame, so the animal stood there for ever.
+            if (d.mode !== 'alert' && d.mode !== 'browse') { d.mode = 'alert'; d.timer = 0; }
           } else if (worked > .28 && dist < .30) {
             d.mode = 'watch';
           } else if (d.mode === 'alert' || d.mode === 'watch') {
@@ -7595,6 +7599,10 @@
             if (dwProbe.lengthSq() > 1e-10) d.aim.copy(dwProbe.normalize());
             d.goto.copy(d.pos).addScaledVector(d.aim, .020).normalize();
           }
+          // An awake animal that has not moved for a second and a fifth is trapped by something it cannot see
+          // round: it browses its way out instead of choosing a target it will never reach. Watching the sky
+          // during an operation is exempt — that is a mode where standing still is the whole point.
+          if (d.mode !== 'flee' && d.mode !== 'watch' && d.still > 1.2) { d.mode = 'browse'; d.timer = 1.6; }
           if (d.mode === 'flee') {
             d.timer -= dt;
             d.speed *= Math.exp(-dt * 1.85);          // one burst, then it is over
@@ -7625,6 +7633,51 @@
           } else if (d.mode === 'watch') {
             d.speed = 0; d.stride = 0;
             d.headTilt += (-.52 - d.headTilt) * (1 - Math.exp(-dt * 3));
+          } else if (d.mode === 'browse') {
+            // The way out of a hole. Every stone, wall and person within a body's length pushes on the choice,
+            // weighted by how close it is, and the animal walks that way at a browse's pace without asking the
+            // walking logic for permission. This is the mode of last resort, and it exists for one reason: the
+            // walking logic can be surrounded — a pocket of boulders, a town a herd was placed inside, a wall on
+            // three sides — and an awake animal that stands still while the game runs is the thing the user
+            // called out. Re-choosing a target it can never reach is not motion.
+            d.speed = .045; d.stride = .18; d.timer -= dt;
+            dwE.set(0, 0, 0);
+            for (const p2 of d.near) {
+              const gap = p2.dir.distanceTo(d.pos) * R - p2.r - d.hit.r;
+              if (gap > .055) continue;
+              dwProbe.copy(d.pos).sub(p2.dir);
+              dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
+              if (dwProbe.lengthSq() < 1e-12) continue;
+              dwE.addScaledVector(dwProbe.normalize(), 1 / Math.max(gap + .006, .006));
+            }
+            for (const sv of settlementDirs) {
+              const gap = sv.dir.angleTo(d.pos) * R - (sv.wr || .20);
+              if (gap > .055) continue;
+              dwProbe.copy(d.pos).sub(sv.dir);
+              dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
+              if (dwProbe.lengthSq() < 1e-12) continue;
+              dwE.addScaledVector(dwProbe.normalize(), 1 / Math.max(gap + .006, .006));
+            }
+            {
+              const gap = d.pos.angleTo(state.direction) * R - d.hit.r - WALKER_RADIUS - .010;
+              if (gap < .055) {
+                dwProbe.copy(d.pos).sub(state.direction);
+                dwProbe.addScaledVector(d.pos, -dwProbe.dot(d.pos));
+                if (dwProbe.lengthSq() > 1e-12) dwE.addScaledVector(dwProbe.normalize(), 1 / Math.max(gap + .006, .006));
+              }
+            }
+            if (dwE.lengthSq() > 1e-12) {
+              dwE.addScaledVector(d.pos, -dwE.dot(d.pos)).normalize();
+              const ang = d.fwd.angleTo(dwE);
+              if (ang > 1e-3) {
+                dwProbe.crossVectors(d.fwd, dwE);
+                if (dwProbe.lengthSq() > 1e-12) {
+                  d.fwd.applyAxisAngle(dwProbe.normalize(), Math.min(ang, dt * 3.2));
+                  d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos)).normalize();
+                }
+              }
+            }
+            if (d.timer <= 0) { d.mode = 'graze'; d.timer = 1.0 + .7 * (1 + Math.sin(d.seedPhase * 1.7)); }
           } else if (d.mode === 'walk') {
             d.speed = .075; d.stride = .20;
             d.headTilt += (.30 - d.headTilt) * (1 - Math.exp(-dt * 5));
@@ -7746,7 +7799,18 @@
               }
             }
           }
-          if (d.speed > 1e-4) {
+          // The speed is eased into, not snapped to. A body that stops between two frames reads as a prop
+          // whose switch was thrown — which is what the user saw as "停住有点突兀" — and the same is true of a
+          // body that starts at full pace. `d.speed` is what the animal has decided to do; `d.vel` is what it
+          // is doing, and it approaches the first with a time constant of about a tenth of a second either
+          // way (a shade quicker to stop than to start, which is how legs work).
+          {
+            const want = d.speed;
+            const chase = 1 - Math.exp(-dt * (want > d.vel ? 9 : 12));
+            d.vel += (want - d.vel) * chase;
+            if (want === 0 && d.vel < 2e-4) d.vel = 0;
+          }
+          if (d.vel > 1e-4) {
             d.moved = true;
             // Nothing walkable straight ahead? Turn, do not flip. The old code negated the heading
             // outright, and on a hillside both directions are too steep, so it turned round every
@@ -7830,15 +7894,16 @@
               }
               if (!turned) { d.speed = 0; d.mode = 'graze'; d.timer = 1.4; }
             }
-            d.pos.addScaledVector(d.fwd, d.speed * dt / R).normalize();
+            d.pos.addScaledVector(d.fwd, d.vel * dt / R).normalize();
             d.fwd.addScaledVector(d.pos, -d.fwd.dot(d.pos));
             if (d.fwd.lengthSq() < 1e-8) aimBell(d, dwTarget.copy(d.home).multiplyScalar(R + heightAt(d.home)));
             else d.fwd.normalize();
             bellNormal(d.pos, d.up);
             d.world.copy(d.pos).multiplyScalar(R + heightAt(d.pos));
-            d.phase += dt * (d.speed > .25 ? 12 : d.speed > .06 ? 6.4 : 3.2);
+            d.phase += dt * (d.vel > .25 ? 12 : d.vel > .06 ? 6.4 : 3.2);
           }
-          if (d.moved) { plantFeet(d); d.moved = d.speed > 1e-4; }
+          if (d.moved || d.vel > 1e-4) { plantFeet(d); d.moved = d.vel > 1e-4; }
+          if (d.vel > 1e-4) d.still = 0; else d.still = Math.min(3, d.still + dt);
           poseBell(d, i, Math.abs(Math.sin(d.phase)) * .0011 * (d.stride / .2));
         }
         // ---- shoulders -------------------------------------------------------------------------

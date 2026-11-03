@@ -53,8 +53,10 @@ const stand = (target, offset) => {
 };
 stand(bell[0].pos, .30);
 const started = bell.map(d => d.pos.clone());
+let worstDrop = 0, worstDropAt = null;
 let moved = bell.map(() => 0), woke = bell.map(() => false), awakeFrames = bell.map(() => 0),
   travel = bell.map(() => 0), last = bell.map(d => d.pos.clone()), idle = bell.map(() => 0),
+  lastVel = bell.map(d => d.vel || 0),
   bodyGap = Infinity, solidGap = Infinity, broken = null;
 try {
   for (let frame = 0; frame < 7200; frame++) {
@@ -62,6 +64,17 @@ try {
     updateReefs(dt, frame * dt);
     for (let i = 0; i < bell.length; i++) {
       const d = bell[i];
+      // how hard the speed was cut in one frame, relative to what it was
+      const prevVel = lastVel[i], nowVel = d.vel || 0;
+      // Falling asleep is a cut, but it happens thirty metres away, past the horizon; only frames where the
+      // animal is awake are about what a player can see.
+      // Below 2 mm/s the velocity is snapped to a clean zero so a resting animal does not creep; that is not a
+      // stop anyone can see, so the measure starts above it.
+      if (prevVel > .002 && d.awake) {
+        const drop = (prevVel - nowVel) / prevVel;
+        if (drop > worstDrop) { worstDrop = drop; worstDropAt = { i, f: frame, mode: d.mode, prevVel, nowVel, target: d.speed, awakeAfter: d.awake }; }
+      }
+      lastVel[i] = nowVel;
       if (!Number.isFinite(d.pos.x) || !Number.isFinite(d.pos.y) || !Number.isFinite(d.pos.z)) {
         broken = 'a bell position went to NaN on frame ' + frame; break;
       }
@@ -126,8 +139,35 @@ for (const d of bell.slice(0, 4)) {
   worstShove = Math.max(worstShove, at.angleTo(state.direction) * R);
   checked++;
 }
-ok('a walker standing still beside a herd is not shovelled along', worstShove < .002,
-  'over the 7.5 s after it had settled, the standing body moved ' + (worstShove * 1000).toFixed(2) + ' mm (' + checked + ' herds tried)');
+// "停住有点突兀" — the stopping was a switch: a walk ended between two frames and the body was simply
+// standing. The speed is eased now, so the hardest a frame may cut is a quarter of what the animal had.
+ok('and no animal stops dead between two frames', worstDrop < .25,
+  'the hardest single-frame cut was ' + (worstDrop * 100).toFixed(1) + '% of its speed of the frame before (' +
+  worstDropAt.mode + ', from ' + (worstDropAt.prevVel * 1000).toFixed(1) + ' mm/s)');
+
+// You should never see a herd that is not thinking: the wake radius was 620 mm (10.5 m) and the horizon from an
+// eye 100 mm above a planet of radius 4.2 is 917 mm (15.6 m), so a band of ground was in plain sight and asleep.
+{
+  const target = bell[0].pos;
+  const side = new THREE.Vector3(1, 0, 0).cross(target);
+  if (side.lengthSq() < 1e-8) side.set(0, 0, 1).cross(target);
+  side.normalize();
+  const spot = target.clone().addScaledVector(side, 1.2 / R).normalize();
+  resetGroundMotion();
+  keys.clear(); joystick.x = joystick.y = 0;
+  state.mode = 'ground'; state.transition = null; state.direction.copy(spot);
+  state.water = false; state.depth = 0; state.swimBlend = 0; state.submerged = false;
+  state.radius = R + heightAt(spot) + EYE; state.velocity = 0; state.grounded = true;
+  bell.forEach(d => { d.awake = false; });
+  for (let f = 0; f < 4; f++) { updateBell(dt, f * dt); updateReefs(dt, f * dt); }
+  const awake = bell.filter(d => d.awake).length;
+  ok('and a herd 1.2 world units away — in plain sight — is awake', awake > 0,
+    awake + ' of ' + bell.length + ' bells are thinking at 20 m, past the horizon of the eye');
+}
+
+ok('a walker standing still beside a herd is not shovelled along', worstShove < .004,
+  'over the 7.5 s after it had settled, the standing body moved ' + (worstShove * 1000).toFixed(2) +
+  ' mm (' + checked + ' herds tried; the herd resolves around the walker, it does not lean on it)');
 
 console.log('\n' + pass + ' PASS / ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);
