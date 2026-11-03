@@ -29,7 +29,10 @@ self-contained, ~72 KB, no server or network needed.
 - Branching scenes with flags, choices, conditional gates
 - SVG bust portraits per character × expression (focus/dim states)
 - Animated background dioramas: parallax star field with shooting stars,
-  dual-layer rain + neon pulse, blinking server racks, memory light leaks
+  dual-layer rain + neon pulse, blinking server racks, memory light leaks;
+  adaptive canvas quality (sustained slow frames drop render DPR to 1)
+- Line-level cinematography fx: `fx:"glitch"`, `fx:"shake"`, `fx:"dolly"`
+  (camera push-in + synthesized swell), `fx:"grade"` (scene color grade)
 - Cinematic layers: vignette, film grain, dip-to-black scene transitions,
   glitch text FX, screen shake, dolly zoom (`fx: "dolly"` — bg push-in +
   focus sprite lean + one-step soften, paired with a synthesized sub-drop
