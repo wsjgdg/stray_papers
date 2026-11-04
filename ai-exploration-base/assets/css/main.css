@@ -328,19 +328,21 @@ html.js .reveal.is-visible {
   outline: none;
 }
 
+/* Grid-stacking flip: both faces share grid-area 1/1, so the card
+   height always fits the taller face — no 3D-context clipping issues. */
 .flip-inner {
   position: relative;
   transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
   transform-style: preserve-3d;
   min-height: 260px;
+  display: grid;
 }
 
 .flip-card.is-flipped .flip-inner,
 .flip-card:focus-visible .flip-inner { transform: rotateY(180deg); }
 
 .flip-face {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   display: flex;
@@ -355,6 +357,7 @@ html.js .reveal.is-visible {
 .flip-face.flip-back {
   transform: rotateY(180deg);
   background: var(--accent-soft);
+  justify-content: flex-start;
 }
 
 .flip-hint {
