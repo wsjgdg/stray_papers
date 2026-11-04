@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-77">
+  <meta name="aetheris-build" content="pennants-78">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -215,7 +215,7 @@
     .world-status[hidden] { display: none; }
     .world-error-detail { margin-top: 12px; padding: 10px 12px; max-height: min(52dvh, 430px); overflow: auto; pointer-events: auto; user-select: text; border: 1px solid rgba(232, 167, 154, .25); background: rgba(20, 8, 8, .85); color: #e8b0a4; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; letter-spacing: .04em; line-height: 1.7; text-align: left; overflow-wrap: anywhere; white-space: pre-wrap; }
     .world-error-detail[hidden] { display: none; }
-    body.loading .descend-button, body.loading .switch-button { opacity: .4; pointer-events: none; }
+    body.loading .descend-button, body.loading .switch-button, body.loading .quality-status { opacity: .4; pointer-events: none; }
     body.loading .archive-chip { opacity: 0; pointer-events: none; }
 
     .sound-button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #8fb4ab; cursor: pointer; transition: color .25s, border-color .25s; }
@@ -383,7 +383,7 @@
       .brand { gap: 10px; }
       .brand-symbol { width: 23px; height: 23px; }
       .brand-name { font-size: 11px; letter-spacing: .2em; }
-      .brand-divider, .brand-caption, .top-divider, .text-button, .quality-status { display: none; }
+      .brand-divider, .brand-caption, .top-divider, .text-button { display: none; }
       .top-actions { gap: 14px; }
       .light-status { font-size: 9px; letter-spacing: .11em; }
       .mobile-light-button { display: grid; place-items: center; width: 25px; height: 30px; padding: 0; border: 0; background: transparent; color: #b5e9d7; cursor: pointer; }
@@ -441,14 +441,32 @@
       .event-title { font-size: 22px; }
       .event-kicker { letter-spacing: .32em; }
       .topbar .weather-chip { margin-left: auto; }
-      .quality-status { display: none; }
+      /* The full label would crowd a phone. Keep the same button and show its mode and tier
+         on three short lines, with a touch-sized target and its complete accessible name. */
+      .quality-status { display: flex; align-items: center; justify-content: center; width: 56px; height: 44px; padding: 0;
+        border: 1px solid rgba(174, 224, 216, .26); border-radius: 3px; background: rgba(12, 34, 41, .34);
+        color: #dcebe4; font-size: 0; letter-spacing: 0; }
+      .quality-status::before { content: "QUALITY\a" attr(data-mobile-mode) "\a" attr(data-mobile-tier); white-space: pre;
+        font-size: 8.5px; line-height: 1.15; text-align: center; }
+      .quality-status::after { content: none; }
+      .archive-chip .archive-key { display: none; }
     }
 
+    @media (max-width: 540px) {
+      .top-actions { gap: 5px; }
+      .light-status { display: none; }
+    }
+    @media (max-width: 500px) { .weather-chip span.weather-label { display: none; } }
     @media (max-width: 420px) {
-      .weather-chip span.weather-label { display: none; }
       .weather-chip { padding: 6px; }
       .topbar { padding: 0 16px; }
-      .top-actions { gap: 9px; }
+    }
+    @media (max-width: 350px) {
+      .topbar { padding: 0 8px; }
+      .top-actions { gap: 3px; }
+      .brand { gap: 6px; }
+      .brand-symbol { width: 19px; height: 19px; }
+      .brand-name { font-size: 9px; letter-spacing: .1em; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -506,7 +524,7 @@
           <span class="weather-label" id="weatherLabel">CLEAR SKIES</span>
         </button>
         <span class="top-divider"></span>
-        <button class="quality-status" id="qualityStatus" type="button" title="Click or press Q to cycle Auto, High, and Balanced quality" aria-label="Change render quality">AUTO / HIGH</button>
+        <button class="quality-status" id="qualityStatus" data-mobile-mode="AUTO" data-mobile-tier="HIGH" type="button" title="Click or press Q to cycle Auto, High, and Balanced quality" aria-label="Change render quality">AUTO / HIGH</button>
       </div>
     </header>
 
@@ -595,7 +613,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-77';
+    const BUILD_ID = 'pennants-78';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -9156,6 +9174,14 @@
       const quality={mode:'auto',tier:0,average:1/60,slow:0,fast:0,cooldown:5,severeFrames:0,severeTime:0,
         fps:60,fpsTime:0,fpsFrames:0};
       const tierNames=['HIGH','BALANCED','SMOOTH'];
+      function updateQualityLabel() {
+        qualityButton.textContent=(quality.mode==='auto'?'AUTO / ':'LOCKED / ')+tierNames[quality.tier];
+        qualityButton.dataset.mobileMode=quality.mode==='auto'?'AUTO':'LOCKED';
+        qualityButton.dataset.mobileTier=tierNames[quality.tier];
+        const aaValue=actualAntialias(),aaLabel=aaValue===null?'unknown':aaValue?'on':'off';
+        qualityButton.title=`Click or press Q to cycle quality. Antialiasing ${aaLabel}; use URL parameter aa=on or aa=off and reload to change it.`;
+        qualityButton.setAttribute('aria-label',`Render quality ${quality.mode==='auto'?'automatic':'locked'}: ${tierNames[quality.tier].toLowerCase()}. Antialiasing ${aaLabel}. Activate to change quality.`);
+      }
       function applyQuality() {
         const ratio=Math.min(devicePixelRatio||1,compact?1.4:1.85,Math.sqrt((compact?1900000:4200000)/(innerWidth*innerHeight)));
         // A one-times display also needs room to adapt: a floor of 1 kept all three desktop tiers at
@@ -9170,10 +9196,7 @@
         for(const chunk of floraChunks)if(chunk.cards)chunk.cards.visible=quality.tier<2;
         weatherParticles.uniforms.uRatio.value=renderer.getPixelRatio();
         weatherParticles.points.geometry.setDrawRange(0, Math.round(weatherParticles.count * [1, .74, .5][quality.tier]));
-        qualityButton.textContent=(quality.mode==='auto'?'AUTO / ':'LOCKED / ')+tierNames[quality.tier];
-        const aaValue=actualAntialias(),aaLabel=aaValue===null?'unknown':aaValue?'on':'off';
-        qualityButton.title=`Click or press Q to cycle quality. Antialiasing ${aaLabel}; use URL parameter aa=on or aa=off and reload to change it.`;
-        qualityButton.setAttribute('aria-label',`Render quality: ${quality.mode}, ${tierNames[quality.tier].toLowerCase()}. Antialiasing ${aaLabel}. Click to change quality.`);
+        updateQualityLabel();
         quality.cooldown=8; quality.slow=quality.fast=quality.severeFrames=quality.severeTime=0;
         renderer.shadowMap.needsUpdate=true;
       }
@@ -10349,8 +10372,8 @@
         quality.fps=60;quality.fpsTime=quality.fpsFrames=0;
       }
       document.addEventListener('visibilitychange',()=>{rebaseFrameClock();clearInput();});
-      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;status.hidden=false;statusText.textContent='RESTORING THE WORLD';clearInput();});
-      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;rebaseFrameClock();renderer.shadowMap.needsUpdate=true;status.hidden=true;});
+      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;updateQualityLabel();status.hidden=false;statusText.textContent='RESTORING THE WORLD';clearInput();});
+      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;updateQualityLabel();rebaseFrameClock();renderer.shadowMap.needsUpdate=true;status.hidden=true;});
       orbitPose();camera.position.copy(targetPosition);camera.quaternion.copy(targetRotation);
       applyQuality();
       function updateWorld(dt) {

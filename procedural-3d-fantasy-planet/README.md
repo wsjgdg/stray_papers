@@ -42,12 +42,15 @@ npm ci --prefix sims/browser
 CHROME_PATH=/path/to/chromium npm test --prefix sims/browser                 # 实际输入与音频链路
 CHROME_PATH=/path/to/chromium npm run test:adaptive --prefix sims/browser    # 加入人工慢帧及 Q 画质切换
 CHROME_PATH=/path/to/chromium npm run test:antialias --prefix sims/browser   # 真实 WebGL 抗锯齿设置
+CHROME_PATH=/path/to/chromium npm run test:quality-touch --prefix sims/browser # 触屏画质控制和窄屏布局
 CHROME_PATH=/path/to/chromium npm run test:fauna --prefix sims/browser       # 动物行为与声音调度
 CHROME_PATH=/path/to/chromium npm run test:sightline --prefix sims/browser   # 干地受控路线与实际画面像素
 CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # 帧间隔与渲染调用诊断
 ```
 
-烟测独立启动只监听本机的临时服务器，不占用 8080；用锁定的本地 three.js 代替 CDN、禁用外部字体，并在内存副本中插入观察钩子。基础烟测检查默认转场、实际 `F / W / H / O / Space / M` 事件及 WebAudio；`test:adaptive` 在实际动画帧中人为加入延迟，验证自动降档与 `Q` 锁定，**不是设备性能测试**。`test:antialias` 在独立的真实 WebGL 上下文中检查默认和 URL 覆盖，并用模拟的硬件名称检查策略接线（模拟名称不是真 GPU 测试）；可设置 `BROWSER_AA_CONTEXT_RESTORE=1` 附加上下文丢失/恢复测试，`BROWSER_AA_REQUIRE_COMPOSER=1` 要求测试桌面 bloom 渲染目标（需将 `BROWSER_WIDTH` 设为至少 `760`）。`test:fauna` 把玩家放到真实动物附近，观察页面自己的动画和受惊鼻息调度；并未证明从默认落点能看见动物或人耳能听清声音。
+烟测独立启动只监听本机的临时服务器，不占用 8080；用锁定的本地 three.js 代替 CDN、禁用外部字体，并在内存副本中插入观察钩子。基础烟测检查默认转场、实际 `F / W / H / O / Space / M` 事件及 WebAudio；`test:adaptive` 在实际动画帧中人为加入延迟，验证自动降档与 `Q` 锁定，**不是设备性能测试**。`test:antialias` 在独立的真实 WebGL 上下文中检查默认和 URL 覆盖，并用模拟的硬件名称检查策略接线（模拟名称不是真 GPU 测试）；可设置 `BROWSER_AA_CONTEXT_RESTORE=1` 附加上下文丢失/恢复及按钮状态测试，`BROWSER_AA_REQUIRE_COMPOSER=1` 要求测试桌面 bloom 渲染目标（需将 `BROWSER_WIDTH` 设为至少 `760`）。`test:fauna` 把玩家放到真实动物附近，观察页面自己的动画和受惊鼻息调度；并未证明从默认落点能看见动物或人耳能听清声音。
+
+`test:quality-touch` 用浏览器模拟触摸，在轨道和实际点按 `SWITCH VIEW` 降落后分别点按画质按钮，检查三种选择、可访问名称及抗锯齿上下文不变；随后仅为避免自动画质在断言之间变化而暂停实时循环，检查 320–1000 CSS 像素多个断点的按钮可点击区域、顶栏重叠与人工慢帧后的标签。后半段不是性能测试；模拟触屏、本地 three.js 和默认不加载外部字体也不能代替真实手机目检。
 
 `test:sightline` 在实际 `F` 降落后暂停实时循环，从落点以页面自己的 120 Hz 物理及动物更新**受控逐步**走一条干地候选路线；完成该位置的地表重撒后，对准附近动物渲染包括全部植被和动物的正常画面。仅为像素归因，随后临时把 650 mm 内动物实例的矩阵缩到零，保留原阴影再渲染对照，并立即恢复；通过条件是正常画面中至少 `0.1%`、且不少于 `20` 个像素来自这些附近动物，截图保存的始终是**未做实例遮掩的正常画面**（它仍可能被植被挡住）。测试不是人手实时行走，也不保证默认首眼可见，更不能代替人眼验收。建议使用默认窄视口（宽度小于 `760`，不启用 bloom）；`BROWSER_SIGHTLINE_ATTEMPTS` 可将候选画面次数设为 1–12，默认达到像素阈值即停止。设置 `BROWSER_SIGHTLINE_ALL=1` 会继续观察直到尝试上限或路线结束；再设 `BROWSER_SIGHTLINE_DIR=/tmp/aetheris-views` 可保存各次未遮掩画面（同名 `sightline-NN.png` 会覆盖），`BROWSER_SCREENSHOT` 则保存归因像素最多的一帧。不同画面内动物数量可能不同，像素最多**不等于**最清楚，需逐张目视；采样多帧也会更慢。
 
@@ -290,7 +293,7 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 | --- | --- |
 | `T` / 顶部太阳按钮 | 昼夜相位翻转 π（`SHIFT LIGHT`） |
 | `R` / 顶部云图标 | 循环 6 种天气：CLEAR / MIST / RAIN / STORM / SNOW / ASH |
-| `Q` / 右上角质量标签 | 画质档位循环：`AUTO → LOCKED HIGH → LOCKED BALANCED` |
+| `Q` / 右上角 `QUALITY` 按钮 | 画质档位循环：`AUTO → LOCKED HIGH → LOCKED BALANCED`；窄屏和触屏也可点按，按钮显示当前模式与实际档位 |
 | `M` / 喇叭按钮 | 生成式环境音（风噪 + 低频 pad + 夜间微光泛音） |
 | `E` | 立刻观看一次穹顶作业（原「异象」），用于看效果 / 演示 |
 
@@ -384,7 +387,8 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 目标是在「轻薄本 / 中端手机」上也能 60 fps 巡航。核心手段：
 
 - **像素预算**：`pixelRatio = min(devicePixelRatio, 上限, sqrt(预算 / 视口面积))`，桌面 3.5–4.2 MP、移动 1.9 MP，避免高分屏直接渲 4K。
-- **软件渲染抗锯齿回退**：创建 WebGL 上下文前，仅当启动探针明确报告 `SwiftShader` 时默认不请求多重采样；其他或隐藏 GPU 名称仍保持原来的开启默认。桌面 bloom 的渲染目标也跟随同一请求。锯齿可能更明显；可在页面 URL 加 `?aa=on` 请求开启、`?aa=off` 请求关闭（已有查询参数时用 `&`），刷新生效；浏览器可能拒绝开启请求。它与 `Q` 实时画质档位独立，因为 WebGL 上下文创建后不能改这个属性；质量按钮的提示和 `aetheris.diagnostics()` 会区分请求与浏览器实际给予的设置。沙箱 SwiftShader、`480×270` / `0.5` 像素比下，三次各 10 个地表帧的 RAF 间隔中位数由开启时约 `3.36–6.16 s` 变为关闭时约 `0.50–1.24 s`；`640×360` / `0.5` 的一次对照约 `7.37 → 1.38 s`。这些是少量软件环境的回调间隔，不是显示帧率或真机 GPU 基准；仍有慢帧，真实画质和性能需要实测。
+- **窄屏画质控制**（`pennants-78`）：之前窄屏和触屏把画质标签完全隐藏，现在同一个按钮显示 `QUALITY / AUTO 或 LOCKED / 当前档位`，点击仍按 `AUTO → LOCKED HIGH → LOCKED BALANCED → AUTO` 循环。`AUTO` 可自行降到 `SMOOTH`；手动点击并不会切换 WebGL 抗锯齿。按钮只提供已有控制，并不声称解决慢帧或保证某个帧率。
+- **软件渲染抗锯齿回退**：创建 WebGL 上下文前，仅当启动探针明确报告 `SwiftShader` 时默认不请求多重采样；其他或隐藏 GPU 名称仍保持原来的开启默认。桌面 bloom 的渲染目标也跟随同一请求。锯齿可能更明显；可在页面 URL 加 `?aa=on` 请求开启、`?aa=off` 请求关闭（已有查询参数时用 `&`），刷新生效；浏览器可能拒绝开启请求。它与 `Q` 实时画质档位独立，因为 WebGL 上下文创建后不能改这个属性；质量按钮的提示和 `aetheris.diagnostics()` 会区分请求与浏览器实际给予的设置；上下文丢失期间按钮报告 `unknown`，恢复后重新报告实际值。沙箱 SwiftShader、`480×270` / `0.5` 像素比下，三次各 10 个地表帧的 RAF 间隔中位数由开启时约 `3.36–6.16 s` 变为关闭时约 `0.50–1.24 s`；`640×360` / `0.5` 的一次对照约 `7.37 → 1.38 s`。这些是少量软件环境的回调间隔，不是显示帧率或真机 GPU 基准；仍有慢帧，真实画质和性能需要实测。
 - **三档自适应画质**（`AUTO` 时按帧时间自动切换）：像素比、云层、叶卡、天气粒子数量、阴影刷新频率一起降级；降级使用 `InstancedMesh.count` / `setDrawRange`，不重传缓冲。连续极慢帧也参与判断，单次长卡顿不会单独触发降档，转场中不切档、隐藏页恢复会重置计时。1× 像素比设备的三档分别为 `1.00 / 0.92 / 0.82`（实际受视口预算约束）；`estimatedFps` 单独按真实帧间隔计数，不用控制器截断后的均值冒充帧率。**这是自适应策略，不是 60 fps 的实测保证**；沙箱 SwiftShader 在降档后仍有数秒以上的慢帧。
 - **慢帧排查的未采用方案**：临时将镇子按 24 个球面区域分批，并为轨道保留原全球批次，某次相同视口的落地帧从 `676,323` 降到 `410,917` 个三角形，但 draw calls 从 `124` 增到 `152`；各 12 帧的帧间隔中位数约 `3.66 / 3.60 s`，不足以证明实际变快。将渲染缓冲的宽高各减半也仍观察到数秒的渲染等待。样本有限且不能定位驱动、GPU 队列或合成器根因，因此没有把该分批候选当性能修复提交，真实设备仍需实测。
 - **阴影**按帧节流（`shadowMap.autoUpdate = false`）：地表模式每 3 / 5 / 8 帧刷新，轨道模式降到每 10 / 14 / 20 帧（太阳几乎不动、玩家不在阴影体积里移动）；光源包围盒在地表模式收缩到 1.4 单位。

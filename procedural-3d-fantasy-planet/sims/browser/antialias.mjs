@@ -118,21 +118,31 @@ try {
           const gl = window.__aaProbe.renderer.getContext();
           window.__aaRestoreExt = gl.getExtension('WEBGL_lose_context');
           if (!window.__aaRestoreExt) return false;
-          window.__aaLost = false;
+          window.__aaLost = false; window.__aaRestored = false;
           window.__aaProbe.renderer.domElement.addEventListener('webglcontextlost', () => { window.__aaLost = true; }, { once: true });
+          window.__aaProbe.renderer.domElement.addEventListener('webglcontextrestored', () => { window.__aaRestored = true; }, { once: true });
           window.__aaRestoreExt.loseContext();
           return true;
         });
         check(test.label + ': context-loss extension is available', available);
         await page.waitForFunction(() => window.__aaLost, { timeout, polling: 500 });
-        const lost = await page.evaluate(() => window.aetheris.diagnostics());
-        check(test.label + ': lost context reports unknown actual antialiasing', lost.antialias === null &&
-          lost.antialiasRequested === false);
+        const lost = await page.evaluate(() => ({ diagnostics: window.aetheris.diagnostics(),
+          title: document.getElementById('qualityStatus').title,
+          aria: document.getElementById('qualityStatus').getAttribute('aria-label') }));
+        check(test.label + ': lost context reports unknown actual antialiasing', lost.diagnostics.antialias === null &&
+          lost.diagnostics.antialiasRequested === false);
+        check(test.label + ': quality label reports unknown during context loss',
+          lost.title.includes('Antialiasing unknown') && lost.aria.includes('Antialiasing unknown'));
         await page.evaluate(() => window.__aaRestoreExt.restoreContext());
-        await page.waitForFunction(() => !window.__aaProbe.renderer.getContext().isContextLost(), { timeout, polling: 500 });
-        const restored = await page.evaluate(() => window.aetheris.diagnostics());
-        check(test.label + ': restored context retains the request', restored.antialias === before.actual &&
-          restored.antialiasRequested === false);
+        await page.waitForFunction(() => window.__aaRestored && !window.__aaProbe.renderer.getContext().isContextLost(),
+          { timeout, polling: 500 });
+        const restored = await page.evaluate(() => ({ diagnostics: window.aetheris.diagnostics(),
+          title: document.getElementById('qualityStatus').title,
+          aria: document.getElementById('qualityStatus').getAttribute('aria-label') }));
+        check(test.label + ': restored context retains the request', restored.diagnostics.antialias === before.actual &&
+          restored.diagnostics.antialiasRequested === false);
+        check(test.label + ': quality label reports the recovered actual setting',
+          restored.title.includes('Antialiasing off') && restored.aria.includes('Antialiasing off'));
       }
       check(test.label + ': no page or console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
     } finally {

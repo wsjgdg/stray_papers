@@ -86,6 +86,18 @@ ok('locked choices ignore low frame rates and Q returns to AUTO', lockedHigh && 
   quality.mode === 'auto' && quality.tier === 0 && qualityButton.textContent === 'AUTO / HIGH');
 
 reset();
+const compactAuto = qualityButton.dataset.mobileMode === 'AUTO' && qualityButton.dataset.mobileTier === 'HIGH';
+cycleQuality();
+const compactHigh = qualityButton.dataset.mobileMode === 'LOCKED' && qualityButton.dataset.mobileTier === 'HIGH';
+cycleQuality();
+const compactBalanced = qualityButton.dataset.mobileMode === 'LOCKED' && qualityButton.dataset.mobileTier === 'BALANCED';
+cycleQuality();
+feed(.2, 20);
+ok('compact label tracks locked choices and automatic downgrades', compactAuto && compactHigh && compactBalanced &&
+  quality.mode === 'auto' && quality.tier === 2 && qualityButton.dataset.mobileMode === 'AUTO' &&
+  qualityButton.dataset.mobileTier === 'SMOOTH' && qualityButton.getAttribute('aria-label').includes('smooth'));
+
+reset();
 const full = { ratio: renderer.getPixelRatio(), ...qualityVisuals() };
 quality.tier = 1; applyQuality();
 const balanced = { ratio: renderer.getPixelRatio(), ...qualityVisuals() };
