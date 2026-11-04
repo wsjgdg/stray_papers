@@ -499,6 +499,20 @@ body {
   opacity: 0.3;
 }
 
+/* screen-reader live channel: full dialogue lines land here once per
+   display; visually hidden so it never disturbs the typewriter view */
+.vn-sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* decorative auto-mode progress line along the dialog's bottom edge; the
    engine sets animation-duration inline (mirrors the auto-advance delay) */
 .vn-auto-bar {
@@ -7076,6 +7090,11 @@ window.SCENARIO = {
     var dialog = h("div", "vn-dialog", app);
     var name = h("div", "vn-name", dialog);
     var text = h("div", "vn-text", dialog);
+    // screen-reader channel: the full line lands here once per display, so
+    // SR users hear complete sentences instead of per-character type noise
+    var srLive = h("div", "vn-sr-live", dialog);
+    srLive.setAttribute("aria-live", "polite");
+    srLive.setAttribute("aria-atomic", "true");
     // decorative auto-mode progress line (aria-hidden: purely visual cue)
     var autoBar = h("div", "vn-auto-bar", dialog);
     autoBar.setAttribute("aria-hidden", "true");
@@ -7221,6 +7240,7 @@ window.SCENARIO = {
       sprites: sprites,
       name: name,
       text: text,
+      srLive: srLive,
       autoBar: autoBar,
       autoBarFill: autoBarFill,
       choices: choices,
@@ -8395,10 +8415,13 @@ window.SCENARIO = {
       els.name.style.borderColor = color;
       showSprite(speakerId, line.feel);
       pushBacklog(nameText, text);
+      if (els.srLive)
+        els.srLive.textContent = nameText + "：" + text; // full line, once
     } else {
       els.name.classList.add("vn-hidden");
       els.name.textContent = "";
       pushBacklog("", text);
+      if (els.srLive) els.srLive.textContent = text;
     }
 
     applyLineFx(line);

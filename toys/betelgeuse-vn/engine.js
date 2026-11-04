@@ -216,6 +216,11 @@
     var dialog = h("div", "vn-dialog", app);
     var name = h("div", "vn-name", dialog);
     var text = h("div", "vn-text", dialog);
+    // screen-reader channel: the full line lands here once per display, so
+    // SR users hear complete sentences instead of per-character type noise
+    var srLive = h("div", "vn-sr-live", dialog);
+    srLive.setAttribute("aria-live", "polite");
+    srLive.setAttribute("aria-atomic", "true");
     // decorative auto-mode progress line (aria-hidden: purely visual cue)
     var autoBar = h("div", "vn-auto-bar", dialog);
     autoBar.setAttribute("aria-hidden", "true");
@@ -361,6 +366,7 @@
       sprites: sprites,
       name: name,
       text: text,
+      srLive: srLive,
       autoBar: autoBar,
       autoBarFill: autoBarFill,
       choices: choices,
@@ -1535,10 +1541,13 @@
       els.name.style.borderColor = color;
       showSprite(speakerId, line.feel);
       pushBacklog(nameText, text);
+      if (els.srLive)
+        els.srLive.textContent = nameText + "：" + text; // full line, once
     } else {
       els.name.classList.add("vn-hidden");
       els.name.textContent = "";
       pushBacklog("", text);
+      if (els.srLive) els.srLive.textContent = text;
     }
 
     applyLineFx(line);

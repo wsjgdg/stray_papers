@@ -487,6 +487,20 @@ body {
   opacity: 0.3;
 }
 
+/* screen-reader live channel: full dialogue lines land here once per
+   display; visually hidden so it never disturbs the typewriter view */
+.vn-sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* decorative auto-mode progress line along the dialog's bottom edge; the
    engine sets animation-duration inline (mirrors the auto-advance delay) */
 .vn-auto-bar {
