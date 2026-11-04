@@ -33,9 +33,12 @@
  *     .vn-settings > .vn-settings-title + .vn-setting-row (label + input.vn-range
  *                                  + span.vn-range-val) x2 + button.vn-close
  *     .vn-title > .vn-title-name + .vn-title-sub + .vn-endings +
- *                                  button#vn-start + button#vn-bonus
+ *                                  button#vn-start + button#vn-continue +
+ *                                  button#vn-bonus
  *       (.vn-endings = .vn-endings-count + .vn-endings-marks >
  *        span.vn-ending-mark[data-ending="ending_*"], the 结局收集 readout;
+ *        #vn-continue 继续游戏 = loads the most recent vn-save-1..3 slot,
+ *        hidden via .vn-hidden unless some slot holds parseable JSON;
  *        #vn-bonus 星语 · 后日谈 = 100%-completion bonus episode, hidden via
  *        .vn-hidden unless titleBonusActive())
  *     .vn-toast
@@ -330,6 +333,16 @@
     bonusBtn.textContent = "星语 · 后日谈";
     bonusBtn.classList.add("vn-hidden");
     bonusBtn.addEventListener("click", startBonus);
+    // 继续游戏: loads the most recent of vn-save-1..3 through the exact
+    // readSlot() path the in-game load menu uses. Visibility is driven by
+    // syncContinueButton() from here and every showTitle; hidden by default
+    // until some slot holds parseable JSON.
+    var continueBtn = h("button", null, title);
+    continueBtn.id = "vn-continue";
+    continueBtn.type = "button";
+    continueBtn.textContent = "继续游戏";
+    continueBtn.classList.add("vn-hidden");
+    continueBtn.addEventListener("click", continueGame);
 
     var chapter = h("div", "vn-chapter vn-hidden", app);
     var chapterText = h("div", "vn-chapter-text", chapter);
@@ -373,6 +386,7 @@
       endingsMarks: endingsMarks,
       endingMarks: endingMarks,
       bonusBtn: bonusBtn,
+      continueBtn: continueBtn,
       chapter: chapter,
       chapterText: chapterText,
       credits: credits,
@@ -390,6 +404,7 @@
     loadSettings(); // once per build: volume -> VN_AUDIO, delay -> state
     renderEndings(); // initial collector readout (empty storage -> 0/3, ？x3)
     syncBonusButton(); // 星语 · 后日谈 joins the title only at 3/3 + finale_star
+    syncContinueButton(); // 继续游戏 joins the title only with a parseable save
   }
 
   /* ------------------------------------------------------------- small utils */
@@ -1856,6 +1871,32 @@
     presentCurrent(0);
   }
 
+  // Slot number (1..SLOT_COUNT) of the most recent parseable save, or -1 when
+  // no slot parses. ISO `ts` strings compare lexicographically; a slot whose
+  // payload lacks a usable ts sorts below any timestamped one. Same guarded
+  // storage discipline as readSlot: an unavailable store reads as no saves.
+  function latestSaveSlot() {
+    var bestN = -1;
+    var bestTs = "";
+    for (var i = 1; i <= SLOT_COUNT; i++) {
+      var raw = readSlotRaw(i);
+      if (!raw) continue;
+      var data = null;
+      try {
+        data = JSON.parse(raw);
+      } catch (err) {
+        data = null; // corrupt payload: not a continue candidate
+      }
+      if (!data || typeof data !== "object") continue;
+      var ts = typeof data.ts === "string" ? data.ts : "";
+      if (bestN < 0 || ts > bestTs) {
+        bestN = i;
+        bestTs = ts;
+      }
+    }
+    return bestN;
+  }
+
   /* ---------------------------------------------------------------- vn menu */
 
   function openMenu(mode) {
@@ -2173,6 +2214,15 @@
   function syncBonusButton() {
     if (!els || !els.bonusBtn) return;
     els.bonusBtn.classList.toggle("vn-hidden", !titleBonusActive());
+  }
+
+  // 继续游戏 gate: the continue button joins the title only while some
+  // vn-save-1..3 slot holds parseable JSON (validity against the scenario is
+  // readSlot's business at click time), re-evaluated on every DOM build and
+  // every return to the title. Pure class toggle: no timers, no loops.
+  function syncContinueButton() {
+    if (!els || !els.continueBtn) return;
+    els.continueBtn.classList.toggle("vn-hidden", latestSaveSlot() < 0);
   }
 
   /* -------------------------------------------------- title canvas + chapter */
@@ -2547,6 +2597,7 @@
     renderEndings(); // refresh the 结局收集 readout for this visit
     applyTitleSub(titleBonusActive()); // 3/3: swap in the thank-you subtitle
     syncBonusButton(); // 星语 · 后日谈 reappears while 3/3 still holds
+    syncContinueButton(); // 继续游戏 reappears while a save slot holds data
     els.title.classList.remove("vn-hidden");
     startTitleCanvas();
   }
@@ -2581,6 +2632,26 @@
     els.title.classList.add("vn-hidden");
     stopTitleCanvas();
     enterScene(bonusId, 0);
+  }
+
+  // 继续游戏: the title-screen continue button. Picks the most recent
+  // parseable save (latestSaveSlot) and loads it through the exact readSlot()
+  // path the in-game load menu uses, so every load side effect matches —
+  // audio blip, bg restore, state, timer cleanup, menu/overlay teardown. A
+  // corrupt payload is readSlot's business: its 空存档 toast fires and we
+  // stay on the title (restoreFrom never ran, so the title is still shown and
+  // its canvas loop is restarted below).
+  function continueGame() {
+    var n = latestSaveSlot();
+    if (n < 0) {
+      toast("空存档"); // unreachable via the UI (the button hides itself)
+      return;
+    }
+    stopTitleCanvas(); // same teardown as beginGame/startBonus before leaving
+    readSlot(n); // restoreFrom hides the title — this button goes with it
+    if (!els.title.classList.contains("vn-hidden")) {
+      startTitleCanvas(); // corrupt save: the toast kept us on the title
+    }
   }
 
   /* ----------------------------------------------------------------- events */
