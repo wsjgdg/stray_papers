@@ -26,6 +26,9 @@ function listHtml() {
 }
 
 function extractLocalRefs(html) {
+  /* Strip script/style blocks first: inline JS legitimately contains
+     dynamic hrefs ('...+ p.url + ...') that are not file references. */
+  html = html.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, '');
   const refs = [];
   const re = /(?:src|href)\s*=\s*"([^"]+)"/g;
   let m;

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>结业证书 — AI 探索基地</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+  <main class="section">
+
+    <h1>🎓 结业这一页</h1>
+    <p class="lead">逛完 6 关，这里有一份给你的证书；就算还没逛完，这里也有一份马上就能用的行动清单。</p>
+
+    <!-- 证书：集齐 6 关才显示 -->
+    <div id="certificate-block" style="display:none;">
+      <div class="certificate reveal" style="margin-top:2rem;">
+        <p style="letter-spacing:0.3em; color:var(--ink-soft); margin:0;">CERTIFICATE OF EXPLORATION</p>
+        <p class="cert-title">结 业 证 书</p>
+        <p style="color:var(--ink-soft);">兹证明</p>
+        <p class="cert-name">妈妈</p>
+        <p style="max-width:26em; margin:0 auto;">
+          已走完「AI 探索基地」全部六关，
+          见证了 AI 能做什么、它正往哪里去、
+          以及骗子用 AI 耍的花招。
+          从今天起，你也可以让 AI 帮你干活了。
+        </p>
+        <p style="margin-top:1.5em; color:var(--ink-soft);">颁发人：<strong style="color:var(--accent-dark);">爱你的儿子</strong>（和 AI 一起）</p>
+      </div>
+      <p style="text-align:center; color:var(--ink-soft); margin-top:1rem;">🎉 恭喜！这一路你不是看客，是把六关都走完的探索者。</p>
+    </div>
+
+    <!-- 未集齐：显示进度 -->
+    <div id="progress-block" class="card reveal" style="margin-top:2rem;">
+      <h3 style="margin-top:0;">证书还没解锁 🔒</h3>
+      <p>当前进度：<strong id="progress-count"></strong></p>
+      <p id="remaining-list"></p>
+      <a class="btn" href="../index.html">回到探索地图继续 →</a>
+    </div>
+
+    <h2 class="reveal">行动清单：不用等结业，今天就能开始</h2>
+
+    <div class="card reveal">
+      <h3 style="margin-top:0;">📅 今天（5 分钟）</h3>
+      <p>
+        在手机上装一个 <strong>豆包</strong>（应用商店搜"豆包"，免费的），
+        或者浏览器打开 <strong>doubao.com</strong>。
+        然后把这句话发给它（可以照抄，也可以改）：
+      </p>
+      <div class="bubble them typewriter" style="max-width:100%;">
+        你是一位有20年经验的保险顾问。我想给50-60岁的客户讲重疾险的价值，请帮我写一段300字的口语化开场白。
+      </div>
+      <p style="color:var(--ink-soft); font-size:0.95rem;">
+        这是提示词学院教的第一课：告诉 AI 它是谁、你要什么、给谁看。就这一句话，回答质量完全不一样。
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <h3 style="margin-top:0;">📦 本周（半小时）</h3>
+      <p>
+        用 AI 做<strong>一件小作品</strong>发到朋友圈：
+        让 AI 帮你画一张节日祝福图、写一段配文，或者把今天想发的内容先请 AI 润色一遍再发。
+        发完你会得到一个结论：<strong>原来我也能做出这种东西。</strong>
+      </p>
+    </div>
+
+    <div class="card reveal">
+      <h3 style="margin-top:0;">🗓️ 本月（选一条路）</h3>
+      <p>
+        回到 <a href="../index.html">探索地图</a> 里的「副业地图」关卡，从三条路里挑一条最顺眼的，
+        只要求自己走完<strong>第一步</strong>（每一关都写好了第一步是什么）。
+        不用想太远，先走一步。
+      </p>
+    </div>
+
+    <!-- 给儿子的隐藏提示 -->
+    <details class="card reveal" style="color:var(--ink-soft);">
+      <summary style="cursor:pointer; font-weight:700;">给儿子的话（妈妈可以不点开 🙂）</summary>
+      <ul>
+        <li>演示建议：当面陪她把「骗局解剖室」走一遍，尤其是第 4 关让她自己选"继续投资"，体验上头的感觉比说教有效。</li>
+        <li>帮她把豆包装进手机，第一次打开时陪她发第一条提示词。</li>
+        <li>她的进度存在浏览器里，换设备会重置——如果她换手机看，陪她重新打卡一次当复习。</li>
+        <li>后续迭代方向：真实 AI 成果素材替换占位展示、增加视频讲解、部署在线版。</li>
+      </ul>
+    </details>
+
+    <p style="text-align:center; margin-top:2.5rem;">
+      <a class="btn btn-secondary" href="../index.html">← 回到探索地图</a>
+    </p>
+
+  </main>
+
+  <script src="../assets/vendor/confetti.min.js"></script>
+  <script src="../assets/js/progress.js"></script>
+  <script src="../assets/js/site.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var P = window.AIProgress;
+
+      function render() {
+        var all = P.isAllDone();
+        document.getElementById('certificate-block').style.display = all ? '' : 'none';
+        document.getElementById('progress-block').style.display = all ? 'none' : '';
+
+        document.getElementById('progress-count').textContent = P.badge();
+
+        var remaining = P.PAGES.filter(function (p) { return !P.done(p.id); });
+        document.getElementById('remaining-list').innerHTML = remaining.length
+          ? '还差这几关：' + remaining.map(function (p) {
+              return '<a href="' + p.url + '">' + p.title + '</a>';
+            }).join('、')
+          : '';
+      }
+
+      render();
+      P.onChange(render);
+
+      /* Full-screen celebration once, on the moment all six are done.
+         On later visits the certificate simply shows without re-firing. */
+      var celebrated = false;
+      try { celebrated = root_localStorage_flag(); } catch (e) {}
+      if (P.isAllDone() && !celebrated && window.confetti) {
+        burst();
+        try {
+          localStorage.setItem('ai-base-celebrated', '1');
+        } catch (e) {}
+      }
+
+      function burst() {
+        var end = Date.now() + 1800;
+        (function frame() {
+          window.confetti({ particleCount: 6, angle: 60, spread: 60, origin: { x: 0 } });
+          window.confetti({ particleCount: 6, angle: 120, spread: 60, origin: { x: 1 } });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+        window.confetti({ particleCount: 160, spread: 100, origin: { y: 0.6 } });
+      }
+
+      function root_localStorage_flag() {
+        return localStorage.getItem('ai-base-celebrated') === '1';
+      }
+
+      window.AISite.pageReady('graduation'); /* chrome only — not a checkable task */
+    })();
+  </script>
+</body>
+</html>
+
