@@ -43,11 +43,14 @@ CHROME_PATH=/path/to/chromium npm test --prefix sims/browser                 # �
 CHROME_PATH=/path/to/chromium npm run test:adaptive --prefix sims/browser    # 加入人工慢帧及 Q 画质切换
 CHROME_PATH=/path/to/chromium npm run test:fauna --prefix sims/browser       # 动物行为与声音调度
 CHROME_PATH=/path/to/chromium npm run test:sightline --prefix sims/browser   # 干地受控路线与实际画面像素
+CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # 帧间隔与渲染调用诊断
 ```
 
 烟测独立启动只监听本机的临时服务器，不占用 8080；用锁定的本地 three.js 代替 CDN、禁用外部字体，并在内存副本中插入观察钩子。基础烟测检查默认转场、实际 `F / W / H / O / Space / M` 事件及 WebAudio；`test:adaptive` 在实际动画帧中人为加入延迟，验证自动降档与 `Q` 锁定，**不是设备性能测试**。`test:fauna` 把玩家放到真实动物附近，观察页面自己的动画和受惊鼻息调度；并未证明从默认落点能看见动物或人耳能听清声音。
 
 `test:sightline` 在实际 `F` 降落后暂停实时循环，从落点以页面自己的 120 Hz 物理及动物更新**受控逐步**走一条干地候选路线；完成该位置的地表重撒后，对准附近动物渲染包括全部植被和动物的正常画面。仅为像素归因，随后临时把 650 mm 内动物实例的矩阵缩到零，保留原阴影再渲染对照，并立即恢复；通过条件是正常画面中至少 `0.1%`、且不少于 `20` 个像素来自这些附近动物，截图保存的始终是**未做实例遮掩的正常画面**（它仍可能被植被挡住）。测试不是人手实时行走，也不保证默认首眼可见，更不能代替人眼验收。建议使用默认窄视口（宽度小于 `760`，不启用 bloom）；`BROWSER_SIGHTLINE_ATTEMPTS` 可将候选画面次数设为 1–12。
+
+`bench:render` 采样正常轨道帧，实际按 `F` 后采样地表帧；不跳过绘制，也不改世界或画质。默认 `1024×576`、像素比 `1`，分别采 20 / 30 帧；可用 `BROWSER_PERF_ORBIT_FRAMES`、`BROWSER_PERF_GROUND_FRAMES` 设为 4–300 帧，慢机器可能需要调大 `BROWSER_TIMEOUT_MS`。设置 `BROWSER_PERF_OUTPUT=/tmp/aetheris-perf.json` 可保存汇总和逐帧数据；`BROWSER_PAGE_HTML` 可改为待对照的本地页面（须包含当前相同的插桩锚点），输出记录源文件及 SHA-256。`BROWSER_HEADFUL=1` 会打开有窗口的浏览器，需要图形桌面。无头模式可能使用软件渲染，应检查输出的 GPU 名称，不要假定是真实硬件。RAF 间隔不是显示帧间隔；`renderScene` 调用墙钟时间可能包括阻塞，**不等于 GPU 完成时间**；地表样本包含首帧，bloom 开启时 renderer 计数可能只反映最后一个后处理 pass。插桩本身有开销，本地 three.js / 无字体的自动运行既不是性能保证，也不能代替实际游玩和目视。
 
 可通过 `BROWSER_WIDTH`、`BROWSER_HEIGHT`、`BROWSER_SCALE` 配置视口，以 `BROWSER_SCREENSHOT` 指定可选截图路径（`test:sightline` 保存画布，其他烟测保存页面）；`BROWSER_FAUNA_FRAMES` 可设动物观察帧数（8–120），`BROWSER_FAUNA_RAYS=1` 输出 CPU 射线诊断（不包含 GPU 的植被顶点变形）。`CHROME_ARGS` 可传 JSON 字符串数组（例如仅在隔离环境中使用 `["--no-sandbox"]`；请先了解其安全风险）。`BROWSER_MAX_TRANSITION_SECONDS` 可设真实机器上的耗时预算；默认只报告墙钟时间，不把慢软件渲染当作性能通过。浏览器二进制并不随依赖安装，烟测也不能代替联网 CDN、真机目视或人工试听。
 
