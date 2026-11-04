@@ -195,7 +195,7 @@ export function loadPage(file = PAGE) {
         inquest, updateInquest, clearInquest, inquestSheltered, patrol, patrolWorld, shelterRings,
         INQUEST_DWELL, INQUEST_WARNING, INQUEST_SWEEP, INQUEST_REST, INQUEST_BEAM, INQUEST_SHELTER,
         drowned, updateDrowned, shadow, trenchDirection, echoes, echoSites, updateEchoes, updateAudioMix,
-        skyCities, updateSkyCities,
+        skyCities, updateSkyCities, focusSkyCity, returnFromSkyCity, dropSkyFocus, orbitPose, zoom,
         eventState, updateEvents, finishEvent, detune, costState, setWorldMap, mapDraw, mapWorldDraw,
         getCodexHTML: () => document.getElementById('codexSection').innerHTML,
         teleportTo, mapAnchors, rebaseFrameClock: typeof rebaseFrameClock === 'undefined' ? null : rebaseFrameClock,

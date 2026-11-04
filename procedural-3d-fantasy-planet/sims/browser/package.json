@@ -11,7 +11,8 @@
     "test:fauna": "node fauna.mjs",
     "test:sightline": "node sightline.mjs",
     "bench:render": "node perf.mjs",
-    "test:story": "node story.mjs"
+    "test:story": "node story.mjs",
+    "test:cities": "node cities.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "25.16.0"

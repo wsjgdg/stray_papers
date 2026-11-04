@@ -24,19 +24,22 @@ ok('a fresh device begins with no signal, mark or visible story geometry',
   story.detunes === 0 && story.detections === 0 && story.mark === null && storyStage() === 0 && !echoes.visible && !shadow.visible);
 const cities = w.skyCities;
 w.scene.updateMatrixWorld(true); w.camera.updateMatrixWorld(true);
-let lowestCityPoint = Infinity;
-for (const city of cities) {
-  const positions = city.mesh.geometry.attributes.position, point = new THREE.Vector3();
+let lowestCityPoint = Infinity, cityVertices = 0;
+for (const city of cities) for (const mesh of city.meshes) {
+  // Include every material batch and the separately animated ring, not just the first mesh.
+  const positions = mesh.geometry.attributes.position, point = new THREE.Vector3();
+  cityVertices += positions.count;
   for (let i = 0; i < positions.count; i++) {
-    point.fromBufferAttribute(positions, i).applyMatrix4(city.mesh.matrixWorld);
+    point.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld);
     lowestCityPoint = Math.min(lowestCityPoint, point.length());
   }
 }
-ok('three distinct, bounded city silhouettes exist above both mirror bands',
+ok('three distinct, bounded city models exist above both mirror bands',
   cities.map(c => c.id).join(',') === 'VIRE,SOLEN,KEST' && cities.every(c => c.group.parent === w.scene && c.group.visible &&
-    c.mesh.geometry.attributes.position.count > 50 && Math.abs(c.direction.length() - 1) < 1e-6) && lowestCityPoint > 9.4 &&
-  cities[0].radius > cities[1].radius && cities[1].radius > cities[2].radius,
-  `lowest vertex radius=${lowestCityPoint.toFixed(3)}`);
+    c.meshes.length >= 4 && c.meshes.every(mesh => mesh.geometry.attributes.position.count > 0) &&
+    Math.abs(c.direction.length() - 1) < 1e-6) && cities[1].meshes.some(mesh => mesh.parent === cities[1].movingRing) &&
+  lowestCityPoint > 9.4 && cities[0].radius > cities[1].radius && cities[1].radius > cities[2].radius,
+  `${cityVertices} vertices; lowest radius=${lowestCityPoint.toFixed(3)}`);
 const framed = cities.filter(c => {
   const p = c.group.position, screen = p.clone().project(w.camera), line = p.clone().sub(w.camera.position);
   const t = Math.max(0, Math.min(1, -w.camera.position.dot(line) / line.lengthSq()));

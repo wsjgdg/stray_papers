@@ -2,7 +2,7 @@
 
 > 一颗可以「从轨道降落、再用双脚走进去」的实时程序化行星：地形、海洋、云、植被、遗迹、天气与声音全部在浏览器里当场生成，无美术资源、无构建步骤。
 
-`index.html` 就是完整应用（约 11.3k 行，716 KiB）：HTML/CSS 外壳 + 一个内联 ES module，运行时按需从 CDN 载入 three.js `r174`。全部几何与贴图都由固定随机种子 `819213` 推导，因此每次刷新看到的都是同一颗 Aetheris。
+`index.html` 就是完整应用（约 11.6k 行，740 KiB）：HTML/CSS 外壳 + 一个内联 ES module，运行时按需从 CDN 载入 three.js `r174`。场景几何与贴图由程序生成，其中随机部分使用固定种子 `819213`，因此每次刷新看到的都是同一颗 Aetheris。
 
 ---
 
@@ -46,6 +46,7 @@ CHROME_PATH=/path/to/chromium npm run test:quality-touch --prefix sims/browser #
 CHROME_PATH=/path/to/chromium npm run test:fauna --prefix sims/browser       # 动物行为与声音调度
 CHROME_PATH=/path/to/chromium npm run test:sightline --prefix sims/browser   # 干地受控路线与实际画面像素
 CHROME_PATH=/path/to/chromium npm run test:story --prefix sims/browser       # 剧情、存档、触屏及远景
+CHROME_PATH=/path/to/chromium npm run test:cities --prefix sims/browser      # 浮空城近观、返回及触屏
 CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # 帧间隔与渲染调用诊断
 ```
 
@@ -56,6 +57,8 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 `test:sightline` 在实际 `F` 降落后暂停实时循环，从落点以页面自己的 120 Hz 物理及动物更新**受控逐步**走一条干地候选路线；完成该位置的地表重撒后，对准附近动物渲染包括全部植被和动物的正常画面。仅为像素归因，随后临时把 650 mm 内动物实例的矩阵缩到零，保留原阴影再渲染对照，并立即恢复；通过条件是正常画面中至少 `0.1%`、且不少于 `20` 个像素来自这些附近动物，截图保存的始终是**未做实例遮掩的正常画面**（它仍可能被植被挡住）。测试不是人手实时行走，也不保证默认首眼可见，更不能代替人眼验收。建议使用默认窄视口（宽度小于 `760`，不启用 bloom）；`BROWSER_SIGHTLINE_ATTEMPTS` 可将候选画面次数设为 1–12，默认达到像素阈值即停止。设置 `BROWSER_SIGHTLINE_ALL=1` 会继续观察直到尝试上限或路线结束；再设 `BROWSER_SIGHTLINE_DIR=/tmp/aetheris-views` 可保存各次未遮掩画面（同名 `sightline-NN.png` 会覆盖），`BROWSER_SCREENSHOT` 则保存归因像素最多的一帧。不同画面内动物数量可能不同，像素最多**不等于**最清楚，需逐张目视；采样多帧也会更慢。
 
 `test:story` 先用真实 `F` 键降落，再暂停循环、控制世界状态与相机来检查追捕、地图标记、三个阶段、音频调度、跨标签存档和重置；它也在初始窄屏轨道取景下临时逐一遮掩三座城来归因像素，保存的截图仍是完整画面。设置 `BROWSER_STORY_DIR` 可保存这些 PNG；这是 Chromium 中的受控夹具和模拟触摸，不是人工游玩、目视、试听或真机性能验收。
+
+`test:cities` 使用真实 WebGL 和桌面鼠标、键盘及模拟触屏，检查三城入口、飞行、旋转/缩放、返回星球和切回地表；`BROWSER_CITY_DIR` 可保存未遮掩的画面。测试运行在本地 three.js / 无外部字体的 Chromium，并不代替真人目视或真机验收。
 
 `bench:render` 采样正常轨道帧，实际按 `F` 后采样地表帧；不跳过绘制，也不改世界或画质。默认 `1024×576`、像素比 `1`，分别采 20 / 30 帧；可用 `BROWSER_PERF_ORBIT_FRAMES`、`BROWSER_PERF_GROUND_FRAMES` 设为 4–300 帧，慢机器可能需要调大 `BROWSER_TIMEOUT_MS`。设置 `BROWSER_PERF_OUTPUT=/tmp/aetheris-perf.json` 可保存汇总和逐帧数据；`BROWSER_QUERY=aa=on` 或 `BROWSER_QUERY=aa=off` 可对照抗锯齿请求；`BROWSER_PAGE_HTML` 可改为待对照的本地页面（须包含当前相同的插桩锚点），输出记录源文件、查询参数及 SHA-256。`BROWSER_HEADFUL=1` 会打开有窗口的浏览器，需要图形桌面。无头模式可能使用软件渲染，应检查输出的 GPU 名称，不要假定是真实硬件。RAF 间隔不是显示帧间隔；`renderScene` 调用墙钟时间可能包括阻塞，**不等于 GPU 完成时间**；地表样本包含首帧，bloom 开启时 renderer 计数可能只反映最后一个后处理 pass。插桩本身有开销，本地 three.js / 无字体的自动运行既不是性能保证，也不能代替实际游玩和目视。
 
@@ -72,6 +75,7 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 | 拖拽 / 方向键 / `WASD` | 环绕星球；`Shift` 加速 |
 | 滚轮 / 双指捏合 / 右下 `+` `-` | 缩放（6.4 – 32 半径） |
 | 点击「DESCEND TO THE SURFACE」或 `F` | 降落到最近的陆地上 |
+| 初始画面的「浮空城」或 `O` 野档 → THREE CITIES | 飞近三座城之一；拖拽环绕、滚轮或捏合缩放，按钮或 `Esc` 返回星球。按 `F` 返回地表而不是登陆城市 |
 
 ### 地表模式（SURFACE / WALKING）
 
@@ -372,7 +376,7 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 - **追捕**：在地表同一片区域停留 `90 s` 且期间见证作业，巡管虫先预警、再用搜索光扫过。离开搜索区、潜入水下、走进圣所脚下的庇护环，或在 `BLOOM TIDE` 期间移动，都能避开；普通屋顶不算掩护。每次扫过至多记一次，三次被扫到会在地图记录该位置；此后每次在地表见到作业会再排一次扫描。离开区块可逃脱，不死亡、不传送。
 - **苏醒**：累计 `20` 次错音后夜海出现缓慢移动的回声群；`50` 次后圣所光环乱拍、靠近无光沟可听到低频（需用 `M` 开启声音），全球图显示沟底线索；`100` 次后在日蚀 `SOLAR VEIL` 期间，溺者之影从沟底升起，追逐附近深水中的泳者。接触会短暂减速而非致死，向岸游可以逃离。
 - **存储与重置**：错音累计、扫描次数和被记录的位置存于本浏览器当前站点的 `localStorage`（`aetheris.story.v1`），不上传、不跨设备；浏览器清理站点数据也会删除。`O` →「THE SIGNAL · 本机进度」→「重置本机剧情进度」→「确认清除剧情进度」需要明确二次操作；这不清当前图鉴或生态债务。存储不可用或损坏时野档会提示；不可用时进度仅在当前页面内。相同站点的其他标签会接收存档/重置事件，但并发写入不提供事务合并；待扫队列是临时状态，不跨刷新。生态作业代价仍按原规则恢复且刷新清零。
-- **浮空城远景**：轨道视角可寻找 `VIRE` 镜面平台、`SOLEN` 铜环、`KEST` 悬浮岛；它们是世界中固定方向的三维远景，地表也能在视线允许时看见，不可登陆。小行星模型压缩了设定的 `5 / 4 / 3 km` 高度，因此不是按真实公里比例建造，也不是完整可进入的城市。
+- **三座浮空城（`pennants-80`）**：`VIRE` 的倾斜分片镜湖有调律塔、回廊、侧台与悬吊结构；`SOLEN` 有钟面、钟塔、层叠铜环及缓慢摆动的外环；`KEST` 是以桥相连的多座岩岛、街屋、树冠、桅杆与弯曲的云帆。初始画面可点「浮空城」，也可按 `O` 在 THREE CITIES 中选城；镜头会飞到同一个世界空间模型附近，支持环绕和缩放，按钮或 `Esc` 返回。地表也可从野档进入近观（会回到轨道），按 `F` 降到地面、不是降落在城里。城不会因画质或近观被隐藏，地面是否能看见取决于视线；小行星模型压缩了设定的 `5 / 4 / 3 km` 高度，不是实尺、不可登陆或进入建筑。
 
 #### 作业的代价（v3 新增）
 
@@ -459,4 +463,4 @@ procedural-3d-fantasy-planet/
 - 行星尺度的陆地植被是**预生成 + 分块 LOD**，不会随昼夜或天气重新生长；贴地草花会随玩家在局部重新散布。
 - 音效是合成声景，非采样素材；移动端默认不自动播放（需用户手势，符合浏览器策略）。
 - 性能问题仍待真实设备排查；新剧情和浮空城的自动化验证不代表真人视觉/听觉验收。
-- 世界观的正式描述在 [`WORLD.md`](WORLD.md)。追捕、沉默者和三座浮空城已有上述可见实现，但溺者线索不是完整任务链、远景也不是可探索的城市。
+- 世界观的正式描述在 [`WORLD.md`](WORLD.md)。追捕、沉默者和三座浮空城已有上述可见实现，但溺者线索不是完整任务链、三城不能登陆或进入建筑。

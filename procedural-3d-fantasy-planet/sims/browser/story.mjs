@@ -99,14 +99,17 @@ try {
       let count = 0; for (let i = 0; i < width * height; i++) {
         if (Math.max(...[0, 1, 2].map(c => Math.abs(actual[i * 4 + c] - reference[i * 4 + c]))) >= 6) count++;
       }
-      counts.push({ id: city.id, pixels: count });
+      // Masking the group covers all material batches and the moving child ring together.
+      counts.push({ id: city.id, pixels: count, meshes: city.meshes.length,
+        ringIncluded: !city.movingRing || city.meshes.some(mesh => mesh.parent === city.movingRing) });
     }
     p.renderScene();
     return { image, counts, glError: gl.getError(), width, height };
   });
   saveDataURL('cities.png', cityFrame.image);
   check('all three actual sky cities contribute pixels in the compact orbit view', cityFrame.glError === 0 &&
-    cityFrame.counts.length === 3 && cityFrame.counts.every(c => c.pixels >= 5), JSON.stringify(cityFrame.counts));
+    cityFrame.counts.length === 3 && cityFrame.counts.every(c => c.pixels >= 5 && c.meshes >= 4 && c.ringIncluded),
+    JSON.stringify(cityFrame.counts));
 
   const setup = await page.evaluate(() => {
     const p = window.__storyProbe, s = p.state;

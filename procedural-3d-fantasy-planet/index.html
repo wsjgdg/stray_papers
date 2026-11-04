@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-79">
+  <meta name="aetheris-build" content="pennants-80">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -163,7 +163,7 @@
       display: inline-flex;
       align-items: center;
       gap: 25px;
-      margin: 42px 0 0 5px;
+      margin: 0;
       padding: 0 0 13px;
       border: 0;
       border-bottom: 1px solid rgba(176, 231, 220, .7);
@@ -178,6 +178,10 @@
     }
     .descend-button:hover { color: var(--aqua); gap: 34px; border-color: var(--aqua); }
     .descend-button svg { width: 18px; height: 18px; }
+    .intro-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 42px 0 0 5px; }
+    .city-guide { min-width: 44px; min-height: 44px; margin: 0; padding: 6px 3px; border: 0;
+      background: transparent; color: #a9d9ca; pointer-events: auto; cursor: pointer; font-size: 11px; letter-spacing: .08em; }
+    .city-guide:hover { color: #e4fff3; }
 
     .hud {
       position: absolute;
@@ -215,7 +219,7 @@
     .world-status[hidden] { display: none; }
     .world-error-detail { margin-top: 12px; padding: 10px 12px; max-height: min(52dvh, 430px); overflow: auto; pointer-events: auto; user-select: text; border: 1px solid rgba(232, 167, 154, .25); background: rgba(20, 8, 8, .85); color: #e8b0a4; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; letter-spacing: .04em; line-height: 1.7; text-align: left; overflow-wrap: anywhere; white-space: pre-wrap; }
     .world-error-detail[hidden] { display: none; }
-    body.loading .descend-button, body.loading .switch-button, body.loading .quality-status { opacity: .4; pointer-events: none; }
+    body.loading .descend-button, body.loading .city-guide, body.loading .switch-button, body.loading .quality-status { opacity: .4; pointer-events: none; }
     body.loading .archive-chip { opacity: 0; pointer-events: none; }
 
     .sound-button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #8fb4ab; cursor: pointer; transition: color .25s, border-color .25s; }
@@ -269,6 +273,19 @@
     .archive-row.tell > span:last-child { color: #f0dfae; }
     .archive-tag { display: inline-block; margin-top: 9px; padding: 2px 7px; border: 1px solid rgba(165, 238, 225, .22); border-radius: 999px;
       font-size: 7.5px; letter-spacing: .18em; color: #86c3b4; }
+    .archive-city-observe { min-height: 44px; margin-top: 8px; padding: 7px 12px; border: 1px solid rgba(165, 238, 225, .35);
+      border-radius: 6px; background: rgba(25, 61, 64, .45); color: #d8f6e9; font-size: 10px; letter-spacing: .08em; cursor: pointer; }
+    .archive-city-observe:hover { border-color: #b8e7d4; background: rgba(39, 89, 86, .55); }
+    #skyCityView { position: absolute; z-index: 5; top: 100px; left: clamp(26px, 5.8vw, 105px); display: flex;
+      align-items: center; gap: 13px; padding: 5px 6px 5px 13px; border: 1px solid rgba(165, 238, 225, .24); border-radius: 8px;
+      background: rgba(5, 22, 29, .88); color: #d4eee4; font-size: 10px; letter-spacing: .1em; white-space: nowrap; }
+    #skyCityView[hidden] { display: none; }
+    #skyCityReturn { min-height: 44px; padding: 7px 12px; border: 1px solid rgba(165, 238, 225, .35); border-radius: 5px;
+      background: rgba(44, 83, 78, .55); color: #eafaf3; cursor: pointer; }
+    @media (max-width: 760px), (pointer: coarse) {
+      #skyCityView { top: 78px; left: 20px; gap: 8px; }
+      #skyCityReturn { min-height: 44px; }
+    }
     .story-reset { margin-top: 12px; color: #b9d2ca; font-size: 11px; line-height: 1.6; }
     .story-reset summary { cursor: pointer; color: #f0dfae; padding: 8px 0; }
     .story-reset p { margin: 4px 0 10px; }
@@ -411,7 +428,8 @@
       .eyebrow-line { width: 20px; }
       .intro h1 { font-size: clamp(75px, 16vw, 112px); }
       .intro-copy { margin: 20px 0 0 2px; max-width: 245px; font-size: 23px; }
-      .descend-button { margin: 28px 0 0 2px; padding-bottom: 11px; font-size: 9px; gap: 15px; }
+      .intro-actions { margin: 28px 0 0 2px; gap: 12px; }
+      .descend-button { margin: 0; padding-bottom: 11px; font-size: 9px; gap: 15px; }
       .control-hints { display: none !important; }
       .hud { left: 23px; right: 23px; min-height: 84px; padding-bottom: env(safe-area-inset-bottom); gap: 8px; justify-content: space-between; }
       .mode-block { min-width: 0; gap: 11px; }
@@ -475,6 +493,8 @@
     }
     @media (max-width: 500px) { .weather-chip span.weather-label { display: none; } }
     @media (max-width: 420px) {
+      /* Keep the guide away from the right-hand mobile zoom controls on short screens. */
+      .city-guide { order: -1; }
       .weather-chip { padding: 6px; }
       .topbar { padding: 0 16px; }
     }
@@ -486,6 +506,14 @@
       .brand-name { font-size: 9px; letter-spacing: .1em; }
     }
 
+    /* On short landscape screens keep both introductory actions above the footer. */
+    @media (max-height: 430px) {
+      .intro { top: 70px; transform: none; animation: none; }
+      .eyebrow { display: none; }
+      .intro h1 { font-size: clamp(48px, 12vh, 64px); }
+      .intro-copy { margin: 6px 0 0; max-width: none; font-size: 16px; }
+      .intro-actions { margin-top: 8px; }
+    }
     @media (prefers-reduced-motion: reduce) {
       .intro, .status-dot { animation: none; }
       *, *::before, *::after { scroll-behavior: auto !important; }
@@ -549,10 +577,13 @@
       <p class="eyebrow"><span class="eyebrow-line"></span> AN UNCHARTED LIVING PLANET</p>
       <h1>Aetheris<span class="full-stop">.</span></h1>
       <p class="intro-copy">Where the ocean ends, <em>another world begins.</em></p>
-      <button id="descendButton" class="descend-button" type="button">
-        DESCEND TO THE SURFACE
-        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10H17M17 10L11 4M17 10L11 16" stroke="currentColor" stroke-width="1.3"/></svg>
-      </button>
+      <div class="intro-actions">
+        <button id="descendButton" class="descend-button" type="button">
+          DESCEND TO THE SURFACE
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10H17M17 10L11 4M17 10L11 16" stroke="currentColor" stroke-width="1.3"/></svg>
+        </button>
+        <button id="skyCityGuide" class="city-guide" type="button" aria-label="近观三座浮空城">浮空城 ↗</button>
+      </div>
     </main>
 
     <div id="pointerPrompt" class="pointer-prompt">CLICK THE WORLD TO LOOK AROUND &nbsp; / &nbsp; ESC TO RELEASE</div>
@@ -567,6 +598,7 @@
     </div>
     <div id="markers" aria-label="Nearby sanctuaries"></div>
     <div id="storyAlert" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="skyCityView" hidden><span id="skyCityName" aria-live="polite"></span><button id="skyCityReturn" type="button">返回星球</button></div>
     <div id="siteReadout" aria-live="off"><span class="readout-region" id="regionLabel">VAELMAR</span><span class="readout-sep"></span><span class="readout-biome" id="biomeLabel">LUMINOUS GROVE</span><span class="readout-sep"></span><span id="coordLabel">0.0°N 0.0°E</span></div>
 
     <footer class="hud" aria-label="Exploration controls">
@@ -633,7 +665,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-79';
+    const BUILD_ID = 'pennants-80';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -2172,52 +2204,275 @@
       scene.add(moon);
 
       // ---- Three cities of the Zenith --------------------------------------------------------------
-      // A real piece of world geometry for each city, not a screen-space skybox or an orbit-only
-      // visibility switch. The miniature planet compresses the written 3/4/5 km altitudes so that
-      // the distant silhouettes fit inside its existing camera and atmosphere; they are not places
-      // the player can land. Each uses its own fixed direction and consumes no generation randomness.
-      const cityMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .42, roughness: .57,
-        emissive: 0x1b3230, emissiveIntensity: .20 });
+      // These are actual world-space models, never billboards or view-dependent substitutes. They
+      // are deliberately compressed relative to the written 3/4/5 km heights of this tiny planet.
+      // Parts are grouped by material after construction; the seeded world layouts are untouched.
+      const cityMaterials = {
+        masonry: new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .16, roughness: .78,
+          emissive: 0x112521, emissiveIntensity: .22 }),
+        metal: new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .72, roughness: .31,
+          emissive: 0x101a16, emissiveIntensity: .16 }),
+        mirror: new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .68, roughness: .19 }),
+        foliage: new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .04, roughness: .95 }),
+        canvas: new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .05, roughness: .9, side: THREE.DoubleSide }),
+        light: new THREE.MeshBasicMaterial({ vertexColors: true })
+      };
       function makeSkyCity(id, altitudeKm, radius, bearing, angle, shape) {
-        const direction = nearDirection(landing, bearing, angle), group = new THREE.Group(), parts = [];
-        function piece(geometry, position, scale, rotation, color) {
+        const direction = nearDirection(landing, bearing, angle), group = new THREE.Group();
+        const parts = Object.fromEntries(Object.keys(cityMaterials).map(key => [key, []]));
+        const count = Object.fromEntries(Object.keys(cityMaterials).map(key => [key, 0]));
+        function add(kind, geometry, position, scale, color, rotation = [0, 0, 0]) {
           geometry.scale(...scale); geometry.rotateX(rotation[0]); geometry.rotateY(rotation[1]); geometry.rotateZ(rotation[2]);
-          geometry.translate(...position); bakeColor(geometry, color, .06); parts.push(geometry);
+          geometry.translate(...position); bakeColor(geometry, color, .055); parts[kind].push(geometry); count[kind]++;
         }
-        const add = (geometry, pos, scale, color, rot = [0, 0, 0]) => piece(geometry, pos, scale, rot, color);
+        const box = (kind, x, y, z, w, h, d, color, rot = [0, 0, 0]) =>
+          add(kind, new THREE.BoxGeometry(w, h, d), [x, y, z], [1, 1, 1], color, rot);
+        const drum = (kind, x, y, z, top, bottom, height, color, sides = 12, scale = [1, 1, 1], rot = [0, 0, 0]) =>
+          add(kind, new THREE.CylinderGeometry(top, bottom, height, sides), [x, y, z], scale, color, rot);
+        const ring = (kind, x, y, z, rad, tube, color, rot = [Math.PI / 2, 0, 0], scale = [1, 1, 1]) =>
+          add(kind, new THREE.TorusGeometry(rad, tube, 6, 48), [x, y, z], scale, color, rot);
+        function strut(kind, a, b, width, color) {
+          const start = new THREE.Vector3(...a), end = new THREE.Vector3(...b), delta = end.clone().sub(start);
+          if (delta.lengthSq() < 1e-10) return;
+          const geometry = new THREE.CylinderGeometry(width, width, delta.length(), 6);
+          geometry.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, delta.normalize()));
+          geometry.translate((start.x + end.x) / 2, (start.y + end.y) / 2, (start.z + end.z) / 2);
+          bakeColor(geometry, color, .055); parts[kind].push(geometry); count[kind]++;
+        }
+        function tower(x, z, base, height, radius, stone, metal, lamp) {
+          drum('masonry', x, base + .015, z, radius * 1.25, radius * 1.32, .03, stone, 8);
+          drum('masonry', x, base + height * .48, z, radius * .78, radius, height * .92, stone, 8);
+          drum('metal', x, base + height * .25, z, radius, radius, .008, metal, 8);
+          drum('metal', x, base + height * .77, z, radius * .9, radius * .9, .012, metal, 8);
+          drum('masonry', x, base + height * .83, z, radius * 1.07, radius * .9, .018, stone, 8);
+          drum('masonry', x, base + height, z, radius * 1.12, radius * 1.05, .025, stone, 8);
+          add('metal', new THREE.ConeGeometry(radius * 1.04, radius * 1.7, 8),
+            [x, base + height + radius * .85 + .01, z], [1, 1, 1], metal);
+          add('light', new THREE.OctahedronGeometry(radius * .18, 0),
+            [x, base + height + radius * 1.75, z], [1, 1, 1], lamp);
+          for (let j = 0; j < 8; j++) {
+            const a = j * TAU / 8, r = radius * .89;
+            box('light', x + Math.sin(a) * r, base + height * .63, z + Math.cos(a) * r,
+              radius * .22, height * .13, .004, lamp, [0, a, 0]);
+          }
+        }
+        function house(x, z, base, width, depth, height, wall, roof, windowColor) {
+          box('masonry', x, base + .015, z, width * 1.14, .03, depth * 1.14, roof);
+          box('masonry', x, base + height * .5 + .025, z, width, height, depth, wall);
+          box('metal', x, base + height + .03, z, width * 1.12, .012, depth * 1.12, roof);
+          add('metal', new THREE.ConeGeometry(1, 1, 4), [x, base + height + .075, z],
+            [width * .81, .085, depth * .81], roof, [0, Math.PI / 4, 0]);
+          for (const side of [-1, 1]) for (const offset of [-.26, .26]) {
+            box('light', x + offset * width, base + height * .55 + .025, z + side * (depth / 2 + .002),
+              width * .14, height * .27, .004, windowColor);
+            box('light', x + side * (width / 2 + .002), base + height * .55 + .025, z + offset * depth,
+              .004, height * .27, depth * .14, windowColor);
+          }
+          box('metal', x, base + height * .28 + .02, z + depth / 2 + .003, width * .17, height * .48, .007, roof);
+        }
         if (shape === 'mirror') {
-          // Vire: the long inclined lake of mirrors, with a dark underside and four tuning towers.
-          add(new THREE.CylinderGeometry(.26, .29, .025, 28), [0, 0, 0], [1.45, 1, .72], '#455e66', [0, 0, .12]);
-          add(new THREE.CylinderGeometry(.24, .24, .007, 28), [0, .020, 0], [1.45, 1, .72], '#a7c8cb', [0, 0, .12]);
-          for (const x of [-.23, -.08, .08, .23]) {
-            add(new THREE.CylinderGeometry(.012, .018, .14, 6), [x, .082 + x * .12, 0], [1, 1, 1], '#7c9c9d');
-            add(new THREE.OctahedronGeometry(.025, 0), [x, .16 + x * .12, 0], [1, .6, 1], '#dbd9ae');
+          // VIRE: a tilted, segmented mirror lake held in a bronze frame. The halls occupy the
+          // far shore; spokes, beacons, a suspended core and two satellite platforms make it a city.
+          drum('masonry', 0, -.025, 0, .69, .74, .08, '#556d72', 32, [1.34, 1, .80], [0, 0, .10]);
+          drum('metal', 0, .025, 0, .685, .69, .025, '#b8b8a1', 32, [1.34, 1, .80], [0, 0, .10]);
+          for (let i = 0; i < 16; i++) {
+            const pane = new THREE.CircleGeometry(.65, 8, i * TAU / 16 + .012, TAU / 16 - .024);
+            add('mirror', pane, [0, .047, 0], [1.34, .80, 1],
+              i % 3 === 0 ? '#bfd8d5' : i % 3 === 1 ? '#7fa7b3' : '#9bbec3', [-Math.PI / 2, 0, .10]);
           }
-          add(new THREE.BoxGeometry(.62, .006, .012), [0, .03, 0], [1, 1, 1], '#e0e1bc', [0, 0, .12]);
+          ring('metal', 0, .060, 0, .65, .012, '#e4d3ab', [-Math.PI / 2, 0, .10], [1.34, .80, 1]);
+          ring('metal', 0, .067, 0, .32, .004, '#d6d2b7', [-Math.PI / 2, 0, .10], [1.34, .80, 1]);
+          for (let i = 0; i < 16; i++) {
+            const a = i * TAU / 16, x = Math.cos(a) * .84, z = Math.sin(a) * .49, y = .068 + x * .10;
+            strut('metal', [0, .066, 0], [x, y, z], .003, '#d9cda9');
+            drum('metal', x, y + .028, z, .009, .012, .056, '#d7c29b', 6);
+            add('light', new THREE.OctahedronGeometry(.012, 0), [x, y + .063, z], [1, 1, 1], '#d7eee0');
+          }
+          // Council hall and the tuning towers on the rear of the lake, with lit clerestory windows.
+          house(0, -.27, .075, .36, .20, .18, '#d1d8cf', '#927f66', '#d5f2e7');
+          for (const [x, z, h, r] of [[-.30, -.31, .30, .075], [.30, -.31, .30, .075],
+            [0, -.42, .39, .085], [-.55, -.18, .23, .052], [.55, -.18, .23, .052]]) {
+            tower(x, z, .08 + x * .10, h, r, '#c3d2ca', '#c6a87f', '#dcf8e8');
+          }
+          // Smaller riverside halls, linked galleries and a colonnaded court give the mirror a
+          // built edge rather than leaving five isolated towers on an empty disc.
+          for (let i = 0; i < 10; i++) {
+            const a = .18 + i * (Math.PI - .36) / 9, x = Math.cos(a) * .68, z = Math.sin(a) * .35;
+            house(x, z, .08 + x * .10, .095, .075, .085 + (i % 3) * .016,
+              '#b8cbc4', '#9f927a', '#d5f2e7');
+          }
+          for (let i = -3; i <= 3; i++) {
+            const x = i * .043, y = .08 + x * .10;
+            drum('masonry', x, y + .08, -.15, .009, .011, .16, '#d6e1d6', 8);
+            drum('metal', x, y + .16, -.15, .015, .012, .012, '#cfbc98', 8);
+          }
+          box('metal', 0, .25, -.15, .30, .012, .018, '#cbb697');
+          for (const side of [-1, 1]) {
+            const x = side * 1.02, z = .06, y = side * .10;
+            drum('masonry', x, y, z, .18, .21, .055, '#607a7d', 16, [1, 1, .75]);
+            drum('mirror', x, y + .036, z, .17, .17, .009, '#a9ccca', 16, [1, 1, .75]);
+            tower(x, z, y + .05, .19, .045, '#c0cfc5', '#bea47e', '#d9f3e5');
+            ring('metal', x, y + .047, z, .155, .005, '#e4d5af', [Math.PI / 2, 0, 0], [1, .75, 1]);
+            for (const dz of [-.07, .07]) house(x + side * .08, z + dz, y + .045, .065, .06, .075, '#b5c9c2', '#927e69', '#d9f3e5');
+            strut('metal', [side * .72, .04 + side * .07, z], [side * .88, y + .02, z], .015, '#a99c83');
+            strut('metal', [side * .72, .09 + side * .07, z + .05], [side * .88, y + .07, z + .05], .005, '#cfbe9b');
+          }
+          drum('metal', 0, -.10, 0, .34, .25, .09, '#687c78', 16);
+          add('metal', new THREE.ConeGeometry(.24, .29, 8), [0, -.27, 0], [1, 1, 1], '#7f8c7d', [0, 0, Math.PI]);
+          ring('metal', 0, -.22, 0, .29, .009, '#d0b991');
+          for (let i = 0; i < 8; i++) {
+            const a = i * TAU / 8;
+            strut('metal', [Math.cos(a) * .48, -.04, Math.sin(a) * .29],
+              [Math.cos(a) * .22, -.25, Math.sin(a) * .14], .009, '#a49f87');
+          }
         } else if (shape === 'bell') {
-          // Solen: three suspended bronze rings and the narrow central clock spindle.
-          add(new THREE.CylinderGeometry(.18, .22, .035, 20), [0, 0, 0], [1, 1, .78], '#5e5446');
-          add(new THREE.CylinderGeometry(.012, .024, .45, 8), [0, .23, 0], [1, 1, 1], '#948b68');
-          for (let i = 0; i < 3; i++) {
-            add(new THREE.TorusGeometry(.11 + i * .055, .006, 6, 36), [0, .22, 0], [1, 1, 1], '#c7ad76',
-              [i * .46, i * .64, i * .24]);
+          // SOLEN: a stepped bronze clock city with nested suspended rings, hanging bell and
+          // radial chapels. The rings, clock markings and four spires form its silhouette.
+          drum('masonry', 0, -.02, 0, .53, .59, .09, '#655b50', 24);
+          drum('metal', 0, .036, 0, .52, .54, .04, '#a87e56', 24);
+          drum('masonry', 0, .063, 0, .43, .46, .025, '#b7a990', 24);
+          ring('metal', 0, .082, 0, .49, .012, '#d2ab76');
+          ring('metal', 0, .09, 0, .35, .008, '#d4b987');
+          drum('masonry', 0, .145, 0, .20, .25, .12, '#bdb29b', 12);
+          drum('metal', 0, .218, 0, .22, .21, .025, '#c8a377', 12);
+          tower(0, 0, .23, .36, .105, '#c3b9a3', '#ad845d', '#ffe2a8');
+          // A real clock face, brass frame, tick marks and hands sit on the front of the tower.
+          add('masonry', new THREE.CircleGeometry(.071, 24), [0, .445, .104], [1, 1, 1], '#e2d5b5');
+          ring('metal', 0, .445, .107, .071, .006, '#9b704c', [0, 0, 0]);
+          for (let i = 0; i < 12; i++) {
+            const a = i * TAU / 12;
+            add('metal', new THREE.OctahedronGeometry(.0038, 0), [Math.sin(a) * .057, .445 + Math.cos(a) * .057, .110], [1, 1, 1], '#6d4b36');
           }
-          add(new THREE.OctahedronGeometry(.038, 0), [0, .45, 0], [1, 1.2, 1], '#d8dfb1');
+          strut('metal', [0, .445, .112], [.006, .488, .112], .0025, '#604834');
+          strut('metal', [0, .445, .113], [.035, .432, .113], .0025, '#604834');
+          for (let i = 0; i < 8; i++) {
+            const a = i * TAU / 8, x = Math.cos(a) * .35, z = Math.sin(a) * .35;
+            if (i % 2 === 0) tower(x, z, .09, .22, .052, '#b7ae99', '#ba8f62', '#f6dba1');
+            else house(x, z, .09, .12, .10, .10, '#a99980', '#8f684b', '#f6dba1');
+            strut('metal', [Math.cos(a) * .23, .09, Math.sin(a) * .23], [x, .09, z], .011, '#d0ad7e');
+          }
+          // Eight little galleries and their pendant weights are distinct from the main tower.
+          for (let i = 0; i < 8; i++) {
+            const a = (i + .5) * TAU / 8, x = Math.cos(a) * .46, z = Math.sin(a) * .46;
+            drum('metal', x, .09, z, .045, .052, .022, '#c09a6c', 8);
+            drum('masonry', x, .145, z, .026, .031, .10, '#c5baa3', 8);
+            add('metal', new THREE.ConeGeometry(.04, .05, 8), [x, .22, z], [1, 1, 1], '#b1845b');
+            strut('metal', [x, -.06, z], [x * 1.08, -.20, z * 1.08], .004, '#b89167');
+            add('light', new THREE.OctahedronGeometry(.013, 0), [x * 1.08, -.21, z * 1.08], [1, 1, 1], '#ffdda0');
+          }
+          for (const [rad, turn, tilt] of [[.36, 0, 0], [.46, .45, .20], [.56, -.42, -.16]]) {
+            ring('metal', 0, .39, -.015, rad, .012, '#c59967', [tilt, turn, 0]);
+            ring('metal', 0, .39, -.015, rad - .026, .004, '#e3c28d', [tilt, turn, 0]);
+          }
+          for (let i = 0; i < 12; i++) {
+            const a = i * TAU / 12;
+            add('light', new THREE.OctahedronGeometry(.012, 0), [Math.sin(a) * .46, .39 + Math.cos(a) * .46, -.02],
+              [1, 1, 1], '#ffe6ad');
+          }
+          drum('metal', 0, -.17, 0, .15, .27, .25, '#9a734f', 16);
+          ring('metal', 0, -.305, 0, .28, .016, '#d2ac78');
+          add('metal', new THREE.SphereGeometry(.042, 8, 6), [0, -.36, 0], [1, 1, 1], '#e0ba84');
+          for (let i = 0; i < 8; i++) {
+            const a = i * TAU / 8;
+            strut('metal', [Math.cos(a) * .43, -.06, Math.sin(a) * .43],
+              [Math.cos(a) * .23, -.31, Math.sin(a) * .23], .009, '#9d7957');
+          }
         } else {
-          // Kest: three rock-and-timber islands joined by masts and pale cloud sails.
-          for (const [x, z, size] of [[-.18, .02, .15], [.03, -.03, .19], [.20, .05, .12]]) {
-            add(new THREE.IcosahedronGeometry(size, 1), [x, -.045, z], [1, .45, .72], '#53665f');
-            add(new THREE.CylinderGeometry(size * .88, size, .016, 12), [x, .014, z], [1, 1, .7], '#73907a');
-            add(new THREE.CylinderGeometry(.009, .013, .22, 6), [x, .13, z], [1, 1, 1], '#a68f69');
-            add(new THREE.ConeGeometry(.065, .09, 4), [x, .08, z], [1, 1, 1], '#a5b7a3', [0, .78, 0]);
+          // KEST: separate rooted islands, a real wooden harbor and bridges; the pale curved sails
+          // are double-sided geometry, with masts, ropes, houses and living-looking tree crowns.
+          const islands = [
+            { x: 0, z: 0, r: .39, y: .03 }, { x: -.61, z: -.10, r: .23, y: -.025 },
+            { x: .61, z: -.10, r: .25, y: .05 }, { x: -.25, z: .48, r: .19, y: .005 },
+            { x: .34, z: .43, r: .18, y: .045 }
+          ];
+          for (let n = 0; n < islands.length; n++) {
+            const island = islands[n], { x, z, r, y } = island;
+            const rock = new THREE.IcosahedronGeometry(1, 1), p = rock.attributes.position;
+            for (let i = 0; i < p.count; i++) {
+              const vx = p.getX(i), vy = p.getY(i), vz = p.getZ(i);
+              const rough = 1 + noise(vx * 3 + n * 7, vy * 4 - n, vz * 3 + 13) * .15;
+              p.setXYZ(i, vx * rough, Math.min(vy, .45) * rough, vz * rough);
+            }
+            rock.computeVertexNormals();
+            add('masonry', rock, [x, y - .075, z], [r * 1.10, .22, r * .90], '#4f6660', [0, n * .53, 0]);
+            drum('masonry', x, y + .01, z, r * .89, r, .035, '#70877a', 16, [1, 1, .82]);
+            ring('metal', x, y + .028, z, r * .87, .005, '#ad9a74', [Math.PI / 2, 0, 0], [1, .82, 1]);
+            const number = n === 0 ? 5 : 2;
+            for (let i = 0; i < number; i++) {
+              const a = i * TAU / number + n * .9, offset = n === 0 ? .22 : .105;
+              house(x + Math.cos(a) * offset, z + Math.sin(a) * offset * .74, y + .035,
+                n === 0 ? .12 : .095, n === 0 ? .105 : .085, n === 0 ? .115 : .09,
+                '#b5b39b', '#836e55', '#f2ddaa');
+            }
+            // A cluster of low, broad canopies rather than isolated sticks.
+            for (let i = 0; i < 4; i++) {
+              const a = i * TAU / 4 + .6 + n, tx = x + Math.cos(a) * r * .62, tz = z + Math.sin(a) * r * .53;
+              drum('masonry', tx, y + .12, tz, .012, .017, .19, '#6e6854', 6);
+              add('foliage', new THREE.IcosahedronGeometry(.075, 1), [tx, y + .23, tz],
+                [1.0, .72, .85], i % 2 ? '#749785' : '#5d8875');
+              strut('masonry', [tx, y - .09, tz], [tx + Math.cos(a) * .045, y - .23, tz + Math.sin(a) * .045], .006, '#766d53');
+            }
           }
-          add(new THREE.BoxGeometry(.18, .13, .004), [.06, .18, .018], [1, 1, 1], '#d5daca', [0, .38, -.18]);
+          function bridge(a, b) {
+            const dx = b.x - a.x, dz = b.z - a.z, length = Math.hypot(dx, dz), ux = dx / length, uz = dz / length;
+            const from = [a.x + ux * a.r * .72, a.y + .045, a.z + uz * a.r * .64];
+            const to = [b.x - ux * b.r * .72, b.y + .045, b.z - uz * b.r * .64];
+            strut('masonry', from, to, .023, '#9e8561');
+            for (let i = 1; i < 7; i++) {
+              const t = i / 7, px = from[0] * (1 - t) + to[0] * t, py = from[1] * (1 - t) + to[1] * t, pz = from[2] * (1 - t) + to[2] * t;
+              strut('metal', [px - uz * .027, py + .007, pz + ux * .027], [px + uz * .027, py + .007, pz - ux * .027], .003, '#c1a37b');
+            }
+            for (const side of [-1, 1]) {
+              const shift = .032 * side, ax = -uz * shift, az = ux * shift;
+              strut('metal', [from[0] + ax, from[1] + .055, from[2] + az], [to[0] + ax, to[1] + .055, to[2] + az], .003, '#cab893');
+              strut('metal', [from[0] + ax, from[1], from[2] + az], [from[0] + ax, from[1] + .055, from[2] + az], .004, '#c4aa7f');
+              strut('metal', [to[0] + ax, to[1], to[2] + az], [to[0] + ax, to[1] + .055, to[2] + az], .004, '#c4aa7f');
+            }
+          }
+          for (let i = 1; i < islands.length; i++) bridge(islands[0], islands[i]);
+          function sail(x, z, base, width, height, turn) {
+            drum('metal', x, base + height * .5, z, .010, .015, height, '#a78d69', 8);
+            const vertices = [], indices = [], cols = 8, rows = 10;
+            for (let j = 0; j <= rows; j++) for (let i = 0; i <= cols; i++) {
+              const u = i / cols, v = j / rows;
+              vertices.push(width * u * (1 - .43 * v), height * (.15 + .78 * v), Math.sin(u * Math.PI) * .038 * Math.sin(v * Math.PI));
+              if (i < cols && j < rows) {
+                const a = j * (cols + 1) + i, b = a + cols + 1;
+                indices.push(a, a + 1, b, a + 1, b + 1, b);
+              }
+            }
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setIndex(indices); geometry.computeVertexNormals();
+            add('canvas', geometry, [x, base, z], [1, 1, 1], '#dbddc8', [0, turn, 0]);
+            const tip = [x + Math.cos(turn) * width * .57, base + height * .93, z - Math.sin(turn) * width * .57];
+            strut('metal', [x, base + height * .93, z], tip, .004, '#d0bf99');
+            strut('metal', [x, base + .06, z], [x + Math.cos(turn) * width, base + height * .15, z - Math.sin(turn) * width], .003, '#ccb993');
+          }
+          sail(-.54, -.12, .02, .27, .50, .35);
+          sail(.58, -.11, .09, .31, .58, -.55);
+          sail(.03, -.09, .09, .24, .44, .95);
+          house(0, -.02, .09, .20, .15, .18, '#c1c1a7', '#837059', '#f5e4b9');
         }
-        const mesh = new THREE.Mesh(join(parts), cityMaterial);
-        mesh.castShadow = false; mesh.receiveShadow = false; group.add(mesh);
+        const meshes = [];
+        for (const kind of Object.keys(parts)) {
+          if (!parts[kind].length) continue;
+          const mesh = new THREE.Mesh(join(parts[kind]), cityMaterials[kind]);
+          mesh.name = id + '-' + kind; mesh.castShadow = false; mesh.receiveShadow = false;
+          group.add(mesh); meshes.push(mesh);
+        }
+        let movingRing = null;
+        if (shape === 'bell') {
+          // A separate, world-space outer ring breathes slowly around the clockwork. Reduced-motion
+          // users see the same ring in its resting position rather than losing geometry.
+          movingRing = new THREE.Group(); movingRing.position.set(0, .39, -.015); movingRing.rotation.x = .32;
+          const geometry = bakeColor(new THREE.TorusGeometry(.63, .006, 6, 64), '#dfbb86', .05);
+          const rim = new THREE.Mesh(geometry, cityMaterials.metal); rim.name = id + '-moving-ring';
+          movingRing.add(rim); group.add(movingRing); meshes.push(rim); count.metal++;
+        }
         group.position.copy(direction).multiplyScalar(radius); group.quaternion.setFromUnitVectors(UP, direction);
         group.userData.city = id; scene.add(group);
-        return { id, altitudeKm, radius, direction, group, mesh };
+        return { id, altitudeKm, radius, direction, group, mesh: meshes[0], meshes, count, movingRing };
       }
       const skyCities = [
         makeSkyCity('VIRE', 5, 11.0, .90, 2.20, 'mirror'),
@@ -2229,6 +2484,11 @@
           const city = skyCities[i];
           const drift = reducedMotion ? 0 : Math.sin(elapsed * .12 + i * 1.7) * .015;
           city.group.position.copy(city.direction).multiplyScalar(city.radius + drift);
+          if (city.movingRing) {
+            const beat = reducedMotion ? 0 : Math.sin(elapsed * .28);
+            city.movingRing.rotation.y = .20 + beat * .18;
+            city.movingRing.scale.setScalar(1 + beat * .025);
+          }
         }
       }
 
@@ -7806,7 +8066,7 @@
       const LOOK_YAW_SPEED = 2.0, LOOK_PITCH_SPEED = 1.25;
       const state = {
         mode: 'orbit', yaw: initialYaw, polar: initialPolar, distance: fitDistance(),
-        composition: compact ? 0 : 1, compositionTarget: compact ? 0 : 1,
+        composition: compact ? 0 : 1, compositionTarget: compact ? 0 : 1, skyFocus: null,
         direction: landing.clone(), radius: groundRadius(landing) + EYE,
         heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false, depth: 0, submerged: false, crouch: 0, swimBlend: 0,
         ghost: false,                     // holding H: nothing built or growing stops the body; the ground still does
@@ -8849,6 +9109,7 @@
       let touchDive = false, touchRise = false;
       const targetPosition = new THREE.Vector3(), targetRotation = new THREE.Quaternion(), lookMatrix = new THREE.Matrix4();
       const aim = new THREE.Vector3(), right = new THREE.Vector3(), move = new THREE.Vector3(), orbitNormal = new THREE.Vector3();
+      const cityFocusNormal = new THREE.Vector3();
       const moveTarget = new THREE.Vector3(), slopeProbe = new THREE.Vector3();
       const walkProbe = new THREE.Vector3(), walkBump = new THREE.Vector3(), walkTmp = new THREE.Vector3(),
         walkPrev = new THREE.Vector3();
@@ -8937,6 +9198,18 @@
       headingToward(landmarkDirection);
       function orbitPose() {
         sphereDirection(state.yaw, state.polar, orbitNormal);
+        if (state.skyFocus) {
+          const city = state.skyFocus.city;
+          aim.set(0, .14, 0).applyQuaternion(city.group.quaternion).add(city.group.position);
+          targetPosition.copy(orbitNormal).applyQuaternion(city.group.quaternion).multiplyScalar(state.distance).add(aim);
+          // The city can be orbited from below: keep the camera above the real terrain even when
+          // a wide zoom and low angle would otherwise put that target on the inside of the planet.
+          cityFocusNormal.copy(targetPosition).normalize();
+          const floor = groundRadius(cityFocusNormal) + EYE;
+          if (targetPosition.lengthSq() < floor * floor) targetPosition.setLength(floor);
+          targetRotation.setFromRotationMatrix(lookMatrix.lookAt(targetPosition, aim, city.direction));
+          return;
+        }
         targetPosition.copy(orbitNormal).multiplyScalar(state.distance);
         aim.set(Math.cos(state.yaw),0,-Math.sin(state.yaw)).multiplyScalar(-2.05 * state.composition);
         aim.y += .17 * state.composition;
@@ -8958,12 +9231,74 @@
       }
       function explore() { state.compositionTarget = 0; state.faceTarget = null; document.body.classList.add('exploring'); }
       state.faceTarget = null;
+      // A closer orbital look is a camera flight to the *same* world-space model. No duplicate,
+      // overlay, hidden world, collision bypass, or landing on a city is involved.
+      const skyCityView = document.getElementById('skyCityView');
+      const skyCityName = document.getElementById('skyCityName');
+      function focusFlight(from, fromRotation) {
+        state.transition = {
+          from, fromRotation, to: targetPosition.clone(), toRotation: targetRotation.clone(),
+          fromNormal: from.clone().normalize(),
+          arc: new THREE.Quaternion().setFromUnitVectors(from.clone().normalize(), targetPosition.clone().normalize()),
+          time: 0, duration: reducedMotion ? .45 : 1.8, wallLastMs: performance.now()
+        };
+        document.body.classList.add('transitioning');
+      }
+      function focusSkyCity(id) {
+        if (!startup.ready || state.transition || stopped || contextLost) return false;
+        const city = skyCities.find(item => item.id === id);
+        if (!city) return false;
+        const back = state.skyFocus ? state.skyFocus.back : state.mode === 'orbit'
+          ? { yaw: state.yaw, polar: state.polar, distance: state.distance, composition: state.composition }
+          : { yaw: Math.atan2(state.direction.x, state.direction.z), polar: Math.acos(clamp(state.direction.y, -1, 1)),
+            distance: fitDistance(), composition: 0 };
+        const from = camera.position.clone(), fromRotation = camera.quaternion.clone();
+        clearInput();
+        if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
+        if (archiveOpen) setArchive(false);
+        if (worldMapOpen) setWorldMap(false);
+        if (state.mode === 'ground') { resetGroundMotion(); clearInquest(); }
+        state.mode = 'orbit'; state.skyFocus = { city, back };
+        state.yaw = .65; state.polar = 1.05;
+        state.distance = innerWidth / innerHeight < .76 ? 4.7 : 3.0;
+        state.composition = state.compositionTarget = 0;
+        skyCityName.textContent = city.id + ' · 轨道近观'; skyCityView.hidden = false;
+        document.body.dataset.mode = 'orbit';
+        document.getElementById('modeNumber').textContent = '01'; modeLabel.textContent = 'ORBIT / FLYING';
+        explore(); orbitPose(); focusFlight(from, fromRotation);
+        canvas.focus({ preventScroll: true });
+        return true;
+      }
+      function returnFromSkyCity() {
+        if (!state.skyFocus || state.transition || stopped || contextLost) return false;
+        const from = camera.position.clone(), fromRotation = camera.quaternion.clone(), back = state.skyFocus.back;
+        clearInput();
+        if (archiveOpen) setArchive(false);
+        if (worldMapOpen) setWorldMap(false);
+        state.skyFocus = null; skyCityView.hidden = true;
+        state.yaw = back.yaw; state.polar = back.polar; state.distance = back.distance;
+        state.composition = back.composition; state.compositionTarget = 0;
+        orbitPose(); focusFlight(from, fromRotation);
+        canvas.focus({ preventScroll: true });
+        return true;
+      }
+      // A descent or map teleport from a city starts above the camera's actual planet direction,
+      // not the city-local orbit angles. Restore normal orbit controls before the flight starts.
+      function dropSkyFocus() {
+        if (!state.skyFocus) return;
+        const normal = camera.position.clone().normalize();
+        state.yaw = Math.atan2(normal.x, normal.z); state.polar = Math.acos(clamp(normal.y, -1, 1));
+        state.distance = clamp(camera.position.length(), 6.4, 32);
+        state.skyFocus = null; skyCityView.hidden = true;
+      }
+      document.getElementById('skyCityReturn').addEventListener('click', returnFromSkyCity);
       function switchMode() {
         if (!startup.ready || state.transition || stopped || contextLost) return;
         clearInput();
         if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
         const from = camera.position.clone(), fromRotation = camera.quaternion.clone();
         if (state.mode === 'orbit') {
+          dropSkyFocus();
           state.direction.copy(nearestLand(sphereDirection(state.yaw,state.polar,orbitNormal)));
           state.radius = groundRadius(state.direction) + EYE;
           state.velocity = 0; state.grounded = true; state.water = false; state.walkPhase = 0;
@@ -9018,7 +9353,7 @@
       function turn(dx,dy) { rotateView(-dx*.0024,-dy*.0022); }
       function zoom(factor) {
         if (state.mode !== 'orbit' || state.transition) return;
-        state.distance=clamp(state.distance*factor,6.4,32); explore();
+        state.distance=state.skyFocus?clamp(state.distance*factor,1.55,8):clamp(state.distance*factor,6.4,32); explore();
       }
       // A body above a stone or a roof can land on its top; without this, measuring real airborne feet
       // only defers the sideways shove until the first frame below the top. H deliberately skips support.
@@ -9487,6 +9822,11 @@
           state.yaw+=(Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')))*speed;
           state.composition+=(state.compositionTarget-state.composition)*(1-Math.exp(-dt*2.5));
           orbitPose(); camera.position.lerp(targetPosition,1-Math.exp(-dt*9)); camera.quaternion.slerp(targetRotation,1-Math.exp(-dt*9));
+          if (state.skyFocus) {
+            cityFocusNormal.copy(camera.position).normalize();
+            const floor = groundRadius(cityFocusNormal) + EYE * .9;
+            if (camera.position.lengthSq() < floor * floor) camera.position.setLength(floor);
+          }
         } else {
           physicsTime+=dt;
           // A frame may contain several fixed steps. Preserve the hardest impact for the sound pass;
@@ -10188,6 +10528,7 @@
         clearInput();
         if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
         const from = camera.position.clone(), fromRotation = camera.quaternion.clone();
+        dropSkyFocus();
         state.direction.copy(anchor.direction);
         state.radius = groundRadius(state.direction) + EYE;
         state.velocity = 0; state.grounded = true; state.water = false; state.submerged = false;
@@ -10606,6 +10947,7 @@
           <article class="archive-entry">
             <div><span class="archive-code">${c.name}</span><span class="archive-zh">${c.zh}</span><span class="archive-tag">${c.altitude}</span></div>
             ${archiveRow('SKY', c.note)}
+            <button class="archive-city-observe" type="button" data-city-view="${c.name}">近观 ${c.name} ↗</button>
           </article>`).join('');
         const provinces = ARCHIVE_DATA.provinces.map(p => `
           <article class="archive-entry">
@@ -10637,15 +10979,15 @@
               <button id="storyReset" type="button">确认清除剧情进度</button>
             </details>
           </section>
+          <section class="archive-section" id="skyCitySection">
+            <h3>THREE CITIES</h3>
+            <p>选择一座城，飞到附近环绕观察；仍不可登陆。星球模型压缩了设定中的高度比例。</p>
+            ${cities}
+          </section>
           <section class="archive-section">
             <h3>FIVE OPERATIONS</h3>
             <p>地表人管它们叫异象。穹顶管它们叫作业。这里写的是两者之间被省掉的那段。</p>
             ${operations}
-          </section>
-          <section class="archive-section">
-            <h3>THREE CITIES</h3>
-            <p>穹顶的三座城是空中的远景，不能登陆；星球模型压缩了设定中的高度比例。</p>
-            ${cities}
           </section>
           <section class="archive-section">
             <h3>FIVE PROVINCES</h3>
@@ -10734,6 +11076,20 @@
         archivePanel.setAttribute('aria-hidden', String(!open));
         archiveChip.setAttribute('aria-expanded', String(open));
       }
+      document.getElementById('skyCityGuide').addEventListener('click', () => {
+        if (!startup.ready || state.transition) return;
+        setArchive(true);
+        // The panel starts off-screen while sliding in. scrollIntoView would also scroll #app's
+        // hidden overflow horizontally, permanently shifting the planet and controls. Move only
+        // the archive's own scroller, using vertical coordinates independent of its slide.
+        const section = document.getElementById('skyCitySection');
+        const top = archiveBody.scrollTop + section.getBoundingClientRect().top - archiveBody.getBoundingClientRect().top;
+        archiveBody.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' });
+      });
+      archiveBody.addEventListener('click', event => {
+        const button = event.target.closest('[data-city-view]');
+        if (button && archiveBody.contains(button)) focusSkyCity(button.dataset.cityView);
+      });
       archiveChip.addEventListener('click', () => setArchive(!archiveOpen));
       if (worldChip) worldChip.addEventListener('click', () => setWorldMap(!worldMapOpen));
       const worldClose = document.getElementById('worldMapClose');
@@ -10776,6 +11132,7 @@
         // While the chart is up you are reading, not walking: swallow everything but the toggles.
         if(worldMapOpen)return;
         if(event.code==='Escape'&&archiveOpen){setArchive(false);return;}
+        if(event.code==='Escape'&&state.skyFocus){returnFromSkyCity();return;}
         if(event.code==='Space'&&!event.repeat)jump();
         keys.add(event.code);
         if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.code))explore();
@@ -10825,7 +11182,10 @@
       function applyViewportSize(){
         const portrait=innerWidth/innerHeight<.76;
         camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-        if(portrait!==wasPortrait&&state.mode==='orbit')state.distance=fitDistance();
+        if (portrait !== wasPortrait && state.mode === 'orbit') {
+          if (state.skyFocus) state.distance = clamp(state.distance * (portrait ? 4.7 / 3 : 3 / 4.7), 1.55, 8);
+          else state.distance = fitDistance();
+        }
         wasPortrait=portrait;applyQuality();
       }
       // Dragging a window edge fires resize many times per second; rebuilding the render
@@ -10855,7 +11215,7 @@
         sun.set(Math.sin(solarAngle),.48,Math.cos(solarAngle)).normalize();
         const surface = updateWeather(dt);
         const weatherNow = weather.now;
-        viewNormal.copy(surface?state.direction:sphereDirection(state.yaw,state.polar,orbitNormal));
+        viewNormal.copy(surface ? state.direction : state.skyFocus ? state.skyFocus.city.direction : sphereDirection(state.yaw,state.polar,orbitNormal));
         const daylight=viewNormal.dot(sun);
         skyUniforms.uUp.value.copy(viewNormal);
         skyUniforms.uGround.value+=(Number(surface)-skyUniforms.uGround.value)*(1-Math.exp(-dt*2.5));
