@@ -78,7 +78,23 @@
 
 **全站链路（已闭合）**：index → ①②③④⑤⑥ → graduation → index；每页"下一关"真实可达。
 
-**下一步：** Round 6 执行 Task 11：全站精修（移动端 375px 走查、全流程打卡到证书解锁、文案终审、来源核对）→ zip 打包验证 → DELIVERY.md → PROJECT COMPLETE。
+## 2026-11-05 Round 6（收尾轮）— **PROJECT COMPLETE** ✅
+
+**完成：**
+- Task 11 完成：
+  - 移动端 375px 走查：无横向溢出；**发现并修复翻转卡重叠问题**（根因：3D 变换上下文 overflow 裁剪失效 → 改为 grid 堆叠翻转，两面共享 grid-area，容器高度自动取较高面）——修复时还识别并绕过了预览环境的浏览器 CSS 缓存干扰
+  - 全流程打卡测试：清空进度 → 6 页逐页打卡 1/6→6/6 → 证书正确解锁（显示"妈妈"）+ confetti，截图存档
+  - 文案终审：无占位符残留、①-⑥ 编号体系一致、语气统一
+  - 打包：`scripts/build-zip.sh`（python zipfile 实现）→ `ai-exploration-base-v1.zip`（387KB / 22 文件）；解压副本独立跑 smoke ALL PASS
+  - `docs/DELIVERY.md` 交付说明（微信发送步骤、演示建议、验证记录、v2 迭代方向、维护流程）
+  - `.gitignore` 增加 `*.zip`（构建产物不入库，脚本可重建）
+
+**11/11 Task 全部完成。**
+
+**交付状态：** zip 位于 `C:\Users\sibop\Desktop\introduce\ai-exploration-base-v1.zip`，可直接微信发给妈妈。
+
+**后续（不在本轮）：** v2 迭代见 DELIVERY.md；仓库继续保留作维护基线。
+
 
 
 
