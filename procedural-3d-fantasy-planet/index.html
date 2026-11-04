@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-78">
+  <meta name="aetheris-build" content="pennants-79">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -269,6 +269,20 @@
     .archive-row.tell > span:last-child { color: #f0dfae; }
     .archive-tag { display: inline-block; margin-top: 9px; padding: 2px 7px; border: 1px solid rgba(165, 238, 225, .22); border-radius: 999px;
       font-size: 7.5px; letter-spacing: .18em; color: #86c3b4; }
+    .story-reset { margin-top: 12px; color: #b9d2ca; font-size: 11px; line-height: 1.6; }
+    .story-reset summary { cursor: pointer; color: #f0dfae; padding: 8px 0; }
+    .story-reset p { margin: 4px 0 10px; }
+    .story-reset button { min-height: 44px; padding: 8px 14px; border: 1px solid #a97969; border-radius: 6px;
+      color: #ffe0d4; background: #402c2b; font: inherit; cursor: pointer; }
+    .story-reset button:focus-visible, .story-reset summary:focus-visible { outline: 2px solid #f0dfae; outline-offset: 3px; }
+    #storyAlert { position: absolute; z-index: 6; left: 50%; bottom: 104px; transform: translate(-50%, 6px);
+      max-width: min(330px, calc(100% - 32px)); padding: 7px 11px; border: 1px solid rgba(240, 201, 150, .45);
+      border-radius: 7px; background: rgba(12, 26, 29, .9); color: #ffe6bb; text-align: center;
+      font-size: 10px; line-height: 1.45; letter-spacing: .05em; pointer-events: none;
+      opacity: 0; visibility: hidden; transition: opacity .25s, transform .25s, visibility .25s; }
+    #storyAlert.visible { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+    @media (max-height: 430px) { #storyAlert { bottom: 58px; font-size: 9px; padding: 4px 8px; } }
+    @media (prefers-reduced-motion: reduce) { #storyAlert { transition: none; } }
     /* A dot on the archive chip, never a number on the screen: something has been added to the list. */
     .archive-chip.has-news::after { content: ''; position: absolute; right: 3px; top: 3px; width: 4px; height: 4px;
       border-radius: 50%; background: #f0dfae; box-shadow: 0 0 7px rgba(240, 223, 174, .85); }
@@ -318,6 +332,7 @@
       box-shadow: 0 26px 70px rgba(1, 6, 9, .55), inset 0 0 0 1px rgba(0, 0, 0, .3); }
     .worldmap-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 9px; letter-spacing: .16em; color: #a8cfc2; }
     .worldmap-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .worldmap-legend span[hidden] { display: none; }
     .worldmap-legend i { width: 11px; height: 11px; display: inline-block; }
     .worldmap-legend .lg-town { width: 6px; height: 6px; margin: 0 2px; background: #e2f4e8; }
     .worldmap-legend .lg-altar { background: #ffce82; transform: rotate(45deg); width: 8px; height: 8px; margin: 0 1px; }
@@ -328,6 +343,8 @@
     .worldmap-legend .lg-anchor::before { left: 50%; top: 2px; bottom: 2px; width: 1px; transform: translateX(-50%); }
     .worldmap-legend .lg-anchor::after { top: 50%; left: 2px; right: 2px; height: 1px; transform: translateY(-50%); }
     .worldmap-legend .lg-you { border: 1px solid #eaffe9; border-radius: 50%; }
+    .worldmap-legend .lg-inquest { border: 2px solid #ffa484; transform: rotate(45deg); width: 8px; height: 8px; }
+    .worldmap-legend .lg-trench { border: 1px solid #a98bbd; border-radius: 50%; }
     .worldmap-hint { margin-left: auto; color: #7f9c95; }
     @media (max-width: 760px) {
       .worldmap-legend { font-size: 8px; gap: 6px 12px; }
@@ -549,6 +566,7 @@
       <span class="minimap-expand" aria-hidden="true">G</span>
     </div>
     <div id="markers" aria-label="Nearby sanctuaries"></div>
+    <div id="storyAlert" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="siteReadout" aria-live="off"><span class="readout-region" id="regionLabel">VAELMAR</span><span class="readout-sep"></span><span class="readout-biome" id="biomeLabel">LUMINOUS GROVE</span><span class="readout-sep"></span><span id="coordLabel">0.0°N 0.0°E</span></div>
 
     <footer class="hud" aria-label="Exploration controls">
@@ -591,6 +609,8 @@
           <span><i class="lg-herd"></i>兽群</span>
           <span><i class="lg-anchor"></i>锚点 · 点击传送</span>
           <span><i class="lg-you"></i>你 · 虚线是足下巡检范围</span>
+          <span id="inquestLegend" hidden><i class="lg-inquest"></i>被记录的位置</span>
+          <span id="trenchLegend" hidden><i class="lg-trench"></i>无光沟信号</span>
           <span class="worldmap-hint">G / ESC 关闭</span>
         </div>
       </div>
@@ -613,7 +633,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-78';
+    const BUILD_ID = 'pennants-79';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -821,10 +841,14 @@
         return base.clone().multiplyScalar(Math.cos(distance)).addScaledVector(east, Math.cos(angle) * Math.sin(distance)).addScaledVector(north, Math.sin(angle) * Math.sin(distance)).normalize();
       }
       const landSites = [];
+      // Keep one real deep-water direction for the signal and its chart mark; this samples the
+      // same deterministic world as landing selection and consumes no world-generation randomness.
+      let trenchDirection = null, trenchHeight = Infinity;
       for (let i = 0; i < 2600; i++) {
         const y = 1 - (i + .5) * 2 / 2600, angle = i * Math.PI * (3 - Math.sqrt(5)), r = Math.sqrt(1 - y * y);
         const n = new THREE.Vector3(Math.cos(angle) * r, y, Math.sin(angle) * r), h = heightAt(n);
         if (h > .065 && h < .27) landSites.push(n);
+        if (h < trenchHeight) { trenchHeight = h; trenchDirection = n.clone(); }
       }
       function nearestLand(direction) {
         let best = landSites[0], score = -Infinity;
@@ -2146,6 +2170,67 @@
       bakeColor(moonGeo, '#9caaa8', .5);
       const moon = new THREE.Mesh(moonGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
       scene.add(moon);
+
+      // ---- Three cities of the Zenith --------------------------------------------------------------
+      // A real piece of world geometry for each city, not a screen-space skybox or an orbit-only
+      // visibility switch. The miniature planet compresses the written 3/4/5 km altitudes so that
+      // the distant silhouettes fit inside its existing camera and atmosphere; they are not places
+      // the player can land. Each uses its own fixed direction and consumes no generation randomness.
+      const cityMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .42, roughness: .57,
+        emissive: 0x1b3230, emissiveIntensity: .20 });
+      function makeSkyCity(id, altitudeKm, radius, bearing, angle, shape) {
+        const direction = nearDirection(landing, bearing, angle), group = new THREE.Group(), parts = [];
+        function piece(geometry, position, scale, rotation, color) {
+          geometry.scale(...scale); geometry.rotateX(rotation[0]); geometry.rotateY(rotation[1]); geometry.rotateZ(rotation[2]);
+          geometry.translate(...position); bakeColor(geometry, color, .06); parts.push(geometry);
+        }
+        const add = (geometry, pos, scale, color, rot = [0, 0, 0]) => piece(geometry, pos, scale, rot, color);
+        if (shape === 'mirror') {
+          // Vire: the long inclined lake of mirrors, with a dark underside and four tuning towers.
+          add(new THREE.CylinderGeometry(.26, .29, .025, 28), [0, 0, 0], [1.45, 1, .72], '#455e66', [0, 0, .12]);
+          add(new THREE.CylinderGeometry(.24, .24, .007, 28), [0, .020, 0], [1.45, 1, .72], '#a7c8cb', [0, 0, .12]);
+          for (const x of [-.23, -.08, .08, .23]) {
+            add(new THREE.CylinderGeometry(.012, .018, .14, 6), [x, .082 + x * .12, 0], [1, 1, 1], '#7c9c9d');
+            add(new THREE.OctahedronGeometry(.025, 0), [x, .16 + x * .12, 0], [1, .6, 1], '#dbd9ae');
+          }
+          add(new THREE.BoxGeometry(.62, .006, .012), [0, .03, 0], [1, 1, 1], '#e0e1bc', [0, 0, .12]);
+        } else if (shape === 'bell') {
+          // Solen: three suspended bronze rings and the narrow central clock spindle.
+          add(new THREE.CylinderGeometry(.18, .22, .035, 20), [0, 0, 0], [1, 1, .78], '#5e5446');
+          add(new THREE.CylinderGeometry(.012, .024, .45, 8), [0, .23, 0], [1, 1, 1], '#948b68');
+          for (let i = 0; i < 3; i++) {
+            add(new THREE.TorusGeometry(.11 + i * .055, .006, 6, 36), [0, .22, 0], [1, 1, 1], '#c7ad76',
+              [i * .46, i * .64, i * .24]);
+          }
+          add(new THREE.OctahedronGeometry(.038, 0), [0, .45, 0], [1, 1.2, 1], '#d8dfb1');
+        } else {
+          // Kest: three rock-and-timber islands joined by masts and pale cloud sails.
+          for (const [x, z, size] of [[-.18, .02, .15], [.03, -.03, .19], [.20, .05, .12]]) {
+            add(new THREE.IcosahedronGeometry(size, 1), [x, -.045, z], [1, .45, .72], '#53665f');
+            add(new THREE.CylinderGeometry(size * .88, size, .016, 12), [x, .014, z], [1, 1, .7], '#73907a');
+            add(new THREE.CylinderGeometry(.009, .013, .22, 6), [x, .13, z], [1, 1, 1], '#a68f69');
+            add(new THREE.ConeGeometry(.065, .09, 4), [x, .08, z], [1, 1, 1], '#a5b7a3', [0, .78, 0]);
+          }
+          add(new THREE.BoxGeometry(.18, .13, .004), [.06, .18, .018], [1, 1, 1], '#d5daca', [0, .38, -.18]);
+        }
+        const mesh = new THREE.Mesh(join(parts), cityMaterial);
+        mesh.castShadow = false; mesh.receiveShadow = false; group.add(mesh);
+        group.position.copy(direction).multiplyScalar(radius); group.quaternion.setFromUnitVectors(UP, direction);
+        group.userData.city = id; scene.add(group);
+        return { id, altitudeKm, radius, direction, group, mesh };
+      }
+      const skyCities = [
+        makeSkyCity('VIRE', 5, 11.0, .90, 2.20, 'mirror'),
+        makeSkyCity('SOLEN', 4, 10.4, 2.40, 1.96, 'bell'),
+        makeSkyCity('KEST', 3, 9.95, 4.05, 2.04, 'nest')
+      ];
+      function updateSkyCities() {
+        for (let i = 0; i < skyCities.length; i++) {
+          const city = skyCities[i];
+          const drift = reducedMotion ? 0 : Math.sin(elapsed * .12 + i * 1.7) * .015;
+          city.group.position.copy(city.direction).multiplyScalar(city.radius + drift);
+        }
+      }
 
       // ---- What is above: the sun-mirror net -------------------------------------------------------
       // Not an orbit — the directorate cannot leave the atmosphere (WORLD §4.2). This is its 日镜网,
@@ -7496,6 +7581,54 @@
       const eventState = { id: null, def: null, time: 0, duration: 0, intensity: 0, next: 40 + eventRandom() * 32, last: null, seen: 0, daylight: 0 };
       const eventFxKeys = Object.keys(eventFx);
 
+      // Only the signal and the Inquest's record survive a refresh. Ecological debt and the
+      // session's detune counter deliberately remain transient. Untrusted storage is validated
+      // before it can become geometry or affect a state machine.
+      const STORY_KEY = 'aetheris.story.v1';
+      let storyStorage = 'available';
+      const blankStory = () => ({ version: 1, detunes: 0, detections: 0, mark: null });
+      function decodeStory(raw) {
+        if (typeof raw !== 'string' || raw.length > 2048) return null;
+        try {
+          const data = JSON.parse(raw);
+          const integer = n => Number.isSafeInteger(n) && n >= 0 && n <= 10000000;
+          if (!data || data.version !== 1 || !integer(data.detunes) || !integer(data.detections)) return null;
+          if (data.mark === null && data.detections < 3) return { version: 1, detunes: data.detunes, detections: data.detections, mark: null };
+          if (!Array.isArray(data.mark) || data.mark.length !== 3 || data.detections < 3 ||
+              !data.mark.every(n => typeof n === 'number' && Number.isFinite(n))) return null;
+          const length = Math.hypot(...data.mark);
+          if (length < .9 || length > 1.1) return null;
+          return { version: 1, detunes: data.detunes, detections: data.detections, mark: data.mark.map(n => n / length) };
+        } catch (_) { return null; }
+      }
+      function loadStory() {
+        try {
+          const raw = window.localStorage.getItem(STORY_KEY);
+          if (raw === null) return blankStory();
+          const loaded = decodeStory(raw);
+          if (loaded) return loaded;
+          storyStorage = 'corrupt';
+        } catch (_) { storyStorage = 'unavailable'; }
+        return blankStory();
+      }
+      const story = loadStory();
+      const storyMarkDirection = new THREE.Vector3();
+      if (story.mark) storyMarkDirection.fromArray(story.mark);
+      const storyStage = () => story.detunes >= 100 ? 3 : story.detunes >= 50 ? 2 : story.detunes >= 20 ? 1 : 0;
+      function saveStory() {
+        try {
+          window.localStorage.setItem(STORY_KEY, JSON.stringify(story));
+          storyStorage = 'available';
+        } catch (_) { storyStorage = 'unavailable'; }
+        refreshStoryPanel();
+      }
+      function recordDetune() {
+        detune.pulse = 1; detune.count++; detune.notes++;
+        story.detunes = Math.min(10000000, story.detunes + 1);
+        saveStory();
+        playDetune();
+      }
+
       const leyRing = new THREE.Mesh(
         new THREE.TorusGeometry(1, .013, 6, 72),
         new THREE.MeshBasicMaterial({ color: 0x8dffe6, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })
@@ -7588,10 +7721,9 @@
           if (eventState.time > 2.2) {
             detune.next -= dt;
             if (detune.next <= 0) {
-              detune.pulse = 1; detune.count++; detune.notes++;
+              recordDetune();
               // Interfering with the operation also halves what it will cost the world.
               costState.pending = Math.max(.125, costState.pending * .5);
-              playDetune();
               detune.next = 3.2 + eventRandom() * 3.4;
             }
           }
@@ -7682,6 +7814,235 @@
         moveVelocity: new THREE.Vector3(), speed: 0, slope: 1, lastFootfall: 0, footstepsAt: -9,
         coyote: 0, jumpBuffer: 0, landDip: 0, roll: 0
       };
+      // ---- The Inquest and the Drowned -------------------------------------------------------
+      // A scan looks at a real, moving patch on the surface. It does not chase the camera, and
+      // changing view/teleporting away cancels the local search rather than recording a phantom hit.
+      const INQUEST_DWELL = 90, INQUEST_WARNING = 5, INQUEST_SWEEP = 10, INQUEST_REST = 18;
+      const INQUEST_RANGE = .24, INQUEST_BEAM = .085, INQUEST_SHELTER = .20, INQUEST_EXPOSURE = .55;
+      const inquest = { phase: 'idle', time: 0, dwell: 0, witnessed: false, center: new THREE.Vector3(),
+        target: new THREE.Vector3(), axis: new THREE.Vector3(), hasCenter: false, exposure: 0,
+        hit: false, queued: 0, lastEvent: eventState.seen, sweeps: 0 };
+      const storyAlert = document.getElementById('storyAlert');
+      const storyNotice = { text: '', left: 0 };
+      function storyMessage(text, seconds = 4) { storyNotice.text = text; storyNotice.left = seconds; }
+      function updateStoryAlert(dt) {
+        storyNotice.left = Math.max(0, storyNotice.left - dt);
+        let text = storyNotice.left > 0 ? storyNotice.text : '';
+        if (!text && inquest.phase === 'warning') text = '巡管虫接近 · 离开此处或进入圣所庇护环';
+        if (!text && inquest.phase === 'sweep') text = '搜索光正在扫过 · 荧光潮中移动也可掩护';
+        if (storyAlert.textContent !== text) storyAlert.textContent = text;
+        storyAlert.classList.toggle('visible', !!text);
+      }
+
+      // One small machine and one tilted search cone, not a camera-space overlay. The illuminated
+      // footprint is the same radius as the detection test, so a player can read and evade it.
+      const patrol = new THREE.Group();
+      const patrolBodyMat = new THREE.MeshStandardMaterial({ color: 0x485c5d, metalness: .72, roughness: .35 });
+      const patrolLampMat = new THREE.MeshBasicMaterial({ color: 0xffd69b });
+      const patrolBody = new THREE.Mesh(new THREE.OctahedronGeometry(.058, 1), patrolBodyMat);
+      patrolBody.scale.set(1.35, .7, .85); patrolBody.position.set(-.16, .91, 0); patrol.add(patrolBody);
+      const patrolRing = new THREE.Mesh(new THREE.TorusGeometry(.081, .004, 5, 20), patrolLampMat);
+      patrolRing.rotation.x = Math.PI / 2; patrolRing.position.copy(patrolBody.position); patrol.add(patrolRing);
+      const patrolEye = new THREE.Mesh(new THREE.SphereGeometry(.012, 8, 6), patrolLampMat);
+      patrolEye.position.set(-.16, .875, .025); patrol.add(patrolEye);
+      const patrolWings = [];
+      for (const side of [-1, 1]) for (const fore of [-1, 1]) {
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(.09, .004, .022), patrolBodyMat);
+        wing.position.set(-.16 + side * .07, .91, fore * .033);
+        wing.rotation.y = side * fore * .30; patrolWings.push({ wing, side, fore }); patrol.add(wing);
+      }
+      const patrolBeam = new THREE.Mesh(new THREE.ConeGeometry(INQUEST_BEAM, Math.hypot(.16, .9), 20, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0xffca87, transparent: true, opacity: .16,
+          depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      patrolBeam.position.set(-.08, .45, 0); patrolBeam.rotation.z = Math.atan2(.16, .9); patrol.add(patrolBeam);
+      const patrolFoot = new THREE.Mesh(new THREE.RingGeometry(INQUEST_BEAM * .90, INQUEST_BEAM, 28),
+        new THREE.MeshBasicMaterial({ color: 0xffd69b, transparent: true, opacity: .65,
+          depthWrite: false, side: THREE.DoubleSide }));
+      patrolFoot.rotation.x = -Math.PI / 2; patrolFoot.position.y = .006; patrol.add(patrolFoot);
+      patrol.visible = false; patrol.renderOrder = 12; scene.add(patrol);
+      const shelterRings = new THREE.Group();
+      const shelterMaterial = new THREE.MeshBasicMaterial({ color: 0x9bffde, transparent: true, opacity: .60,
+        depthWrite: false, side: THREE.DoubleSide });
+      for (const landmark of landmarks) {
+        // Follow the real terrain, rather than laying a flat torus through a sloping hillside.
+        // Its centreline is at the exact chord-distance used by inquestSheltered().
+        const points = [], angle = 2 * Math.asin(INQUEST_SHELTER / (2 * R));
+        for (let i = 0; i < 96; i++) {
+          const dir = nearDirection(landmark.direction, i * TAU / 96, angle);
+          points.push(dir.multiplyScalar(groundRadius(dir) + .019));
+        }
+        const curve = new THREE.CatmullRomCurve3(points, true);
+        shelterRings.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 192, .003, 4, true), shelterMaterial));
+      }
+      shelterRings.visible = false; shelterRings.renderOrder = 11; scene.add(shelterRings);
+      const patrolWorld = new THREE.Vector3();
+      function inquestSheltered() {
+        if (state.submerged) return true; // the searchlight cannot read through deep water
+        if (eventState.id === 'bloom' && state.speed > .025) return true;
+        return landmarks.some(landmark => landmark.direction.distanceTo(state.direction) * R <= INQUEST_SHELTER);
+      }
+      function clearInquest() {
+        inquest.phase = 'idle'; inquest.time = inquest.dwell = inquest.exposure = 0;
+        inquest.witnessed = inquest.hit = inquest.hasCenter = false;
+        inquest.queued = 0; inquest.lastEvent = eventState.seen;
+        patrol.visible = shelterRings.visible = false;
+      }
+      function beginInquest() {
+        inquest.phase = 'warning'; inquest.time = 0; inquest.exposure = 0; inquest.hit = false;
+        inquest.axis.crossVectors(Math.abs(inquest.center.y) > .95 ? new THREE.Vector3(1, 0, 0) : UP, inquest.center).normalize();
+        inquest.target.copy(inquest.center);
+        storyMessage('巡管虫接近 · 离开此处或进入圣所庇护环', 4);
+        inquestCall(false);
+      }
+      function inquestDetection() {
+        inquest.hit = true;
+        story.detections = Math.min(10000000, story.detections + 1);
+        if (story.detections >= 3 && !story.mark) {
+          storyMarkDirection.copy(state.direction).normalize(); story.mark = storyMarkDirection.toArray();
+          storyMessage('UNFILED OBJECT · 已被记录，地图留下标记', 6);
+          archiveChip.classList.add('has-news');
+        } else storyMessage('UNFILED OBJECT · 扫描记录 ' + Math.min(story.detections, 3) + ' / 3', 5);
+        inquestCall(true);
+        saveStory();
+        mapNeedsDraw = true;
+      }
+      function updateInquest(dt, surface) {
+        if (!surface) { clearInquest(); return; }
+        // Reading either panel cannot cost the player an unanswerable hit. The rest of the world
+        // still runs, including operations; a marked player's extra scan is queued until reading ends.
+        const newOperations = Math.max(0, eventState.seen - inquest.lastEvent);
+        inquest.lastEvent = eventState.seen;
+        if (newOperations && story.mark) inquest.queued = Math.min(10000000, inquest.queued + newOperations);
+        if (archiveOpen || worldMapOpen || document.hidden) return;
+        if (!inquest.hasCenter || inquest.center.distanceTo(state.direction) * R > .35) {
+          const escaped = inquest.hasCenter && (inquest.phase === 'warning' || inquest.phase === 'sweep');
+          inquest.center.copy(state.direction); inquest.hasCenter = true;
+          inquest.dwell = 0; inquest.witnessed = false; inquest.exposure = 0;
+          inquest.phase = 'idle'; inquest.time = 0;
+          if (escaped) { inquest.queued = 0; storyMessage('已离开扫描区域', 3); }
+        }
+        inquest.dwell += dt;
+        if (eventState.def) inquest.witnessed = true;
+        if (inquest.phase === 'idle') {
+          if (inquest.queued > 0) { inquest.queued--; beginInquest(); }
+          else if (inquest.dwell >= INQUEST_DWELL && inquest.witnessed) beginInquest();
+        } else if (inquest.phase === 'warning') {
+          inquest.time += dt;
+          // Move to the start of the sweep during the warning. The first scan frame must never
+          // briefly send an uninitialised target (and its patrol) to the planet's centre.
+          inquest.target.copy(inquest.center).addScaledVector(inquest.axis,
+            -INQUEST_RANGE * smooth(0, INQUEST_WARNING, inquest.time) / R).normalize();
+          if (inquest.time >= INQUEST_WARNING) { inquest.phase = 'sweep'; inquest.time = 0; }
+        } else if (inquest.phase === 'sweep') {
+          inquest.time += dt;
+          const along = (clamp(inquest.time / INQUEST_SWEEP, 0, 1) * 2 - 1) * INQUEST_RANGE;
+          inquest.target.copy(inquest.center).addScaledVector(inquest.axis, along / R).normalize();
+          const inBeam = state.direction.distanceTo(inquest.target) * R <= INQUEST_BEAM;
+          inquest.exposure = inBeam && !inquestSheltered() ? inquest.exposure + dt : 0;
+          if (!inquest.hit && inquest.exposure >= INQUEST_EXPOSURE) inquestDetection();
+          if (inquest.time >= INQUEST_SWEEP) {
+            inquest.phase = 'cooldown'; inquest.time = 0; inquest.sweeps++;
+            if (!inquest.hit) storyMessage('扫描结束 · 未被记录', 3);
+          }
+        } else {
+          inquest.time += dt;
+          if (inquest.time >= INQUEST_REST) { inquest.phase = 'idle'; inquest.time = 0; }
+        }
+        const scanning = inquest.phase === 'warning' || inquest.phase === 'sweep';
+        patrol.visible = shelterRings.visible = scanning;
+        if (scanning) {
+          const target = inquest.target;
+          patrol.position.copy(target).multiplyScalar(groundRadius(target) + .005);
+          patrol.quaternion.setFromUnitVectors(UP, target);
+          patrolBeam.material.opacity = inquest.phase === 'warning' ? .07 : .18;
+          patrolFoot.material.opacity = inquest.phase === 'warning' ? .28 : .72;
+          for (const { wing, side, fore } of patrolWings) wing.rotation.z = side * (.16 + .10 * Math.sin(elapsed * 5 + fore));
+          patrolWorld.copy(patrolBody.position).applyQuaternion(patrol.quaternion).add(patrol.position);
+        }
+      }
+
+      // Echoes are world-anchored schools in genuinely deep water, not particles glued to the view.
+      // Each swims a tiny bounded circle and fades with the local sun; no random layout is disturbed.
+      const echoSites = [];
+      for (let i = 0; i < 480; i++) {
+        const y = 1 - (i + .5) * 2 / 480, a = i * Math.PI * (3 - Math.sqrt(5)), r = Math.sqrt(1 - y * y);
+        const dir = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+        if (heightAt(dir) >= SEA - .10) continue;
+        // A whole school should remain over water, not straddle a nearby beach.
+        if ([0, Math.PI / 2, Math.PI, Math.PI * 1.5].some(a => heightAt(nearDirection(dir, a, .11 / R)) >= SEA - .01)) continue;
+        const east = new THREE.Vector3().crossVectors(Math.abs(y) > .95 ? new THREE.Vector3(1, 0, 0) : UP, dir).normalize();
+        echoSites.push({ dir, east, north: new THREE.Vector3().crossVectors(dir, east), phase: a });
+      }
+      const echoGeometry = new THREE.CircleGeometry(1, 16); echoGeometry.rotateX(-Math.PI / 2);
+      const echoes = new THREE.InstancedMesh(echoGeometry,
+        new THREE.MeshBasicMaterial({ color: 0x06171e, transparent: true, opacity: .78, depthWrite: false, side: THREE.DoubleSide }), echoSites.length);
+      echoes.instanceMatrix.setUsage(THREE.DynamicDrawUsage); echoes.frustumCulled = false; echoes.visible = false; echoes.renderOrder = 10; scene.add(echoes);
+      const echoDummy = new THREE.Object3D(), echoDir = new THREE.Vector3();
+      function updateEchoes() {
+        echoes.visible = storyStage() >= 1;
+        if (!echoes.visible) return;
+        for (let i = 0; i < echoSites.length; i++) {
+          const site = echoSites[i], t = elapsed * .12 + site.phase;
+          echoDir.copy(site.dir).addScaledVector(site.east, Math.cos(t) * .012 / R)
+            .addScaledVector(site.north, Math.sin(t) * .012 / R).normalize();
+          const night = 1 - smooth(-.20, .02, echoDir.dot(sun));
+          echoDummy.position.copy(echoDir).multiplyScalar(WATER + .006);
+          echoDummy.quaternion.setFromUnitVectors(UP, echoDir);
+          echoDummy.scale.set(.095 * night, 1, .052 * night);
+          echoDummy.updateMatrix(); echoes.setMatrixAt(i, echoDummy.matrix);
+        }
+        echoes.instanceMatrix.needsUpdate = true;
+      }
+
+      // The only hostile life rises at the charted trench during a veil after 100 notes. It can
+      // pursue a swimmer over deep water, but is slower than swimming and never forces a death or
+      // teleports the body. Contact briefly slows movement; leaving the water is a refuge.
+      const drowned = { direction: trenchDirection.clone(), eventSeen: -1, active: false, slow: 0, cooldown: 0, contacts: 0 };
+      const shadow = new THREE.Group();
+      const shadowMat = new THREE.MeshBasicMaterial({ color: 0x050c13, transparent: true, opacity: .90, depthWrite: false, side: THREE.DoubleSide });
+      const shadowEyeMat = new THREE.MeshBasicMaterial({ color: 0x789a9a });
+      const shadowBody = new THREE.Mesh(new THREE.SphereGeometry(.19, 16, 12), shadowMat);
+      shadowBody.scale.set(1, 2.6, .55); shadowBody.position.y = .56; shadow.add(shadowBody);
+      const shadowHead = new THREE.Mesh(new THREE.OctahedronGeometry(.17, 1), shadowMat);
+      shadowHead.scale.set(1.1, 1.25, .65); shadowHead.position.y = 1.05; shadow.add(shadowHead);
+      for (let i = 0; i < 6; i++) {
+        const limb = new THREE.Mesh(new THREE.ConeGeometry(.075, .85, 7), shadowMat);
+        const a = i * TAU / 6; limb.position.set(Math.cos(a) * .22, .42, Math.sin(a) * .17);
+        limb.rotation.set(Math.sin(a) * .50, 0, -Math.cos(a) * .50); shadow.add(limb);
+      }
+      for (const x of [-.06, .06]) {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(.013, 8, 6), shadowEyeMat);
+        eye.position.set(x, 1.08, .09); shadow.add(eye);
+      }
+      shadow.visible = false; shadow.renderOrder = 11; scene.add(shadow);
+      const shadowNext = new THREE.Vector3(), shadowTangent = new THREE.Vector3();
+      function updateDrowned(dt, surface) {
+        drowned.slow = Math.max(0, drowned.slow - dt);
+        drowned.cooldown = Math.max(0, drowned.cooldown - dt);
+        const active = storyStage() >= 3 && eventState.id === 'veil';
+        if (!active) { drowned.active = false; shadow.visible = false; return; }
+        if (drowned.eventSeen !== eventState.seen) {
+          drowned.eventSeen = eventState.seen; drowned.direction.copy(trenchDirection); drowned.cooldown = 0;
+        }
+        drowned.active = true;
+        const rise = smooth(0, 5, eventState.time) * smooth(0, 3, eventState.duration - eventState.time);
+        shadow.visible = rise > .01;
+        if (surface && !archiveOpen && !worldMapOpen && !document.hidden && rise > .65 &&
+            heightAt(state.direction) < SEA - .02) {
+          const distance = drowned.direction.distanceTo(state.direction) * R;
+          if (distance < .85 && distance > .001) {
+            shadowTangent.copy(state.direction).addScaledVector(drowned.direction, -state.direction.dot(drowned.direction)).normalize();
+            shadowNext.copy(drowned.direction).addScaledVector(shadowTangent, Math.min(distance, .07 * dt) / R).normalize();
+            if (heightAt(shadowNext) < SEA - .02) drowned.direction.copy(shadowNext);
+          }
+          if (drowned.direction.distanceTo(state.direction) * R < .11 && drowned.cooldown <= 0) {
+            drowned.slow = 3; drowned.cooldown = 8; drowned.contacts++;
+            storyMessage('溺者之影触及了你 · 向岸边游', 5);
+          }
+        }
+        shadow.position.copy(drowned.direction).multiplyScalar(WATER - .95 + rise * .95);
+        shadow.quaternion.setFromUnitVectors(UP, drowned.direction);
+      }
       // ---- Bell: who is afraid of whom ---------------------------------------------------------
       // Stepped once a frame, and only for the animals close enough to see: a bell further than a
       // stone's throw is already posed in the buffers and nothing off screen moves. The modes are the
@@ -8705,12 +9066,14 @@
         state.slope+=(grade-state.slope)*(1-Math.exp(-dt*9));
 
         const sprint=(keys.has('ShiftLeft')||keys.has('ShiftRight'))&&state.crouch<.35;
-        const topSpeed=state.water ? SWIM_SPEED : (sprint ? SPRINT_SPEED : WALK_SPEED)*mix(1,CROUCH_SPEED,state.crouch);
+        const topSpeed=(state.water ? SWIM_SPEED : (sprint ? SPRINT_SPEED : WALK_SPEED)*mix(1,CROUCH_SPEED,state.crouch)) * (drowned.slow > 0 ? .55 : 1);
 
         // Air: keep whatever momentum the take-off had, steer it slowly, never bleed it. On the
         // ground the stick is analogue, so half a push walks at half speed.
         const speedNow=state.moveVelocity.length();
-        if (state.grounded) {
+        if (state.grounded || (state.water && drowned.slow > 0)) {
+          // The Drowned can slow a swimmer too: ordinary airborne movement otherwise deliberately
+          // preserves its old momentum and would ignore the lower speed limit entirely.
           moveTarget.copy(move).multiplyScalar(topSpeed*inputLength*state.slope);
         } else {
           moveTarget.copy(move).multiplyScalar(Math.max(topSpeed,speedNow));
@@ -9570,6 +9933,20 @@
           ctx.moveTo(q.x, q.y - 3.4); ctx.lineTo(q.x + 3.4, q.y); ctx.lineTo(q.x, q.y + 3.4); ctx.lineTo(q.x - 3.4, q.y);
           ctx.closePath(); ctx.fill();
         }
+        // Recorded locations and the deep signal are meaningful world coordinates, not a new
+        // teleport target. Never project an antipodal point into the local disc.
+        if (story.mark && storyMarkDirection.dot(state.direction) > 0) {
+          const q = toDisc(storyMarkDirection, .96);
+          if (q) {
+            ctx.strokeStyle = '#ffa484'; ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.moveTo(q.x, q.y - 5); ctx.lineTo(q.x + 5, q.y);
+            ctx.lineTo(q.x, q.y + 5); ctx.lineTo(q.x - 5, q.y); ctx.closePath(); ctx.stroke();
+          }
+        }
+        if (storyStage() >= 2 && trenchDirection.dot(state.direction) > 0) {
+          const q = toDisc(trenchDirection, .96);
+          if (q) { ctx.strokeStyle = '#c7acd7'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, MAP_TAU); ctx.stroke(); }
+        }
         // Living fauna: one drifting mote per flock, so clusters read as a herd.
         ctx.fillStyle = 'rgba(214, 236, 255, .8)';
         for (let i = 0; i < flocks.length; i++) {
@@ -9729,6 +10106,20 @@
             ctx.fillText(label, p.x, p.y);
           });
         }
+        // The two story marks are not clickable anchors. Their coordinates are the same ones
+        // used by the physical scan and the Drowned, including after a reload.
+        if (story.mark) {
+          const p = mapWorldPoint(storyMarkDirection, worldScratch), r = 10 * s;
+          ctx.strokeStyle = '#ffa484'; ctx.lineWidth = Math.max(1.5, 2 * s);
+          ctx.beginPath(); ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x + r, p.y);
+          ctx.lineTo(p.x, p.y + r); ctx.lineTo(p.x - r, p.y); ctx.closePath(); ctx.stroke();
+        }
+        if (storyStage() >= 2) {
+          const p = mapWorldPoint(trenchDirection, worldScratch), r = 9 * s;
+          ctx.strokeStyle = '#c7acd7'; ctx.lineWidth = Math.max(1.5, 2 * s);
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, MAP_TAU); ctx.stroke();
+          ctx.beginPath(); ctx.arc(p.x, p.y, 3 * s, 0, MAP_TAU); ctx.stroke();
+        }
         // Where you are: a ring, the range of the little disc, and the way you are facing.
         const n = state.direction;
         const lat = Math.asin(clamp(n.y, -1, 1)), lon = Math.atan2(n.x, n.z);
@@ -9850,7 +10241,11 @@
         shimmer.connect(shimmerGain).connect(master);shimmer.start();
         const trem=ctx.createOscillator(),tremGain=ctx.createGain();trem.frequency.value=5.2;tremGain.gain.value=.004;
         trem.connect(tremGain).connect(shimmerGain.gain);trem.start();
-        return {ctx,master,muffle,windGain,windFilter,shimmerGain,buffer};
+        const drownedGain=ctx.createGain();drownedGain.gain.value=0;drownedGain.connect(master);
+        for(const frequency of [48,48.7]){
+          const hum=ctx.createOscillator();hum.type='sine';hum.frequency.value=frequency;hum.connect(drownedGain);hum.start();
+        }
+        return {ctx,master,muffle,windGain,windFilter,shimmerGain,drownedGain,buffer};
       }
       function toggleSound(){
         try{
@@ -9882,6 +10277,17 @@
           gain.gain.linearRampToValueAtTime(.05,t+.014);
           gain.gain.exponentialRampToValueAtTime(.0008,t+.9);
         }catch(_){ /* audio is decoration: never let it break the frame */ }
+      }
+      // A quiet, non-spatial warning accompanies a real patrol, only when sound is enabled.
+      function inquestCall(detected){
+        if(!audio||!soundOn)return;
+        try{
+          const t=audio.ctx.currentTime, gain=audio.ctx.createGain(), osc=audio.ctx.createOscillator();
+          osc.type='sine';osc.frequency.value=detected?510:690;
+          gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(.025,t+.025);
+          gain.gain.exponentialRampToValueAtTime(.0004,t+.42);
+          osc.connect(gain).connect(audio.master);osc.start(t);osc.stop(t+.45);
+        }catch(_){ /* sound is optional, the HUD and beam remain */ }
       }
       // A startled stag: a short breathy huff — a falling saw through a band-pass. Heard only when the
       // herd is close, and only with sound on.
@@ -10019,6 +10425,12 @@
         audio.windFilter.frequency.setTargetAtTime((surface?400:240)+wx.rain*420,t,.8);
         audio.shimmerGain.gain.setTargetAtTime(night*(surface?.012:.005)*(1-wx.rain*.7)*(1+eventFx.glow*1.8),t,1.2);
         audio.muffle.frequency.setTargetAtTime(18000-dive*16600,t,.35);
+        if(audio.drownedGain){
+          const distance=state.direction.distanceTo(trenchDirection)*R;
+          const near=surface&&storyStage()>=2?clamp(1-distance/1.5,0,1):0;
+          const pulse=Math.pow(Math.max(0,Math.cos(elapsed*TAU/3.7)),6);
+          audio.drownedGain.gain.setTargetAtTime(near*.012*(.18+.82*pulse),t,.18);
+        }
       }
       document.getElementById('descendButton').addEventListener('click',switchMode);
       document.getElementById('switchButton').addEventListener('click',switchMode);
@@ -10051,6 +10463,9 @@
         { id: 'flock', name: 'SKY PENNANT', zh: '浮幡', where: '九座圣所的上空', range: 1.15,
           hint: '没有翅膀，也没有前后：一条膜靠往自己身上送波前进。',
           note: '它绕着圣所转，四五百毫米高。走音者把东西绑在它身上——它是唯一能飞越环洋的邮差，也是唯一不归穹顶管的航线。' },
+        { id: 'inquest', name: 'INQUEST WARDEN', zh: '巡管虫', where: '见证作业后的地表扫描', range: 1.25,
+          hint: '不属于浮幡的航线；它跟着一束搜索光来。',
+          note: '镜务院的清点器。它不是来杀人的：它只把光照到的未申报物体写进记录。圣所、潜水和荧光潮中移动都能扰乱读数。' },
         { id: 'swarm-vaelmar', name: 'EMBER MOTH', zh: '萤蛾', province: 'vaelmar', where: 'VAELMAR 的苔面',
           hint: '黄昏之后成片浮起来，暖色，很慢。',
           note: '它们不吃苔，吃苔边界上的光。所以一块被踩秃的苔地上，萤蛾总是比别处多。' },
@@ -10101,7 +10516,7 @@
               codexDir.set(flockWorld[i * 3], flockWorld[i * 3 + 1], flockWorld[i * 3 + 2]);
               hit = inSight(codexDir, eyeDir, forward, entry.range);
             }
-          }
+          } else if (entry.id === 'inquest') hit = patrol.visible && inSight(patrolWorld, eyeDir, forward, entry.range);
           if (hit) { entry.seen = true; entry.fresh = true; found++; }
         }
         return found;
@@ -10128,6 +10543,11 @@
           { code: 'ZENITH MIGRATION', zh: '天穹迁徙', official: 'THE FLOCKS CLIMB THE THERMALS',
             truth: '驱赶作业：用浮晶格脉冲把浮幡赶出镜阵航线，同时取走它们体内的磁记忆。',
             tell: '浮幡是唯一能飞越环洋的邮差，走音者会在它们身上绑东西。' }
+        ],
+        cities: [
+          { name: 'VIRE', zh: '镜面之城', altitude: '5 km', note: '倾斜的镜面平台。日镜阵列、调律院与执政团在这里。' },
+          { name: 'SOLEN', zh: '钟之城', altitude: '4 km', note: '悬挂的铜环。灵脉中继和穹顶的时间基准在这里。' },
+          { name: 'KEST', zh: '巢之城', altitude: '3 km', note: '树与金属相接的悬浮岛群，云帆围着港口。' }
         ],
         provinces: [
           { name: 'VAELMAR', zh: '苍苔行省', seat: '苔庭联邦 Tilin｜树居城邦联盟',
@@ -10161,9 +10581,9 @@
         ],
         omissions: [
           { code: 'THE INQUEST', zh: '穹顶追捕',
-            body: '镜务院迟早要来清点「未申报的坠落物」。一旦有追捕，就必须有失败、重置与惩罚——那会把这个观景器变成另一种东西，所以暂时不做。' },
+            body: '在同一区域停留 90 秒并见证作业，巡管虫就会带着搜索光来。离开扫描区、潜水、进入圣所庇护环，或在荧光潮中移动，都能避开读数；普通屋顶不算掩护。三次被扫到后，地点会被记录，之后每次在地表见到作业都会多一次扫描。' },
           { code: 'THE DROWNED', zh: '沉默者苏醒',
-            body: '每一次错音都在给沟底发信号。二十次、五十次、一百次，各有一阶段。它需要跨会话记忆，也就需要存档——与「刷新即重置」相冲突。' },
+            body: '错音的累计会留在本机。20 次后夜海出现回声群，50 次后圣所节拍紊乱、靠近无光沟可听到低频；100 次后，日蚀中溺者之影从沟底升起。它会追逐附近的泳者，靠岸可以逃离。' },
           { code: 'THIS PANEL', zh: '这份档案',
             body: '地表人没有文字，穹顶不需要档案，所以写下这些的人只能是走音者。你手里的东西，是有人塞给你的。' }
         ]
@@ -10181,6 +10601,11 @@
             ${archiveRow('OFFICIAL', op.official)}
             ${archiveRow('TRUTH', op.truth, 'truth')}
             ${archiveRow('THE TELL', op.tell, 'tell')}
+          </article>`).join('');
+        const cities = ARCHIVE_DATA.cities.map(c => `
+          <article class="archive-entry">
+            <div><span class="archive-code">${c.name}</span><span class="archive-zh">${c.zh}</span><span class="archive-tag">${c.altitude}</span></div>
+            ${archiveRow('SKY', c.note)}
           </article>`).join('');
         const provinces = ARCHIVE_DATA.provinces.map(p => `
           <article class="archive-entry">
@@ -10202,10 +10627,25 @@
             ${archiveRow('UNFILED', o.body, 'tell')}
           </article>`).join('');
         archiveBody.innerHTML = `
+          <section class="archive-section" id="storySection">
+            <h3>THE SIGNAL · 本机进度</h3>
+            <p id="storyProgress" aria-live="polite"></p>
+            <p id="storyStorage" aria-live="polite"></p>
+            <details class="story-reset">
+              <summary>重置本机剧情进度</summary>
+              <p>清除累计错音、扫描记录和地图标记；不会清除本次发现的图鉴或当前作业代价。</p>
+              <button id="storyReset" type="button">确认清除剧情进度</button>
+            </details>
+          </section>
           <section class="archive-section">
             <h3>FIVE OPERATIONS</h3>
             <p>地表人管它们叫异象。穹顶管它们叫作业。这里写的是两者之间被省掉的那段。</p>
             ${operations}
+          </section>
+          <section class="archive-section">
+            <h3>THREE CITIES</h3>
+            <p>穹顶的三座城是空中的远景，不能登陆；星球模型压缩了设定中的高度比例。</p>
+            ${cities}
           </section>
           <section class="archive-section">
             <h3>FIVE PROVINCES</h3>
@@ -10223,8 +10663,41 @@
             ${omissions}
           </section>
           <section class="archive-section" id="codexSection"></section>`;
+        document.getElementById('storyReset').addEventListener('click', resetStory);
+        refreshStoryPanel();
         refreshCodex();
       }
+      function refreshStoryPanel() {
+        const progress = document.getElementById('storyProgress'), storage = document.getElementById('storyStorage');
+        const stage = ['尚无回声', '夜海回声群', '无光沟信号与乱拍', '日蚀中的溺者之影'][storyStage()];
+        if (progress) progress.textContent = '累计错音 ' + story.detunes + ' · ' + stage + '。扫描 ' + Math.min(story.detections, 3) + ' / 3' + (story.mark ? ' · 地点已被记录。' : '。');
+        if (storage) storage.textContent = storyStorage === 'available' ? '进度保存在此浏览器的本地存储中。' :
+          storyStorage === 'corrupt' ? '本地存档损坏，未采用损坏的数据；下一次保存会替换它。' : '浏览器未允许保存或清除：本次进度可能只保留到刷新或关闭页面。';
+        const markLegend = document.getElementById('inquestLegend'), trenchLegend = document.getElementById('trenchLegend');
+        if (markLegend) markLegend.hidden = !story.mark;
+        if (trenchLegend) trenchLegend.hidden = storyStage() < 2;
+      }
+      function resetStory() {
+        let erased = false;
+        try { window.localStorage.removeItem(STORY_KEY); erased = true; storyStorage = 'available'; }
+        catch (_) { storyStorage = 'unavailable'; }
+        Object.assign(story, blankStory()); storyMarkDirection.set(0, 0, 0);
+        clearInquest(); drowned.active = false; drowned.slow = drowned.cooldown = 0;
+        shadow.visible = false; echoes.visible = false; mapNeedsDraw = true;
+        storyMessage(erased ? '本机剧情进度已清除' : '本次进度已清除 · 浏览器阻止清除本地存档', 5);
+        refreshStoryPanel();
+      }
+      // Reflect a reset or a new save made in another tab; live environmental debt is untouched.
+      window.addEventListener('storage', event => {
+        if (event.key !== STORY_KEY && event.key !== null) return;
+        const incoming = event.newValue === null ? blankStory() : decodeStory(event.newValue);
+        if (!incoming) { storyStorage = 'corrupt'; refreshStoryPanel(); return; }
+        Object.assign(story, incoming); storyStorage = 'available';
+        if (story.mark) storyMarkDirection.fromArray(story.mark); else storyMarkDirection.set(0, 0, 0);
+        if (event.newValue === null) { clearInquest(); drowned.slow = 0; }
+        mapNeedsDraw = true; refreshStoryPanel();
+      });
+      refreshStoryPanel();
       // The list renders itself from the state of CODEX, so the panel can be open while something is
       // added to it — which is exactly what happens, because you read the archive while walking.
       function codexHTML() {
@@ -10289,7 +10762,7 @@
       window.addEventListener('keydown',event=>{
         if(!startup.ready)return;
         if(event.ctrlKey||event.metaKey||event.altKey||event.target instanceof Element && event.target.matches('input,textarea,select'))return;
-        if(event.code==='Space'&&event.target instanceof Element && event.target.closest('button'))return;
+        if((event.code==='Space'||event.code==='Enter')&&event.target instanceof Element && event.target.closest('button, summary, a, [role="button"]'))return;
         if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.code))event.preventDefault();
         if(event.code==='KeyF'&&!event.repeat){switchMode();return;}
         if(event.code==='KeyT'&&!event.repeat){shiftLight();return;}
@@ -10389,6 +10862,11 @@
         const fogWeather = surface ? weatherNow.fog : 1 + (weatherNow.fog - 1) * .16;
         const dayAmount=smooth(-.22,.36,daylight), nightAmount=1-dayAmount;
         updateEvents(dt, daylight);
+        updateSkyCities();
+        updateInquest(dt, surface);
+        updateDrowned(dt, surface);
+        updateEchoes();
+        updateStoryAlert(dt);
         const eventChill=eventFx.chill;
         skyUniforms.uChill.value=eventChill;
         // Aerial perspective only: a neutral blue-grey haze, denser by day so distance reads as depth.
@@ -10577,9 +11055,12 @@
         const lightDim=(1-.28*lightDebt+lightRebound)*detuneDim;
         for(const landmark of landmarks){
           landmark.group.position.copy(landmark.direction).multiplyScalar(landmark.base+Math.sin(elapsed*.6+landmark.phase)*.018);
-          landmark.halo.rotation.y=elapsed*.13;landmark.crystal.rotation.y=elapsed*.32;
+          landmark.halo.rotation.y=elapsed*.13+(storyStage()>=2&&!reducedMotion?.23*Math.sin(elapsed*2.37+landmark.phase*2):0);
+          landmark.crystal.rotation.y=elapsed*.32;
           const siteNight=1-smooth(-.2,.28,landmark.direction.dot(sun));
-          const sitePulse=.85+.15*Math.sin(elapsed*1.6+landmark.phase);
+          const sitePulse=storyStage() >= 2
+            ? .82 + .10*Math.sin(elapsed*1.6+landmark.phase) + .08*Math.sin(elapsed*2.37+landmark.phase*2)
+            : .85 + .15*Math.sin(elapsed*1.6+landmark.phase);
           landmark.sanctuaryLight.intensity=(.15+siteNight*1.65)*sitePulse*(1+eventFx.ley*.9)*lightDim;
           landmark.beacon.visible=siteNight>.04;
           landmark.glow.material.opacity=(.24+siteNight*.32)*lightDim;
@@ -10737,8 +11218,8 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,ghost:state.ghost,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Number(quality.fps.toFixed(2)),pixelRatio:renderer.getPixelRatio(),antialiasMode:antialias.mode,antialiasRequested:antialias.requested,antialias:actualAntialias(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
-        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,storyDetunes:story.detunes,storyStage:storyStage(),inquestDetections:story.detections,inquestPhase:inquest.phase,inquestMarked:!!story.mark,storyStorage,skyCities:skyCities.length,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,ghost:state.ghost,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Number(quality.fps.toFixed(2)),pixelRatio:renderer.getPixelRatio(),antialiasMode:antialias.mode,antialiasRequested:antialias.requested,antialias:actualAntialias(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:recordDetune,
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,
             lat:Number(lat.toFixed(2)),lon:Number(lon.toFixed(2))};},

@@ -10,7 +10,8 @@
     "test:quality-touch": "node quality-touch.mjs",
     "test:fauna": "node fauna.mjs",
     "test:sightline": "node sightline.mjs",
-    "bench:render": "node perf.mjs"
+    "bench:render": "node perf.mjs",
+    "test:story": "node story.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "25.16.0"

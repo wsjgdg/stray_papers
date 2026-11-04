@@ -183,9 +183,11 @@ try {
   await page.keyboard.press('o');
   const archive = await page.evaluate(() => ({ open: document.body.classList.contains('archive-open'),
     count: document.querySelector('.codex-count')?.textContent,
+    seen: window.__browserProbe.CODEX.filter(entry => entry.seen).length,
+    total: window.__browserProbe.CODEX.length,
     news: document.getElementById('archiveChip').classList.contains('has-news') }));
-  check('real O key opens the archive and displays the ground discoveries', archive.open &&
-    /^[1-8]\s*\/\s*8$/.test(archive.count?.trim() || '') && !archive.news,
+  check('real O key opens the archive and displays the ground discoveries', archive.open && archive.seen > 0 &&
+    archive.count?.replace(/\s/g, '') === `${archive.seen}/${archive.total}` && !archive.news,
   (archive.count || 'missing count') + '; notification cleared=' + !archive.news);
   await page.keyboard.press('o');
   await page.waitForFunction(() => window.__browserProbe.state.grounded && !window.__browserProbe.state.water,
