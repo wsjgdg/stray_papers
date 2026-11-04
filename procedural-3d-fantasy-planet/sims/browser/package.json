@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node smoke.mjs",
     "test:adaptive": "node smoke.mjs --adaptive",
-    "test:fauna": "node fauna.mjs"
+    "test:fauna": "node fauna.mjs",
+    "test:sightline": "node sightline.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "25.16.0"
