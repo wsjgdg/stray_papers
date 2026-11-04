@@ -25,5 +25,21 @@
 - 测试全过：smoke ALL PASS；progress 逻辑断言（幂等 mark、badge 计数、isAllDone）全过
 - 本轮问题当轮解决：初版 progress.js 每次读 storage 导致无存储环境下状态丢失 → 改为内存缓存单次 hydrate + save() 持久化
 
-**下一步：** Round 2 执行 Task 3（启动页 index.html + 先读我.txt）→ 视进度做 Task 4。
+## 2026-11-05 Round 2（用户触发，提前执行）
+
+**完成：**
+- Task 3 完成：`先读我.txt`（给妈妈的信：怎么打开/怎么玩/防骗页引导）+ `index.html` 启动页（hero + GSAP 逐字入场、任务地图 renderMap + onChange 联动、探索地图 6 卡、结业直达链接）
+- Task 10 核心提前落地：`pages/graduation.html`（三档行动清单含可照抄的豆包提示词、结业证书两态逻辑 + 双侧 confetti、给儿子的隐藏折叠提示）——因启动页链接它，为保站点完整可运行而提前
+- site.js 完善：`pageReady()` 非任务页自动隐藏打卡按钮与页脚提示
+- smoke.js 增强：提取引用前剥离 script/style 块（内联 JS 的动态 href 不再误报）
+- **真浏览器验证**（IAB + 本地 http.server）：index 渲染完美（0/6 徽章、6 张任务卡、无控制台错误），截图确认视觉；graduation 两态逻辑正确（未集齐显示进度块 + 缺失关卡列表）
+
+**问题及当轮解决：**
+- 启动页链接 graduation.html 但该页不存在 → 当轮把结业页做出来
+- 内联 JS 动态 href 被 smoke 误报 → smoke 剥离 script 块
+- 非任务页页脚仍提示打卡 → pageReady 条件隐藏
+- 结业页 "副业地图" 原指向未创建的 side-jobs.html → 暂指向探索地图；**Task 8 落地时须把 graduation.html 行动清单里的链接改回 side-jobs.html**
+
+**下一步：** Round 3 执行 Task 4（① AI 能做什么——精选 5 卡，需产出真实素材）→ Task 5（② 趋势）。
+
 

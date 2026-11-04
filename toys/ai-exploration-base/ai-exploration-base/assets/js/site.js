@@ -33,7 +33,7 @@
     footer.className = 'site-footer';
     footer.innerHTML =
       '<p>这个网站是儿子和 AI 一起做的 · 双击就能打开 · 断网也能看</p>' +
-      '<p>看完这页，别忘了点上面的「完成打卡」</p>';
+      '<p id="site-footer-hint">看完这页，别忘了点上面的「完成打卡」</p>';
 
     document.body.insertBefore(header, document.body.firstChild);
     document.body.appendChild(footer);
@@ -104,13 +104,23 @@
     });
   }
 
-  /* Per-page entry point. */
+  /* Per-page entry point. Pages that are not checkable tasks
+     (landing, graduation) pass null/unknown id: chrome mounts,
+     the done button hides. */
   function pageReady(pageId) {
     mountChrome();
     revealOnScroll('.reveal');
 
     var btn = document.getElementById('site-done-btn');
     if (!btn) return;
+
+    var isTask = AIProgress.PAGES.some(function (p) { return p.id === pageId; });
+    if (!isTask) {
+      btn.style.display = 'none';
+      var hint = document.getElementById('site-footer-hint');
+      if (hint) hint.style.display = 'none';
+      return;
+    }
 
     function paint() {
       if (root.AIProgress.done(pageId)) {
