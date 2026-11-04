@@ -17,4 +17,13 @@
 - Task 1 完成：5 个 vendor 库本地化（GSAP 3.13.0 core/ScrollTrigger/TextPlugin、canvas-confetti 1.9.3、Chart.js 4.4.9 UMD），VERSIONS.md 已记录来源；文件头校验通过（均为官方构建）
 - 定时任务已创建（automation-b9bc9f8e，每 30 分钟）
 
-**下一步：** Round 1 执行 Task 2（共享基础：main.css / site.js / progress.js / smoke.js）。
+## 2026-11-05 Round 1
+
+**完成：**
+- 远程仓库建立：`wsjgdg/ai-exploration-base`（**private 确认**），main 已推送
+- Task 2 完成：main.css（设计令牌/chrome/任务地图/翻转卡/聊天气泡/解剖卡/证书样式，18px 基线、reduced-motion 支持）、progress.js（内存态+localStorage 持久化，6 关任务系统+renderMap+confetti）、site.js（header/footer 注入、打卡按钮、GSAP ScrollTrigger 渐入+IntersectionObserver 兜底、打字机）、smoke.js（零依赖：本地引用存在性 + node --check）
+- 测试全过：smoke ALL PASS；progress 逻辑断言（幂等 mark、badge 计数、isAllDone）全过
+- 本轮问题当轮解决：初版 progress.js 每次读 storage 导致无存储环境下状态丢失 → 改为内存缓存单次 hydrate + save() 持久化
+
+**下一步：** Round 2 执行 Task 3（启动页 index.html + 先读我.txt）→ 视进度做 Task 4。
+
