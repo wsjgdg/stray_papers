@@ -12,7 +12,9 @@
     "test:sightline": "node sightline.mjs",
     "bench:render": "node perf.mjs",
     "test:story": "node story.mjs",
-    "test:cities": "node cities.mjs"
+    "test:cities": "node cities.mjs",
+    "test:occlusion": "node occlusion.mjs",
+    "test:performance-capture": "node performance-capture.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "25.16.0"

@@ -33,9 +33,9 @@ node sims/run.mjs                # 全套：自动发现各项回归
 node sims/lint.mjs
 ```
 
-`run.mjs` 自动发现 `*_sim.mjs`，并显式运行 `syntax.mjs` 与 `bell_walk.mjs`。当前锁文件的开发工具依赖有 4 条 moderate `npm audit` 提示；`npm audit --prefix sims --omit=dev` 为 0，网页运行时不使用这些开发包。
+`run.mjs` 自动发现 `*_sim.mjs`，并显式运行 `syntax.mjs` 与 `bell_walk.mjs`。截至 2026-11-04，重新 `npm ci` 后 `npm audit --prefix sims`、`npm audit --prefix sims --omit=dev` 和 `npm audit --prefix sims/browser` 均为 0；结果随漏洞数据库变化。此前 4 条 moderate 是同一 [minimatch 通告](https://github.com/advisories/GHSA-g3hv-75wg-m249) 在 ESLint 依赖链上的传播，不是四个独立漏洞，网页运行时不使用这些开发包。上游 ESLint 目前仍要求 minimatch 10，故暂时**仅在 ESLint 和 `@eslint/config-array` 两条路径** override 为 `11.0.4`，不是自动降级 ESLint；这是跨主版本的临时兼容措施，应在上游支持后复审。`lint_contract_sim` 检查实际 lint 规则、文件选择、忽略与否定模式，以及该通告的有限复现；这些检查不保证未来任意 ESLint 插件兼容 minimatch 11。
 
-可选的真实浏览器烟测（需 Node.js `>=22.13` 及另行安装的 Chromium/Chrome）：
+可选的真实浏览器烟测（与主测试包一起使用时需 Node.js `^22.13.0` 或 `>=24`，以及另行安装的 Chromium/Chrome）：
 
 ```bash
 npm ci --prefix sims/browser
@@ -45,6 +45,8 @@ CHROME_PATH=/path/to/chromium npm run test:antialias --prefix sims/browser   # �
 CHROME_PATH=/path/to/chromium npm run test:quality-touch --prefix sims/browser # 触屏画质控制和窄屏布局
 CHROME_PATH=/path/to/chromium npm run test:fauna --prefix sims/browser       # 动物行为与声音调度
 CHROME_PATH=/path/to/chromium npm run test:sightline --prefix sims/browser   # 干地受控路线与实际画面像素
+CHROME_PATH=/path/to/chromium npm run test:occlusion --prefix sims/browser   # 真实墙面/地形的图鉴遮挡
+CHROME_PATH=/path/to/chromium npm run test:performance-capture --prefix sims/browser # 性能记录、导出与中断
 CHROME_PATH=/path/to/chromium npm run test:story --prefix sims/browser       # 剧情、存档、触屏及远景
 CHROME_PATH=/path/to/chromium npm run test:cities --prefix sims/browser      # 浮空城近观、返回及触屏
 CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # 帧间隔与渲染调用诊断
@@ -55,6 +57,10 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 `test:quality-touch` 用浏览器模拟触摸，在轨道和实际点按 `SWITCH VIEW` 降落后分别点按画质按钮，检查三种选择、可访问名称及抗锯齿上下文不变；随后仅为避免自动画质在断言之间变化而暂停实时循环，检查 320–1000 CSS 像素多个断点的按钮可点击区域、顶栏重叠与人工慢帧后的标签。后半段不是性能测试；模拟触屏、本地 three.js 和默认不加载外部字体也不能代替真实手机目检。
 
 `test:sightline` 在实际 `F` 降落后暂停实时循环，从落点以页面自己的 120 Hz 物理及动物更新**受控逐步**走一条干地候选路线；完成该位置的地表重撒后，对准附近动物渲染包括全部植被和动物的正常画面。仅为像素归因，随后临时把 650 mm 内动物实例的矩阵缩到零，保留原阴影再渲染对照，并立即恢复；通过条件是正常画面中至少 `0.1%`、且不少于 `20` 个像素来自这些附近动物，截图保存的始终是**未做实例遮掩的正常画面**（它仍可能被植被挡住）。测试不是人手实时行走，也不保证默认首眼可见，更不能代替人眼验收。建议使用默认窄视口（宽度小于 `760`，不启用 bloom）；`BROWSER_SIGHTLINE_ATTEMPTS` 可将候选画面次数设为 1–12，默认达到像素阈值即停止。设置 `BROWSER_SIGHTLINE_ALL=1` 会继续观察直到尝试上限或路线结束；再设 `BROWSER_SIGHTLINE_DIR=/tmp/aetheris-views` 可保存各次未遮掩画面（同名 `sightline-NN.png` 会覆盖），`BROWSER_SCREENSHOT` 则保存归因像素最多的一帧。不同画面内动物数量可能不同，像素最多**不等于**最清楚，需逐张目视；采样多帧也会更慢。
+
+`test:occlusion` 在真实 WebGL 页面和实际 `F` 降落后，同步布置并立即恢复一只动物的受控测试状态：真实墙后不识别，移到同一目标的无遮挡侧能识别；另查地形隆起、高处视线和水下透过水面。没有隐藏场景或暂停绘制；这不是人手复现或人眼验收。
+
+`test:performance-capture` 在正常运行的页面分别采集轨道和地表 20 秒，检查状态、实际 JSON 下载、模拟触屏手动复制及地图中断；可设 `BROWSER_CAPTURE_DIR` 保存报告。它不遮掩、冻结或跳过任何场景绘制，仍受所用浏览器、设备及探针开销影响。
 
 `test:story` 先用真实 `F` 键降落，再暂停循环、控制世界状态与相机来检查追捕、地图标记、三个阶段、音频调度、跨标签存档和重置；它也在初始窄屏轨道取景下临时逐一遮掩三座城来归因像素，保存的截图仍是完整画面。设置 `BROWSER_STORY_DIR` 可保存这些 PNG；这是 Chromium 中的受控夹具和模拟触摸，不是人工游玩、目视、试听或真机性能验收。
 
@@ -277,6 +283,8 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 - 打开时会先释放鼠标指针锁定并清空移动输入，免得你一边读一边漂。
 - 窄屏下面板占满整宽，触屏用同一个顶栏图标开关。
 - 那个图标现在和天气/声音按钮同级（`14 px` 图标 + `8 px` 的 `O` 字样），不再是一枚浮在右下角的胶囊。
+- **图鉴视线**（`pennants-81`）：钵行者、驮园、浮幡和巡管虫仍须在距离及视锥内，额外检查眼睛到目标中心是否被地形或省域/水下遗迹建筑挡住。地形使用 `heightAt()` 每 `0.012` 世界单位沿线采样、留 `0.002` 容差；建筑先用静态实例包围球筛选，再对真实几何和实例矩阵射线求交，不用粗碰撞盒当实心墙。水面不作为不透明地面；五省虫群仍按所在省自动记录。植物、动物、浮空岛等其他动态/装饰物不参与该遮挡判断，地形小于采样间距的细节与网格插值也不保证完全像素级一致；目标只测中心，不能保证露出一角即识别。没有改变碰撞或场景显示。
+- **设备性能记录**：在野档中点「准备 20 秒记录」，关闭野档后正常操作，顶栏档案角标从 `REC` 变「完成」后再打开下载或显示 JSON。期间打开档案/地图、切后台或上下文丢失会中断并标明部分报告。不会自动上传；报告含采集时间、浏览器标识、GPU、画面尺寸和质量设置，不含 URL、IP、现实位置或剧情存档，刷新或准备新记录会清除/覆盖。完整的真机画面、输入、声音和数据采集步骤见 [`DEVICE_ACCEPTANCE.md`](DEVICE_ACCEPTANCE.md)。
 
 #### 地表移动手感
 
@@ -400,6 +408,7 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 
 目标是在「轻薄本 / 中端手机」上也能 60 fps 巡航。核心手段：
 
+- **真实设备记录与限度**（`pennants-81`）：可选 20 秒诊断保留正常场景、输入与自动画质，逐帧保存 RAF 间隔、相机/世界/地表补丁/画质/渲染调用的墙钟时间、图鉴扫描及画质档位。支持时异步限频 WebGL GPU 时间查询（最多 4 个未完成、不调用 `gl.finish`）；不支持、计时失效或未完成的查询按缺失/丢弃记录。RAF 间隔不是显示帧时间，渲染调用墙钟不是 GPU 完成时间，GPU 查询也不包括完整合成和显示，插桩有开销；bloom 时 renderer 计数可能只反映最后一遍。它是定位工具，不是性能修复或实机通过证明。
 - **像素预算**：`pixelRatio = min(devicePixelRatio, 上限, sqrt(预算 / 视口面积))`，桌面 3.5–4.2 MP、移动 1.9 MP，避免高分屏直接渲 4K。
 - **窄屏画质控制**（`pennants-78`）：之前窄屏和触屏把画质标签完全隐藏，现在同一个按钮显示 `QUALITY / AUTO 或 LOCKED / 当前档位`，点击仍按 `AUTO → LOCKED HIGH → LOCKED BALANCED → AUTO` 循环。`AUTO` 可自行降到 `SMOOTH`；手动点击并不会切换 WebGL 抗锯齿。按钮只提供已有控制，并不声称解决慢帧或保证某个帧率。
 - **软件渲染抗锯齿回退**：创建 WebGL 上下文前，仅当启动探针明确报告 `SwiftShader` 时默认不请求多重采样；其他或隐藏 GPU 名称仍保持原来的开启默认。桌面 bloom 的渲染目标也跟随同一请求。锯齿可能更明显；可在页面 URL 加 `?aa=on` 请求开启、`?aa=off` 请求关闭（已有查询参数时用 `&`），刷新生效；浏览器可能拒绝开启请求。它与 `Q` 实时画质档位独立，因为 WebGL 上下文创建后不能改这个属性；质量按钮的提示和 `aetheris.diagnostics()` 会区分请求与浏览器实际给予的设置；上下文丢失期间按钮报告 `unknown`，恢复后重新报告实际值。沙箱 SwiftShader、`480×270` / `0.5` 像素比下，三次各 10 个地表帧的 RAF 间隔中位数由开启时约 `3.36–6.16 s` 变为关闭时约 `0.50–1.24 s`；`640×360` / `0.5` 的一次对照约 `7.37 → 1.38 s`。这些是少量软件环境的回调间隔，不是显示帧率或真机 GPU 基准；仍有慢帧，真实画质和性能需要实测。
@@ -422,6 +431,8 @@ window.aetheris.diagnostics()
 //   eventsSeen, quality, tier, estimatedFps, pixelRatio,
 //   antialiasMode, antialiasRequested, antialias, drawCalls, triangles }
 
+window.aetheris.performanceCapture() // 当前采样状态和样本数
+window.aetheris.performanceReport()  // 完成或中断的 JSON 副本；仅本标签页
 window.aetheris.switchView()        // 轨道 ⇄ 地表
 window.aetheris.cycleQuality()      // 等同按 Q
 window.aetheris.cycleWeather()      // 等同按 R

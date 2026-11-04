@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-80">
+  <meta name="aetheris-build" content="pennants-81">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -247,6 +247,16 @@
     .archive-chip svg { width: 14px; height: 14px; color: #a8ded2; flex: none; }
     .archive-chip .archive-key { font-size: 8px; font-weight: 700; letter-spacing: .06em; color: #8fb6ab; }
     body.archive-open .archive-chip { border-color: var(--aqua); color: #eafaf3; }
+    .perf-indicator { position: absolute; top: -9px; right: -7px; padding: 2px 4px; border-radius: 3px;
+      background: #275d4f; color: #f1fff7; font-size: 8px; font-weight: 700; letter-spacing: 0; }
+    .perf-indicator[hidden] { display: none; }
+    .perf-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    .perf-controls button { min-height: 44px; padding: 8px 10px; border: 1px solid rgba(165, 238, 225, .35);
+      border-radius: 6px; background: rgba(25, 61, 64, .45); color: #d8f6e9; font-size: 10px; cursor: pointer; }
+    .perf-controls button:disabled { opacity: .45; cursor: not-allowed; }
+    .perf-text { width: 100%; min-height: 110px; max-height: 30vh; margin-top: 10px; padding: 8px;
+      border: 1px solid rgba(165, 238, 225, .24); background: rgba(4, 15, 20, .9); color: #d4eee4;
+      font: 10px/1.5 ui-monospace, monospace; resize: vertical; user-select: text; }
     .archive { position: absolute; top: 0; right: 0; bottom: 0; width: min(432px, 100%); z-index: 9; display: flex; flex-direction: column;
       transform: translateX(102%); transition: transform .55s cubic-bezier(.2, .8, .2, 1); pointer-events: auto;
       background: linear-gradient(270deg, rgba(4, 13, 19, .95), rgba(7, 21, 29, .86));
@@ -557,7 +567,7 @@
         </button>
         <button id="archiveChip" class="archive-chip" type="button" aria-controls="archive" aria-expanded="false" aria-label="Open the field archive (O)" title="Field archive · O">
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.2 3.4h8.9L16.8 7v9.6H4.2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M13 3.5V7h3.7M6.9 10.4h6.9M6.9 13.1h4.8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
-          <span class="archive-key">O</span>
+          <span class="archive-key">O</span><span id="perfIndicator" class="perf-indicator" aria-live="polite" hidden></span>
         </button>
         <button id="mapChip" class="archive-chip" type="button" aria-controls="worldMap" aria-expanded="false" aria-label="Open the survey chart (G)" title="Survey chart · G">
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.2"/><ellipse cx="10" cy="10" rx="2.9" ry="6.5" stroke="currentColor" stroke-width="1"/><path d="M3.5 10h13M4.6 6.6h10.8M4.6 13.4h10.8" stroke="currentColor" stroke-width=".9" stroke-linecap="round"/></svg>
@@ -665,7 +675,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-80';
+    const BUILD_ID = 'pennants-81';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -4929,6 +4939,9 @@
       // camera going through the side of a cottage is the same bug as going through a trunk, only
       // bigger. The herd never needs these: it keeps clear of whole towns.
       const walkBoxes = [];
+      // The same static rendered building instances, with compact world-space sphere bounds for
+      // line-of-sight broad phase. They do not add meshes, change collisions or hide the scene.
+      const sightBuildingBatches = [];
       // ---- The mossbell: the ground's own animal -------------------------------------------------
       // The mantas own the sky and the raft owns the shallows; this is what walks. It is not a bell.
       // Everything that made the last version a bell was a vertebrate: a barrel, a neck, a face, four
@@ -7334,19 +7347,33 @@
             });
           }
         }
+        sightBuildingBatches.length = 0;
+        const sightBoundCenter = new THREE.Vector3();
         for (const [key, list] of buckets) {
           const [geoKey, matKey] = key.split('|');
-          const inst = new THREE.InstancedMesh(provinceGeo[geoKey], provinceMat[matKey], list.length);
+          const geometry = provinceGeo[geoKey], material = provinceMat[matKey];
+          const inst = new THREE.InstancedMesh(geometry, material, list.length);
           inst.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+          // These instances are static. Store only a broad-phase sphere per instance; ray hits
+          // later use this very geometry and instance matrix, rather than a solid collision box.
+          if (!geometry.boundingSphere) geometry.computeBoundingSphere();
+          const bounds = new Float32Array(list.length * 4);
           list.forEach((item, i) => {
             mesh.compose(item.origin, item.quat, item.scale);
             inst.setMatrixAt(i, mesh);
+            sightBoundCenter.copy(geometry.boundingSphere.center).applyMatrix4(mesh);
+            bounds[i * 4] = sightBoundCenter.x; bounds[i * 4 + 1] = sightBoundCenter.y;
+            bounds[i * 4 + 2] = sightBoundCenter.z;
+            bounds[i * 4 + 3] = geometry.boundingSphere.radius * Math.max(Math.abs(item.scale.x), Math.abs(item.scale.y), Math.abs(item.scale.z)) + .00001;
           });
           inst.instanceMatrix.needsUpdate = true;
           inst.castShadow = matKey !== 'glass' && matKey !== 'crystal';
           inst.receiveShadow = true;
           inst.boundingSphere = new THREE.Sphere(new THREE.Vector3(), R + 1.2);
           scene.add(inst);
+          // Province materials are opaque today. A future transparent material must not be treated
+          // as a solid just because its triangles intersect the line.
+          if (!material.transparent && material.depthWrite !== false) sightBuildingBatches.push({ inst, bounds, geoKey, matKey });
         }
         // ---- smoke ---------------------------------------------------------------------------
         // Three puffs per chimney, all of them computed in the vertex shader: the cloud costs one
@@ -10491,6 +10518,7 @@
 
       function setWorldMap(open) {
         if (worldMapOpen === open) return;
+        if (open) finishPerfCapture('map-opened');
         worldMapOpen = open;
         document.body.classList.toggle('worldmap-open', open);
         if (worldMapEl) worldMapEl.setAttribute('aria-hidden', String(!open));
@@ -10830,12 +10858,58 @@
       const CODEX_SIGHT_COS = .74;                       // a 42° cone, roughly the middle of the screen
       const codexDir = new THREE.Vector3(), codexNormal = new THREE.Vector3(), codexRay = new THREE.Vector3();
       const codexForward = new THREE.Vector3();
-      function inSight(target, eyeDir, forward, range) {
+      function inSightCone(target, eyeDir, forward, range) {
         if (target.lengthSq() < 1e-6) return false;       // an unplaced instance is not visible
         codexNormal.copy(target).normalize();
         if (codexNormal.distanceTo(eyeDir) * R > range) return false;
         codexRay.copy(target).sub(camera.position);
         return codexRay.lengthSq() > 1e-12 && codexRay.normalize().dot(forward) > CODEX_SIGHT_COS;
+      }
+      // Terrain is a sampled radial heightfield, not the water level: water is translucent and a
+      // swimmer must still be able to discover things through it. The samples use the same terrain
+      // function as the ground physics. Thin visual details and animated vegetation are not claimed.
+      const sightPoint = new THREE.Vector3(), sightDirection = new THREE.Vector3();
+      const sightRaycaster = new THREE.Raycaster(), sightMesh = new THREE.Mesh(provinceGeo.wall, provinceMat.timber);
+      const sightMatrix = new THREE.Matrix4(), sightHits = [];
+      function terrainBlocksSight(origin, target) {
+        const distance = origin.distanceTo(target), steps = Math.ceil(distance / .012);
+        for (let i = 1; i < steps; i++) {
+          sightPoint.copy(origin).lerp(target, i / steps);
+          const radius = sightPoint.length();
+          if (radius < 1e-6) return true;
+          sightDirection.copy(sightPoint).multiplyScalar(1 / radius);
+          if (radius < R + heightAt(sightDirection) - .002) return true;
+        }
+        return false;
+      }
+      function buildingsBlockSight(origin, target) {
+        sightDirection.copy(target).sub(origin);
+        const distance = sightDirection.length();
+        if (distance < .006) return false;
+        sightDirection.multiplyScalar(1 / distance);
+        sightRaycaster.set(origin, sightDirection);
+        sightRaycaster.near = .003; sightRaycaster.far = distance - .003;
+        for (const batch of sightBuildingBatches) {
+          const { inst, bounds } = batch;
+          if (!inst.visible || !inst.parent || inst.material.transparent || inst.material.depthWrite === false) continue;
+          for (let i = 0; i < inst.count; i++) {
+            const j = i * 4, x = bounds[j] - origin.x, y = bounds[j + 1] - origin.y, z = bounds[j + 2] - origin.z;
+            const r = bounds[j + 3], along = x * sightDirection.x + y * sightDirection.y + z * sightDirection.z;
+            if (along + r < sightRaycaster.near || along - r > sightRaycaster.far ||
+                x * x + y * y + z * z - along * along > r * r) continue;
+            inst.getMatrixAt(i, sightMatrix);
+            sightMesh.geometry = inst.geometry; sightMesh.material = inst.material;
+            sightMesh.matrixWorld.multiplyMatrices(inst.matrixWorld, sightMatrix);
+            sightHits.length = 0;
+            sightMesh.raycast(sightRaycaster, sightHits);
+            if (sightHits.length) return true;
+          }
+        }
+        return false;
+      }
+      function inSight(target, eyeDir, forward, range) {
+        return inSightCone(target, eyeDir, forward, range) &&
+          !terrainBlocksSight(camera.position, target) && !buildingsBlockSight(camera.position, target);
       }
       let codexClock = 0;
       function codexScan(eyeDir, forward) {
@@ -10932,6 +11006,183 @@
       const archiveChip = document.getElementById('archiveChip'), archivePanel = document.getElementById('archive');
       const archiveBody = document.getElementById('archiveBody'), archiveClose = document.getElementById('archiveClose');
       let archiveOpen = false, archiveBuilt = false;
+      // Opt-in, bounded device capture. It times the *same* live frame stages and never changes
+      // quality, visibility, input or draw count. Timer queries are non-blocking and optional.
+      const PERF_DURATION_MS = 20000, PERF_MAX_SAMPLES = 8192, PERF_PANEL_SETTLE_MS = 750;
+      const perfCapture = { phase: 'idle', samples: [], report: null, currentCodexMs: null, gpu: null };
+      const perfIndicator = document.getElementById('perfIndicator');
+      const perfRound = n => Number.isFinite(n) ? Number(n.toFixed(3)) : null;
+      function perfStats(values) {
+        const sorted = values.filter(Number.isFinite).sort((a, b) => a - b), n = sorted.length;
+        if (!n) return { count: 0, median: null, p95: null, max: null };
+        return { count: n, median: perfRound(n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2),
+          p95: perfRound(sorted[Math.max(0, Math.ceil(n * .95) - 1)]), max: perfRound(sorted[n - 1]) };
+      }
+      function updatePerfControls() {
+        const status = document.getElementById('perfStatus'), start = document.getElementById('perfStart');
+        const download = document.getElementById('perfDownload'), show = document.getElementById('perfShow');
+        const reportText = document.getElementById('perfText');
+        const reasons = { 'archive-opened': '打开野档', 'map-opened': '打开地图', 'page-hidden': '页面进入后台',
+          'webgl-context-lost': '图形上下文丢失', 'sample-limit': '达到样本上限', 'render-error': '页面运行错误' };
+        const labels = { idle: '尚未记录。', armed: '已准备；关闭野档，界面收起后开始记录。',
+          waiting: '等待野档收起，然后开始记录。', recording: '正在记录；请保持页面可见并正常操作。',
+          ready: '记录完成，可下载或显示 JSON。刷新页面会清除本次结果。',
+          interrupted: '记录中断：' + (reasons[perfCapture.reason] || '未完成') + '。可重新准备；若有部分数据也可导出。' };
+        if (status) status.textContent = labels[perfCapture.phase];
+        if (start) start.disabled = perfCapture.phase === 'waiting' || perfCapture.phase === 'recording';
+        if (download) download.disabled = !perfCapture.report;
+        if (show) show.disabled = !perfCapture.report;
+        if (reportText && !perfCapture.report) { reportText.hidden = true; reportText.value = ''; }
+        if (perfIndicator) {
+          const badge = { waiting: '准备', recording: 'REC', ready: '完成', interrupted: '中断' }[perfCapture.phase];
+          perfIndicator.hidden = !badge || archiveOpen;
+          perfIndicator.textContent = badge || '';
+        }
+      }
+      function preparePerfCapture() {
+        if (!startup.ready || contextLost || !archiveOpen) return;
+        perfCapture.phase = 'armed'; perfCapture.samples = []; perfCapture.report = null;
+        perfCapture.currentCodexMs = null; perfCapture.reason = ''; perfCapture.gpu = null;
+        updatePerfControls();
+      }
+      function perfDropQueries(gpu) {
+        if (!gpu?.gl) return;
+        for (const item of gpu.pending) { try { gpu.gl.deleteQuery(item.query); } catch (_) { /* Context may be gone. */ } }
+        gpu.dropped += gpu.pending.length; gpu.pending.length = 0;
+      }
+      function perfPollGpu() {
+        const gpu = perfCapture.gpu;
+        if (!gpu?.ext || !gpu.pending.length) return;
+        try {
+          const gl = gpu.gl;
+          if (gl.getParameter(gpu.ext.GPU_DISJOINT_EXT)) {
+            gpu.disjoints++; perfDropQueries(gpu); return;
+          }
+          for (let i = gpu.pending.length - 1; i >= 0; i--) {
+            const item = gpu.pending[i];
+            if (!gl.getQueryParameter(item.query, gl.QUERY_RESULT_AVAILABLE)) continue;
+            const ns = gl.getQueryParameter(item.query, gl.QUERY_RESULT);
+            gl.deleteQuery(item.query); gpu.pending.splice(i, 1);
+            if (Number.isFinite(ns) && ns >= 0) { item.sample.gpuMs = perfRound(ns / 1000000); gpu.completed++; }
+            else gpu.dropped++;
+          }
+        } catch (_) { gpu.error = 'query-error'; perfDropQueries(gpu); gpu.ext = null; }
+      }
+      function perfBeginGpu(timestamp) {
+        const gpu = perfCapture.gpu;
+        if (!gpu?.ext) return null;
+        perfPollGpu();
+        if (!gpu.ext || timestamp - gpu.lastAttempt < 100) return null; // at most ten queries per second
+        gpu.lastAttempt = timestamp;
+        if (gpu.pending.length >= 4) { gpu.skipped++; return null; }
+        let query = null;
+        try {
+          query = gpu.gl.createQuery();
+          if (!query) { gpu.error = 'query-create-failed'; perfDropQueries(gpu); gpu.ext = null; return null; }
+          gpu.gl.beginQuery(gpu.ext.TIME_ELAPSED_EXT, query); gpu.issued++;
+          return query;
+        } catch (_) {
+          if (query) { try { gpu.gl.deleteQuery(query); } catch (_) {} }
+          gpu.error = 'query-error'; perfDropQueries(gpu); gpu.ext = null; return null;
+        }
+      }
+      function perfEndGpu(query, sample) {
+        const gpu = perfCapture.gpu;
+        if (!query || !gpu?.ext) return;
+        try { gpu.gl.endQuery(gpu.ext.TIME_ELAPSED_EXT); gpu.pending.push({ query, sample }); }
+        catch (_) { try { gpu.gl.deleteQuery(query); } catch (_) {} gpu.dropped++; gpu.error = 'query-error'; perfDropQueries(gpu); gpu.ext = null; }
+      }
+      function beginPerfCapture(timestamp) {
+        const gpu = { gl: null, ext: null, supported: false, pending: [], issued: 0, completed: 0,
+          skipped: 0, dropped: 0, disjoints: 0, lastAttempt: -Infinity, error: '' };
+        try {
+          gpu.gl = renderer.getContext(); gpu.ext = gpu.gl?.getExtension?.('EXT_disjoint_timer_query_webgl2') || null;
+          gpu.supported = !!gpu.ext && typeof gpu.gl.createQuery === 'function';
+          if (!gpu.supported) gpu.ext = null;
+        } catch (_) { gpu.ext = null; gpu.error = 'extension-error'; }
+        perfCapture.gpu = gpu; perfCapture.phase = 'recording'; perfCapture.start = timestamp;
+        perfCapture.previous = null; perfCapture.startedAt = new Date().toISOString();
+        perfCapture.environment = { browser: String(navigator.userAgent || ''), gpu: startup.graphics?.gpu || 'unknown',
+          viewport: { width: innerWidth, height: innerHeight, devicePixelRatio: window.devicePixelRatio || 1 },
+          antialiasMode: antialias.mode, antialiasRequested: antialias.requested, antialiasActual: actualAntialias(),
+          three: THREE.REVISION };
+        updatePerfControls();
+      }
+      function finishPerfCapture(reason = '') {
+        if (perfCapture.phase !== 'recording') {
+          if (reason && (perfCapture.phase === 'armed' || perfCapture.phase === 'waiting')) {
+            perfCapture.phase = 'interrupted'; perfCapture.reason = reason; updatePerfControls();
+          }
+          return;
+        }
+        perfPollGpu(); const gpu = perfCapture.gpu; perfDropQueries(gpu);
+        const samples = perfCapture.samples, intervals = samples.map(s => s.rafIntervalMs).filter(Number.isFinite);
+        const intervalTotal = intervals.reduce((sum, n) => sum + n, 0);
+        const last = samples.at(-1), stage = key => perfStats(samples.map(s => s[key]));
+        perfCapture.report = {
+          schema: 'aetheris-performance-v1', build: BUILD_ID, startedAt: perfCapture.startedAt,
+          status: reason ? 'interrupted' : 'completed', reason: reason || null, requestedDurationMs: PERF_DURATION_MS,
+          sampledDurationMs: last ? last.elapsedMs : 0, environment: perfCapture.environment,
+          summary: { frames: samples.length, rafIntervalMs: perfStats(intervals),
+            meanRafCallbacksPerSecond: intervalTotal > 0 ? perfRound(intervals.length * 1000 / intervalTotal) : null,
+            cameraWallMs: stage('cameraWallMs'), worldWallMs: stage('worldWallMs'),
+            patchWallMs: stage('patchWallMs'), qualityWallMs: stage('qualityWallMs'),
+            renderCallWallMs: stage('renderCallWallMs'), codexScanWallMs: stage('codexScanWallMs'),
+            gpuElapsedMs: stage('gpuMs') },
+          gpuTimer: { supported: gpu.supported, issued: gpu.issued, completed: gpu.completed,
+            skippedPendingLimit: gpu.skipped, dropped: gpu.dropped, disjointEvents: gpu.disjoints, error: gpu.error || null },
+          notes: [
+            'RAF intervals are callback intervals, not presentation timestamps; a backgrounded page interrupts capture.',
+            'Each RAF interval precedes its sample callback, while the stage timings belong to that callback; do not equate them as same-frame cause and effect.',
+            'Stage wall times and non-blocking GPU queries include measurement overhead. Render call wall time is not GPU completion.',
+            'GPU elapsed queries cover submitted WebGL work, not compositor, display or all driver scheduling; unsupported, disjoint and pending results are omitted.',
+            'Codex timing is included in world timing. Renderer counts may reflect only the last post-processing pass when bloom is active.',
+            'The normal scene and automatic quality continue running. No URL, IP address, real-world location or saved story is collected or uploaded.'
+          ], samples
+        };
+        perfCapture.reason = reason; perfCapture.phase = reason ? 'interrupted' : 'ready'; updatePerfControls();
+      }
+      function perfFrame(timestamp, dt, raw) {
+        const t0 = performance.now(); updateCamera(dt, timestamp); const t1 = performance.now();
+        perfCapture.currentCodexMs = null; updateWorld(dt); const t2 = performance.now();
+        advanceGroundRefresh(Math.min(2.6, Math.max(1.4, dt * 150))); const t3 = performance.now();
+        updateQuality(raw); const t4 = performance.now();
+        const sample = { elapsedMs: perfRound(timestamp - perfCapture.start),
+          rafIntervalMs: perfCapture.previous === null ? null : perfRound(timestamp - perfCapture.previous),
+          cameraWallMs: perfRound(t1 - t0), worldWallMs: perfRound(t2 - t1), patchWallMs: perfRound(t3 - t2),
+          qualityWallMs: perfRound(t4 - t3), renderCallWallMs: null, codexScanWallMs: perfCapture.currentCodexMs,
+          gpuMs: null, mode: state.mode, transition: !!state.transition, moving: state.speed > .001,
+          quality: quality.mode, tier: tierNames[quality.tier], pixelRatio: renderer.getPixelRatio(), bloom: !!bloomOn,
+          canvasWidth: renderer.domElement.width, canvasHeight: renderer.domElement.height,
+          viewportWidth: innerWidth, viewportHeight: innerHeight, weather: weather.id,
+          drawCalls: 0, triangles: 0 };
+        const query = perfBeginGpu(timestamp), renderStarted = performance.now();
+        try { renderScene(); } finally {
+          sample.renderCallWallMs = perfRound(performance.now() - renderStarted); perfEndGpu(query, sample);
+          sample.drawCalls = renderer.info.render.calls; sample.triangles = renderer.info.render.triangles;
+          perfCapture.samples.push(sample); perfCapture.previous = timestamp;
+        }
+        if (sample.elapsedMs >= PERF_DURATION_MS) finishPerfCapture();
+        else if (perfCapture.samples.length >= PERF_MAX_SAMPLES) finishPerfCapture('sample-limit');
+      }
+      function downloadPerfCapture() {
+        if (!perfCapture.report) return;
+        try {
+          const blob = new Blob([JSON.stringify(perfCapture.report, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob), link = document.createElement('a');
+          link.href = url; link.download = 'aetheris-performance-' + BUILD_ID + '.json';
+          document.body.appendChild(link); link.click(); link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } catch (_) {
+          showPerfCapture(); document.getElementById('perfStatus').textContent = '下载不可用，已显示 JSON，可全选并手动复制。';
+        }
+      }
+      function showPerfCapture() {
+        if (!perfCapture.report) return;
+        const text = document.getElementById('perfText');
+        text.value = JSON.stringify(perfCapture.report, null, 2); text.hidden = false; text.focus(); text.select();
+        document.getElementById('perfStatus').textContent = '已显示 JSON，可全选并手动复制。';
+      }
       const archiveRow = (label, text, cls = '') => `<div class="archive-row ${cls}"><span>${label}</span><span>${text}</span></div>`;
       function buildArchive() {
         if (archiveBuilt) return;
@@ -10979,6 +11230,15 @@
               <button id="storyReset" type="button">确认清除剧情进度</button>
             </details>
           </section>
+          <section class="archive-section" id="perfSection">
+            <h3>DEVICE PERFORMANCE · 设备性能记录</h3>
+            <p>准备后关闭野档，等界面收起；正常操作约 20 秒，野档按钮的 REC 变成完成后再打开。期间不暂停或隐藏场景。打开档案/地图、切到后台或图形上下文丢失会中断记录。</p>
+            <p>结果仅在当前标签页，刷新或准备新记录会清除，不会自动上传；包含时间、浏览器标识、GPU 名称、画质与画面尺寸，不含网址、IP、现实位置或剧情存档。分享前可先查看 JSON；下载受限时可显示并手动复制。</p>
+            <div class="perf-controls"><button id="perfStart" type="button">准备 20 秒记录</button>
+              <button id="perfDownload" type="button" disabled>下载 JSON</button><button id="perfShow" type="button" disabled>显示 JSON</button></div>
+            <p id="perfStatus" role="status" aria-live="polite">尚未记录。</p>
+            <textarea id="perfText" class="perf-text" readonly hidden spellcheck="false" aria-label="Performance report JSON for manual copying"></textarea>
+          </section>
           <section class="archive-section" id="skyCitySection">
             <h3>THREE CITIES</h3>
             <p>选择一座城，飞到附近环绕观察；仍不可登陆。星球模型压缩了设定中的高度比例。</p>
@@ -11006,7 +11266,10 @@
           </section>
           <section class="archive-section" id="codexSection"></section>`;
         document.getElementById('storyReset').addEventListener('click', resetStory);
-        refreshStoryPanel();
+        document.getElementById('perfStart').addEventListener('click', preparePerfCapture);
+        document.getElementById('perfDownload').addEventListener('click', downloadPerfCapture);
+        document.getElementById('perfShow').addEventListener('click', showPerfCapture);
+        refreshStoryPanel(); updatePerfControls();
         refreshCodex();
       }
       function refreshStoryPanel() {
@@ -11060,6 +11323,7 @@
         if (box) box.innerHTML = codexHTML();
       }
       function setArchive(open) {
+        if (open) finishPerfCapture('archive-opened');
         if (open && worldMapOpen) setWorldMap(false);
         archiveOpen = open;
         if (open) {
@@ -11072,7 +11336,9 @@
           document.body.classList.add('archive-open');
         } else {
           document.body.classList.remove('archive-open');
+          if (perfCapture.phase === 'armed') { perfCapture.phase = 'waiting'; perfCapture.closedAt = performance.now(); }
         }
+        updatePerfControls();
         archivePanel.setAttribute('aria-hidden', String(!open));
         archiveChip.setAttribute('aria-expanded', String(open));
       }
@@ -11204,8 +11470,8 @@
         quality.average=1/60;quality.slow=quality.fast=quality.severeFrames=quality.severeTime=0;quality.cooldown=5;
         quality.fps=60;quality.fpsTime=quality.fpsFrames=0;
       }
-      document.addEventListener('visibilitychange',()=>{rebaseFrameClock();clearInput();});
-      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;updateQualityLabel();status.hidden=false;statusText.textContent='RESTORING THE WORLD';clearInput();});
+      document.addEventListener('visibilitychange',()=>{if(document.hidden)finishPerfCapture('page-hidden');rebaseFrameClock();clearInput();});
+      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();finishPerfCapture('webgl-context-lost');contextLost=true;updateQualityLabel();status.hidden=false;statusText.textContent='RESTORING THE WORLD';clearInput();});
       canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;updateQualityLabel();rebaseFrameClock();renderer.shadowMap.needsUpdate=true;status.hidden=true;});
       orbitPose();camera.position.copy(targetPosition);camera.quaternion.copy(targetRotation);
       applyQuality();
@@ -11361,7 +11627,12 @@
         if (codexClock > .5 && surface) {
           codexClock = 0;
           camera.getWorldDirection(codexForward);
-          if (codexScan(state.direction, codexForward)) {
+          let found;
+          if (perfCapture.phase === 'recording') {
+            const started = performance.now(); found = codexScan(state.direction, codexForward);
+            perfCapture.currentCodexMs = perfRound(performance.now() - started);
+          } else found = codexScan(state.direction, codexForward);
+          if (found) {
             refreshCodex();
             archiveChip.classList.add('has-news');
           }
@@ -11569,16 +11840,23 @@
         try {
           const raw=lastFrame?(timestamp-lastFrame)/1000:1/60;lastFrame=timestamp;
           const dt=Math.min(raw,.05);elapsed+=dt;frame++;
+          if (perfCapture.phase === 'waiting' && timestamp - perfCapture.closedAt >= PERF_PANEL_SETTLE_MS)
+            beginPerfCapture(timestamp);
+          if (perfCapture.phase === 'recording') perfFrame(timestamp, dt, raw);
+          else {
           updateCamera(dt,timestamp);updateWorld(dt);
           // Re-center the walking patch over several frames instead of one long stall.
           advanceGroundRefresh(Math.min(2.6, Math.max(1.4, dt * 150)));
           updateQuality(raw);renderScene();
+          }
         } catch (error) {
-          stopped=true;renderer.setAnimationLoop(null);clearInput();reportFailure(error);
+          finishPerfCapture('render-error'); stopped=true;renderer.setAnimationLoop(null);clearInput();reportFailure(error);
         }
       });
       window.aetheris={
         diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,storyDetunes:story.detunes,storyStage:storyStage(),inquestDetections:story.detections,inquestPhase:inquest.phase,inquestMarked:!!story.mark,storyStorage,skyCities:skyCities.length,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,ghost:state.ghost,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Number(quality.fps.toFixed(2)),pixelRatio:renderer.getPixelRatio(),antialiasMode:antialias.mode,antialiasRequested:antialias.requested,antialias:actualAntialias(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        performanceCapture:()=>({phase:perfCapture.phase,frames:perfCapture.samples.length,hasReport:!!perfCapture.report}),
+        performanceReport:()=>perfCapture.report?JSON.parse(JSON.stringify(perfCapture.report)):null,
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:recordDetune,
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,

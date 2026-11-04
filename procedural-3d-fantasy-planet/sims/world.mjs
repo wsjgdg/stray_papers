@@ -139,7 +139,7 @@ class RecorderRenderer {
     this.outputColorSpace = ''; this.toneMapping = 0; this.toneMappingExposure = 1;
   }
   setSize() {} setPixelRatio(v) { this._pixelRatio = v; } getPixelRatio() { return this._pixelRatio; }
-  setClearColor() {} setAnimationLoop() {} render() { this.info.render.calls++; }
+  setClearColor() {} setAnimationLoop(callback) { this.animationLoop = callback; } render() { this.info.render.calls++; }
   async compileAsync() {} compile() {} dispose() {} getContext() { return null; }
   setRenderTarget() {} clear() {} getRenderTarget() { return null; }
 }
@@ -189,7 +189,8 @@ export function loadPage(file = PAGE) {
         BELL_SIZE, REEF_S, BELL_HALF_WIDE, BELL_BODY_TOP, keys, joystick, stoneSolids, groundPose, dwFeet,
         heightAt, provinceAt, biomeAt, nearestLand, nearDirection, landing, seeded, hash, noise, waterAt, depthMeters,
         provinceDressing, physicsStep, updateBell, updateReefs, updateCamera, updateWorld, updateWeather, updateLattice,
-        CODEX, codexScan, codexHTML, inSight, flockWorld, archiveChip, modeLabel, setArchive, eventFx, triggerEvent, sun,
+        CODEX, codexScan, codexHTML, inSight, inSightCone, terrainBlocksSight, buildingsBlockSight, sightBuildingBatches,
+        flockWorld, archiveChip, modeLabel, setArchive, eventFx, triggerEvent, sun,
         story, storyStage, decodeStory, saveStory, recordDetune, resetStory, STORY_KEY, storyMarkDirection,
         getStoryStorage: () => storyStorage, storage: window.localStorage,
         inquest, updateInquest, clearInquest, inquestSheltered, patrol, patrolWorld, shelterRings,
@@ -202,6 +203,8 @@ export function loadPage(file = PAGE) {
         quality, updateQuality, applyQuality, cycleQuality, qualityButton,
         antialiasPolicy: typeof antialiasPolicy === 'function' ? antialiasPolicy : null,
         getDiagnostics: () => window.aetheris.diagnostics(),
+        perfCapture, preparePerfCapture, finishPerfCapture, getPerformanceCapture: () => window.aetheris.performanceCapture(),
+        getPerformanceReport: () => window.aetheris.performanceReport(),
         qualityVisuals: () => ({ bloom: bloomOn, highCloud: clouds[1].visible,
           weatherCount: weatherParticles.points.geometry.drawRange.count }),
         setDocumentHidden: value => { document.hidden = value; },
