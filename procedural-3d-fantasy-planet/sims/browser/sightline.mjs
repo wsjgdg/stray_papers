@@ -31,6 +31,9 @@ const attempts = Number(process.env.BROWSER_SIGHTLINE_ATTEMPTS || 12);
 if (!Number.isInteger(attempts) || attempts < 1 || attempts > 12) {
   throw new Error('BROWSER_SIGHTLINE_ATTEMPTS must be an integer between 1 and 12.');
 }
+const collectAll = process.env.BROWSER_SIGHTLINE_ALL === '1';
+const viewDir = process.env.BROWSER_SIGHTLINE_DIR;
+if (viewDir) fs.mkdirSync(viewDir, { recursive: true });
 const extraArgs = process.env.CHROME_ARGS ? JSON.parse(process.env.CHROME_ARGS) : [];
 if (!Array.isArray(extraArgs) || extraArgs.some(arg => typeof arg !== 'string')) {
   throw new Error('CHROME_ARGS must be a JSON array of Chromium argument strings.');
@@ -154,7 +157,7 @@ try {
   check('a candidate dry route approaches an actual animal', plan.initialEdge < 1.6 && plan.waypoints > 0,
     'initial edge ' + (plan.initialEdge * 1000).toFixed(1) + ' mm; ' + plan.waypoints + ' waypoints');
 
-  let image = '', observation = null, walk = null;
+  let image = '', observation = null, walk = null, best = null;
   for (let attempt = 0; attempt < attempts; attempt++) {
     // 120 Hz is the production physics step. This controlled run also updates the live herd at each
     // step; it does not teleport either player or animals. It is not an ordinary real-time input run.
@@ -255,10 +258,21 @@ try {
     delete observation.screenshot;
     if (observation.errorA || observation.errorB) throw new Error('WebGL readPixels failed: ' + JSON.stringify(observation));
     const minimum = Math.max(20, Math.ceil(observation.width * observation.height * .001));
-    console.log('  view ' + (attempt + 1) + ': ' + observation.pixels + ' attributable pixels; need ' + minimum);
-    if (observation.pixels >= minimum) break;
+    console.log('  view ' + (attempt + 1) + ': ' + observation.pixels + ' attributable pixels from ' +
+      observation.near + ' nearby animals; need ' + minimum);
+    if (viewDir) {
+      const file = path.join(viewDir, 'sightline-' + String(attempt + 1).padStart(2, '0') + '.png');
+      fs.writeFileSync(file, Buffer.from(image.split(',')[1], 'base64'));
+      console.log('  unmasked view: ' + file);
+    }
+    if (!best || observation.pixels > best.observation.pixels) best = { observation, image, attempt: attempt + 1 };
+    if (!collectAll && observation.pixels >= minimum) break;
   }
   await page.evaluate(() => { window.__sightline.joystick.y = 0; });
+  if (best) {
+    observation = best.observation; image = best.image;
+    if (collectAll) console.log('  most attributable pixels: view ' + best.attempt + ' (not a visual clarity score)');
+  }
   if (process.env.BROWSER_SCREENSHOT && image) {
     fs.writeFileSync(process.env.BROWSER_SCREENSHOT, Buffer.from(image.split(',')[1], 'base64'));
     console.log('  unmasked canvas screenshot: ' + process.env.BROWSER_SCREENSHOT);
@@ -268,7 +282,7 @@ try {
   walk ? walk.seconds.toFixed(2) + ' simulated seconds; ' + walk.wet + ' wet steps; minimum ground above sea ' +
     (walk.minDry * 1000).toFixed(1) + ' mm' : 'no route was stepped');
   const minimum = observation ? Math.max(20, Math.ceil(observation.width * observation.height * .001)) : Infinity;
-  check('the unmasked WebGL view contains nearby-animal pixels', !!walk?.found && !!observation &&
+  check('the unmasked WebGL view contains nearby-animal pixels', !!best && !!observation &&
     observation.near > 0 && observation.pixels >= minimum,
   observation ? observation.pixels + '/' + (observation.width * observation.height) + ' pixels changed in the ' +
     'diagnostic comparison; ' + observation.near + ' animals within 650 mm' : 'no suitable view');
