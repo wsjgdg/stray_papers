@@ -409,6 +409,7 @@ CHROME_PATH=/path/to/chromium npm run bench:render --prefix sims/browser     # �
 目标是在「轻薄本 / 中端手机」上也能 60 fps 巡航。核心手段：
 
 - **真实设备记录与限度**（`pennants-81`）：可选 20 秒诊断保留正常场景、输入与自动画质，逐帧保存 RAF 间隔、相机/世界/地表补丁/画质/渲染调用的墙钟时间、图鉴扫描及画质档位。支持时异步限频 WebGL GPU 时间查询（最多 4 个未完成、不调用 `gl.finish`）；不支持、计时失效或未完成的查询按缺失/丢弃记录。RAF 间隔不是显示帧时间，渲染调用墙钟不是 GPU 完成时间，GPU 查询也不包括完整合成和显示，插桩有开销；bloom 时 renderer 计数可能只反映最后一遍。它是定位工具，不是性能修复或实机通过证明。
+- **首份真机读数与判读**（`pennants-81`）：Windows / Edge 156 / Intel Arc、视口 `747×754`（`compact` 分支，`pixelRatio 1.148`）、雪天轨道的 20 秒记录，RAF 间隔中位 `16.7 ms`、`9.3%` 为 `33.3 ms`（错过一个 vsync），GPU 中位 `14.55 ms`、p95 `21.22 ms`，且已处于最低档 `SMOOTH`。地表样本与手机仍缺，结论保持**待验收**；逐条判定与排除的假设见 [`DEVICE_ACCEPTANCE_RESULT.md`](DEVICE_ACCEPTANCE_RESULT.md)。
 - **像素预算**：`pixelRatio = min(devicePixelRatio, 上限, sqrt(预算 / 视口面积))`，桌面 3.5–4.2 MP、移动 1.9 MP，避免高分屏直接渲 4K。
 - **窄屏画质控制**（`pennants-78`）：之前窄屏和触屏把画质标签完全隐藏，现在同一个按钮显示 `QUALITY / AUTO 或 LOCKED / 当前档位`，点击仍按 `AUTO → LOCKED HIGH → LOCKED BALANCED → AUTO` 循环。`AUTO` 可自行降到 `SMOOTH`；手动点击并不会切换 WebGL 抗锯齿。按钮只提供已有控制，并不声称解决慢帧或保证某个帧率。
 - **软件渲染抗锯齿回退**：创建 WebGL 上下文前，仅当启动探针明确报告 `SwiftShader` 时默认不请求多重采样；其他或隐藏 GPU 名称仍保持原来的开启默认。桌面 bloom 的渲染目标也跟随同一请求。锯齿可能更明显；可在页面 URL 加 `?aa=on` 请求开启、`?aa=off` 请求关闭（已有查询参数时用 `&`），刷新生效；浏览器可能拒绝开启请求。它与 `Q` 实时画质档位独立，因为 WebGL 上下文创建后不能改这个属性；质量按钮的提示和 `aetheris.diagnostics()` 会区分请求与浏览器实际给予的设置；上下文丢失期间按钮报告 `unknown`，恢复后重新报告实际值。沙箱 SwiftShader、`480×270` / `0.5` 像素比下，三次各 10 个地表帧的 RAF 间隔中位数由开启时约 `3.36–6.16 s` 变为关闭时约 `0.50–1.24 s`；`640×360` / `0.5` 的一次对照约 `7.37 → 1.38 s`。这些是少量软件环境的回调间隔，不是显示帧率或真机 GPU 基准；仍有慢帧，真实画质和性能需要实测。
