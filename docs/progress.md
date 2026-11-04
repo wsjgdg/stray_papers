@@ -67,7 +67,19 @@
 - 浏览器定位器 strict 冲突（两个按钮同 .btn 类）→ 改用可访问名称定位，页面本身无此问题
 - anti-scam CTA 指向未建的 academy.html → 暂指向探索地图；**Task 9 落地时改回 academy.html（模拟器剧终按钮 + 页底 CTA 两处）**
 
-**下一步：** Round 5 执行 Task 8（副业地图三层）→ Task 9（提示词学院），并回收两处临时链接。
+## 2026-11-05 Round 5（定时轮）
+
+**完成：**
+- Task 8 完成：`pages/side-jobs.html`（④ 副业地图三层：新手层"先赢一次" / 进阶层三方向（保险短视频获客·AI 接单·财务知识付费，各带学习路线+工具+合规风险红线）/ 深度层（AI 工作流+Agent 开发，"母子一起做 agent"钩子）；收入预期说真话 + "先交钱保赚钱=骗局，回看第 5 关"防骗呼应）
+- Task 9 完成：`pages/academy.html`（⑥ 提示词三要素课 + 互动改写练习（A/B/C 三档预置回答，打字机播放，C 档正向反馈）+ Agent 入门四步流程图 + L1-L5 毕业探索任务卡）
+- **临时链接全部回收**：lab→side-jobs、graduation→side-jobs、anti-scam 两处→academy；并修正链条顺序（side-jobs 主 CTA 指向 anti-scam，符合任务地图 ④→⑤→⑥ 顺序，另保留"直接去学院"副链接）
+- 真浏览器验证：学院互动练习三档回答差异化正常（A 档 AI 把问题退回、C 档精准回答+✓ 反馈）
+- smoke ALL PASS（8 页全过）
+
+**全站链路（已闭合）**：index → ①②③④⑤⑥ → graduation → index；每页"下一关"真实可达。
+
+**下一步：** Round 6 执行 Task 11：全站精修（移动端 375px 走查、全流程打卡到证书解锁、文案终审、来源核对）→ zip 打包验证 → DELIVERY.md → PROJECT COMPLETE。
+
 
 
 
