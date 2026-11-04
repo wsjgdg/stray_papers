@@ -6,7 +6,15 @@ three years ago by a missing friend, and an AI's question about whether a
 memory backup is still the same person.
 
 **Play now**: open `betelgeuse-vn.html` in any browser — fully
-self-contained, ~72 KB, no server or network needed.
+self-contained, no server or network needed.
+
+## Screenshots
+
+In-game canvas renders (1280×720, captured from the live engine):
+
+| 旧天文台·圆顶 | 雨夜·环山公路 | 地下·机房 |
+|---|---|---|
+| ![observatory](docs/screenshots/observatory_night.png) | ![rain](docs/screenshots/streets_rain.png) | ![server](docs/screenshots/server_room.png) |
 
 ## Story
 
