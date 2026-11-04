@@ -40,6 +40,20 @@
 - 非任务页页脚仍提示打卡 → pageReady 条件隐藏
 - 结业页 "副业地图" 原指向未创建的 side-jobs.html → 暂指向探索地图；**Task 8 落地时须把 graduation.html 行动清单里的链接改回 side-jobs.html**
 
-**下一步：** Round 3 执行 Task 4（① AI 能做什么——精选 5 卡，需产出真实素材）→ Task 5（② 趋势）。
+## 2026-11-05 Round 3（定时轮）
+
+**完成：**
+- Task 4 完成：`pages/what-ai-can-do.html`（① 精选 5 卡：CSS 真排版海报 / 小红书文案打字机实录 / 看账对话实录 / 老照片修复行动卡 / 日常问答实录；点击翻转看提示词原文；打字机随滚动播放；键盘可访问）
+- Task 5 完成：`pages/trends.html`（② 时间线 5 项 + CNNIC 核实数据 2.49亿→5.15亿 大数字卡 + Chart.js 柱图 + 5 行业卡 + "这不是风口是电"结论 + 来源脚注）
+- Task 6 完成：`pages/lab.html`（③ 开场"全是 AI 陪着写出来的" + **algorithm-lab standalone（619KB）下载至 assets/embed 内嵌可玩** + score-transcriber/matlit-miner/spot-visual 三卡带 GitHub 链接）
+- **真浏览器验证**：翻转卡点击生效；打字机逐字播放确认（127 字仍在增长）；内嵌 iframe 成功加载（title "Algorithm Lab — Make, play, discover"），截图确认视觉完美
+- **数据核实（不编造）**：CNNIC《生成式人工智能应用发展报告(2025)》——2024.12 用户 2.49 亿（17.7%）→ 2025.6 5.15 亿（36.5%），来源新华网/人民日报报道，已写入页面脚注
+
+**问题及当轮解决：**
+- 本会话无 agnes 出图工具 → 按预案走诚实路线：海报用 CSS 真排版并如实标注、对话用可照抄的真实提示词、老照片卡改为"教你 30 秒亲手做"，无假图无编造
+- "下一关"链接未建页面 → what-ai-can-do→trends→lab 已真实成链；lab→side-jobs 暂指向探索地图（**Task 8 落地时把 lab.html CTA 改回 side-jobs.html**，与 graduation.html 的同类待办一起在 Task 11 终审核对）
+
+**下一步：** Round 4 执行 Task 7（⑤ 骗局解剖室——最重头：模拟器 7 幕 + 引擎 + 三个板块），预计 1-2 轮。
+
 
 
