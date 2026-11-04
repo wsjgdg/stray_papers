@@ -30,7 +30,7 @@ export default [
         ResizeObserver: 'readonly', IntersectionObserver: 'readonly', MutationObserver: 'readonly',
         PointerEvent: 'readonly', KeyboardEvent: 'readonly', WheelEvent: 'readonly', Event: 'readonly',
         WebGL2RenderingContext: 'readonly', WebGLRenderingContext: 'readonly', OffscreenCanvas: 'readonly',
-        URL: 'readonly', Blob: 'readonly', TextDecoder: 'readonly', TextEncoder: 'readonly'
+        URL: 'readonly', URLSearchParams: 'readonly', Blob: 'readonly', TextDecoder: 'readonly', TextEncoder: 'readonly'
       }
     },
     rules: {

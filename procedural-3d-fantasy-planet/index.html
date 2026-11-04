@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="pennants-76">
+  <meta name="aetheris-build" content="pennants-77">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,7 +595,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'pennants-76';
+    const BUILD_ID = 'pennants-77';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -642,6 +642,16 @@
         ? '\n\nWebGL context creation failed. Check browser graphics acceleration and GPU availability.'
         : '\n\nThis is a code or resource-loading error, not evidence that WebGL2 is disabled.';
       failWorld('STARTUP FAILED / ' + BUILD_ID, stack + hint);
+    }
+
+    // WebGL context antialiasing cannot be switched after creation. Keep it on by default except
+    // for the known SwiftShader software renderer; an explicit URL choice always wins. Other or
+    // masked renderer names retain the original default instead of guessing from device type.
+    function antialiasPolicy(gpu, choice) {
+      const option = String(choice || '').trim().toLowerCase();
+      if (option === 'on') return { mode: 'on', requested: true };
+      if (option === 'off') return { mode: 'off', requested: false };
+      return { mode: 'auto', requested: !/\bswiftshader\b/i.test(String(gpu || '')) };
     }
 
     function probeWebGL() {
@@ -811,7 +821,11 @@
       const landmarkDirection = nearDirection(landing, 0, .19);
       const sun = new THREE.Vector3(-.55, .58, .65).normalize();
       setPhase('renderer-creation', 'CREATING THE RENDERER');
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, stencil: false, powerPreference: 'high-performance' });
+      const antialias = antialiasPolicy(startup.graphics?.gpu, new URLSearchParams(window.location.search).get('aa'));
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: antialias.requested, stencil: false, powerPreference: 'high-performance' });
+      // The browser may decline a requested multisampled context. Report what it actually created,
+      // not just the request; a missing/lost context has an unknown result rather than a false one.
+      const actualAntialias = () => renderer.getContext()?.getContextAttributes?.()?.antialias ?? null;
       const generatedTextures = new Set();
       let shaderFailure = null;
       renderer.debug.checkShaderErrors = true;
@@ -918,8 +932,8 @@
               }
             `
           }));
-          composer.renderTarget1.samples = 4;
-          composer.renderTarget2.samples = 4;
+          composer.renderTarget1.samples = antialias.requested ? 4 : 0;
+          composer.renderTarget2.samples = antialias.requested ? 4 : 0;
           composer.setPixelRatio(renderer.getPixelRatio());
           composer.setSize(innerWidth, innerHeight);
         } catch (_) { composer = null; bloomPass = null; }
@@ -9157,7 +9171,9 @@
         weatherParticles.uniforms.uRatio.value=renderer.getPixelRatio();
         weatherParticles.points.geometry.setDrawRange(0, Math.round(weatherParticles.count * [1, .74, .5][quality.tier]));
         qualityButton.textContent=(quality.mode==='auto'?'AUTO / ':'LOCKED / ')+tierNames[quality.tier];
-        qualityButton.setAttribute('aria-label',`Render quality: ${quality.mode}, ${tierNames[quality.tier].toLowerCase()}. Click to change.`);
+        const aaValue=actualAntialias(),aaLabel=aaValue===null?'unknown':aaValue?'on':'off';
+        qualityButton.title=`Click or press Q to cycle quality. Antialiasing ${aaLabel}; use URL parameter aa=on or aa=off and reload to change it.`;
+        qualityButton.setAttribute('aria-label',`Render quality: ${quality.mode}, ${tierNames[quality.tier].toLowerCase()}. Antialiasing ${aaLabel}. Click to change quality.`);
         quality.cooldown=8; quality.slow=quality.fast=quality.severeFrames=quality.severeTime=0;
         renderer.shadowMap.needsUpdate=true;
       }
@@ -10698,7 +10714,7 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,ghost:state.ghost,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Number(quality.fps.toFixed(2)),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,detune:detune.count,extraction:Number(costState.extraction.toFixed(3)),depth:Number(state.depth.toFixed(3)),submerged:state.submerged,speed:Number(state.speed.toFixed(3)),bell:bell.length,bellAwake:bell.filter(d=>d.awake).length,reefs:reefs.length,reefsUp:reefs.filter(w=>w.mode==='blow').length,grounded:state.grounded,water:state.water,ghost:state.ghost,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Number(quality.fps.toFixed(2)),pixelRatio:renderer.getPixelRatio(),antialiasMode:antialias.mode,antialiasRequested:antialias.requested,antialias:actualAntialias(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
         switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump,detune:()=>{detune.pulse=1;detune.count++;detune.notes++;playDetune();},
         where:()=>{const n=state.direction,h=heightAt(n);const lat=Math.asin(clamp(n.y,-1,1))*180/Math.PI,lon=Math.atan2(n.x,n.z)*180/Math.PI;
           return {province:provinceAt(n,h),water:h<SEA-.006?waterAt(h).id:'land',depth:h<SEA?depthMeters(SEA-h):0,

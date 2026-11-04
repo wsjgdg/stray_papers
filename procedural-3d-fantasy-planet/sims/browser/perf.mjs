@@ -93,7 +93,8 @@ await new Promise((resolve, reject) => {
   server.once('error', reject);
   server.listen(0, '127.0.0.1', resolve);
 });
-const url = 'http://127.0.0.1:' + server.address().port + '/';
+const url = new URL('http://127.0.0.1:' + server.address().port + '/');
+url.search = process.env.BROWSER_QUERY || '';
 const median = values => {
   const sorted = values.slice().sort((a, b) => a - b), middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
@@ -139,7 +140,7 @@ try {
   const errors = [];
   page.on('pageerror', error => errors.push(String(error)));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
+  await page.goto(url.href, { waitUntil: 'domcontentloaded', timeout });
   await page.waitForFunction(() => window.aetherisStartup &&
     (window.aetherisStartup.error || (window.aetherisStartup.ready && window.__renderBench)), { timeout, polling: 1000 });
   const startupError = await page.evaluate(() => window.aetherisStartup.error || '');
@@ -161,7 +162,7 @@ try {
   if (errors.length) throw new Error('Page or console errors: ' + errors.slice(0, 3).join(' | '));
   const report = {
     chromium: await browser.version(), browserMode: headless === false ? 'headful' : headless === 'shell' ? 'headless-shell' : 'headless',
-    source: { file: sourcePage, sha256: sourceSha256 }, viewport, canvas: result.canvas,
+    source: { file: sourcePage, sha256: sourceSha256, query: url.search }, viewport, canvas: result.canvas,
     graphics: result.graphics, visibility: result.visibility, build: result.diagnostics.build,
     descent: { keyAtMs: result.keyAt, firstGroundRenderReturnSeconds: round((result.ground[0].at - result.keyAt) / 1000),
       flightFrames: result.flightFrames },

@@ -128,7 +128,8 @@ const windowStub = {
 
 // ---- a renderer that draws nothing and remembers what it was asked to draw ------------------------------
 class RecorderRenderer {
-  constructor() {
+  constructor(options = {}) {
+    this.options = { ...options };
     this.domElement = makeElement('canvas');
     this.shadowMap = { enabled: false, type: 0, autoUpdate: true, needsUpdate: false };
     this.capabilities = { getMaxAnisotropy: () => 8, isWebGL2: true };
@@ -192,6 +193,7 @@ export function loadPage(file = PAGE) {
         getCodexHTML: () => document.getElementById('codexSection').innerHTML,
         teleportTo, mapAnchors, rebaseFrameClock: typeof rebaseFrameClock === 'undefined' ? null : rebaseFrameClock,
         quality, updateQuality, applyQuality, cycleQuality, qualityButton,
+        antialiasPolicy: typeof antialiasPolicy === 'function' ? antialiasPolicy : null,
         getDiagnostics: () => window.aetheris.diagnostics(),
         qualityVisuals: () => ({ bloom: bloomOn, highCloud: clouds[1].visible,
           weatherCount: weatherParticles.points.geometry.drawRange.count }),
