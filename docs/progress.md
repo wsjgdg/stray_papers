@@ -11,4 +11,10 @@
 - 动效库选型：GSAP 3（ScrollTrigger+TextPlugin）+ canvas-confetti + Chart.js 4，全部本地 vendored
 - spec 与实施计划已提交（Task 1-11）
 
-**下一步：** Round 1 执行 Task 1（vendor 库本地化）→ Task 2（共享基础）。
+## 2026-11-04 Round 0b（启动轮，本会话）
+
+**完成：**
+- Task 1 完成：5 个 vendor 库本地化（GSAP 3.13.0 core/ScrollTrigger/TextPlugin、canvas-confetti 1.9.3、Chart.js 4.4.9 UMD），VERSIONS.md 已记录来源；文件头校验通过（均为官方构建）
+- 定时任务已创建（automation-b9bc9f8e，每 30 分钟）
+
+**下一步：** Round 1 执行 Task 2（共享基础：main.css / site.js / progress.js / smoke.js）。
