@@ -150,6 +150,63 @@ function analyze(file) {
   console.log('');
 }
 
-const files = process.argv.slice(2);
-if (!files.length) { console.error('usage: node analyze_device_report.mjs <return.json> [more.json ...]'); process.exit(2); }
-for (const file of files) analyze(file);
+/** One line per report, so several captures can be put side by side before any of them is quoted. */
+function compare(files) {
+  const rows = files.map(file => {
+    const report = JSON.parse(fs.readFileSync(file, 'utf8')), samples = report.samples || [];
+    const first = samples[0] || {}, env = report.environment || {};
+    const raf = samples.map(s => s.rafIntervalMs).filter(Number.isFinite);
+    return {
+      file: file.split('/').pop(), ok: report.schema === 'aetheris-performance-v1',
+      status: report.status, mode: first.mode, quality: first.quality, tier: first.tier, weather: first.weather,
+      viewport: `${first.viewportWidth}×${first.viewportHeight}`, pr: first.pixelRatio,
+      px: first.canvasWidth * first.canvasHeight, frames: samples.length,
+      rafMed: median(raf), drops: 100 * raf.filter(v => v > 17.5).length / Math.max(1, raf.length),
+      world: median(samples.map(s => s.worldWallMs)), render: median(samples.map(s => s.renderCallWallMs)),
+      gpu: median(samples.map(s => s.gpuMs)), gpuN: samples.filter(s => Number.isFinite(s.gpuMs)).length,
+      aa: env.antialiasActual, tiers: new Set(samples.map(s => s.tier)).size
+    };
+  });
+  const head = ['file', 'mode', 'quality', 'tier', 'weather', 'viewport', 'PR', 'Mpx',
+    'frames', 'rafMed', 'drop%', 'world', 'render', 'gpu', 'gpuN'];
+  const cell = r => [r.file, r.mode, r.quality, r.tier, r.weather, r.viewport, String(r.pr),
+    (r.px / 1e6).toFixed(2), String(r.frames), String(round(r.rafMed)), round(r.drops, 1) + '%',
+    String(round(r.world)), String(round(r.render)), String(round(r.gpu)), String(r.gpuN)];
+  const body = [head, ...rows.map(cell)];
+  const width = head.map((_, i) => Math.max(...body.map(row => String(row[i]).length)));
+  for (const [i, row] of body.entries()) {
+    console.log(row.map((v, c) => (c === 0 ? String(v).padEnd(width[c]) : String(v).padStart(width[c]))).join('  '));
+    if (i === 0) console.log(width.map(w => '─'.repeat(w)).join('  '));
+  }
+  // Comparability is a property of the set, not of any single file.
+  const warn = [];
+  const uniq = key => [...new Set(rows.map(r => String(r[key])))];
+  for (const [key, label] of [['weather', '天气'], ['tier', '画质档位'], ['quality', '画质模式'],
+    ['viewport', '视口'], ['pr', '像素比'], ['mode', '场景模式'], ['status', '完成状态']]) {
+    if (uniq(key).length > 1) warn.push(`${label}不一致：${uniq(key).join(' / ')}`);
+  }
+  for (const r of rows) if (r.tiers > 1) warn.push(`${r.file} 内部档位发生过变化（${r.tiers} 档），AUTO 未锁定`);
+  if (rows.length > 1) {
+    const worlds = rows.map(r => r.world).filter(Number.isFinite).sort((a, b) => a - b);
+    const lo = worlds[0], hi = worlds[worlds.length - 1];
+    if (lo > 0 && hi / lo > 3) {
+      warn.push(`world 阶段时间相差 ${(hi / lo).toFixed(1)} 倍（${round(lo)} → ${round(hi)} ms）：` +
+        '同一构建下更像采集环境差异（DevTools/设备模拟/降频），先查环境再比较其它字段');
+    }
+  }
+  console.log('');
+  if (warn.length) { console.log('  可比性提示：'); for (const w of warn) console.log('  • ' + w); }
+  else console.log('  可比性提示：以上字段一致，可直接逐项比较。');
+  console.log('');
+}
+
+const argv = process.argv.slice(2);
+const compareMode = argv[0] === '--compare';
+const files = compareMode ? argv.slice(1) : argv;
+if (!files.length) {
+  console.error('usage: node analyze_device_report.mjs <return.json> [more.json ...]\n' +
+    '       node analyze_device_report.mjs --compare a.json b.json ...');
+  process.exit(2);
+}
+if (compareMode) compare(files);
+else for (const file of files) analyze(file);
