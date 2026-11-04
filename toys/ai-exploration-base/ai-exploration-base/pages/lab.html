@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>③ 儿子的 AI 实验室 — AI 探索基地</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <style>
+    /* Page-local: embed frame sizing. Tokens from main.css. */
+    .lab-embed {
+      width: 100%;
+      height: 640px;
+      border: 1px solid rgba(45,42,38,0.15);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+    .repo-link {
+      display: inline-block;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+    }
+  </style>
+</head>
+<body>
+  <main class="section">
+
+    <h1>③ 儿子的 AI 实验室</h1>
+    <p class="lead">
+      现在把镜头转向另一个方向：<strong>你儿子做的这些项目，全部是 AI 陪着写出来的。</strong>
+      不是"AI 给了一点点帮助"，而是 AI 写代码、儿子定方向，一个功能一个功能磨出来的。
+      你现在看的这个网站，也是同样做出来的。
+    </p>
+
+    <h2 class="reveal">先玩一个：算法实验室</h2>
+    <div class="card reveal">
+      <p>
+        下面这个就是其中之一，<strong>整个程序塞在这一个网页文件里，已经装进这个网站了</strong>。
+        它是儿子和 AI 一起做的"算法游乐场"——你现在就可以玩：
+      </p>
+      <p>
+        🎨 <strong>生命画布</strong>：用四色画笔涂几笔，点 <strong>Play</strong>，图案会自己"生长"——
+        这是数学里的细胞自动机，画面会像生命一样繁衍或消亡；
+      </p>
+      <p>
+        🥁 <strong>节拍制作器</strong>：点格子编一段节奏，点 <strong>Play loop</strong> 听效果，还能导出音频文件；
+      </p>
+      <p>
+        📐 <strong>算法工作室</strong>：写一小段指令，看它一步步排好一列数字——AI 会把每一步画给你看。
+      </p>
+      <p style="color:var(--ink-soft); font-size:0.95rem;">（如果下面区域是空的，往下滑一点等它加载；手机上也可以玩。）</p>
+      <iframe class="lab-embed" loading="lazy"
+        src="../assets/embed/algorithm-lab-standalone.html"
+        title="Algorithm Lab - 交互式算法游乐场（内嵌可玩）"></iframe>
+      <p style="margin-top:0.8rem;">
+        <span class="repo-link">源码在 GitHub：
+        <a href="https://github.com/wsjgdg/stray_papers" target="_blank">github.com/wsjgdg/stray_papers</a>
+        （联网时点开，里面有更多：量子物理工作坊、3D 奇幻星球、粒子生命模拟——都是同样方式做出来的）</span>
+      </p>
+    </div>
+
+    <h2 class="reveal">再看三个"正经"的</h2>
+
+    <div class="card reveal">
+      <h3 style="margin-top:0;">🎼 乐谱识别器</h3>
+      <p>
+        拍一张乐谱照片，程序把上面的音符全部"读"出来，变成可编辑的数字乐谱。
+        图像识别 + 音乐知识，两层 AI 技术叠在一起。
+      </p>
+      <span class="repo-link">
+        <a href="https://github.com/wsjgdg/score-transcriber" target="_blank">github.com/wsjgdg/score-transcriber</a>
+      </span>
+    </div>
+
+    <div class="card reveal">
+      <h3 style="margin-top:0;">📚 科研文献挖掘助手</h3>
+      <p>
+        帮材料科学家读论文的工具：一个人一年读不完的文献量，AI 辅助筛出有用的那些。
+        <strong>科学家的活，AI 已经能打下手了。</strong>
+      </p>
+      <span class="repo-link">
+        <a href="https://github.com/wsjgdg/matlit-miner" target="_blank">github.com/wsjgdg/matlit-miner</a>
+      </span>
+    </div>
+
+    <div class="card reveal">
+      <h3 style="margin-top:0;">👀 视觉分析网站</h3>
+      <p>
+        一个能"看"东西的网站——把图片交给它分析。AI 的眼睛，就是这么一步步教出来的。
+      </p>
+      <span class="repo-link">
+        <a href="https://github.com/wsjgdg/spot-visual" target="_blank">github.com/wsjgdg/spot-visual</a>
+      </span>
+    </div>
+
+    <div class="card correct-move reveal">
+      <h4>这一关想让你记住的一句话</h4>
+      <p style="margin:0.4em 0 0;">
+        这些项目没有一个是"天才写出来的"。就是<strong>每天和 AI 聊：让它写，我来试，哪里不对说清楚，再让它改</strong>。
+        这个方法，你已经会了——聊天谁不会呢？差的就是开始。
+        下一关我们看看，这个方法能怎么帮你赚钱。
+      </p>
+    </div>
+
+    <p style="text-align:center; margin-top:2rem;">
+      <a class="btn" href="../index.html">回到探索地图，继续下一关 →</a>
+    </p>
+    <p style="text-align:center;">
+      <a href="../index.html" style="font-size:0.9rem; color:var(--ink-soft);">← 回到探索地图</a>
+    </p>
+
+  </main>
+
+  <script src="../assets/vendor/gsap.min.js"></script>
+  <script src="../assets/vendor/ScrollTrigger.min.js"></script>
+  <script src="../assets/vendor/confetti.min.js"></script>
+  <script src="../assets/js/progress.js"></script>
+  <script src="../assets/js/site.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      window.AISite.pageReady('lab');
+    })();
+  </script>
+</body>
+</html>
