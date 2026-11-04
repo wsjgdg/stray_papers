@@ -63,9 +63,30 @@ a { color: var(--accent); }
 strong { color: var(--accent-dark); }
 
 .section {
-  max-width: 720px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 1.5rem 1.2rem 3rem;
+  padding: 1.5rem clamp(1.2rem, 4vw, 3rem) 3rem;
+}
+
+/* ---------- 12-column grid system ----------
+   Mobile: everything stacks full-width by default.
+   Desktop (>=900px): .grid-12 enables the 12-col grid and
+   .col-* spans take effect. Content fills the page edge-to-edge
+   within the 1240px reading width. */
+.grid-12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.2rem; }
+.grid-12 > * { grid-column: 1 / -1; }
+.grid-12 > .card { margin: 0; }
+
+@media (min-width: 900px) {
+  .grid-12 > .col-3 { grid-column: span 3; }
+  .grid-12 > .col-4 { grid-column: span 4; }
+  .grid-12 > .col-5 { grid-column: span 5; }
+  .grid-12 > .col-6 { grid-column: span 6; }
+  .grid-12 > .col-7 { grid-column: span 7; }
+  .grid-12 > .col-8 { grid-column: span 8; }
+  .grid-12 > .col-9 { grid-column: span 9; }
+  /* Alignment helpers for mixed-height rows */
+  .grid-12 { align-items: stretch; }
 }
 
 .lead {
@@ -295,15 +316,11 @@ html.js .reveal.is-visible {
 /* ---------- flip cards (page 1 showcase) ---------- */
 
 .flip-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.2rem;
   margin: 1.5rem 0;
 }
 
-@media (min-width: 640px) {
-  .flip-grid { grid-template-columns: 1fr 1fr; }
-}
+/* Column spans are owned by the .grid-12 system (see top of file).
+   Cards get col-6 / col-12 classes in markup. */
 
 .flip-card {
   perspective: 1000px;
