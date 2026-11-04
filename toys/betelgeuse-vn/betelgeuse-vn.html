@@ -8257,15 +8257,18 @@ window.SCENARIO = {
 
   function toggleBacklog() {
     if (els.backlog.classList.contains("vn-hidden")) {
+      captureFocusReturn();
       renderBacklog();
       els.backlog.classList.remove("vn-hidden");
     } else {
       els.backlog.classList.add("vn-hidden");
+      restoreFocusReturn();
     }
   }
 
   function hideBacklog() {
     els.backlog.classList.add("vn-hidden");
+    restoreFocusReturn();
   }
 
   /* ---------------------------------------------------------- scene machine */
@@ -8759,19 +8762,45 @@ window.SCENARIO = {
 
   /* ---------------------------------------------------------------- vn menu */
 
+  // Focus return for overlays (WebAIM: focus goes back to the element that
+  // opened the dialog). Captured as a topbar button element or null.
+  function captureFocusReturn() {
+    var el = typeof document !== "undefined" ? document.activeElement : null;
+    state.focusReturn =
+      el && el.classList && el.classList.contains("vn-btn") ? el : null;
+  }
+
+  function restoreFocusReturn() {
+    if (state.focusReturn && typeof state.focusReturn.focus === "function") {
+      try {
+        state.focusReturn.focus();
+      } catch (err) {
+        /* element may be gone; ignore */
+      }
+    }
+    state.focusReturn = null;
+  }
+
   function openMenu(mode) {
     if (mode === "save" && !state.scene) {
       toast("暂无进度");
       return;
     }
+    captureFocusReturn();
     state.menuMode = mode;
     els.menuTitle.textContent = mode === "save" ? "存档" : "读档";
     refreshSlots();
     els.menu.classList.remove("vn-hidden");
+    var close =
+      typeof els.menu.querySelector === "function"
+        ? els.menu.querySelector(".vn-close")
+        : null;
+    if (close && typeof close.focus === "function") close.focus();
   }
 
   function hideMenu() {
     els.menu.classList.add("vn-hidden");
+    restoreFocusReturn();
   }
 
   // Swaps a slot button's thumbnail in/out. The img sits before the info
@@ -8960,12 +8989,19 @@ window.SCENARIO = {
   }
 
   function openSettings() {
+    captureFocusReturn();
     syncSettingsUi(); // sliders always show the current values
     els.settings.classList.remove("vn-hidden");
+    var close =
+      typeof els.settings.querySelector === "function"
+        ? els.settings.querySelector(".vn-close")
+        : null;
+    if (close && typeof close.focus === "function") close.focus();
   }
 
   function hideSettings() {
     els.settings.classList.add("vn-hidden");
+    restoreFocusReturn();
   }
 
   /* ------------------------------------------------------ ending collection */
