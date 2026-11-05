@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10171b">
+  <meta name="description" content="Explore three deterministic systems, sensitive dependence, and finite-time growth in an interactive phase-space workbench.">
+  <title>The Chaos Atlas · Phase-space workbench</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23151e22'/%3E%3Cpath d='M20 4l2.6 10.6L30 7l-3.6 10.3L37 20l-10.6 2.6L30 33l-7.4-7.6L20 36l-2.6-10.6L10 33l3.6-10.4L3 20l10.6-2.7L10 7l7.4 7.6z' fill='%23efbb86'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="styles.css?v=20261031-23">
+  <script defer src="model.js?v=20261031-23"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="atlas-renderer.js?v=20261031-23"></script>
+  <script defer src="app.js?v=20261031-23"></script>
+  <script defer src="atlas-notes.js?v=20261031-23"></script>
+</head>
+<body class="atlas-lab">
+<a class="skip-link" href="#scene">Skip to the experiment</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#scene" data-jump="stage">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><path d="M20 20C10 5 5 17 10 23c4 5 9-1 10-3zm0 0c10-15 15-3 10 3-4 5-9-1-10-3z"/></svg></span>
+      <span><strong>CHAOS / LAB</strong><small>PHASE SPACE ATLAS</small></span>
+    </a>
+    <a class="overview-return" href="overview.html" lang="zh-CN"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>Navigation</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status"><span class="status-light"></span><span id="header-status">Live</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="Experiment navigation" hidden>
+    <div class="nav-scroll-frame">
+    <div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="Other experiments, scroll to see all">
+      <a href="index.html"><span>Spatial pendulum</span><small>01</small></a>
+      <a href="rigid-body.html"><span>Rigid body</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>Potential landscape</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>Vortex fluid</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>Turing patterns</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="ising.html"><span>Ising lattice</span><small>08</small></a>
+      <a href="relativity.html"><span>Relativity</span><small>09</small></a>
+    </div>
+    <input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="Navigation scroll position" aria-controls="nav-scroll-list">
+    </div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓  Drag or scroll · 8 entries</div>
+  </nav>
+</header>
+
+<main id="workbench" class="lab-workbench" aria-label="Phase-space workbench">
+  <h1 id="explore" class="visually-hidden">The Chaos Atlas: phase-space workbench</h1>
+  <article class="model-panel" aria-label="Interactive three-dimensional phase space">
+    <div class="model-stage" id="scene-container">
+      <canvas id="scene" data-lab-canvas tabindex="0" aria-label="Three-dimensional phase-space projection. Drag or use arrow keys to rotate; scroll or use plus and minus to zoom. Press space to pause or play.">Your browser does not support canvas. The equations are available in Field notes.</canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="scene-status">SIMULATION LIVE</b></div><div>PHASE SPACE <i>/</i> XYZ</div></div>
+      <div class="atlas-index" aria-hidden="true"><span>FIG.</span><strong id="scene-index">01</strong><span>— 03</span></div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend"><span><i class="legend-main"></i> PATH A</span><span><i class="legend-twin"></i> PATH B</span><span><i class="legend-trail"></i> REFERENCE ORBIT</span></div><div class="stage-instruction"><span>↔</span> DRAG TO ROTATE <b>·</b> SCROLL TO ZOOM</div></div>
+      <div id="scene-error" class="stage-error" role="status" aria-live="polite">The experiment is loading. If it does not appear, refresh the page.</div>
+    </div>
+  </article>
+
+  <div class="lab-bottom">
+    <section class="telemetry" aria-label="Live experiment readings">
+      <div class="telemetry-item"><span>TIME</span><strong id="elapsed">0.00</strong></div>
+      <div class="telemetry-item"><span>SEPARATION</span><strong id="separation">1.0e−5</strong></div>
+      <div class="telemetry-item"><span>GROWTH</span><strong id="growth">—</strong></div>
+      <div class="telemetry-item"><span>PARAMETER</span><strong id="active-parameter">ρ 28.0</strong></div>
+    </section>
+    <div class="transport" aria-label="Playback and camera controls">
+      <div class="transport-left"><button type="button" class="play-button" id="play-toggle" aria-label="Pause simulation"><span id="play-icon" aria-hidden="true">Ⅱ</span><span id="play-label">Pause</span></button><button type="button" class="tool-button" id="step" title="Advance one fixed integration step (pause first)" aria-label="Advance one integration step" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button><button type="button" class="tool-button" id="reset" title="Restart with the current settings" aria-label="Restart simulation"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button></div>
+      <div class="transport-right"><div class="speed-options" role="group" aria-label="Simulation speed"><span>SPEED</span><button type="button" class="active" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button><button type="button" data-speed="4" aria-pressed="false">4×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" title="Reset the camera" aria-label="Reset camera view"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" title="Download the scene as a PNG" aria-label="Download the scene as a PNG"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="Collapse Controls" title="Collapse Controls"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>Collapse</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="Phase-space experiment controls">
+      <div class="panel-top"><div><span class="panel-kicker">CONTROL CONSOLE</span><h3>Experiment<span>.</span></h3></div></div>
+      <p class="panel-description">Choose a system and set its initial conditions.</p>
+      <div class="control-section">
+        <div class="control-heading"><span>Attractor system</span><small>01 / SELECT</small></div>
+        <div class="system-options" role="group" aria-label="Attractor system">
+          <button type="button" class="system-option active" data-system="lorenz" aria-pressed="true"><span class="option-art" aria-hidden="true"><svg viewBox="0 0 42 36"><path d="M21 18C7 0 1 15 7 23c5 7 13-2 14-5zm0 0C35 0 41 15 35 23c-5 7-13-2-14-5zM21 18c-9-12-12-3-9 2 3 5 7 0 9-2zm0 0c9-12 12-3 9 2-3 5-7 0-9-2z"/></svg></span><span class="option-copy"><strong>Lorenz</strong><small>THE BUTTERFLY</small></span><span class="option-number">01</span></button>
+          <button type="button" class="system-option" data-system="rossler" aria-pressed="false"><span class="option-art" aria-hidden="true"><svg viewBox="0 0 42 36"><path d="M20 18c7-8 17-3 14 4-3 8-18 9-25 3C1 18 7 7 20 6c14-1 21 6 18 12M20 18c-5 2-3 6 1 6 6 0 8-6 5-9-4-5-13-2-13 4"/></svg></span><span class="option-copy"><strong>Rössler</strong><small>THE SPIRAL</small></span><span class="option-number">02</span></button>
+          <button type="button" class="system-option" data-system="thomas" aria-pressed="false"><span class="option-art" aria-hidden="true"><svg viewBox="0 0 42 36"><path d="M6 22C2 6 15 4 21 16S37 29 36 17C35 5 24 8 22 19S6 32 7 21c1-9 10-11 15-4S33 26 35 20"/></svg></span><span class="option-copy"><strong>Thomas</strong><small>THE LABYRINTH</small></span><span class="option-number">03</span></button>
+        </div>
+      </div>
+      <div class="control-section">
+        <div class="control-heading"><span>System parameter</span><small>02 / CONDITIONS</small></div>
+        <div class="parameter-head"><label for="parameter"><span id="parameter-name">Driving force</span> <i id="parameter-symbol">ρ</i></label><output for="parameter" id="parameter-value">28.0</output></div>
+        <input id="parameter" class="range" type="range" min="0" max="50" step="0.1" value="28" aria-describedby="parameter-help">
+        <div class="range-ends"><span id="parameter-min">0.0</span><span id="parameter-max">50.0</span></div>
+        <p class="control-note" id="parameter-help">Controls the strength of convection. Changing it restarts the experiment.</p>
+        <div class="distance-heading">Initial separation</div>
+        <div class="delta-options" role="group" aria-label="Initial separation"><button type="button" data-distance="0.001" aria-pressed="false">10<sup>−3</sup></button><button type="button" data-distance="0.00001" class="active" aria-pressed="true">10<sup>−5</sup></button><button type="button" data-distance="0.0000001" aria-pressed="false">10<sup>−7</sup></button></div>
+        <p class="control-note">Two visible paths begin this far apart.</p>
+      </div>
+      <div class="control-section">
+        <div class="control-heading"><span>Guided experiments</span><small>03 / TRY</small></div>
+        <div class="guided-options">
+          <button type="button" data-experiment="butterfly"><span><strong>Meet the butterfly</strong><small>ρ = 28 · watch nearby paths diverge</small></span><b aria-hidden="true">↗</b></button>
+          <button type="button" data-experiment="settle"><span><strong>Find the stillness</strong><small>ρ = 15 · approach an equilibrium</small></span><b aria-hidden="true">↗</b></button>
+        </div>
+      </div>
+      <div class="console-foot"><span aria-hidden="true">✳</span> COMPUTED LOCALLY IN YOUR BROWSER</div>
+    </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">Scroll for more <span>↓</span></div>
+  </div>
+
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="Collapse Field notes" title="Collapse Field notes"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>Collapse</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h3 id="knowledge-title">Field notes<span>.</span></h3></div></div>
+      <p class="panel-description">Choose a card to understand what you see.</p>
+      <div class="lesson-tabs atlas-tabs" role="group" aria-label="Choose a field note">
+        <button type="button" data-note="sensitivity" class="active" aria-pressed="true"><span class="lesson-icon">✳</span><span><strong>Sensitive dependence</strong><small>Two nearby paths</small></span><b>01</b></button>
+        <button type="button" data-note="dissipation" aria-pressed="false"><span class="lesson-icon">⌁</span><span><strong>Stretch &amp; fold</strong><small>Phase-space volume</small></span><b>02</b></button>
+        <button type="button" data-note="growth" aria-pressed="false"><span class="lesson-icon">∿</span><span><strong>Growth estimate</strong><small>A separate probe</small></span><b>03</b></button>
+        <button type="button" data-note="equations" aria-pressed="false"><span class="lesson-icon">ƒ</span><span><strong>Equations &amp; numerics</strong><small>The rules behind the scene</small></span><b>04</b></button>
+      </div>
+      <section class="lesson-detail atlas-detail" data-note-content="sensitivity" aria-label="Sensitive dependence">
+        <div class="lesson-top"><span id="observation-index">SYSTEM 01 / 03</span><span id="system-year">1963</span></div>
+        <h4 id="observation-title">The Lorenz<br><em>attractor.</em></h4>
+        <p id="system-description">A simplified convection model whose stretching and folding produces the iconic butterfly.</p>
+        <div class="lesson-metric"><span>Current separation</span><strong id="separation-card">1.0e−5</strong></div>
+        <div class="chart-head"><span>DISTANCE BETWEEN PATHS</span><span>LOG SCALE</span></div>
+        <svg id="history" viewBox="0 0 240 76" role="img" aria-label="A logarithmic plot of the distance between the two visible trajectories over simulation time. Values below 10 to the minus 15 are floored for display.">
+          <title>Values below 10⁻¹⁵ are floored for logarithmic display.</title>
+          <path id="history-grid" fill="none" stroke="rgba(173,149,155,.19)" stroke-width="0.7"></path>
+          <g fill="#8c7d84" font-family="ui-monospace, monospace" font-size="8" dominant-baseline="middle"><text id="history-label-0"></text><text id="history-label-1"></text><text id="history-label-2"></text></g>
+          <path id="history-line" fill="none" stroke="#e3a58d" stroke-width="1.4" stroke-linejoin="round"></path>
+          <circle id="history-last" r="2.3" fill="#f0bb9c"></circle>
+        </svg>
+        <div class="chart-caption"><span>START</span><span>NOW →</span></div>
+        <p class="lesson-note">A tiny difference can grow under the same deterministic rules. The faint orbit is a precomputed reference; the two bright paths evolve live.</p>
+        <div class="atlas-formula">δ(t) ≈ δ₀e<sup>λt</sup></div>
+        <small class="formula-note">An approximation while separation is small and a growth rate is meaningful.</small>
+        <button type="button" class="lesson-action" data-note-jump="growth">Explore the growth estimate <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail atlas-detail" data-note-content="dissipation" aria-label="Stretch and fold" hidden>
+        <div class="lesson-top"><span>FIELD NOTE / 02</span><span>02 — 04</span></div>
+        <h4>Stretch, fold, repeat.</h4>
+        <p>Nearby states can stretch apart even as a volume of phase space contracts. In a bounded attractor, folding brings those stretched regions back together.</p>
+        <div class="atlas-formula" id="divergence-formula">∇ · f = −σ − 1 − β</div>
+        <p class="lesson-note" id="divergence-copy">For Lorenz, the divergence is constant and negative.</p>
+        <p class="lesson-note">The divergence depends on the selected system and its parameters; for Rössler it also varies with position.</p>
+      </section>
+      <section class="lesson-detail atlas-detail" data-note-content="growth" id="growth-note" aria-label="Finite-time growth" hidden>
+        <div class="lesson-top"><span>FIELD NOTE / 03</span><span>03 — 04</span></div>
+        <h4>Measuring separation.</h4>
+        <p>An unseen probe is repeatedly rescaled to stay close to path A. Its accumulated growth gives a running finite-time estimate.</p>
+        <div class="lesson-metric"><span>Current estimate / time unit</span><strong id="growth-card">—</strong></div>
+        <div class="atlas-formula">λ̂ = Σ ln(dᵢ / d₀) / Σ Δtᵢ</div>
+        <p class="lesson-note">This is a finite-time, single-direction estimate, not an exact maximal exponent. A positive short-run value alone does not prove chaos.</p>
+      </section>
+      <section class="lesson-detail atlas-detail" data-note-content="equations" aria-label="Equations and numerics" hidden>
+        <div class="lesson-top"><span>FIELD NOTE / 04</span><span>04 — 04</span></div>
+        <h4>Follow the equations.</h4>
+        <p>These differential equations power the selected scene. A dot denotes change with respect to simulation time.</p>
+        <div class="atlas-equations" id="equations"><div>ẋ = σ(y − x)</div><div>ẏ = x(ρ − z) − y</div><div>ż = xy − βz</div></div>
+        <div class="equation-constants" id="equation-constants">σ = 10 · β = 8/3 · ρ is adjustable</div>
+        <div class="regime-block"><span class="regime-dot"></span><div><small id="regime-kicker">LOCAL STABILITY</small><strong id="regime-label">Nonzero equilibria unstable</strong><p id="regime-detail">Above ρ ≈ 24.74, those equilibria are unstable. This alone does not prove chaos.</p></div></div>
+        <details class="stability-detail"><summary>Lorenz stability boundaries</summary><p>For σ = 10 and β = 8/3: below ρ = 1 the origin is locally stable; between 1 and approximately 24.74 the two nonzero equilibria are locally stable; above 24.74 they are unstable. This Hopf boundary is not a universal chaos switch: a chaotic attractor and stable equilibria can coexist for some lower values of ρ.</p></details>
+        <p class="lesson-note">Each path uses fixed-step fourth-order Runge–Kutta. In a chaotic regime, numerical errors eventually lead to different individual trajectories.</p>
+      </section>
+      <div class="knowledge-foot atlas-sources" id="about"><span>FURTHER READING</span><p>Models, not long-term predictions.</p><div><a href="https://doi.org/10.1175/1520-0469%281963%29020%3C0130%3ADNF%3E2.0.CO%3B2" target="_blank" rel="noopener noreferrer">Lorenz, 1963 ↗</a>
+      <a href="https://doi.org/10.1016/0375-9601(76)90101-8" target="_blank" rel="noopener noreferrer">Rössler, 1976 ↗</a>
+      <a href="https://doi.org/10.1142/S0218127499001383" target="_blank" rel="noopener noreferrer">Thomas, 1999 ↗</a>
+      <a href="https://research-information.bris.ac.uk/files/3005052/dko_preprint.pdf" target="_blank" rel="noopener noreferrer">Lorenz stability ↗</a></div></div>
+    </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">Scroll for more <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">The live experiment requires JavaScript. Please enable it and reopen the page.</div></noscript>
+</body>
+</html>

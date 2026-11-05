@@ -1,0 +1,17 @@
+/* A local 3D density solver inside the shared full-screen workbench shell. */
+#streamer-scene{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#streamer-scene:active{cursor:grabbing}#streamer-scene.precise,#streamer-scene.precise:active{cursor:crosshair}
+.streamer-lab .model-stage{background:radial-gradient(ellipse 48% 65% at 50% 41%,#1a3843 0%,#0d242d 43%,#07141b 100%)}
+.streamer-lab .stage-error{z-index:6;background:#0b1d25ed;line-height:1.7}.streamer-lab .stage-error>div{max-width:340px;padding:17px;border:1px solid #53747b;border-radius:4px;background:#1b3138}
+.streamer-lab .vortex-caption>strong{color:#dceff1}.streamer-lab .vortex-caption>small{max-width:265px}
+.streamer-lab .stage-bottom{bottom:var(--vortex-legend-bottom,151px)}
+.streamer-legend .legend-electron{background:#86e9ff;box-shadow:0 0 9px #68d8fa}.streamer-legend .legend-ion{background:#f5b779;box-shadow:0 0 8px #f5b779}.streamer-legend .legend-iso{background:transparent;border:1px solid #9adce4;box-shadow:none}.streamer-legend .legend-field{width:11px;height:2px;border-radius:0;background:#d9eac2;box-shadow:none;vertical-align:3px}
+.streamer-presets{grid-template-columns:repeat(2,minmax(0,1fr))}.streamer-presets button{min-height:53px;white-space:normal;line-height:1.2}.streamer-lab .quality-label{display:flex;justify-content:space-between;margin-top:13px;color:#d9e1d4;font-size:10px}.streamer-lab .quality-label small{font-size:9px;color:#a5b8ac}
+#slice-mode{width:100%;min-height:33px;margin-top:5px;padding:0 8px;color:#e2e9dc;background:#243632;border:1px solid #536a5f;border-radius:3px;font-size:10px}
+#slice-mode:disabled,.streamer-lab .range:disabled{opacity:.45;cursor:not-allowed}.streamer-lab .display-switches{margin-top:10px}
+.streamer-lab .lesson-detail .lesson-metric strong{font-size:12px;white-space:normal;text-align:right}.streamer-lab .vortex-formula{font-size:10px;line-height:1.9;overflow-wrap:anywhere}
+.streamer-lab .stage-notice,.streamer-lab .stage-fallback{line-height:1.5}.streamer-lab .play-button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:520px){.streamer-lab .telemetry-item strong{font-size:10px}.streamer-lab .telemetry-item>span{font-size:7px}.streamer-lab .stage-error>div{max-width:230px}}
+
+.compact-model-label{display:none;position:absolute;left:50px;top:56px;padding:3px 5px;border-radius:3px;background:#0a1823c9;color:#c9d8dc;font-size:9px;pointer-events:none}
+@media(max-height:540px){.compact-model-label{display:block}}

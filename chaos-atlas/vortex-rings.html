@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10171b">
+  <meta name="description" content="交互式三维不可压缩黏性流体与涡环示踪实验。">
+  <title>三维流体涡环 · Vortex Fluid</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23151e22'/%3E%3Cellipse cx='15' cy='20' rx='8' ry='13' fill='none' stroke='%23f1ba8c' stroke-width='2'/%3E%3Cellipse cx='25' cy='20' rx='8' ry='13' fill='none' stroke='%238eddd4' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-23">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="vortex.css?v=20261031-23">
+  <link rel="stylesheet" href="fluid.css?v=20261031-23">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="fluid-model.js?v=20261031-23"></script>
+  <script defer src="fluid-analysis.js?v=20261031-23"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="fluid.js?v=20261031-23"></script>
+</head>
+<body class="vortex-lab fluid-lab">
+<a class="skip-link" href="#fluid-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#fluid-scene" data-jump="stage"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><ellipse cx="16" cy="20" rx="5" ry="9"/><ellipse cx="24" cy="20" rx="5" ry="9"/></svg></span><span><strong>CHAOS / LAB</strong><small>三维流体涡环</small></span></a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status paused"><span class="status-light"></span><span id="header-status">正在初始化</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame">
+    <div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="ising.html"><span>自旋晶格</span><small>08</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div>
+    <input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list">
+    </div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓  拖动滑块或滚动查看 · 8 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" aria-label="三维流体涡环实验台">
+  <h1 class="visually-hidden">三维流体涡环：不可压缩黏性流体与示踪物</h1>
+  <article class="model-panel" aria-label="三维流体体积可视化">
+    <div class="model-stage" id="fluid-stage">
+      <canvas id="fluid-scene" data-lab-canvas tabindex="0" aria-label="三维流体体积图。拖动旋转，滚轮或控制台缩放；方向键旋转，加减号缩放，空格播放或暂停。"></canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">SOLVER INITIALIZING</b></div><div>INCOMPRESSIBLE FLOW <i>/</i> 3D GRID</div></div>
+      <div class="vortex-index" aria-hidden="true"><span>FIG.</span><strong>05</strong><span>— VORTEX FLUID</span></div>
+      <div class="vortex-caption" aria-hidden="true"><span>01 / TRANSPORTED DYE</span><strong>让流体带着颜色运动</strong><small id="render-description">等浓度轮廓 + 体积 · 并非固体表面</small></div>
+      <div class="field-hud" id="field-hud" aria-hidden="true" hidden><span>VELOCITY FIELD / SLICE</span><strong id="field-hud-value">剖面 Z = 0.00</strong><small>涡量幅值 <i></i> 低 → 高　·　箭头：面内速度</small></div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend vortex-legend"><span><i class="legend-a"></i> 示踪物 A</span><span><i class="legend-b"></i> 示踪物 B</span><span><i class="legend-domain"></i> 计算边界</span></div><div class="stage-instruction" id="stage-instruction"><span>↔</span> 拖动旋转 <b>·</b> 滚轮缩放</div></div>
+      <div class="stage-error" id="stage-error" role="status" aria-live="polite"><div><p id="stage-error-text">正在建立三维流体场，请稍候……</p><p class="fallback-console-hint">如无法运行，可在左侧控制台切换涡丝对照。</p></div></div>
+    </div>
+  </article>
+  <div class="lab-bottom">
+    <div class="stage-notice" id="stage-notice" role="status" aria-live="polite" hidden></div>
+    <section class="telemetry" aria-label="流体求解实时数据">
+      <div class="telemetry-item"><span>模拟时间</span><strong id="time-readout">0.00</strong></div>
+      <div class="telemetry-item"><span>三维网格</span><strong id="grid-readout">48×32×32</strong></div>
+      <div class="telemetry-item"><span>散度 RMS</span><strong id="divergence-readout">—</strong></div>
+      <div class="telemetry-item"><span title="两种染料的轴向质心 B − A，不是涡核位置">染料质心 B−A</span><strong id="dye-gap-readout">—</strong></div>
+    </section>
+    <div class="transport" aria-label="模拟和视角控制">
+      <div class="transport-left"><button type="button" id="play" class="play-button" aria-label="播放模拟" disabled><span id="play-symbol" aria-hidden="true">▶</span><span id="play-text">播放</span></button><button type="button" class="tool-button" id="step" aria-label="单步推进 0.04 模拟时间" title="单步推进 0.04" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button><button type="button" class="tool-button" id="reset" aria-label="重置流场" title="按当前初态重置" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button></div>
+      <div class="transport-right"><div class="speed-options" role="group" aria-label="目标模拟速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="流体实验控制台">
+      <div class="panel-top"><div><span class="panel-kicker">FLUID CONSOLE</span><h2>流体控制台<span>。</span></h2></div></div>
+      <p class="panel-description">数值求解三维流场，而不是预设圆环动画。</p>
+      <div class="engine-choice"><span>当前：三维流体</span><a href="vortex-filament.html">切换涡丝对照 ↗</a></div>
+      <div class="control-section"><div class="control-heading"><span>流场预设</span><small>12 PRESETS</small></div>
+        <div class="preset-grid vortex-presets fluid-presets" role="group" aria-label="流体初态预设">
+          <button type="button" data-preset="chase" class="active" aria-pressed="true"><span aria-hidden="true">◎</span>同向追逐</button>
+          <button type="button" data-preset="opposed" aria-pressed="false"><span aria-hidden="true">↔</span>反向相迎</button>
+          <button type="button" data-preset="unequal" aria-pressed="false"><span aria-hidden="true">◌</span>不等环流</button>
+          <button type="button" data-preset="close" aria-pressed="false"><span aria-hidden="true">≋</span>紧距追逐</button>
+          <button type="button" data-preset="smallChase" aria-pressed="false"><span aria-hidden="true">◉</span>小环追大</button>
+          <button type="button" data-preset="largeChase" aria-pressed="false"><span aria-hidden="true">◎</span>大环追小</button>
+          <button type="button" data-preset="offset" aria-pressed="false"><span aria-hidden="true">↔</span>不等相迎</button>
+          <button type="button" data-preset="wide" aria-pressed="false"><span aria-hidden="true">◯</span>大环慢行</button>
+          <button type="button" data-preset="narrow" aria-pressed="false"><span aria-hidden="true">⊙</span>小环快行</button>
+          <button type="button" data-preset="symmetric" aria-pressed="false"><span aria-hidden="true">○</span>零扰对照</button>
+          <button type="button" data-preset="perturbed" aria-pressed="false"><span aria-hidden="true">∿</span>三维扰动</button>
+          <button type="button" data-preset="viscous" aria-pressed="false"><span aria-hidden="true">≈</span>高黏衰减</button>
+        </div>
+        <p class="fluid-preset-detail" id="preset-description" role="status" aria-live="polite">两环同向追逐；染料先后交换不单独证明涡核穿越。</p>
+        <p class="control-note">预设重新建立初态并设置黏度，保留网格、视角、画质和播放状态；有限盒壁会影响后续运动。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>交互工具</span><small>TOUCH / POINTER</small></div>
+        <div class="ring-orientation" role="group" aria-label="实验台指针工具"><button type="button" data-tool="orbit" aria-pressed="true">旋转视角</button><button type="button" data-tool="force" aria-pressed="false">推动流体</button></div>
+        <div class="slider-row second"><label for="force-strength">推力强度</label><output id="force-strength-value" for="force-strength">1.8</output></div><input id="force-strength" class="range" type="range" min="0.2" max="3.0" step="0.1" value="1.8" disabled>
+        <div class="slider-row second"><label for="force-radius">影响半径</label><output id="force-radius-value" for="force-radius">0.55</output></div><input id="force-radius" class="range" type="range" min="0.25" max="1.20" step="0.05" value="0.55" disabled>
+        <button type="button" class="field-toggle" id="force-center" disabled>→　沿剖面中心试推一步</button>
+        <p class="control-note" id="force-help">推流模式会打开剖面。沿剖面拖动时向真实速度网格施加局部外力，不直接绘制染料；暂停时每次施力会推进一步。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>真实流场剖面</span><small>VELOCITY FIELD</small></div>
+        <button type="button" class="field-toggle" id="slice-toggle" aria-pressed="false">◈　显示涡量剖面</button>
+        <label class="quality-label" for="slice-axis">剖面方向 <small>沿选定轴移动</small></label>
+        <select id="slice-axis" disabled><option value="z">XY 平面 · 沿 Z 移动</option><option value="y">XZ 平面 · 沿 Y 移动</option><option value="x">YZ 平面 · 沿 X 移动</option></select>
+        <div class="slider-row second"><label for="slice-position">剖面位置</label><output id="slice-position-value" for="slice-position">Z = 0.00</output></div>
+        <input id="slice-position" class="range" type="range" min="-100" max="100" step="1" value="0" disabled>
+        <div class="display-switches"><label for="slice-arrows"><span>显示面内速度箭头</span><input id="slice-arrows" type="checkbox" checked disabled><b aria-hidden="true"></b></label></div>
+        <p class="field-readout" id="slice-readout" role="status">开启后读取当前速度网格的剖面。</p>
+        <p class="control-note">颜色表示离散涡量幅值，相对当前剖面最大值着色；箭头是速度在剖面内的投影，按本帧最大值缩放，弱于最大值 6% 的箭头省略。剖面移动不会重置流场。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>画面与清晰度</span><small>DISPLAY ONLY</small></div>
+        <div class="ring-orientation" role="group" aria-label="染料显示方式"><button type="button" data-render-mode="contour" aria-pressed="true">清晰轮廓</button><button type="button" data-render-mode="volume" aria-pressed="false">柔和体积</button></div>
+        <div class="slider-row second"><label for="contour-level">轮廓浓度阈值</label><output id="contour-level-value" for="contour-level">40%</output></div><input id="contour-level" class="range" type="range" min="15" max="70" step="5" value="40">
+        <label class="quality-label" for="render-quality">画面分辨率 <small>不改变流体网格</small></label><select id="render-quality"><option value="auto" selected>自动 · 兼顾速度</option><option value="sharp">清晰 · 较耗性能</option><option value="fast">流畅 · 较低分辨率</option></select>
+        <p class="control-note" id="render-scale-hint">正在确定画布分辨率…</p>
+        <p class="control-note">轮廓是当前染料总浓度相对峰值的等值面，不是固体表面或涡核；调整画面不会重置流场。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>涡环初态</span><small>DIMENSIONLESS</small></div>
+        <div class="slider-row"><label for="radius-a">A 初始半径</label><output id="radius-a-value" for="radius-a">0.86</output></div><input id="radius-a" class="range" type="range" min="0.45" max="1.25" step="0.01" value="0.86">
+        <div class="slider-row second"><label for="radius-b">B 初始半径</label><output id="radius-b-value" for="radius-b">0.86</output></div><input id="radius-b" class="range" type="range" min="0.45" max="1.25" step="0.01" value="0.86">
+        <div class="slider-row second"><label for="separation">初始轴向间距</label><output id="separation-value" for="separation">0.80</output></div><input id="separation" class="range" type="range" min="0.40" max="2.20" step="0.02" value="0.80">
+        <div class="slider-row second"><label for="gamma-a">A 环流强度</label><output id="gamma-a-value" for="gamma-a">3.00</output></div><input id="gamma-a" class="range" type="range" min="0.40" max="4.00" step="0.10" value="3.00">
+        <div class="slider-row second"><label for="gamma-b">B 环流强度</label><output id="gamma-b-value" for="gamma-b">3.00</output></div><input id="gamma-b" class="range" type="range" min="0.40" max="4.00" step="0.10" value="3.00">
+        <div class="ring-orientation" role="group" aria-label="B 环流方向"><button type="button" data-orientation="same" aria-pressed="true">同向环流</button><button type="button" data-orientation="opposed" aria-pressed="false">反向环流</button></div>
+        <p class="control-note">环流和半径只用于生成初始速度场；演化中不会强制涡环保持圆形。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>流体与精度</span><small>NUMERICS</small></div>
+        <div class="slider-row"><label for="viscosity">运动黏度 ν</label><output id="viscosity-value" for="viscosity">0.006</output></div><input id="viscosity" class="range" type="range" min="0" max="0.030" step="0.001" value="0.006">
+        <div class="slider-row second"><label for="perturbation">三维初始扰动</label><output id="perturbation-value" for="perturbation">0.025</output></div><input id="perturbation" class="range" type="range" min="0" max="0.080" step="0.005" value="0.025">
+        <label class="quality-label" for="grid-quality">网格分辨率 <small>更高更慢</small></label><select id="grid-quality"><option value="quick">快速 · 36 × 24 × 24</option><option value="standard" selected>标准 · 48 × 32 × 32</option><option value="high">精细 · 72 × 48 × 48</option></select>
+        <label class="quality-label" for="time-step">模拟时间步 Δt <small>更小更慢</small></label><select id="time-step"><option value="0.04" selected>0.04 · 常规</option><option value="0.02">0.02 · 半步</option><option value="0.01">0.01 · 四分之一步</option></select>
+        <label class="quality-label" for="pressure-iterations">压力投影迭代上限 <small>残差达标可提前停止</small></label><select id="pressure-iterations"><option value="16">16 · 较快</option><option value="32" selected>32 · 平衡</option><option value="64">64 · 较精确</option><option value="96">96 · 更耗时</option></select>
+        <p class="control-note">参数修改会重新计算初态并保留播放状态。流体在后台线程计算；设备较慢时模拟时间会慢于真实时间。</p>
+        <div class="display-switches"><label for="follow-dye"><span>视角跟随示踪物</span><input id="follow-dye" type="checkbox" checked><b aria-hidden="true"></b></label></div>
+        <div class="slider-row second"><label for="camera-zoom">观察缩放</label><output id="camera-zoom-value" for="camera-zoom">1.00×</output></div><input id="camera-zoom" class="range" type="range" min="0.55" max="1.50" step="0.01" value="1.00">
+      </div>
+      <div class="console-foot"><span>✳</span>有限网格的教学型数值模拟，不是工程级 CFD。</div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h2 id="knowledge-title">知识卡片<span>。</span></h2></div></div>
+      <p class="panel-description">理解被求解的流体，和被看见的颜色。</p>
+      <div class="lesson-tabs vortex-tabs" role="group" aria-label="选择知识卡片">
+        <button type="button" data-note="equations" class="active" aria-pressed="true"><span class="lesson-icon">∇</span><span><strong>流体如何演化</strong><small>速度、黏性与压力</small></span><b>01</b></button>
+        <button type="button" data-note="dye" aria-pressed="false"><span class="lesson-icon">◌</span><span><strong>颜色是什么</strong><small>三维示踪物与体积光</small></span><b>02</b></button>
+        <button type="button" data-note="rings" aria-pressed="false"><span class="lesson-icon">◎</span><span><strong>涡环相互作用</strong><small>同向与相向</small></span><b>03</b></button>
+        <button type="button" data-note="compare" aria-pressed="false"><span class="lesson-icon">≋</span><span><strong>实验对照</strong><small>快照、曲线与同时间比较</small></span><b>04</b></button>
+        <button type="button" data-note="limits" aria-pressed="false"><span class="lesson-icon">ƒ</span><span><strong>精度与边界</strong><small>数值误差与适用范围</small></span><b>05</b></button>
+      </div>
+      <section class="lesson-detail vortex-detail" data-note-content="equations" aria-label="流体方程">
+        <div class="lesson-top"><span>观察卡片 / 01</span><span>01 — 05</span></div><h3>速度遍布空间，<br><em>压力约束体积。</em></h3>
+        <p>速度场按不可压缩 Navier–Stokes 方程演化：速度输运自身，黏性使速度差扩散，压力投影降低散度；推流时加入局部外力。</p>
+        <div class="vortex-formula">∂u/∂t + (u·∇)u = −∇p + ν∇²u + f<sub>ext</sub><br>∇·u ≈ 0</div>
+        <div class="lesson-metric"><span>当前散度均方根</span><strong id="card-divergence">—</strong></div>
+        <p class="lesson-note">交错网格、半拉格朗日速度输运和有限次压力迭代；散度 RMS 衡量离散场距无散状态的程度，不衡量画面清晰度，也不保证整体精度。开启剖面后，颜色来自当前网格速度的离散旋度 |∇×u|；这不同于被动染料，也不自动识别涡核。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="dye" aria-label="示踪物与体积渲染" hidden>
+        <div class="lesson-top"><span>观察卡片 / 02</span><span>02 — 05</span></div><h3>看得见的颜色，<br><em>不是涡量本身。</em></h3>
+        <p>金色和青色是两种被流场搬运的被动标量。它们不会推动流体，也不等同于涡量、真实烟雾的化学过程或流体界面。</p>
+        <div class="lesson-metric"><span>示踪物积分 A / B</span><strong id="card-mass">—</strong></div>
+        <p class="lesson-note">示踪物由保守有限体积通量输运，仍有数值扩散。体积视图沿视线累积浓度；清晰轮廓叠加的是当前两种染料总浓度的等值面，阈值按当帧峰值归一。它不是物理界面，光照也只是可视化近似。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="rings" aria-label="涡环初态与相互作用" hidden>
+        <div class="lesson-top"><span>观察卡片 / 03</span><span>03 — 05</span></div><h3>初态是环，<br><em>后来交给流场。</em></h3>
+        <p>初始速度由两条带平滑核的涡环诱导场生成，并叠加可调的三维无散扰动；随后各网格速度独立演化，不再假设两个环始终同轴或圆形。</p>
+        <div class="lesson-metric"><span>染料轴向质心 B − A</span><strong id="card-dye-gap">—</strong></div>
+        <p class="lesson-note">正负表示两种染料质心的前后顺序；染料不是涡核，顺序交换不单独证明涡核穿越。相向预设不触发旧涡丝近核暂停；有限网格中的混合不能直接定量预测真实重联。</p>
+        <button type="button" class="lesson-action" data-try-preset="opposed">载入反向相迎初态 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail compare-detail" data-note-content="compare" aria-label="有限时间实验对照" hidden>
+        <div class="lesson-top"><span>观察卡片 / 04</span><span>04 — 05</span></div><h3>保留一组，<br><em>再观察另一组。</em></h3>
+        <p>播放一段后保留参考，再切换预设或数值设置；曲线按模拟时间对齐。新实验恰好到达参考截图时刻时自动留下画面；截图也受视角和显示设置影响。</p>
+        <div class="compare-actions"><button type="button" id="save-reference" disabled>保留当前实验</button><button type="button" id="clear-reference" disabled>清除参考</button></div>
+        <p class="compare-meta" id="reference-meta" role="status">尚未保留参考；记录只在当前页面内保存。</p>
+        <div class="compare-shots">
+          <figure><div class="compare-image"><img id="reference-image" alt="参考实验的实际渲染快照" hidden><span id="reference-placeholder">参考快照</span></div><figcaption>参考 <span id="reference-image-time">—</span></figcaption></figure>
+          <figure><div class="compare-image"><img id="current-image" alt="当前实验在参考时刻的实际渲染快照" hidden><span id="current-placeholder">等待对照时刻</span></div><figcaption>当前 <span id="current-image-time">—</span></figcaption></figure>
+        </div>
+        <div class="compare-metrics" role="group" aria-label="对照曲线指标"><button type="button" data-compare-metric="gap" aria-pressed="true">染料质心差</button><button type="button" data-compare-metric="maxSpeed" aria-pressed="false">最大速度</button></div>
+        <svg class="compare-chart" viewBox="0 0 250 108" role="img" aria-label="参考与当前实验的模拟时间曲线"><path d="M24 11V84H240 M24 47H240" class="compare-grid"/><path id="compare-reference-line" class="compare-reference-line"/><path id="compare-current-line" class="compare-current-line"/><text x="3" y="14" id="compare-axis-high">—</text><text x="3" y="84" id="compare-axis-low">—</text><text x="24" y="101">0</text><text x="240" y="101" text-anchor="end" id="compare-axis-time">t</text></svg>
+        <div class="compare-key"><span><i></i>当前</span><span><i></i>参考</span></div>
+        <p class="compare-result" id="compare-result" role="status">保留参考后，可在同一模拟时间比较。</p>
+        <p class="control-note" id="compare-context">染料质心不是涡核；单次有限时间比较不能证明长期行为。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="limits" aria-label="网格与模型局限" hidden>
+        <div class="lesson-top"><span>观察卡片 / 05</span><span>05 — 05</span></div><h3>更真实的方程，<br><em>仍有有限的精度。</em></h3>
+        <p>盒体六面不可穿透、切向自由滑移；流体撞到墙后会受边界影响。不存在无界空间或无限分辨率。</p>
+        <div class="lesson-metric"><span>当前网格 / 时间步</span><strong id="card-grid">48×32×32 / 0.04</strong></div>
+        <div class="lesson-metric"><span>压力投影迭代 / 上限</span><strong id="card-projection">—</strong></div>
+        <div class="lesson-metric"><span>投影后散度目标</span><strong id="card-projection-target">—</strong></div>
+        <div class="lesson-metric"><span>中心速度 × Δt/h</span><strong id="card-cfl">—</strong></div>
+        <p class="lesson-note">压力使用预条件共轭梯度：目标为投影前散度 RMS 的 0.5%（最低 10⁻⁹），也可能先达到迭代上限。速度比是基于单元中心最大速度的估计，不是标量子步 CFL 上界。有限网格与输运方法仍有误差和耗散。</p>
+        <p class="lesson-note">比较方法：先保留一段参考实验，再只改变网格或时间步，保持初态与黏度不变；在「实验对照」卡查看相同模拟时间的曲线。两档结果接近并不单独证明收敛，也不能保证工程精度。</p>
+      </section>
+      <div class="knowledge-foot"><span>MODEL / 05</span><p>计算盒体 · 无量纲单位<br>实时三维数值实验，不是工程认证求解器。</p></div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">三维流体实验需要 JavaScript。请启用 JavaScript 后重新打开页面。</div></noscript>
+</body>
+</html>

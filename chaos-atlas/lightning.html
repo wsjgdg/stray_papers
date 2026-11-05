@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b171e">
+  <meta name="description" content="通过三维介质击穿生长模型，探索电势、场强与闪电分叉。">
+  <title>三维闪电生长 · Dielectric Breakdown</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23101f29'/%3E%3Cpath d='M22 3 12 21h8l-2 16 12-20h-8z' fill='none' stroke='%238ce8f2' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-23">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="vortex.css?v=20261031-23">
+  <link rel="stylesheet" href="lightning.css?v=20261031-30">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="lightning-model.js?v=20261031-30"></script>
+  <script defer src="lightning-appearance.js?v=20261031-30"></script>
+  <script defer src="lightning-thermal.js?v=20261031-30"></script>
+  <script defer src="lightning-event.js?v=20261031-30"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="lightning.js?v=20261031-30"></script>
+</head>
+<body class="vortex-lab lightning-lab">
+<a class="skip-link" href="#lightning-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#lightning-scene" data-jump="stage"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><path d="m22 7-8 13h6l-2 13 9-15h-6z"/></svg></span><span><strong>CHAOS / LAB</strong><small>三维闪电生长</small></span></a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status paused"><span class="status-light"></span><span id="header-status">正在建立电势场</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame">
+    <div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="ising.html"><span>自旋晶格</span><small>08</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div>
+    <input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list">
+    </div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓ 拖动滑块或滚动查看 · 8 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" aria-label="三维闪电生长实验台">
+  <h1 class="visually-hidden">三维闪电生长：电势场与介质击穿模型</h1>
+  <article class="model-panel" id="lightning-model-panel" aria-label="三维电极和电弧生长场景">
+    <div class="model-stage" id="lightning-stage" data-status="loading">
+      <canvas id="lightning-scene" data-lab-canvas tabindex="0" aria-label="三维电弧生长模型。拖动旋转视角，滚轮缩放；方向键旋转，加减号缩放，空格播放或暂停。"></canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">FIELD INITIALIZING</b></div><div><span id="model-scope">DBM 示意</span> <i>/</i> 非完整雷电</div></div>
+      <div class="compact-model-label" id="compact-model-label">DBM 示意 · 非完整雷电</div>
+      <div class="vortex-index" aria-hidden="true"><span>FIG.</span><strong>07</strong><span>— ELECTRIC BREAKDOWN</span></div>
+      <div class="vortex-caption" aria-hidden="true"><span id="stage-phase">01 / FIELD-DRIVEN GROWTH</span><strong id="stage-title">电场驱动的随机击穿</strong><small id="appearance-caption">节点与分叉由模型计算 · 合成云与光效为表现</small></div>
+      <div id="reference-label" class="discharge-label reference-label" hidden aria-hidden="true"><b>对照 A</b><span id="reference-label-detail">η = 1.0</span></div>
+      <div id="primary-label" class="discharge-label primary-label" hidden aria-hidden="true"><b>实验 B</b><span id="primary-label-detail">η = 4.0</span></div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend lightning-legend"><span id="channel-legend"><i class="legend-channel"></i> 已生长通道</span><span><i class="legend-target"></i> <span id="target-legend-text">正极 / 下极板</span></span><span id="candidate-legend"><i class="legend-frontier"></i> 候选位置</span><span id="event-legend" hidden><i class="legend-negative"></i>差值减少 <i class="legend-positive"></i>增加 · <b id="event-legend-scale"></b></span><span id="return-legend" hidden><i class="legend-return"></i><b id="return-legend-label">回击色阶</b></span></div><div class="stage-instruction" id="stage-instruction">↔ 拖动旋转 · 滚轮缩放</div></div>
+      <div class="stage-error" id="stage-error" role="status" aria-live="polite"><div><p id="stage-error-text">正在计算三维电势场与初始路径，请稍候……</p></div></div>
+    </div>
+  </article>
+  <div class="lab-bottom">
+    <div class="stage-fallback" id="stage-fallback" role="status" hidden>WebGL 不可用，已切换到相同数据的 Canvas 投影。</div>
+    <div class="stage-notice" id="stage-notice" role="status" aria-live="polite" hidden></div>
+    <section class="telemetry" id="lightning-telemetry" aria-label="电弧实时数据">
+      <div class="telemetry-item"><span id="metric-label-1">生长步数</span><strong id="steps-readout">—</strong></div>
+      <div class="telemetry-item"><span id="metric-label-2">候选节点</span><strong id="frontier-readout">—</strong></div>
+      <div class="telemetry-item"><span id="metric-label-3">分叉节点</span><strong id="junction-readout">—</strong></div>
+      <div class="telemetry-item"><span id="metric-label-4">最大电势残差</span><strong id="residual-readout">—</strong></div>
+    </section>
+    <div class="transport" id="transport-controls" aria-label="生长和视角控制">
+      <div class="transport-left">
+        <button type="button" id="play" class="play-button" aria-label="播放生长" disabled><span id="play-symbol" aria-hidden="true">▶</span><span id="play-text">播放</span></button>
+        <button type="button" class="tool-button" id="step" aria-label="生长一步" title="生长一步" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button>
+        <button type="button" class="tool-button" id="reset" aria-label="按当前参数从零开始" title="按当前参数从零开始" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button>
+      </div>
+      <div class="transport-right"><div class="speed-options" id="speed-controls" role="group" aria-label="目标生长速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="闪电生长控制台">
+      <div class="panel-top"><div><span class="panel-kicker">BREAKDOWN CONSOLE</span><h2>闪电控制台<span>。</span></h2></div></div>
+      <p class="panel-description">这是随机击穿教学模型，不是完整真实雷电。</p>
+      <a class="fluid-mode-link" href="streamer.html">↗ 局部流注物理：电子、离子与自洽场</a>
+      <div class="control-section appearance-section"><div class="control-heading"><span>路径呈现</span><small>DISPLAY ONLY</small></div>
+        <div class="ring-orientation" role="group" aria-label="路径显示方式"><button type="button" data-appearance="glow" aria-pressed="true">放电观感</button><button type="button" data-appearance="grid" aria-pressed="false">原始网格</button></div>
+        <p class="control-note">节点和分叉来自计算；合成云背景、辉光、线宽及节点间细小弯折是视觉表现，不代表真实电流或云地雷电。切换不会改变求解。</p>
+      </div>
+      <div class="control-section return-controls" id="return-controls"><div class="control-heading"><span>回击传播</span><small>BRANCHED RLC</small></div>
+        <p class="control-note">将已接通的树当作假设先导通道，预置负电压后接地；计算有限速度的电流扰动。参数为等效假设，不是完整雷电或实测预测。</p>
+        <button type="button" class="lightning-action" id="return-example">↗　快速接通并演示回击</button>
+        <div class="slider-row second"><label for="return-height">假设极板间距 / m</label><output id="return-height-value" for="return-height">2000</output></div><input id="return-height" class="range" type="range" min="500" max="5000" step="100" value="2000">
+        <div class="slider-row second"><label for="return-voltage">初始负电压幅值 / MV</label><output id="return-voltage-value" for="return-voltage">10.0</output></div><input id="return-voltage" class="range" type="range" min="1" max="30" step="1" value="10">
+        <details class="return-advanced"><summary>等效线参数与接地</summary>
+          <div class="slider-row second"><label for="return-resistance">单位长度电阻 / Ω·m⁻¹</label><output id="return-resistance-value" for="return-resistance">0.10</output></div><input id="return-resistance" class="range" type="range" min="0.02" max="0.8" step="0.02" value="0.10">
+          <div class="slider-row second"><label for="return-inductance">单位长度电感 / μH·m⁻¹</label><output id="return-inductance-value" for="return-inductance">2.0</output></div><input id="return-inductance" class="range" type="range" min="1" max="8" step="0.5" value="2">
+          <div class="slider-row second"><label for="return-capacitance">单位长度电容 / pF·m⁻¹</label><output id="return-capacitance-value" for="return-capacitance">50</output></div><input id="return-capacitance" class="range" type="range" min="20" max="120" step="5" value="50">
+          <div class="slider-row second"><label for="return-ground">接地电阻 / Ω</label><output id="return-ground-value" for="return-ground">10</output></div><input id="return-ground" class="range" type="range" min="0" max="100" step="5" value="10">
+          <p class="control-note">等效线的波速和特性阻抗由 L′、C′ 决定；这些并非从 DBM 或照片反推的空气参数。</p>
+        </details>
+        <div class="return-parameter" id="return-parameter">等效波速 1.00×10⁸ m/s · 阻抗 200 Ω</div>
+        <label class="quality-label" for="return-duration">求解时长 <small>物理模型时间</small></label><select id="return-duration"><option value="20">20 μs</option><option value="50" selected>50 μs</option><option value="100">100 μs</option></select>
+        <div class="study-actions"><button type="button" id="return-compute" disabled>后台计算回击</button><button type="button" id="return-cancel" disabled>取消</button></div>
+        <div class="study-results return-status" id="return-status" role="status" aria-live="polite">等待计算通道接触目标电极。</div>
+        <div class="slider-row second"><label for="return-probe">主通道探针 <small>沿接地点起的路径长度</small></label><output id="return-probe-value" for="return-probe">—</output></div><input id="return-probe" class="range" type="range" min="0" max="100" step="1" value="50" disabled>
+        <div class="return-wave-head"><span>电流随时间</span><span><i class="wave-ground"></i>接地点　<i class="wave-probe"></i>探针</span></div>
+        <canvas id="return-chart" class="return-chart" width="540" height="176" role="img" aria-label="接地点和主通道探针的电流曲线；尚未计算。"></canvas>
+        <div class="slider-row second"><label for="return-time">回击时间 / μs</label><output id="return-time-value" for="return-time">—</output></div><input id="return-time" class="range" type="range" min="0" max="240" step="1" value="0" disabled>
+        <label class="quality-label" for="return-encoding">通道色阶 <small>非线性映射，非光谱</small></label><select id="return-encoding"><option value="current">瞬时电流幅值 |I|</option><option value="power">单位长度焦耳功率 I²R′</option><option value="heat">累计焦耳能量 / 长度</option></select>
+        <p class="control-note">色阶以参考电流 |V₀|/√(L′/C′) 定标；累计热参考 10 μs。超过色阶会饱和，颜色不是实际发光。</p>
+        <label class="quality-label" for="return-rate">基础回放速率 <small>可用底部倍速调整</small></label><select id="return-rate"><option value="2">每秒 2 μs</option><option value="5" selected>每秒 5 μs</option><option value="15">每秒 15 μs</option></select>
+        <div class="thermal-actions return-actions"><button type="button" id="return-play" disabled aria-pressed="false">播放回击</button><button type="button" id="return-step" disabled>回击单步</button><button type="button" id="return-reset" disabled>回到起点</button><button type="button" id="return-view" disabled aria-pressed="false">显示回击色阶</button></div>
+        <div class="thermal-readout return-readout" id="return-readout">尚未计算回击。</div>
+        <p class="control-note">下极接地，源端与悬空支路在模型中开路；开路支路可有瞬态电流；反射造成的电流反向不是再次闪击。曲线正向约定为接地点流入通道；电流与电压在交错的半步时间上计算。颜色、亮度及云是表现，不是求出的光谱；不求解等离子体或雷声。</p>
+      </div>
+      <div class="control-section thermal-controls"><div class="control-heading"><span>接通后的电热</span><small>REDUCED CIRCUIT</small></div>
+        <p class="control-note">接触正极后，独立电阻网络计算电流和温度；开路支路的稳态电流为零。均为无量纲示例，不是雷电回击。</p>
+        <button type="button" class="lightning-action" id="thermal-example">↗　快速网格：预演至接通</button>
+        <div class="slider-row second"><label for="thermal-voltage">电源电压</label><output id="thermal-voltage-value" for="thermal-voltage">2.0</output></div><input id="thermal-voltage" class="range" type="range" min="0" max="5" step="0.1" value="2">
+        <div class="slider-row second"><label for="thermal-cooling">散热系数</label><output id="thermal-cooling-value" for="thermal-cooling">0.50</output></div><input id="thermal-cooling" class="range" type="range" min="0" max="3" step="0.05" value="0.5">
+        <label class="quality-label" for="thermal-encoding">通道颜色依据 <small>固定无量纲色阶</small></label><select id="thermal-encoding"><option value="temperature">温度 T：1–5</option><option value="current">电流 |I|：0–3</option><option value="power">单位长度焦耳功率：0–5</option></select>
+        <div class="thermal-actions"><button type="button" id="thermal-play" disabled aria-pressed="false">开始电热</button><button type="button" id="thermal-step" disabled>电热单步</button><button type="button" id="thermal-reset" disabled>重置电热</button><button type="button" id="thermal-view" disabled aria-pressed="false">显示电热色阶</button></div>
+        <div class="thermal-readout" id="thermal-readout">等待计算通道接触正极。</div>
+        <p class="control-note">颜色与亮度按选中的温度、电流或单位长度功率非线性映射（超出色阶会饱和），并非计算出的光谱或发光强度；DBM 路径不受此过程改变。</p>
+      </div>
+      <div class="control-section event-controls"><div class="control-heading"><span>单次事件的前后场</span><small>BEFORE / AFTER</small></div>
+        <p class="control-note">暂停后捕获下一次真实生长；剖面与探针比较同一事件。已接触电极时模型不求后场，因此不显示伪差值。</p>
+        <button type="button" class="lightning-action" id="event-capture" disabled>◉　捕获下一生长事件</button>
+        <label class="quality-label" for="event-view">剖面内容</label><select id="event-view" disabled><option value="current">当前电势</option><option value="before">事件前电势</option><option value="after">事件后电势</option><option value="deltaPhi">电势差 Δφ</option><option value="deltaE">场强差 Δ|E|</option></select>
+        <div class="slider-row second"><label for="event-x">探针 X</label><output id="event-x-value" for="event-x">—</output></div><input id="event-x" class="range" type="range" min="0" max="100" step="1" value="50" disabled>
+        <div class="slider-row second"><label for="event-y">探针 Y</label><output id="event-y-value" for="event-y">—</output></div><input id="event-y" class="range" type="range" min="0" max="100" step="1" value="50" disabled>
+        <div class="study-results" id="event-readout">尚未捕获事件。</div>
+        <p class="control-note" id="event-scale">剖面 Z 使用下方「电场与精度」中的滑杆；场强只在事件前后均为空间的内部节点计算。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>实验预设</span><small>FIELD / GROWTH</small></div>
+        <div class="preset-grid vortex-presets lightning-presets" role="group" aria-label="闪电生长预设">
+          <button type="button" data-preset="branch" class="active" aria-pressed="true"><span aria-hidden="true">ϟ</span>分枝闪电</button>
+          <button type="button" data-preset="needle" aria-pressed="false"><span aria-hidden="true">↯</span>尖端偏选</button>
+          <button type="button" data-preset="bush" aria-pressed="false"><span aria-hidden="true">✣</span>密集分叉</button>
+          <button type="button" data-preset="offset" aria-pressed="false"><span aria-hidden="true">↘</span>错位电极</button>
+        </div>
+        <p class="preset-detail" id="preset-description">已从初态计算至第 120 步，可继续生长；重置从零开始。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>指针工具</span><small>POINTER / TOUCH</small></div>
+        <div class="ring-orientation lightning-tools" role="group" aria-label="实验台指针工具">
+          <button type="button" data-tool="orbit" aria-pressed="true">旋转视角</button>
+          <button type="button" data-tool="source" aria-pressed="false">移动负极</button>
+          <button type="button" data-tool="target" aria-pressed="false">移动正极</button>
+          <button type="button" data-tool="probe" aria-pressed="false">候选探针</button>
+        </div>
+        <p class="control-note" id="tool-description">拖动空白处旋转模型，滚轮或下方滑块缩放。</p>
+        <button type="button" class="lightning-action" id="probe-strongest">◈　探测概率最大的候选位置</button>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>生长规则</span><small>STOCHASTIC DBM</small></div>
+        <div class="slider-row"><label for="eta">场强偏选指数 η</label><output id="eta-value" for="eta">4.0</output></div><input id="eta" class="range" type="range" min="0" max="6" step="0.1" value="4">
+        <p class="parameter-hint">η = 0：每条候选连接等概率；η 越大，越偏向场强较大的连接。</p>
+        <label class="quality-label" for="random-seed">随机种子 <small>相同设置可复现</small></label>
+        <div class="seed-input"><input id="random-seed" type="number" min="1" max="4294967295" step="1" value="19"><button type="button" id="new-seed">换一个</button></div>
+        <p class="control-note">调 η 不重置已有路径；已提交的生长步完成后更新概率。换种子从初态重算。每步是一个生长事件，并非真实放电时间。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>电极形状与尺寸</span><small>VOXEL BOUNDARY</small></div>
+        <label class="quality-label" for="electrode-shape">两侧电极形状 <small>实际参与场求解</small></label><select id="electrode-shape"><option value="needle">尖针 · 锥形</option><option value="blunt">钝头 · 圆端</option></select>
+        <div class="slider-row second"><label for="electrode-length">伸入长度 / 极板间距</label><output id="electrode-length-value" for="electrode-length">0.11</output></div><input id="electrode-length" class="range" type="range" min="0.08" max="0.20" step="0.01" value="0.11">
+        <div class="slider-row second"><label for="electrode-radius">基部半径 / 极板间距</label><output id="electrode-radius-value" for="electrode-radius">0.030</output></div><input id="electrode-radius" class="range" type="range" min="0.02" max="0.10" step="0.005" value="0.03">
+        <p class="control-note" id="electrode-cells">连续尺寸会吸附到网格，粗网格不一定能分辨小半径变化。两侧同步修改后重算；物理体素参与边界，非绘图装饰。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>电极位置</span><small>REAL BOUNDARY</small></div>
+        <div class="slider-row"><label for="source-x">负极 X</label><output id="source-x-value" for="source-x">0.00</output></div><input id="source-x" class="range" type="range" min="-100" max="100" step="1" value="0">
+        <div class="slider-row second"><label for="source-z">负极 Z</label><output id="source-z-value" for="source-z">0.00</output></div><input id="source-z" class="range" type="range" min="-100" max="100" step="1" value="0">
+        <div class="slider-row second"><label for="target-x">正极 X</label><output id="target-x-value" for="target-x">0.00</output></div><input id="target-x" class="range" type="range" min="-100" max="100" step="1" value="0">
+        <div class="slider-row second"><label for="target-z">正极 Z</label><output id="target-z-value" for="target-z">0.00</output></div><input id="target-z" class="range" type="range" min="-100" max="100" step="1" value="0">
+        <p class="control-note">电极在两块固定电势极板之间移动；位置和形状吸附到三维网格，修改后从初态重算。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>同种子对照</span><small>CONTROLLED PAIR</small></div>
+        <div class="slider-row"><label for="reference-eta">对照 A 的 η</label><output id="reference-eta-value" for="reference-eta">1.0</output></div><input id="reference-eta" class="range" type="range" min="0" max="6" step="0.1" value="1.0">
+        <button type="button" class="lightning-action" id="compare-toggle" aria-pressed="false">◉　开启双电弧对照</button>
+        <p class="control-note">A 与 B 从同一初态和随机种子分别求解，按生长步数同步；先接触极板的一侧停止。开启或修改 A 会重置。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>电场与精度</span><small>NUMERICS / VIEW</small></div>
+        <div class="display-switches"><label for="show-candidates"><span>显示候选节点</span><input id="show-candidates" type="checkbox"><b aria-hidden="true"></b></label><label for="show-slice"><span>显示电势剖面</span><input id="show-slice" type="checkbox"><b aria-hidden="true"></b></label></div>
+        <div class="slider-row second"><label for="slice-z">剖面位置 Z</label><output id="slice-z-value" for="slice-z">0.00</output></div><input id="slice-z" class="range" type="range" min="-100" max="100" step="1" value="0" disabled>
+        <label class="quality-label" for="grid-quality">三维网格 <small>更密更慢</small></label><select id="grid-quality"><option value="quick">快速 · 17 × 25 × 17</option><option value="standard" selected>标准 · 25 × 37 × 25</option><option value="fine">精细 · 33 × 49 × 33</option><option value="ultra">高密 · 41 × 61 × 41</option></select>
+        <label class="quality-label" for="solver-accuracy">最大电势残差 <small>越小越慢</small></label><select id="solver-accuracy"><option value="0.0001">快速 · 10⁻⁴</option><option value="0.00001" selected>标准 · 10⁻⁵</option><option value="0.000001">精细 · 10⁻⁶</option></select>
+        <div class="slider-row second"><label for="camera-zoom">观察缩放</label><output id="camera-zoom-value" for="camera-zoom">1.00×</output></div><input id="camera-zoom" class="range" type="range" min="0.55" max="1.65" step="0.01" value="1">
+        <p class="control-note">电势剖面使用 0–1 的固定色阶；候选点亮度按当帧最大概率归一化。网格与精度修改会重置。</p>
+        <div class="lightning-study"><h3>真实网格对照 <small>BACKGROUND STUDY</small></h3>
+          <label class="quality-label" for="grid-pair">对照网格</label><select id="grid-pair"><option value="quick:standard">快速 / 标准</option><option value="standard:fine">标准 / 精细</option><option value="fine:ultra">精细 / 高密</option></select>
+          <label class="quality-label" for="grid-events">每组事件预算 <small>接触时提前停止</small></label><input id="grid-events" class="number-input" type="number" min="0" max="50" step="1" value="20">
+          <div class="study-actions"><button type="button" id="grid-study">后台计算对照</button><button type="button" id="grid-cancel" disabled>取消</button></div>
+          <div class="study-results" id="grid-results">使用当前电极、η 和种子，各自独立求解两套网格。</div>
+          <p class="control-note">相同事件数不等于相同物理时间或长度；网格、针极取整及随机路径均可能改变。此对照不证明严格收敛。</p>
+        </div>
+        <div class="lightning-study"><h3>多随机种子统计 <small>ENSEMBLE / BACKGROUND</small></h3>
+          <p class="control-note">当前 η 与对照 η 使用相同的一组种子，各自独立从初态生长。统计不改变主场景。</p>
+          <label class="quality-label" for="stats-grid">统计网格 <small>越密计算越慢</small></label><select id="stats-grid"><option value="quick">快速 · 17 × 25 × 17</option><option value="standard">标准 · 25 × 37 × 25</option><option value="fine">精细 · 33 × 49 × 33</option><option value="ultra">高密 · 41 × 61 × 41</option></select>
+          <label class="quality-label" for="stats-eta">对照 η <small>主实验 η：<span id="stats-main-eta">4.0</span></small></label><input id="stats-eta" class="number-input" type="number" min="0" max="6" step="0.1" value="1.0">
+          <label class="quality-label" for="stats-samples">每组样本数 <small>1–24</small></label><input id="stats-samples" class="number-input" type="number" min="1" max="24" step="1" value="6">
+          <label class="quality-label" for="stats-events">每个样本事件预算 <small>1–300</small></label><input id="stats-events" class="number-input" type="number" min="1" max="300" step="1" value="80">
+          <div class="study-actions"><button type="button" id="stats-run">后台统计两组 η</button><button type="button" id="stats-cancel" disabled>取消</button></div>
+          <div class="study-results" id="stats-results">尚未运行；起始种子使用当前实验的随机种子。</div><div class="visually-hidden" id="study-announcement" role="status" aria-live="polite"></div>
+          <p class="control-note">未在预算内接通的样本为截尾，不代表永不接通；均值包含截尾样本。Wilson 区间假设样本近似独立，不能代替组间显著性检验；有限样本和离散模型不能预测真实雷电。</p>
+        </div>
+      </div>
+      <div class="console-foot"><span>✳</span>这是随机击穿模型，不是实际雷电的等离子体求解。</div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h2 id="knowledge-title">知识卡片<span>。</span></h2></div></div>
+      <p class="panel-description">从电势到概率，从一个节点到一条路径。</p>
+      <div class="lesson-tabs vortex-tabs" role="group" aria-label="选择知识卡片">
+        <button type="button" data-note="growth" class="active" aria-pressed="true"><span class="lesson-icon">ϟ</span><span><strong>电弧怎样生长</strong><small>电场、概率与分叉</small></span><b>01</b></button>
+        <button type="button" data-note="probe" aria-pressed="false"><span class="lesson-icon">◎</span><span><strong>候选点探针</strong><small>测量位置、场强与概率</small></span><b>02</b></button>
+        <button type="button" data-note="compare" aria-pressed="false"><span class="lesson-icon">≋</span><span><strong>同种子对照</strong><small>控制 η，比较路径</small></span><b>03</b></button>
+        <button type="button" data-note="limits" aria-pressed="false"><span class="lesson-icon">∇</span><span><strong>电场与模型边界</strong><small>残差、离散与适用范围</small></span><b>04</b></button>
+        <button type="button" data-note="thermal" aria-pressed="false"><span class="lesson-icon">♨</span><span><strong>电流与焦耳热</strong><small>导通树的降阶电路</small></span><b>05</b></button>
+        <button type="button" data-note="event" aria-pressed="false"><span class="lesson-icon">Δ</span><span><strong>单次生长的屏蔽</strong><small>同一事件的前后场</small></span><b>06</b></button>
+        <button type="button" data-note="stats" aria-pressed="false"><span class="lesson-icon">Σ</span><span><strong>随机结果与统计</strong><small>种子、截尾与不确定性</small></span><b>07</b></button>
+        <button type="button" data-note="return" aria-pressed="false"><span class="lesson-icon">↟</span><span><strong>回击如何传播</strong><small>传输线、电荷与能量</small></span><b>08</b></button>
+      </div>
+      <section class="lesson-detail vortex-detail" data-note-content="growth" aria-label="电弧生长规则">
+        <div class="lesson-top"><span>观察卡片 / 01</span><span>01 — 08</span></div><h3>路径不是画出来，<br><em>是逐步选出来。</em></h3>
+        <p>电极和已有通道固定电势；其余空间求解三维拉普拉斯方程。通道周围每条候选连接，按局部场强的 η 次方抽样。</p>
+        <div class="vortex-formula">∇²φ ≈ 0　　E = −∇φ<br>P(连接) ∝ (Δφ / d)<sup>η</sup></div>
+        <div class="lesson-metric"><span>当前 η / 候选节点</span><strong id="card-growth">—</strong></div>
+        <p class="lesson-note">每个候选节点可通过面邻或斜邻连接已有通道，距离分别为 h、√2h；节点总概率是各连接概率之和。η 越大通常越偏爱强场，但单次结果不代表统计规律。</p>
+        <p class="lesson-note">伸出的尖端附近场强通常较大；已形成的通道会改变电势，使内侧分支的候选位置可能受到<strong>电场屏蔽</strong>。用探针比较外侧尖端和分叉内侧：概率也受连接数与 η 影响，并非每个点都符合这一趋势。</p>
+        <button type="button" class="lesson-action" id="growth-field-toggle" aria-pressed="false">显示电势剖面 <span aria-hidden="true">↗</span></button>
+        <button type="button" class="lesson-action" data-note-action="probe">选择候选探针 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="probe" aria-label="候选点与局部电场" hidden>
+        <div class="lesson-top"><span>观察卡片 / 02</span><span>02 — 08</span></div><h3>候选点有多亮，<br><em>取决于真实概率。</em></h3>
+        <p>选「候选探针」后点击或触摸点位；也可直接选择当下概率最大的节点。探测会暂停；已提交的生长步完成后再读取，不改变电势或已有路径。</p>
+        <div class="probe-box" id="probe-readout" role="status">尚未选择候选节点。</div>
+        <div class="lesson-metric"><span>探针电势 φ</span><strong id="probe-potential">—</strong></div>
+        <div class="lesson-metric"><span>场强 · 面邻 / 斜邻</span><strong id="probe-field">—</strong></div>
+        <div class="lesson-metric"><span>概率 / 面邻·斜邻连接数</span><strong id="probe-probability">—</strong></div>
+        <p class="lesson-note">场强分别为 Δφ/h、Δφ/(√2h)；无该类型连接时显示「—」。这不是全空间最大场强。亮度按当下最大概率归一并取平方根，读数是该节点下一步被选中的实际概率。</p>
+        <button type="button" class="lesson-action" id="probe-strongest-card">探测概率最大的候选点 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="compare" aria-label="同种子实验对照" hidden>
+        <div class="lesson-top"><span>观察卡片 / 03</span><span>03 — 08</span></div><h3>相同初态，<br><em>不同的偏选规则。</em></h3>
+        <p>开启对照时，两侧具有相同电极、网格、初态与随机种子；A 的 η 固定，B 使用当前 η。两侧独立求场，逐个事件同步；若中途改变 B 的 η，需重置才能比较从头恒定的规则。</p>
+        <div class="lesson-metric"><span>对照 A · 步数 / 分叉</span><strong id="compare-a">—</strong></div>
+        <div class="lesson-metric"><span>实验 B · 步数 / 分叉</span><strong id="compare-b">—</strong></div>
+        <p class="lesson-note" id="compare-result">开启对照后从第 0 步开始。概率不同会使相同随机数选中不同位置，路径和后续电场随之分开。</p>
+        <button type="button" class="lesson-action" id="compare-card-action">开启双电弧对照 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="limits" aria-label="电势方程与数值限制" hidden>
+        <div class="lesson-top"><span>观察卡片 / 04</span><span>04 — 08</span></div><h3>电场是计算的，<br><em>光晕是表现。</em></h3>
+        <p>上极板和通道 φ=0，下极板和正极 φ=1；四个侧壁绝缘。每生长一步后，迭代至电势残差达标，才继续抽样。</p>
+        <div class="lesson-metric"><span>网格 / 电势残差</span><strong id="card-accuracy">—</strong></div>
+        <p class="lesson-note">18 邻接离散场中，面邻权重 1、斜邻权重 1/2；残差是自由节点与加权邻点均值之差的最大值，不是整体误差上界。电极目标尺寸跨网格保持不变，但体素吸附会改变实际边界，不是严格的单变量收敛实验。</p>
+        <p class="lesson-note">DBM 生长是准静态随机介质击穿模型，不含电离、电流、发热、声音或电磁波；接通后的直流电热与回击 RLC 是独立的降阶扩展。合成云背景、辉光、线宽和网格间的细小弯折仅作视觉表现；「原始网格」显示求解连接。接触正极后停止，显示接触前最后一个电势场。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="thermal" aria-label="简化电阻网络和焦耳热" hidden>
+        <div class="lesson-top"><span>观察卡片 / 05</span><span>POST-CONTACT</span></div><h3>接通后才有电流，<br><em>热来自电路计算。</em></h3>
+        <p>把已接通的击穿树暂时视为电阻网络，并串联固定镇流电阻；恒压源驱动唯一的源—目标路径。未接通的悬空支路在这个直流模型中没有电流。</p>
+        <div class="vortex-formula">I = V / (R<sub>源</sub> + ΣR<sub>通路</sub>)<br>Pᵢ = Iᵢ²Rᵢ　 Cᵢ dTᵢ/dt = Pᵢ − 散热</div>
+        <div class="lesson-metric"><span>电流 / 峰值温度</span><strong id="thermal-card">—</strong></div>
+        <p class="lesson-note">通道电阻随示例温度增长，热容量与段长成比例；电极体素视为等势、不模拟其内部电流分布。颜色可由实际计算的温度、电流或单位长度功率映射；不计算空气光谱、等离子体、先导或回击，也不修改 DBM 电势。</p>
+        <button type="button" class="lesson-action" id="thermal-card-example">预演至接通并使用电热控制 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="event" aria-label="生长前后的电场屏蔽" hidden>
+        <div class="lesson-top"><span>观察卡片 / 06</span><span>ONE EVENT</span></div><h3>一段通道出现，<br><em>周围的场随之改变。</em></h3>
+        <p>在一个随机选择后，将新节点加入等势通道，再重新求解电势。前后剖面的差值来自这两次真实求解：暖色为增加，冷色为减少。</p>
+        <div class="vortex-formula">Δφ = φ<sub>后</sub> − φ<sub>前</sub><br>Δ|E| = |∇φ<sub>后</sub>| − |∇φ<sub>前</sub>|</div>
+        <p class="lesson-note">场强由三维中心差分计算；只比较前后均为空间的内部格点。候选概率仅在该节点确为候选时显示，不能把非候选当作已测概率。</p>
+        <p class="lesson-note">这是离散模型的局部场重排，不是已证明的真实雷电测量。继续生长或更改模型参数会清除旧对照。</p>
+        <button type="button" class="lesson-action" id="event-card-capture">捕获下一次生长事件 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="stats" aria-label="随机种子的有限样本统计" hidden>
+        <div class="lesson-top"><span>观察卡片 / 07</span><span>ENSEMBLE</span></div><h3>一次分叉是故事，<br><em>多次重复才有统计。</em></h3>
+        <p>不同种子产生不同随机击穿树；两组使用相同种子和电极边界，但按照各自的 η 独立求场和抽样。比较分叉节点数、实际生长键的总长度与预算内接通比例。</p>
+        <div class="vortex-formula">接通比例 = 预算内接通数 / 已完成样本数<br>均值 ± 样本标准差　·　接通率 Wilson 近似区间</div>
+        <p class="lesson-note">事件预算内未接通的运行是截尾样本；长度和分叉只统计到截尾时。样本数小时区间可能很宽，不应仅凭一组数字认定 η 的趋势或真实闪电规律。</p>
+        <button type="button" class="lesson-action" id="stats-card-run">使用控制台设置开始统计 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="return" aria-label="回击的等效传输线模型" hidden>
+        <div class="lesson-top"><span>观察卡片 / 08</span><span>RETURN STROKE</span></div><h3>接地的影响，<br><em>不是同时到达全树。</em></h3>
+        <p>以一棵已接通的 DBM 树为假设通道，给它预置负电压；在地面闭合后，电压与电流扰动沿每条等效 RLC 线传播，并在分叉和开路端反射。</p>
+        <div class="vortex-formula">∂V/∂s = −L′∂I/∂t − R′I<br>∂I/∂s = −C′∂V/∂t<br>v = 1 / √(L′C′)</div>
+        <div class="lesson-metric"><span>波速 / 当前探针电流</span><strong id="return-card">—</strong></div>
+        <div class="lesson-metric"><span>悬空支路：回击 / 直流</span><strong id="return-comparison">—</strong></div>
+        <p class="lesson-note">地面流入方向约定为正；电流波的传播不等于电子运动轨迹。与上方直流电阻模型不同，悬空支路可因等效电容充放电而产生瞬态电流；两模型单位不同，只比较是否有支路电流，不比较数值大小。</p>
+        <p class="lesson-note">线长、电压和 R′L′C′ 均为假设；通道电离、三维电磁辐射、气体动力学和真实光谱未计算。底部色阶不是实测亮度，也不能用于雷击预测。</p>
+        <button type="button" class="lesson-action" id="return-card-example">预演接通并演示回击 <span aria-hidden="true">↗</span></button>
+      </section>
+      <div class="knowledge-foot"><span>MODEL / 07</span><p>三维拉普拉斯场 · 无量纲单位<br>教学模型，不用于真实雷击预测。</p></div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">三维闪电实验需要 JavaScript。请启用 JavaScript 后重新打开。</div></noscript>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101b1c">
+  <meta name="description" content="九个动力学、场与时空实验：从空间摆、涡环和自旋晶格，到近光速观察，探索彼此之间的知识联系。">
+  <title>动力学与时空实验室 · 九个实验，一张知识图谱</title>
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-23">
+  <link rel="stylesheet" href="overview.css?v=20261105-1">
+</head>
+<body>
+  <a class="skip-link" href="#experiments">跳转到九个实验</a>
+  <header class="site-header" id="top">
+    <div class="shell header-inner">
+      <a class="identity" href="#top">
+        <span class="identity-mark" aria-hidden="true"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/><ellipse cx="22" cy="22" rx="8" ry="18" transform="rotate(50 22 22)"/><circle cx="22" cy="22" r="2"/><circle cx="11" cy="13" r="1.7"/></svg></span>
+        <span><strong>CHAOS / LAB</strong><small>动力学与时空实验室</small></span>
+      </a>
+      <nav class="header-links" aria-label="总览页导航"><a href="#atlas">知识图谱</a><a href="#experiments">全部实验</a><a href="#connections">探索路线</a></nav>
+      <a class="header-action" href="#experiments"><span>开始探索</span><span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero shell" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-line"></span>AN INTERACTIVE ATLAS <span class="eyebrow-dim">/ 01 — 09</span></div>
+        <p class="hero-prelude">从一颗摆球，到光抵达的世界</p>
+        <h1 id="hero-title">观察运动，<br>理解<span>世界。</span></h1>
+        <p class="hero-english" lang="en">A field guide to <em>how things move.</em></p>
+        <p class="hero-description">九个可以亲手改变的实验，串起动力学、场、统计物理与时空。调整一个条件，看看轨迹、结构与光如何回应。</p>
+        <div class="hero-actions"><a class="primary-action" href="#experiments">探索九个实验 <span aria-hidden="true">↘</span></a><a class="secondary-action" href="#connections">先看看它们的联系 <span aria-hidden="true">→</span></a></div>
+        <div class="hero-stats" aria-label="总览内容"><div><strong>09</strong><span>个交互实验</span></div><div><strong>03</strong><span>条探索路线</span></div><div><strong>01</strong><span>张知识图谱</span></div></div>
+      </div>
+      <div class="map-panel" id="atlas">
+        <div class="map-heading"><div><span class="micro-label">THE KNOWLEDGE ATLAS <i>/</i> 01—09</span><h2>一张图，看见联系<span>。</span></h2></div><span class="map-heading-index" aria-hidden="true">FIG. A</span></div>
+        <p class="map-instruction" id="map-instruction">点选节点查看关联；键盘可用方向键切换。</p>
+        <fieldset class="atlas-fieldset" aria-describedby="map-instruction"><legend class="sr-only">选择一个实验，查看与其他实验的联系</legend>
+          <input class="map-input" type="radio" name="atlas-node" id="node-01" value="01" checked>
+          <input class="map-input" type="radio" name="atlas-node" id="node-02" value="02">
+          <input class="map-input" type="radio" name="atlas-node" id="node-03" value="03">
+          <input class="map-input" type="radio" name="atlas-node" id="node-04" value="04">
+          <input class="map-input" type="radio" name="atlas-node" id="node-05" value="05">
+          <input class="map-input" type="radio" name="atlas-node" id="node-06" value="06">
+          <input class="map-input" type="radio" name="atlas-node" id="node-07" value="07">
+          <input class="map-input" type="radio" name="atlas-node" id="node-08" value="08">
+          <input class="map-input" type="radio" name="atlas-node" id="node-09" value="09">
+          <div class="map-visual">
+            <svg class="map-lines" viewBox="0 0 600 400" preserveAspectRatio="none" aria-hidden="true">
+              <ellipse class="map-orbit" cx="300" cy="200" rx="265" ry="158"/><ellipse class="map-orbit inner" cx="300" cy="200" rx="170" ry="113"/>
+              <path class="map-edge" data-nodes="01 02" d="M 90 84 Q 164.0 80.1 234 56"/>
+              <path class="map-edge" data-nodes="01 03" d="M 90 84 Q 255.8 101.1 420 72"/>
+              <path class="map-edge" data-nodes="01 04" d="M 90 84 Q 290.6 159.0 504 176"/>
+              <path class="map-edge" data-nodes="01 09" d="M 90 84 Q 170.3 144.2 264 180"/>
+              <path class="map-edge" data-nodes="03 09" d="M 420 72 Q 334.4 115.1 264 180"/>
+              <path class="map-edge" data-nodes="02 04" d="M 234 56 Q 360.6 134.9 504 176"/>
+              <path class="map-edge" data-nodes="03 04" d="M 420 72 Q 454.7 129.9 504 176"/>
+              <path class="map-edge" data-nodes="04 05" d="M 504 176 Q 447.9 227.3 408 292"/>
+              <path class="map-edge" data-nodes="05 06" d="M 408 292 Q 324.5 298.7 246 328"/>
+              <path class="map-edge" data-nodes="05 07" d="M 408 292 Q 249.3 267.7 90 288"/>
+              <path class="map-edge" data-nodes="06 07" d="M 246 328 Q 170.8 297.1 90 288"/>
+              <path class="map-edge" data-nodes="06 08" d="M 246 328 Q 181.4 243.5 96 180"/>
+              <path class="map-edge" data-nodes="07 08" d="M 90 288 Q 100.6 234.4 96 180"/>
+            </svg>
+            <label class="map-node map-node-01" for="node-01" style="--x:15%;--y:21%;--accent:#e9bd87" title="01 空间摆">
+              <img src="assets/overview/01-pendulum.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">01</span><span class="sr-only">01 空间摆</span><span class="map-name" aria-hidden="true">空间摆</span>
+            </label>
+            <label class="map-node map-node-02" for="node-02" style="--x:39%;--y:14%;--accent:#e6a4b2" title="02 相空间图谱">
+              <img src="assets/overview/02-attractors.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">02</span><span class="sr-only">02 相空间图谱</span><span class="map-name" aria-hidden="true">相空间图谱</span>
+            </label>
+            <label class="map-node map-node-03" for="node-03" style="--x:70%;--y:18%;--accent:#d8c197" title="03 自由刚体">
+              <img src="assets/overview/03-rigid.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">03</span><span class="sr-only">03 自由刚体</span><span class="map-name" aria-hidden="true">自由刚体</span>
+            </label>
+            <label class="map-node map-node-04" for="node-04" style="--x:84%;--y:44%;--accent:#cbcb9f" title="04 势能地形">
+              <img src="assets/overview/04-henon.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">04</span><span class="sr-only">04 势能地形</span><span class="map-name" aria-hidden="true">势能地形</span>
+            </label>
+            <label class="map-node map-node-05" for="node-05" style="--x:68%;--y:73%;--accent:#90d0bd" title="05 涡环追逐">
+              <img src="assets/overview/05-fluid.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">05</span><span class="sr-only">05 涡环追逐</span><span class="map-name" aria-hidden="true">涡环追逐</span>
+            </label>
+            <label class="map-node map-node-06" for="node-06" style="--x:41%;--y:82%;--accent:#d3c996" title="06 球面图灵斑纹">
+              <img src="assets/overview/06-turing.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">06</span><span class="sr-only">06 球面图灵斑纹</span><span class="map-name" aria-hidden="true">球面图灵斑纹</span>
+            </label>
+            <label class="map-node map-node-07" for="node-07" style="--x:15%;--y:72%;--accent:#a3c7df" title="07 闪电生长">
+              <img src="assets/overview/07-lightning.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">07</span><span class="sr-only">07 闪电生长</span><span class="map-name" aria-hidden="true">闪电生长</span>
+            </label>
+            <label class="map-node map-node-08" for="node-08" style="--x:16%;--y:45%;--accent:#f0ae97" title="08 三维自旋晶格">
+              <img src="assets/overview/08-ising.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">08</span><span class="sr-only">08 三维自旋晶格</span><span class="map-name" aria-hidden="true">三维自旋晶格</span>
+            </label>
+            <label class="map-node map-node-09" for="node-09" style="--x:44%;--y:45%;--accent:#ecc8a5" title="09 近光速世界">
+              <img src="assets/overview/09-relativity.jpg" width="640" height="416" alt=""><span class="map-number" aria-hidden="true">09</span><span class="sr-only">09 近光速世界</span><span class="map-name" aria-hidden="true">近光速世界</span>
+            </label>
+          </div>
+          <div class="map-details" aria-live="polite" aria-atomic="true">
+            <div class="map-detail map-detail-01">
+              <div class="map-detail-heading"><div><span>SELECTED / 01</span><h3>空间摆</h3></div><a href="#experiment-01">看实验 <span class="sr-only">：空间摆</span><span aria-hidden="true">↗</span></a></div>
+              <p>与 02 都可比较初值差异，但理想摆是保守系统，Lorenz 吸引子属于耗散系统。04 则用另一保守模型研究相空间。</p><div class="map-related"><span>相关实验</span><a href="#experiment-02">02 相空间图谱</a><a href="#experiment-04">04 势能地形</a></div>
+            </div>
+            <div class="map-detail map-detail-02">
+              <div class="map-detail-heading"><div><span>SELECTED / 02</span><h3>相空间图谱</h3></div><a href="#experiment-02">看实验 <span class="sr-only">：相空间图谱</span><span aria-hidden="true">↗</span></a></div>
+              <p>和 01、04 一样可以比较初值与相空间；但典型 Lorenz 吸引子是耗散的，04 的保守轨道不会收缩成同类吸引子。</p><div class="map-related"><span>相关实验</span><a href="#experiment-01">01 空间摆</a><a href="#experiment-04">04 势能地形</a></div>
+            </div>
+            <div class="map-detail map-detail-03">
+              <div class="map-detail-heading"><div><span>SELECTED / 03</span><h3>自由刚体</h3></div><a href="#experiment-03">看实验 <span class="sr-only">：自由刚体</span><span aria-hidden="true">↗</span></a></div>
+              <p>01、03、04 都可在各自的理想条件下讨论能量守恒；03 在无外力矩时还守恒角动量。中间轴翻转不等于 02 的混沌。</p><div class="map-related"><span>相关实验</span><a href="#experiment-01">01 空间摆</a><a href="#experiment-04">04 势能地形</a></div>
+            </div>
+            <div class="map-detail map-detail-04">
+              <div class="map-detail-heading"><div><span>SELECTED / 04</span><h3>势能地形</h3></div><a href="#experiment-04">看实验 <span class="sr-only">：势能地形</span><span aria-hidden="true">↗</span></a></div>
+              <p>与 01 一样关心保守运动和初值；可将庞加莱截面与 02 的相空间轨迹比较，但保守系统不同于耗散吸引子。</p><div class="map-related"><span>相关实验</span><a href="#experiment-01">01 空间摆</a><a href="#experiment-02">02 相空间图谱</a></div>
+            </div>
+            <div class="map-detail map-detail-05">
+              <div class="map-detail-heading"><div><span>SELECTED / 05</span><h3>涡环追逐</h3></div><a href="#experiment-05">看实验 <span class="sr-only">：涡环追逐</span><span aria-hidden="true">↗</span></a></div>
+              <p>05 与 06 都涉及空间场和扩散，流体还受压力约束；与 04 的理想保守轨道不同，黏性会耗散流体机械能。</p><div class="map-related"><span>相关实验</span><a href="#experiment-04">04 势能地形</a><a href="#experiment-06">06 球面图灵斑纹</a><a href="#experiment-07">07 闪电生长</a></div>
+            </div>
+            <div class="map-detail map-detail-06">
+              <div class="map-detail-heading"><div><span>SELECTED / 06</span><h3>球面图灵斑纹</h3></div><a href="#experiment-06">看实验 <span class="sr-only">：球面图灵斑纹</span><span aria-hidden="true">↗</span></a></div>
+              <p>和 05 都有扩散；与 08 一样可以形成空间结构，但这里求解确定性浓度场，自旋页采样的是离散格点。</p><div class="map-related"><span>相关实验</span><a href="#experiment-05">05 涡环追逐</a><a href="#experiment-08">08 三维自旋晶格</a></div>
+            </div>
+            <div class="map-detail map-detail-07">
+              <div class="map-detail-heading"><div><span>SELECTED / 07</span><h3>闪电生长</h3></div><a href="#experiment-07">看实验 <span class="sr-only">：闪电生长</span><span aria-hidden="true">↗</span></a></div>
+              <p>05 是速度场、06 是浓度场，07 则由电势场驱动生长。07 与 08 都引入概率，但击穿生长和自旋平衡采样规则不同，步数不是直接测得的真实时间。</p><div class="map-related"><span>相关实验</span><a href="#experiment-05">05 涡环追逐</a><a href="#experiment-06">06 球面图灵斑纹</a><a href="#experiment-08">08 三维自旋晶格</a></div>
+            </div>
+            <div class="map-detail map-detail-08">
+              <div class="map-detail-heading"><div><span>SELECTED / 08</span><h3>三维自旋晶格</h3></div><a href="#experiment-08">看实验 <span class="sr-only">：三维自旋晶格</span><span aria-hidden="true">↗</span></a></div>
+              <p>06 和 08 都能显现空间图案：前者求解连续浓度，后者统计离散自旋。07 也有随机选择，但规则与物理目标不同。</p><div class="map-related"><span>相关实验</span><a href="#experiment-06">06 球面图灵斑纹</a><a href="#experiment-07">07 闪电生长</a></div>
+            </div>
+            <div class="map-detail map-detail-09">
+              <div class="map-detail-heading"><div><span>SELECTED / 09</span><h3>近光速世界</h3></div><a href="#experiment-09">看实验 <span class="sr-only">：近光速世界</span><span aria-hidden="true">↗</span></a></div>
+              <p>与 01、03 都研究运动，但本实验采用狭义相对论，区分同时几何和延迟到达的光；不能把经典摆当作同一套模型。</p><div class="map-related"><span>相关实验</span><a href="#experiment-01">01 空间摆</a><a href="#experiment-03">03 自由刚体</a></div>
+            </div>
+          </div>
+        </fieldset>
+        <p class="map-disclaimer">连线表示可比较的知识路径，并不表示模型相同或能相互推导。</p>
+      </div>
+    </section>
+
+    <section class="experiments-section shell section" id="experiments" aria-labelledby="experiments-heading">
+      <div class="section-rule"><span>THE EXPERIMENTS</span><span>01 — 09</span></div>
+      <div class="section-heading"><div><p class="section-kicker">NINE WAYS TO EXPLORE</p><h2 id="experiments-heading">选择一个问题，<br><span>进入实验。</span></h2></div><p>从可拖动的摆到高速世界里的光，每个实验都有独立的三维场景、控制台和知识卡。图片为实验静帧。</p></div>
+      <div class="experiment-grid">
+        <article class="experiment-card" id="experiment-01" style="--accent:#e9bd87">
+          <a href="index.html" class="card-image"><img src="assets/overview/01-pendulum.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 01</span><span class="sr-only"> 进入空间摆实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>01 <i>/</i> 轨迹 / 经典力学</span><span>SPATIAL PENDULUM</span></div>
+            <h3>空间摆</h3><p class="card-model">在三维关节链中，研究初始条件与能量如何塑造运动轨迹。</p>
+            <div class="card-try"><span>动手观察</span><p>拖动摆球、增减级数，对照两条初态仅有微小差异的摆链。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>约束运动</li><li>初值敏感</li><li>理想能量守恒</li></ul>
+            <p class="card-scope"><span>模型范围</span>理想无摩擦；数值积分不严格守恒。</p>
+            <a class="card-link" href="index.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：空间摆</span></a>
+          </div>
+        </article>
+        <article class="experiment-card" id="experiment-02" style="--accent:#e6a4b2">
+          <a href="attractors.html" class="card-image"><img src="assets/overview/02-attractors.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 02</span><span class="sr-only"> 进入相空间图谱实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>02 <i>/</i> 轨迹 / 非线性系统</span><span>PHASE SPACE ATLAS</span></div>
+            <h3>相空间图谱</h3><p class="card-model">Lorenz、Rössler 与 Thomas 系统的轨迹，在状态空间中如何组织？</p>
+            <div class="card-try"><span>动手观察</span><p>切换方程与参数，比较两条轨迹的分离和相空间形状。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>相空间</li><li>吸引子</li><li>初值敏感</li></ul>
+            <p class="card-scope"><span>模型范围</span>吸引子及其稳定性依赖方程与参数；短时分离不单独证明混沌。</p>
+            <a class="card-link" href="attractors.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：相空间图谱</span></a>
+          </div>
+        </article>
+        <article class="experiment-card" id="experiment-03" style="--accent:#d8c197">
+          <a href="rigid-body.html" class="card-image"><img src="assets/overview/03-rigid.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 03</span><span class="sr-only"> 进入自由刚体实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>03 <i>/</i> 运动 / 旋转与稳定性</span><span>RIGID BODY</span></div>
+            <h3>自由刚体</h3><p class="card-model">自由刚体绕不同惯量主轴转动时，为什么可能突然翻转？</p>
+            <div class="card-try"><span>动手观察</span><p>改变初始姿态和主轴，施加可调大小、方向与位置的恒力。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>中间轴不稳定</li><li>角动量</li><li>力矩</li></ul>
+            <p class="card-scope"><span>模型范围</span>不稳定不等于混沌；偏心外力会产生力矩。</p>
+            <a class="card-link" href="rigid-body.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：自由刚体</span></a>
+          </div>
+        </article>
+        <article class="experiment-card" id="experiment-04" style="--accent:#cbcb9f">
+          <a href="henon-heiles.html" class="card-image"><img src="assets/overview/04-henon.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 04</span><span class="sr-only"> 进入势能地形实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>04 <i>/</i> 轨迹 / 哈密顿系统</span><span>HÉNON–HEILES</span></div>
+            <h3>势能地形</h3><p class="card-model">把二维粒子的势能画成高度，观察轨道、鞍点与逃逸边界。</p>
+            <div class="card-try"><span>动手观察</span><p>移动状态点和地形探针，改变能量并比较庞加莱截面。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>哈密顿系统</li><li>势能梯度</li><li>庞加莱截面</li></ul>
+            <p class="card-scope"><span>模型范围</span>地形高度表示势能，不是运动的第三空间维。</p>
+            <a class="card-link" href="henon-heiles.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：势能地形</span></a>
+          </div>
+        </article>
+        <article class="experiment-card" id="experiment-05" style="--accent:#90d0bd">
+          <a href="vortex-rings.html" class="card-image"><img src="assets/overview/05-fluid.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 05</span><span class="sr-only"> 进入涡环追逐实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>05 <i>/</i> 场 / 流体动力学</span><span>VORTEX RINGS</span></div>
+            <h3>涡环追逐</h3><p class="card-model">不可压缩三维流体中，相互靠近的涡环如何影响彼此？</p>
+            <div class="card-try"><span>动手观察</span><p>切换流场预设、查看速度切片；从控制台进入涡丝对照。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>涡量</li><li>平流与扩散</li><li>不可压缩流</li></ul>
+            <p class="card-scope"><span>模型范围</span>染料用于可视化流动，并不直接等同于涡核。</p>
+            <a class="card-link" href="vortex-rings.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：涡环追逐</span></a>
+          </div>
+        </article>
+        <article class="experiment-card" id="experiment-06" style="--accent:#d3c996">
+          <a href="turing-patterns.html" class="card-image"><img src="assets/overview/06-turing.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 06</span><span class="sr-only"> 进入球面图灵斑纹实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>06 <i>/</i> 场 / 自组织</span><span>REACTION / DIFFUSION</span></div>
+            <h3>球面图灵斑纹</h3><p class="card-model">反应与扩散相互竞争，如何在球面形成斑点和条纹？</p>
+            <div class="card-try"><span>动手观察</span><p>调整扩散比、反应参数与球半径，对照不同方程。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>反应扩散</li><li>图灵失稳</li><li>空间模态</li></ul>
+            <p class="card-scope"><span>模型范围</span>Gray–Scott 的有限种子斑纹不一定是线性图灵失稳。</p>
+            <a class="card-link" href="turing-patterns.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：球面图灵斑纹</span></a>
+          </div>
+        </article>
+        <article class="experiment-card" id="experiment-07" style="--accent:#a3c7df">
+          <a href="lightning.html" class="card-image"><img src="assets/overview/07-lightning.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 07</span><span class="sr-only"> 进入闪电生长实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>07 <i>/</i> 场 / 随机生长</span><span>DIELECTRIC BREAKDOWN</span></div>
+            <h3>闪电生长</h3><p class="card-model">电势场与随机生长怎样共同塑造介质击穿的分叉？</p>
+            <div class="card-try"><span>动手观察</span><p>移动电极、比较场与生长概率；从控制台进入局部流注对照。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>电势场</li><li>分枝生长</li><li>局部场反馈</li></ul>
+            <p class="card-scope"><span>模型范围</span>介质击穿模型不是完整雷电；局部流注仅覆盖小范围。</p>
+            <a class="card-link" href="lightning.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：闪电生长</span></a>
+          </div>
+        </article>
+        <article class="experiment-card" id="experiment-08" style="--accent:#f0ae97">
+          <a href="ising.html" class="card-image"><img src="assets/overview/08-ising.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 08</span><span class="sr-only"> 进入三维自旋晶格实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>08 <i>/</i> 统计 / 集体行为</span><span>ISING LATTICE</span></div>
+            <h3>三维自旋晶格</h3><p class="card-model">近邻相互作用与热涨落，如何产生磁畴与相变？</p>
+            <div class="card-try"><span>动手观察</span><p>调整温度、外场和晶体结构，查看磁化、关联与相变曲线。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>Ising 自旋</li><li>序参量</li><li>临界涨落</li></ul>
+            <p class="card-scope"><span>模型范围</span>蒙特卡洛扫描是采样步数，不等同于真实时间。</p>
+            <a class="card-link" href="ising.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：三维自旋晶格</span></a>
+          </div>
+        </article>
+        <article class="experiment-card" id="experiment-09" style="--accent:#ecc8a5">
+          <a href="relativity.html" class="card-image"><img src="assets/overview/09-relativity.jpg" width="640" height="416" loading="lazy" alt=""><span class="image-label">LAB / 09</span><span class="sr-only"> 进入近光速世界实验</span><span class="image-arrow" aria-hidden="true">↗</span></a>
+          <div class="card-content"><div class="card-kicker"><span>09 <i>/</i> 观察 / 狭义相对论</span><span>THE SPEED OF LIGHT</span></div>
+            <h3>近光速世界</h3><p class="card-model">接近光速时，物体观察到的形状、颜色与阴影如何改变？</p>
+            <div class="card-try"><span>动手观察</span><p>改变速度与观察者，比较光锥照片和同一时刻的几何投影。</p></div>
+            <ul class="card-tags" aria-label="核心知识点"><li>光行时</li><li>洛伦兹变换</li><li>相对论多普勒</li></ul>
+            <p class="card-scope"><span>模型范围</span>匀速和理想化光学；不模拟加速、碰撞或广义相对论。</p>
+            <a class="card-link" href="relativity.html">进入实验 <span aria-hidden="true">↗</span><span class="sr-only">：近光速世界</span></a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="connections-section shell section" id="connections" aria-labelledby="connections-heading">
+      <div class="section-rule"><span>FOLLOW THE CONNECTIONS</span><span>THREE PATHS / 三条路线</span></div>
+      <div class="section-heading connections-heading"><div><p class="section-kicker">A PLACE TO START</p><h2 id="connections-heading">从一个实验，<br><span>走向下一个。</span></h2></div><p>这些路线不是前置课程。它们把可比较的概念放在一起，也提醒你留意不同模型之间的边界。</p></div>
+      <div class="path-grid">
+        <article class="path-card"><div class="path-top"><span>PATH / 01</span><span aria-hidden="true">↗</span></div><h3>从轨迹到规律</h3><p>先比较空间摆的初值，再看相空间与势能地形。理想摆和 Hénon–Heiles 是保守模型；Lorenz 的典型吸引子则来自耗散。刚体翻转展示不稳定性，但不因此就是混沌。</p><div class="path-links" aria-label="路线一的实验"><a href="#experiment-01">01 空间摆</a><span>→</span><a href="#experiment-02">02 相空间</a><span>→</span><a href="#experiment-04">04 地形</a><span>→</span><a href="#experiment-03">03 刚体</a></div></article>
+        <article class="path-card"><div class="path-top"><span>PATH / 02</span><span aria-hidden="true">↗</span></div><h3>场怎样长出结构</h3><p>对照流体中的平流、扩散与压力约束，球面上的反应扩散，以及电势场驱动的分叉。它们都研究空间分布如何改变，却由不同方程和机制支配。</p><div class="path-links" aria-label="路线二的实验"><a href="#experiment-05">05 涡环</a><span>→</span><a href="#experiment-06">06 斑纹</a><span>→</span><a href="#experiment-07">07 击穿</a></div></article>
+        <article class="path-card"><div class="path-top"><span>PATH / 03</span><span aria-hidden="true">↗</span></div><h3>概率、统计与观察</h3><p>击穿和自旋采样都包含随机选择，但目标和规则不同；蒙特卡洛扫描数不是实际时间。再到相对论实验，区分物体的同时几何与光抵达观察者的结果。</p><div class="path-links" aria-label="路线三的实验"><a href="#experiment-07">07 击穿</a><span>→</span><a href="#experiment-08">08 自旋</a><span>→</span><a href="#experiment-09">09 光行时</a></div></article>
+      </div>
+    </section>
+    <section class="end-note shell" aria-labelledby="end-heading"><span class="end-symbol" aria-hidden="true">✳</span><div><p class="section-kicker">A NOTE ON THE MODELS</p><h2 id="end-heading">图像只是开始，<em>问题才是入口。</em></h2><p>总览使用本地静帧，不会同时运行九个模拟。实验是用于探索的教学模型，并非对真实世界的完整复制或预测。具体假设、数值方法和边界可在每个实验的知识卡中查看。</p></div><a href="#top">回到顶部 <span aria-hidden="true">↑</span></a></section>
+  </main>
+  <footer class="shell footer"><span>CHAOS / LAB <i>—</i> 动力学与时空实验室</span><span>BUILT FOR CURIOSITY <i>·</i> 01—09</span><a href="README.md">模型与使用说明 ↗</a></footer>
+</body>
+</html>

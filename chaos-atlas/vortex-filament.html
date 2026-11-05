@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10171b">
+  <meta name="description" content="探索可交互的三维同轴涡环、诱导速度与涡环追逐。">
+  <title>涡环追逐实验 · Vortex Rings</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23151e22'/%3E%3Cellipse cx='15' cy='20' rx='8' ry='13' fill='none' stroke='%23f1ba8c' stroke-width='2'/%3E%3Cellipse cx='25' cy='20' rx='8' ry='13' fill='none' stroke='%238eddd4' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-23">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="vortex.css?v=20261031-23">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="vortex-model.js?v=20261031-23"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="vortex.js?v=20261031-23"></script>
+</head>
+<body class="vortex-lab">
+<a class="skip-link" href="#vortex-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#vortex-scene" data-jump="stage">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><ellipse cx="16" cy="20" rx="5" ry="9"/><ellipse cx="24" cy="20" rx="5" ry="9"/></svg></span>
+      <span><strong>CHAOS / LAB</strong><small>涡环追逐实验</small></span>
+    </a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status"><span class="status-light"></span><span id="header-status">实验进行中</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame">
+    <div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="ising.html"><span>自旋晶格</span><small>08</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div>
+    <input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list">
+    </div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓  拖动滑块或滚动查看 · 9 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" aria-label="涡环追逐实验台">
+  <h1 class="visually-hidden">涡环追逐：同轴涡丝动力学实验</h1>
+  <article class="model-panel" aria-label="可交互的三维同轴涡环">
+    <div class="model-stage" id="vortex-stage">
+      <canvas id="vortex-scene" data-lab-canvas tabindex="0" aria-label="三维涡环。拖动涡环沿公共轴设置初态并暂停，拖动空白处旋转视角，滚轮缩放；方向键旋转，加减号缩放，空格播放或暂停。也可使用控制台调整初态。"></canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">SIMULATION LIVE</b></div><div>VORTEX DYNAMICS <i>/</i> COAXIAL RINGS</div></div>
+      <div class="vortex-index" aria-hidden="true"><span>FIG.</span><strong>05</strong><span>— VORTEX RINGS</span></div>
+      <div class="vortex-caption" aria-hidden="true"><span>01 / INDUCED MOTION</span><strong id="vortex-caption-title">两道环，彼此追逐</strong><small>理想同轴涡丝 · 视角跟随双环中心</small></div>
+      <div class="interaction-tip" id="interaction-tip" role="status" aria-live="polite"></div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend vortex-legend"><span><i class="legend-a"></i> 涡环 A</span><span><i class="legend-b"></i> 涡环 B</span><span><i class="legend-flow"></i> 瞬时流线</span><span><i class="legend-vector"></i> 代表点速度</span><span><i class="legend-trail"></i> 代表点轨迹</span></div><div class="stage-instruction"><span>↔</span> 拖动环设初态 <b>·</b> 拖空白旋转</div></div>
+      <div class="stage-error" id="stage-error" role="status" aria-live="polite">实验正在加载。如果长时间没有显示，请刷新页面。</div>
+    </div>
+  </article>
+  <div class="lab-bottom">
+    <div class="stage-fallback" id="stage-fallback" role="status" aria-live="polite" hidden>WebGL 不可用，已切换到二维投影；仍使用相同的涡环方程。</div>
+    <div class="stage-notice" id="stage-notice" role="status" aria-live="polite" hidden></div>
+    <section class="telemetry" aria-label="实验实时数据">
+      <div class="telemetry-item"><span>仿真时间</span><strong id="time-readout">0.00</strong></div>
+      <div class="telemetry-item"><span>半径 A / B</span><strong id="radii-readout">1.00 / 1.00</strong></div>
+      <div class="telemetry-item"><span>轴向间距</span><strong id="gap-readout">1.40</strong></div>
+      <div class="telemetry-item"><span>轴向穿越</span><strong id="pass-readout">0 <small>次</small></strong></div>
+    </section>
+    <div class="transport" aria-label="模拟和视角控制">
+      <div class="transport-left"><button type="button" id="play" class="play-button" aria-label="暂停模拟"><span id="play-symbol" aria-hidden="true">Ⅱ</span><span id="play-text">暂停</span></button><button type="button" class="tool-button" id="step" aria-label="单步推进 1/60 模拟时间" title="单步推进 1/60（请先暂停）" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button><button type="button" class="tool-button" id="reset" aria-label="重置实验" title="按当前初态重置"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button></div>
+      <div class="transport-right"><div class="speed-options" role="group" aria-label="模拟速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="涡环实验控制台">
+      <a class="fluid-mode-link" href="vortex-rings.html">← 返回三维流体实验</a>
+      <div class="panel-top"><div><span class="panel-kicker">CONTROL CONSOLE</span><h2>实验控制台<span>。</span></h2></div></div>
+      <p class="panel-description">设置两道涡环，让流动自己演化。</p>
+      <div class="control-section">
+        <div class="control-heading"><span>对照实验</span><small>01 / PRESETS</small></div>
+        <div class="preset-grid vortex-presets" role="group" aria-label="涡环预设">
+          <button type="button" data-preset="chase" class="active" aria-pressed="true"><span>◎</span>同向追逐</button>
+          <button type="button" data-preset="opposed" aria-pressed="false"><span>↔</span>反向相迎</button>
+          <button type="button" data-preset="unequal" aria-pressed="false"><span>◌</span>不等环流</button>
+        </div>
+        <p class="control-note">预设会重置初态；是否持续追逐取决于参数。「反向相迎」会接近并触发近核保护，重置只会重演。</p>
+      </div>
+      <div class="control-section">
+        <div class="control-heading"><span>环的初始几何</span><small>02 / GEOMETRY</small></div>
+        <div class="ring-selector" role="group" aria-label="选择涡环"><button type="button" data-ring="A" aria-pressed="true">● 涡环 A</button><button type="button" data-ring="B" aria-pressed="false">● 涡环 B</button></div>
+        <div class="slider-row"><label for="radius-a"><i>R<sub>A</sub></i> A 的初始半径</label><output id="radius-a-value" for="radius-a">1.00</output></div><input id="radius-a" class="range" type="range" min="0.40" max="2.30" step="0.01" value="1" aria-describedby="geometry-help">
+        <div class="slider-row second"><label for="radius-b"><i>R<sub>B</sub></i> B 的初始半径</label><output id="radius-b-value" for="radius-b">1.00</output></div><input id="radius-b" class="range" type="range" min="0.40" max="2.30" step="0.01" value="1" aria-describedby="geometry-help">
+        <div class="slider-row second"><label for="separation"><i>Δz</i> 有向间距 B − A</label><output id="separation-value" for="separation">+1.40</output></div><input id="separation" class="range" type="range" min="-3.20" max="3.20" step="0.02" value="1.4" aria-describedby="geometry-help">
+        <p class="control-note" id="geometry-help">拖动环可沿共同轴线改变位置：操作会暂停，并从当前形态重设初态。有向间距可为负，表示 B 位于 A 的另一侧。滑块修改初态并重置，但保留播放状态；两环不能以近乎重合的核开始。</p>
+      </div>
+      <div class="control-section">
+        <div class="control-heading"><span>环流强度与方向</span><small>03 / CIRCULATION</small></div>
+        <div class="slider-row"><label for="gamma-a"><i>Γ<sub>A</sub></i> A 的环流大小</label><output id="gamma-a-value" for="gamma-a">2.00</output></div><input id="gamma-a" class="range" type="range" min="0.50" max="3.50" step="0.05" value="2" aria-describedby="gamma-help">
+        <div class="slider-row second"><label for="gamma-b"><i>Γ<sub>B</sub></i> B 的环流大小</label><output id="gamma-b-value" for="gamma-b">2.00</output></div><input id="gamma-b" class="range" type="range" min="0.50" max="3.50" step="0.05" value="2" aria-describedby="gamma-help">
+        <div class="ring-orientation" role="group" aria-label="环流方向"><button type="button" data-orientation="same" aria-pressed="true">同向</button><button type="button" data-orientation="opposed" aria-pressed="false">相反</button></div>
+        <p class="control-note" id="gamma-help">A 取正环流；B 可同向或反向。单位均为无量纲，不是外加推力。</p>
+      </div>
+      <div class="display-switches">
+        <label><span>显示代表点速度</span><input type="checkbox" id="show-velocity" checked><b aria-hidden="true"></b></label>
+        <label><span>显示瞬时流线</span><input type="checkbox" id="show-flow" checked><b aria-hidden="true"></b></label>
+        <label><span>显示环流方向</span><input type="checkbox" id="show-circulation" checked><b aria-hidden="true"></b></label>
+        <label><span>显示代表点轨迹</span><input type="checkbox" id="show-trail" checked><b aria-hidden="true"></b></label>
+        <p class="control-note">流线位于一个轴向剖面，由当前速度场定期更新，并非粒子轨迹；柔光与雾状外圈只用于显示。</p>
+      </div>
+      <div class="console-foot"><span aria-hidden="true">✳</span> 理想涡丝在本地实时积分</div>
+    </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h2 id="knowledge-title">知识卡片<span>。</span></h2></div></div>
+      <p class="panel-description">从两道环，理解流动如何相互影响。</p>
+      <div class="lesson-tabs vortex-tabs" role="group" aria-label="选择知识卡片">
+        <button type="button" data-note="chase" class="active" aria-pressed="true"><span class="lesson-icon">◎</span><span><strong>为什么会追逐</strong><small>穿越与半径交换</small></span><b>01</b></button>
+        <button type="button" data-note="induction" aria-pressed="false"><span class="lesson-icon">↗</span><span><strong>自诱导速度</strong><small>环流与流场</small></span><b>02</b></button>
+        <button type="button" data-note="compare" aria-pressed="false"><span class="lesson-icon">↔</span><span><strong>改变方向</strong><small>同向与反向对照</small></span><b>03</b></button>
+        <button type="button" data-note="model" aria-pressed="false"><span class="lesson-icon">ƒ</span><span><strong>模型的边界</strong><small>理想化与数值精度</small></span><b>04</b></button>
+      </div>
+      <section class="lesson-detail vortex-detail" data-note-content="chase" aria-label="涡环追逐" >
+        <div class="lesson-top"><span>观察卡片 / 01</span><span>01 — 04</span></div>
+        <h3>穿过去，<br><em>再被追上。</em></h3>
+        <p>同向的两环会互相诱导。在合适的初态下，后环收缩并追上前环，穿过后逐渐变大，下一次又被另一环穿过。</p>
+        <div class="vortex-chart-head"><span>半径随时间</span><span>R<sub>A</sub> / R<sub>B</sub></span></div>
+        <svg id="radius-chart" viewBox="0 0 240 112" role="img" aria-label="两个涡环的半径历史曲线"><rect x="4" y="4" width="232" height="104" rx="3" fill="#1c2d2b" stroke="#41584f"/><path d="M12 29H228 M12 56H228 M12 83H228" stroke="#42584e" stroke-width=".6"/><path id="radius-line-a" d="" fill="none" stroke="#eabb8f" stroke-width="1.7"/><path id="radius-line-b" d="" fill="none" stroke="#84d9ce" stroke-width="1.7"/></svg>
+        <div class="vortex-chart-key"><span><i class="key-a"></i> A 的半径</span><span><i class="key-b"></i> B 的半径</span><span>最近一段</span></div>
+        <div class="lesson-metric"><span>最近一次无重叠穿越</span><strong id="passage-detail">尚未发生</strong></div>
+        <p class="lesson-note">计数只记录两环轴向位置交换且核彼此分开的事件；一次穿越不是长期周期性的证明。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="induction" aria-label="涡环的诱导速度" hidden>
+        <div class="lesson-top"><span>观察卡片 / 02</span><span>02 — 04</span></div>
+        <h3>没有推力，<br><em>环为什么前进？</em></h3>
+        <p>涡丝自身诱导轴向速度，另一环又改变它的轴向速度与半径；变化来自两环共同产生的瞬时速度场。</p>
+        <div class="vortex-metrics"><div><span>A 自诱导轴向速度</span><strong id="self-a">0.508</strong></div><div><span>B 自诱导轴向速度</span><strong id="self-b">0.508</strong></div><div><span>A 总轴向速度</span><strong id="axial-a">—</strong></div><div><span>B 总轴向速度</span><strong id="axial-b">—</strong></div></div>
+        <p class="lesson-note">箭头从环上一处代表点出发，包含其轴向速度和半径变化率；颜色对应 A、B。长度按速度缩放并设上限。环上的小箭头表示环流方向，不是同一物理量。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="compare" aria-label="环流方向对照" hidden>
+        <div class="lesson-top"><span>观察卡片 / 03</span><span>03 — 04</span></div>
+        <h3>反过来，<br><em>会发生什么？</em></h3>
+        <p>同向环可以追逐；将一环环流反向后，自诱导方向也反向。对称的相向初态中，两环接近并向外扩张，而不是预设成追逐动画。</p>
+        <div class="lesson-metric"><span>当前核间最短距离</span><strong id="core-distance">1.400</strong></div>
+        <p class="lesson-note">核过近时暂停：理想同轴涡丝模型无法预测真实流体的三维失稳、黏性扩散或涡线重联。反向预设会走到这道保护线，重置会再次重演。</p>
+        <button type="button" class="lesson-action" data-try-preset="opposed">载入反向相迎对照 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="model" aria-label="理想涡环模型与误差" hidden>
+        <div class="lesson-top"><span>观察卡片 / 04</span><span>04 — 04</span></div>
+        <h3>看见的是环，<br><em>计算的是涡丝。</em></h3>
+        <p>两条圆形涡丝保持同轴；以正则化 Biot–Savart 积分计算诱导速度，再用 RK4 积分半径与轴向位置。</p>
+        <div class="vortex-formula">u(x) = Γ/(4π) ∮ dℓ × (x − x′)<br>　　　　　　 / (|x − x′|² + ε²)<sup>3/2</sup><br>ε = 0.12；Δt = 1/120</div>
+        <div class="lesson-metric"><span>加权面积归一化误差</span><strong id="area-error">0.0e+0</strong></div>
+        <p class="lesson-note">连续模型中的 S = Γ<sub>A</sub>R<sub>A</sub>² + Γ<sub>B</sub>R<sub>B</sub>² 守恒，误差按两环面积项的绝对值之和归一化。RK4 与角向求积并非严格保结构方法，长期误差会累积。</p>
+        <p class="lesson-note">柔光和背景网格只是可视化；没有模拟烟雾输运、黏性耗散、三维变形或重联。</p>
+      </section>
+      <div class="knowledge-foot"><span>MODEL / 05</span><p>同轴圆形涡丝 · 无量纲单位<br>视角跟随中心，不是流体边界。</p></div>
+    </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">涡环实验需要 JavaScript。请启用 JavaScript 后重新打开页面。</div></noscript>
+</body>
+</html>

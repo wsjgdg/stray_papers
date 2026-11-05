@@ -1,0 +1,201 @@
+:root{--rel-ink:#f6f1e8;--rel-muted:#becac9;--rel-accent:#f0c4a3;--rel-blue:#a9d2d2}
+.relativity-lab{background:#15252c;color:var(--rel-ink)}
+.relativity-lab .topbar{width:min(514px,calc(100% - 24px))}
+.relativity-lab .topbar-inner{background:rgba(20,29,34,.96);border-color:#52615e}
+.relativity-lab .nav-toggle{background:#263235;border-color:#53615c;color:#f3ddc5}
+.relativity-lab .model-stage{background:#172a34}
+#relativity-scene{display:block;position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}#relativity-scene:active{cursor:grabbing}
+/* A new physical event must hide stale pixels immediately, including when the
+   global reduced-motion rule gives otherwise-unanimated elements a duration. */
+#relativity-scene,#geometry-contour,.observation-legend{transition-property:none!important}
+/* A still with old parameters must not masquerade as the pending result.
+   Keep the canvas hit-testable; a camera-only change retains the last full view. */
+#relativity-stage[data-render-pending="true"]:not([data-view-pending="true"]) #relativity-scene{opacity:0}
+/* These stage decorations are under the opaque loading veil. Avoid compositing
+   them until the first complete frame; the canvas, status and controls remain
+   laid out and interactive, including while switching rendering modes. */
+#relativity-stage[data-status="loading"] .scene-wash,
+#relativity-stage[data-status="loading"] .scene-title,
+#relativity-stage[data-status="loading"] .scene-meta,
+#relativity-stage[data-status="loading"] .scene-note,
+#relativity-stage[data-status="loading"] .stage-hint{display:none}
+.scene-wash{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(8,19,25,.36),transparent 30%,transparent 70%,rgba(8,19,25,.16)),linear-gradient(0deg,rgba(5,15,19,.62),transparent 34%,transparent 73%,rgba(7,17,22,.22))}
+.scene-title{position:absolute;left:70px;top:91px;display:grid;gap:8px;pointer-events:none;text-shadow:0 2px 12px #0a151cc9}
+.scene-title>span,.scene-meta,.scene-note .note-number{font:700 9px/1.2 var(--mono);letter-spacing:.14em;color:#efdfcc}.scene-title>span i{display:inline-block;width:24px;height:1px;margin:0 6px 3px;background:#f1c8a7}.scene-title>strong{font-size:clamp(23px,3vw,40px);font-weight:600;line-height:1.25;letter-spacing:.04em}.scene-title>strong span{color:var(--rel-accent)}.scene-title>small{font-size:11px;letter-spacing:.04em;color:#f1eee6}
+.scene-meta{position:absolute;right:64px;top:96px;display:flex;gap:24px;opacity:.88;text-shadow:0 2px 8px #071316}
+.scene-note{position:absolute;right:68px;bottom:220px;display:flex;align-items:center;gap:12px;text-shadow:0 2px 8px #081518;pointer-events:none}.scene-note .note-number{display:grid;place-items:center;width:35px;height:35px;border:1px solid #d9c9b0;border-radius:50%;background:#1a2c32a6}.scene-note strong,.scene-note small{display:block}.scene-note strong{font-size:12px;color:#fff7e8}.scene-note small{font-size:10px;color:#e1e8e2;margin-top:2px}
+.stage-hint{position:absolute;left:70px;bottom:215px;color:#e0e7e4;font-size:10px;text-shadow:0 1px 9px #091316;pointer-events:none}.stage-hint b{color:#f2c3a3;padding:0 5px;font-weight:400}.lab-workbench.split-active .stage-hint{bottom:258px}.lab-workbench.split-active .scene-note{bottom:263px}
+.probe-marker{position:absolute;width:23px;height:23px;margin:-11.5px 0 0 -11.5px;border:1px solid #fff5de;border-radius:50%;box-shadow:0 0 0 2px #142a3277;pointer-events:none}.probe-marker::after{content:"";position:absolute;left:9px;top:9px;width:3px;height:3px;border-radius:50%;background:#fff7e3}
+.split-overlay{position:absolute;inset:0;pointer-events:none;--split:50%}.split-line{position:absolute;left:var(--split);top:0;bottom:0;width:2px;background:#f7eadb;box-shadow:0 0 0 1px #15252c66}.split-handle{position:absolute;left:var(--split,50%);top:45%;transform:translate(-50%,-50%);display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #f4deca;border-radius:50%;background:#1c3037;color:white;font-size:17px;cursor:ew-resize;touch-action:none;z-index:8}.split-handle:focus-visible{outline:3px solid #a8f4e6;outline-offset:3px}.split-handle[hidden]{display:none}.split-badge{position:absolute;left:70px;top:207px;padding:5px 8px;border:1px solid #e7d1b399;background:#16272fd9;color:#fff4e4;font-size:10px}.split-badge.split-right{left:auto;right:68px}
+.scene-loading{pointer-events:none;position:absolute;inset:0;display:grid;place-items:center;background:#15252c;color:#e3e9e2}.render-fallback{position:absolute;z-index:4;top:60px;left:50%;transform:translateX(-50%);max-width:min(430px,90%);padding:7px 12px;border:1px solid #a18e77;border-radius:3px;background:#352f29;color:#ffead1;font-size:10px;line-height:1.5;text-align:center}
+.experiment-dock{position:absolute;z-index:6;left:50%;bottom:22px;transform:translateX(-50%);width:min(660px,calc(100% - 120px));padding:14px 16px 12px;border:1px solid #6a7570;border-radius:5px;background:rgba(16,28,32,.94);box-shadow:0 15px 45px #07101555}
+.dock-heading{display:flex;align-items:center;gap:25px;padding-bottom:10px;border-bottom:1px solid #45565a}.dock-heading>div:first-child{flex:1;min-width:0}.dock-label,.dock-stat>span{display:block;font:9px/1.2 var(--mono);letter-spacing:.08em;color:#c1c9c3}.dock-heading>div:first-child>strong{display:block;font-size:14px;color:#fff6e9;margin-top:3px}.dock-stat strong{display:block;color:#f3c8a9;font:500 17px/1.2 var(--mono);margin-top:4px;white-space:nowrap}.dock-stat strong small{font-size:10px}
+.dock-controls{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0 7px}.view-switch,.dock-actions,.option-pills,.speed-presets{display:flex;align-items:center;gap:4px}.view-switch button,.option-pills button,.speed-presets button{min-height:32px;padding:0 10px;border:1px solid #566765;border-radius:3px;background:#223236;color:#dbe5df;font-size:11px;cursor:pointer;white-space:nowrap}.view-switch button:hover,.option-pills button:hover,.speed-presets button:hover{border-color:#f0c4a3}.view-switch button[aria-pressed="true"],.option-pills button[aria-pressed="true"],.speed-presets button[aria-pressed="true"]{border-color:#f0c4a3;background:#eac1a2;color:#19262b;font-weight:600}
+.dock-play,.icon-button{height:32px;min-width:32px;border:1px solid #667872;border-radius:3px;background:#24363a;color:#f2ece0;cursor:pointer}.dock-play{display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;background:#d9b597;border-color:#d9b597;color:#18262a;font-size:11px;font-weight:700}.dock-play:hover{background:#f2cfb1}.icon-button{font-size:17px}.icon-button:hover{border-color:#eac1a2}
+.time-row{display:grid;grid-template-columns:115px minmax(0,1fr) auto auto;gap:10px;align-items:center;color:#cbd7d0;font-size:10px}.time-row label{display:flex;justify-content:space-between;gap:5px}.time-row output{color:#f2c9a8;font:10px var(--mono)}.time-row>span{font:9px var(--mono);color:#c1cbc5}.time-row input,.split-control input{width:100%;min-width:0;height:18px;margin:0;accent-color:#e8bb96;cursor:pointer}.time-rate{align-items:center;white-space:nowrap}.time-rate select{min-height:27px;max-width:62px;padding:2px 4px;border:1px solid #667872;border-radius:3px;background:#24363a;color:#f2ece0;font:10px var(--mono);cursor:pointer}.time-rate select:focus-visible{outline:2px solid #a8f4e6;outline-offset:2px}
+.split-control{display:grid;grid-template-columns:115px 1fr;gap:10px;align-items:center;border-top:1px solid #45565a;margin-top:8px;padding-top:7px;color:#d2ded7;font-size:10px}.split-control label{display:flex;justify-content:space-between;gap:5px}.split-control output{font:10px var(--mono);color:#f4c8a7}
+.relativity-lab .side-shell{top:63px;bottom:18px;width:294px}.relativity-lab .side-shell-right{width:316px}.relativity-lab .side-shell.closed{width:0}.relativity-lab .side-shell .panel{background:rgba(21,32,36,.97);border-color:#5a6965;box-shadow:0 15px 38px #07121866}.relativity-lab .control-panel,.relativity-lab .knowledge-panel{padding:17px 16px 32px}.relativity-lab .side-toggle{background:#24383b;border-color:#70837b;color:#eff4e9}.relativity-lab .side-shell.closed .side-toggle{background:#1b3035eF;top:108px}.relativity-lab .panel-top h2{font-size:18px;line-height:1.3;margin-top:6px}.relativity-lab .panel-top h2 span{color:#efc2a0}.relativity-lab .panel-kicker{color:#e1c5ad}.relativity-lab .panel-description{color:#c3d1ca}.relativity-lab .control-section{border-color:#455457;margin-top:17px;padding-top:15px}.relativity-lab .control-heading>span{color:#f0eee4}.relativity-lab .control-heading small{color:#c3cfca}.relativity-lab .control-note{color:#c2cfc8;font-size:10px;line-height:1.7}.relativity-lab .range{margin-top:8px}.relativity-lab .slider-row label{color:#dfebe3}.relativity-lab .slider-row output{color:#f5caa7}
+.scenario-options{display:grid;gap:6px;margin-top:10px}.scenario-options button{min-height:58px;text-align:left;padding:9px 10px;border:1px solid #4f6461;border-radius:3px;background:#223236;color:#ebeee5;cursor:pointer}.scenario-options button:hover{border-color:#ddbea2}.scenario-options button[aria-pressed="true"]{border-color:#e3bb9d;background:#37413b;box-shadow:inset 2px 0 #efc3a1}.scenario-options strong,.scenario-options small{display:block}.scenario-options strong{font-size:12px}.scenario-options small{font-size:10px;color:#c8d5cd;margin-top:3px}.option-pills{margin-top:10px}.option-pills button{flex:1}
+.speed-value{display:flex;align-items:baseline;gap:5px;margin-top:12px}.speed-value strong{font:500 29px/1 var(--mono);color:#f1c7a5}.speed-value>span{font:12px var(--mono);color:#eac4a6}.speed-value small{margin-left:auto;font-size:10px;color:#d3ded6}.range-ends{display:flex;justify-content:space-between;color:#bfccc5;font:9px var(--mono)}.speed-presets{flex-wrap:wrap;margin-top:10px}.speed-presets button{min-height:28px;padding:0 7px;font-size:10px}.panel-foot span,.card-index{font:9px var(--mono);letter-spacing:.08em;color:#e9c9b1}.panel-foot p{font-size:10px;color:#c4d0c7;line-height:1.7;margin-top:6px}
+.knowledge-card,.probe-card{border:1px solid #526763;background:#243438;padding:12px;margin-top:14px;border-radius:3px}.card-index{display:flex;justify-content:space-between;gap:8px}.card-index span:last-child{color:#c9d7cf}.knowledge-card h3{font-size:15px;line-height:1.5;margin-top:10px;color:#fff6e9}.knowledge-card p,.probe-card p{font-size:11px;line-height:1.75;color:#d4dfd5;margin-top:9px}.equation{padding:9px 10px;margin-top:12px;border-left:2px solid #e9b894;background:#1a292e;color:#f4d1b2;font:11px/1.6 var(--mono)}.key-numbers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.key-numbers div{padding-top:8px;border-top:1px solid #60716b}.key-numbers span,.key-numbers strong{display:block}.key-numbers span{font-size:9px;color:#cbd9cf}.key-numbers strong{font:500 18px var(--mono);color:#f2c8a7;margin-top:3px}.knowledge-card p.card-note{color:#cbd8ce;font-size:10px}
+.spectrum-emitted{color:#81dcd0}.spectrum-observed{color:#f4ae7d}
+.probe-card button{display:block;width:100%;min-height:33px;margin-top:10px;border:1px solid #83948a;border-radius:3px;background:#334746;color:#f5ebdd;font-size:11px;cursor:pointer}.probe-card button:hover{border-color:#efc4a4}.probe-card dl{margin:10px 0 0}.probe-card dl div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #50615d}.probe-card dt{font-size:10px;color:#d1ddd4}.probe-card dd{margin:0;text-align:right;font:10px var(--mono);color:#f2c9a8}.probe-card canvas{display:block;width:100%;height:auto;aspect-ratio:260/118;margin-top:10px;background:#192b30}.probe-card p.plot-caption{font-size:9px;line-height:1.6;color:#c6d3cb}.scope{margin-top:15px;padding:12px;border:1px solid #53645e;border-radius:3px;font-size:10px;line-height:1.7;color:#d4dfd6}.scope summary{color:#f0decb;font-size:11px;cursor:pointer}.scope p{margin-top:8px}.scope strong{color:#f3dfcc}
+.relativity-lab .panel-scroll-hint{display:none;position:absolute;bottom:1px;left:1px;right:1px;height:28px;align-items:end;justify-content:center;padding-bottom:4px;background:linear-gradient(transparent,#152024 80%);font-size:9px;color:#cbd9d0;pointer-events:none}.relativity-lab .side-shell.has-more .panel-scroll-hint{display:flex}.noscript{position:fixed;z-index:90;bottom:10px;left:10px;right:10px;padding:14px;text-align:center;background:#f1c596;color:#1a2923}
+@media(max-width:1100px),(max-aspect-ratio:5/4){.relativity-lab .side-shell{top:58px;bottom:12px;width:min(294px,calc(100% - 54px))}.relativity-lab .side-shell-right{width:min(316px,calc(100% - 54px))}.relativity-lab .side-shell.closed{width:0}.relativity-lab .side-shell.closed .side-toggle{top:90px}.scene-title{left:55px}.scene-meta{right:52px}.scene-note{right:50px}.stage-hint{left:52px}.split-badge{left:52px}.split-badge.split-right{right:52px}}
+@media(max-width:620px){.scene-title{top:73px;left:52px;gap:5px}.scene-title>span{font-size:8px}.scene-title>strong{font-size:24px}.scene-title>small{font-size:10px}.scene-meta,.scene-note{display:none}.experiment-dock{bottom:12px;width:calc(100% - 24px);padding:10px 10px 9px}.dock-heading{gap:12px;padding-bottom:7px}.dock-label,.dock-stat>span{font-size:8px}.dock-heading>div:first-child>strong{font-size:12px}.dock-stat strong{font-size:14px}.dock-controls{gap:4px;padding:8px 0 5px}.view-switch{gap:3px}.view-switch button{min-height:31px;padding:0 7px;font-size:10px}.dock-actions{gap:3px}.dock-play{padding:0 8px;gap:5px;font-size:10px}.icon-button{min-width:29px}.time-row{grid-template-columns:100px minmax(0,1fr) auto auto;gap:6px;font-size:9px}.split-control{grid-template-columns:100px 1fr}.stage-hint{left:52px;bottom:172px;font-size:9px}.lab-workbench.split-active .stage-hint{bottom:212px}.split-badge{top:152px;font-size:9px}.render-fallback{top:52px}.relativity-lab .topbar{width:calc(100% - 20px)}}
+@media(max-width:365px){.dock-heading{gap:8px}.view-switch button{padding:0 5px;font-size:9px}.dock-play{padding:0 5px}.dock-actions{gap:2px}.time-row{grid-template-columns:94px minmax(0,1fr) auto auto}.split-control{grid-template-columns:94px 1fr}.scene-title>strong{font-size:21px}.scene-title>small{font-size:9px}}
+@media(max-height:540px){.scene-title{top:60px;gap:3px}.scene-title>strong{font-size:20px}.scene-title>small,.scene-meta,.scene-note,.stage-hint{display:none}.experiment-dock{bottom:7px;padding:7px 10px;width:min(660px,calc(100% - 120px))}.dock-heading{padding-bottom:4px}.dock-heading>div:first-child>strong{font-size:11px}.dock-stat strong{font-size:12px}.dock-controls{padding:5px 0 3px}.view-switch button,.dock-play,.icon-button{min-height:26px;height:26px}.split-control{margin-top:3px;padding-top:3px}.relativity-lab .side-shell{top:54px;bottom:8px}.relativity-lab .side-shell.closed .side-toggle{top:38px;height:80px}.split-badge{top:110px}}
+@media(max-width:480px) and (max-height:540px){.experiment-dock{width:calc(100% - 24px)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+.compare-example{width:100%;min-height:34px;margin-top:10px;padding:5px 8px;border:1px solid #aabbb0;border-radius:3px;background:#304341;color:#fff2e3;font-size:10px;text-align:left;cursor:pointer}.compare-example:hover{border-color:#f4caa8}
+/* On compact screens the drawers stop above the persistent transport, so
+   sampling or opening a card never makes the comparison controls unreachable. */
+@media(max-width:1100px),(max-aspect-ratio:5/4){
+  .relativity-lab .side-shell:not(.closed){bottom:164px}
+  .relativity-lab .split-active .side-shell:not(.closed){bottom:204px}
+}
+@media(max-height:540px){
+  .relativity-lab .side-shell:not(.closed){bottom:112px}
+  .relativity-lab .split-active .side-shell:not(.closed){bottom:140px}
+}
+
+/* The four real ray-traced environments are available without opening a drawer. */
+.world-switch{display:grid;grid-template-columns:auto repeat(5,minmax(0,1fr));gap:4px;align-items:center;padding:8px 0 2px}
+.world-switch>span{color:#c4d2ca;font-size:10px;margin-right:5px;white-space:nowrap}
+.world-switch button{min-height:30px;padding:0 6px;border:1px solid #536762;border-radius:3px;background:#203235;color:#dbe6df;font-size:10px;white-space:nowrap;cursor:pointer}
+.world-switch button:hover{border-color:#f0c4a3}.world-switch button[aria-pressed="true"]{border-color:#eac1a2;background:#485044;color:#fff1dd;font-weight:700}
+@media(max-width:620px){.world-switch{padding:6px 0 1px;gap:3px}.world-switch>span{font-size:9px;margin-right:2px}.world-switch button{min-height:27px;padding:0 3px;font-size:9px}.stage-hint{bottom:206px}.lab-workbench.split-active .stage-hint{bottom:246px}}
+@media(max-height:540px){.world-switch{padding:4px 0 0}.world-switch button{min-height:24px}.world-switch>span{font-size:9px}}
+@media(max-width:1100px),(max-aspect-ratio:5/4){.relativity-lab .side-shell:not(.closed){bottom:198px}.relativity-lab .split-active .side-shell:not(.closed){bottom:238px}}
+@media(max-height:540px){.relativity-lab .side-shell:not(.closed){bottom:140px}.relativity-lab .split-active .side-shell:not(.closed){bottom:168px}}
+
+/* Pin one light ray and compare a second emission event without obscuring the scene. */
+.reference-marker{border-color:#a9e6d4;box-shadow:0 0 0 2px #142a3277}
+.reference-marker::after{background:#a9e6d4}
+.reference-marker::before,.probe-marker.is-paired::before{position:absolute;left:17px;top:-14px;display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#a9e6d4;color:#142a29;font:700 10px var(--mono);content:'A'}
+.probe-marker.is-paired::before{content:'B';background:#f1caab;color:#2a2724}
+.ray-pair{margin-top:12px;padding-top:11px;border-top:1px solid #536963}
+.ray-pair p{font-size:10px;line-height:1.7}.ray-actions{display:flex;gap:6px}.ray-actions button{flex:1;min-width:0;margin-top:9px;font-size:10px}.ray-actions button:disabled{opacity:.58;cursor:not-allowed}.ray-pair dl{margin-top:7px}.ray-pair dd{max-width:60%;overflow-wrap:anywhere}.ray-pair .pair-footnote{font-size:9px;color:#c6d3cb}
+
+.optics-toggle-row{display:flex;gap:6px;margin:10px 0}.optics-toggle-row button{flex:1;min-height:36px;padding:4px;border:1px solid #71847b;border-radius:3px;background:#22363a;color:#e4ede5;font-size:10px;cursor:pointer}.optics-toggle-row button[aria-pressed="true"]{background:#dbc0a5;border-color:#edc8a8;color:#19282a}.optics-toggle-row button:hover{border-color:#f0c4a3}.optics-controls .slider-row{margin-top:12px}.optics-controls input:disabled{opacity:.45;cursor:not-allowed}
+
+.quick-optics{display:flex;align-items:center;gap:5px;padding:5px 0 0}.quick-optics>span{font-size:10px;color:#c4d2ca;margin-right:5px}.quick-optics button{min-height:27px;padding:0 9px;border:1px solid #536762;border-radius:3px;background:#203235;color:#dbe6df;font-size:10px;cursor:pointer}.quick-optics button[aria-pressed="true"]{border-color:#d8b89b;background:#485044;color:#fff1dd}.quick-optics button[aria-pressed="true"]::before{content:"✓ ";color:#f1c7a5}.quick-optics small{margin-left:auto;color:#c3d0c7;font-size:9px}
+.stage-hint{bottom:246px}.lab-workbench.split-active .stage-hint{bottom:288px}.scene-note{bottom:251px}.lab-workbench.split-active .scene-note{bottom:294px}
+@media(max-width:620px){.quick-optics{padding-top:4px}.quick-optics>span{font-size:9px}.quick-optics button{min-height:24px;font-size:9px}.quick-optics small{font-size:8px}.stage-hint{bottom:237px}.lab-workbench.split-active .stage-hint{bottom:277px}}
+@media(max-height:540px){.quick-optics{padding-top:2px}.quick-optics button{min-height:21px}.quick-optics small{display:none}}
+
+.scene-preparing{position:absolute;z-index:5;top:64px;left:50%;transform:translateX(-50%);padding:7px 11px;border:1px solid #82948a;border-radius:3px;background:#1b3035ed;color:#eaf3e9;font-size:10px;white-space:nowrap;pointer-events:none}
+
+.render-fallback:not([hidden]) + .scene-preparing{top:110px}
+@media(max-width:620px){
+  .render-fallback{top:146px;max-width:min(300px,76%);font-size:9px}
+  .scene-preparing{top:146px}
+  .render-fallback:not([hidden]) + .scene-preparing{top:212px}
+}
+/* Nearly opaque side panels do not need expensive full-height backdrop blurs.
+   Avoid forcing a second compositing pass over every ray-traced frame. */
+.relativity-lab .panel { backdrop-filter: none; }
+.relativity-lab .topbar { filter: none; }
+/* Keep the controls opaque and lightweight when software compositing is in use. */
+.relativity-lab .scene-title,
+.relativity-lab .scene-meta,
+.relativity-lab .scene-note,
+.relativity-lab .stage-hint { text-shadow: 0 1px 3px #0a1719; }
+.relativity-lab .experiment-dock,
+.relativity-lab .side-shell .panel { box-shadow: none; }
+
+.scene-quality{position:absolute;z-index:5;top:64px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid #82948a;border-radius:3px;background:#1b3035ed;color:#eaf3e9;font-size:10px;white-space:nowrap;pointer-events:none}
+.scene-quality strong{color:#f5c9a5;font-family:var(--mono)}.scene-quality small{color:#c7d7cf;font-size:9px}.scene-quality[hidden]{display:none}
+.render-detail{margin-top:9px;padding:8px;border:1px solid #50645e;border-radius:3px;background:#1b2d30;color:#e2eae2;font-size:10px;line-height:1.6;overflow-wrap:anywhere}
+@media(max-width:620px){.scene-quality{top:146px;max-width:88%;font-size:9px}.scene-quality small{font-size:8px}}
+
+/* An on-demand, static 3D projection of the exact probe, not a second GPU renderer. */
+.ray-space{width:min(1040px,calc(100vw - 28px));max-width:none;max-height:calc(100dvh - 28px);padding:0;border:1px solid #718880;border-radius:5px;background:#192b30;color:#f4f1e7;box-shadow:0 20px 70px #020a0cb3}
+.ray-space[open]{display:flex;flex-direction:column;overflow:auto}.ray-space::backdrop{background:#071115d9}
+.ray-space-header{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:16px 20px;border-bottom:1px solid #4b625e}.ray-space-header span,.ray-space-readout>span{font:700 9px var(--mono);letter-spacing:.13em;color:#a8c9bc}.ray-space-header h2{margin:5px 0 0;font-size:18px}.ray-space-header button,.ray-space-toolbar button{min-height:34px;border:1px solid #718880;border-radius:3px;background:#2d4443;color:#fff0df;cursor:pointer}.ray-space-header button{padding:0 12px;font-size:11px}.ray-space-header button:hover,.ray-space-toolbar button:hover{border-color:#f4c7a6}
+.ray-space-body{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:0}.ray-space-view{min-width:0;padding:14px}.ray-space-view canvas{display:block;width:100%;height:min(52vh,470px);min-height:220px;border:1px solid #48635f;background:#102027;touch-action:none;cursor:grab}.ray-space-view canvas:active{cursor:grabbing}.ray-space-view p{font-size:10px;color:#c4d6cf;margin:8px 0 0}.ray-space-toolbar{display:flex;gap:5px;margin-top:9px}.ray-space-toolbar button{min-width:34px;padding:0 9px;font-size:13px}.ray-space-toolbar button:last-child{font-size:11px}
+.ray-space-readout{padding:18px;border-left:1px solid #4b625e;background:#203438}.ray-space-readout h3{font-size:15px;margin:7px 0}.ray-space-readout p{font-size:11px;line-height:1.65;color:#d7e5db;margin:9px 0}.ray-space-readout #ray-space-delta{padding:9px;border-left:2px solid #f1c3a0;background:#17292d;color:#f6d3b5}.ray-space-ray{padding:9px 0;border-bottom:1px solid #49605c}.ray-space-ray strong{font-size:12px;color:#ffbd87}.ray-space-ray.is-a strong{color:#7ad9d1}.ray-space-ray p{margin:4px 0;font:10px/1.6 var(--mono);overflow-wrap:anywhere}.ray-space-readout #ray-space-caption{font-size:10px;color:#c3d5cd}
+#open-ray-space:disabled{opacity:.58;cursor:not-allowed}
+@media(max-width:700px){.ray-space{width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}.ray-space-header{padding:12px 14px}.ray-space-header h2{font-size:16px}.ray-space-body{display:flex;flex-direction:column}.ray-space-view{padding:10px}.ray-space-view canvas{height:min(39vh,330px);min-height:180px}.ray-space-readout{border-left:0;border-top:1px solid #4b625e;padding:13px 15px}.ray-space-toolbar{gap:4px}.ray-space-toolbar button{min-width:31px;min-height:32px;padding:0 7px}}
+
+/* A diagram layer, kept in the same accepted render revision as the photo. */
+#geometry-contour{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#geometry-contour[hidden]{display:none}
+#relativity-stage[data-render-pending="true"]:not([data-view-pending="true"]) #geometry-contour,
+#relativity-stage[data-render-pending="true"]:not([data-view-pending="true"]) .observation-legend{opacity:0}
+.observation-legend{position:absolute;left:70px;top:190px;z-index:2;display:grid;gap:6px;max-width:min(340px,70vw);padding:8px 10px;border:1px solid #60837d;background:#10282ee8;color:#dcf1ea;font-size:10px;line-height:1.5;pointer-events:none}
+.observation-legend[hidden],.observation-legend [hidden]{display:none}.observation-legend i{display:block;width:180px;max-width:100%;height:5px;margin:4px 0;background:linear-gradient(90deg,#ff571f,#ffd159,#0d70d9)}
+@media(max-width:620px){.observation-legend{top:100px;left:12px;max-width:240px;font-size:9px}}
+.optics-controls select{width:100%;min-height:34px;padding:4px 7px;border:1px solid #71847b;border-radius:3px;background:#22363a;color:#e4ede5;font-size:11px}.spectrum-card canvas{display:block;width:100%;height:auto;margin:10px 0;background:#192b30}.spectrum-card .plot-caption{font-size:9px;color:#c6d3cb}.spectrum-card a{color:#9ee1d3;text-decoration:underline}
+.experiment-guide{margin:12px 0;padding:10px;border:1px solid #647b71;background:#1d3335;font-size:10px;color:#dce9df}.experiment-guide summary{cursor:pointer;color:#f3d2b7;font-size:11px;font-weight:700}.guide-list,.snapshot-buttons{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:9px 0}.guide-list button,.snapshot-buttons button{min-height:32px;padding:4px 6px;border:1px solid #71847b;border-radius:3px;background:#263c3c;color:#e8ede4;font-size:10px;cursor:pointer}.guide-list button[aria-pressed="true"]{background:#d8bba2;color:#182b2c}.experiment-guide p{font-size:10px;line-height:1.65;color:#c9d9d0}.snapshot-controls [role="status"]{color:#d9eee5}
+
+/* Same-event view reprojection is a temporary visual preview, never a probe. */
+.camera-preview,.camera-preview-layer,.camera-preview-half{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.camera-preview{background:#172a34;contain:layout paint}.camera-preview[hidden],.camera-preview-layer[hidden]{display:none}
+.camera-preview-image{position:absolute;inset:0;width:100%;height:100%;transform-origin:0 0;will-change:transform;transition:none!important}
+.camera-preview-detail.has-underlay{mask-image:linear-gradient(to right,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(to right,transparent,#000 12%,#000 88%,transparent)}
+#relativity-stage[data-camera-preview="true"] #relativity-scene{opacity:0}
+
+/* Fixed material point indicators are drawn only on matching physical frames. */
+.material-marker{position:absolute;z-index:3;width:17px;height:17px;border:2px solid #ffe3a0;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 0 2px #14262bd9}
+.material-marker::after{content:'M';position:absolute;left:15px;top:-11px;padding:1px 3px;background:#13282be8;color:#ffe3a0;font:700 10px var(--mono)}
+.material-marker-geometry{border-color:#9be9dc}.material-marker-geometry::after{content:attr(data-label);color:#9be9dc;white-space:nowrap}.material-marker-geometry.is-diagram{border-style:dashed}
+.material-marker[hidden]{display:none}#relativity-stage[data-camera-preview="true"] .material-marker{display:none}
+.event-readouts{margin:10px 0}.event-readouts div{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #4b635b;font-size:10px}.event-readouts dt{color:#c5d6cb}.event-readouts dd{margin:0;max-width:62%;color:#f5dfc6;text-align:right;overflow-wrap:anywhere;font-family:var(--mono)}
+.material-readout{margin-top:12px;padding-top:12px;border-top:1px solid #536963}.material-readout p{font-size:10px;line-height:1.65}.material-readout button{min-height:34px;padding:5px;border:1px solid #71847b;border-radius:3px;background:#263c3c;color:#e8ede4;cursor:pointer}.material-readout button:disabled{opacity:.55;cursor:not-allowed}
+.diagram-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.diagram-tabs button,.spacetime-controls select,.spacetime-controls button{min-height:32px;padding:4px 10px;border:1px solid #718880;border-radius:3px;background:#263c3c;color:#e6eee5;font-size:10px}.diagram-tabs button,.spacetime-controls button{cursor:pointer}.diagram-tabs button[aria-pressed="true"]{background:#dec2a6;color:#172a2b;border-color:#f4c7a6}.ray-space-view canvas[hidden],.spacetime-controls[hidden],.ray-space-toolbar[hidden],#space-hint[hidden]{display:none}
+#spacetime-canvas{cursor:default;touch-action:auto}.spacetime-controls{display:grid;grid-template-columns:auto minmax(90px,1fr);align-items:center;gap:7px 12px;margin-top:10px;color:#dcebe2;font-size:11px}.spacetime-controls select{width:100%}.spacetime-controls input{width:100%;accent-color:#e8bd9c}.spacetime-controls p{grid-column:1/-1;margin:2px 0 0;line-height:1.55}.spacetime-controls output{color:#f2caa9;font-family:var(--mono)}
+@media(max-width:700px){.spacetime-controls{grid-template-columns:auto minmax(0,1fr)}.diagram-tabs button{flex:1}.ray-space-view canvas{min-height:200px}}
+
+/* Independent two-configuration study: the main experiment remains full-screen. */
+.parameter-dialog{width:min(1060px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 30px);padding:0;border:1px solid #748f83;border-radius:5px;background:#17282b;color:#e7eee4;box-shadow:0 20px 80px #071114aa;overflow:auto}
+.parameter-dialog::backdrop{background:#091316d9}.parameter-header{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:15px 20px;background:#203538;border-bottom:1px solid #526c62}
+.parameter-header span{font:10px var(--mono);letter-spacing:.13em;color:#a5c5bc}.parameter-header h2{margin:3px 0 0;font-size:19px;color:#f4e3d0}.parameter-header button,.parameter-actions button,.parameter-lock button{min-height:36px;padding:7px 12px;border:1px solid #728b7e;border-radius:3px;background:#2b4645;color:#f6efe2;cursor:pointer}.parameter-header button:hover,.parameter-actions button:hover,.parameter-lock button:hover{border-color:#ffd2ab}.parameter-actions button:disabled{opacity:.48;cursor:not-allowed}
+.parameter-body{padding:17px 20px 24px;font-size:12px;line-height:1.65}.parameter-body>p{margin:0 0 12px;color:#d4e0d6}.parameter-lock{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:10px 12px;border:1px solid #4f6860;background:#1d3334}.parameter-lock strong{color:#f1c9a6}.parameter-lock span{flex:1;min-width:200px}.parameter-lock button{font-size:11px}
+.parameter-groups{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.parameter-group{min-width:0;margin:0;padding:10px 14px 12px;border:1px solid #56746a}.parameter-group legend{padding:0 6px;color:#f4c6a0;font-weight:700}.parameter-group label{display:flex;justify-content:space-between;margin-top:6px;color:#e4ece3}.parameter-group output{font:11px var(--mono);color:#f3cba9}.parameter-group input[type=range]{width:100%;accent-color:#e7b893}
+.parameter-actions{display:flex;flex-wrap:wrap;gap:7px}.parameter-actions button{font-size:11px}.parameter-actions #comparison-run{background:#e6c1a1;color:#172a2c;border-color:#f3d4b7;font-weight:700}.parameter-status{margin:10px 0!important;color:#e5d5bd!important}.comparison-results[data-stale="true"] .comparison-images canvas{filter:grayscale(.35) brightness(.8)}.comparison-images{display:grid;grid-template-columns:1fr 1fr;gap:12px}.comparison-images figure,.comparison-chart{margin:0;min-width:0}.comparison-images figcaption,.comparison-chart figcaption{padding:7px 9px;background:#294341;color:#f1d4b8;font-size:11px;font-weight:700}.comparison-images canvas{display:block;width:100%;aspect-ratio:8/5;background:#0d1d21;object-fit:contain}.comparison-results>p,.comparison-data p{color:#c8d8cf;font-size:10px}.comparison-data{display:grid;grid-template-columns:minmax(250px,1fr) minmax(300px,1fr);gap:15px;margin-top:10px}.comparison-table-wrap{overflow:auto}.comparison-data table{width:100%;border-collapse:collapse;text-align:left;font:11px var(--mono)}.comparison-data caption{text-align:left;padding:6px 0;color:#f1d4b8;font:700 11px sans-serif}.comparison-data th,.comparison-data td{border-bottom:1px solid #47645a;padding:7px 5px}.comparison-chart canvas{display:block;width:100%;height:auto;background:#14272a}
+@media(max-width:620px){.parameter-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}.parameter-header{padding:12px}.parameter-header h2{font-size:16px}.parameter-body{padding:12px}.parameter-groups{gap:7px}.parameter-group{padding:7px}.parameter-group label{font-size:10px}.comparison-images,.comparison-data{grid-template-columns:1fr}.comparison-images canvas{max-height:240px}.parameter-actions button{flex:1 1 42%}}
+
+/* Progressive disclosure keeps the frequently used controls in the console. */
+.advanced-physics{margin:0 0 14px;border:1px solid #536c62;border-radius:3px;background:#1b3031}
+.advanced-physics>summary{display:flex;justify-content:space-between;align-items:center;gap:7px;min-height:40px;padding:9px 10px;color:#f3d5ba;font-size:11px;font-weight:700;cursor:pointer;list-style:none}.advanced-physics>summary::-webkit-details-marker{display:none}.advanced-physics>summary::before{content:'+';color:#a8ded0;font:15px var(--mono)}.advanced-physics[open]>summary::before{content:'−'}.advanced-physics>summary small{margin-left:auto;color:#bed0c7;font-size:9px;font-weight:400}.advanced-physics>.control-section{margin:0 10px;padding:12px 0;border-top:1px solid #4b645b}.advanced-physics>.control-section:last-child{padding-bottom:15px}
+.guide-steps{margin:10px 0 0;padding:0;list-style:none}.guide-steps[hidden]{display:none}.guide-steps li{padding:8px 9px;margin-top:6px;border-left:2px solid #a9ddd0;background:#213739}.guide-steps strong{color:#f4cca9;font-size:10px}.guide-steps p{margin:3px 0 0;font-size:10px;line-height:1.65;color:#e1ebe2}
+.dock-toggle{display:none}
+@media(max-width:620px){
+  .dock-toggle{display:block;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);min-width:150px;min-height:30px;padding:4px 12px;border:1px solid #758c80;border-bottom:0;border-radius:5px 5px 0 0;background:#203538;color:#e8f0e6;font-size:10px;cursor:pointer}
+  .experiment-dock.dock-collapsed{width:auto;padding:0;border:0;background:transparent}
+  .experiment-dock.dock-collapsed .dock-toggle{position:static;transform:none;border:1px solid #758c80;border-radius:4px;min-height:36px}
+  .lab-workbench.dock-collapsed .stage-hint{bottom:65px}.lab-workbench.dock-collapsed .scene-note{bottom:65px}
+  .relativity-lab .lab-workbench.dock-collapsed .side-shell:not(.closed){bottom:58px}
+}
+
+@media(max-width:620px){
+  /* Keep the drawer above the entire dock, including the mobile pull tab. */
+  .relativity-lab .lab-workbench .side-shell:not(.closed){bottom:var(--dock-clearance,270px)}
+}
+
+/* Self-contained physical experiments keep controls beside the actual model. */
+.inline-lab-button,.physics-lab-controls button,.physics-playhead button{border:1px solid #89a79a;border-radius:3px;background:#304b47;color:#fff0e0;min-height:34px;padding:6px 10px;cursor:pointer}
+.inline-lab-button{width:100%;margin:8px 0}.physics-lab-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,310px)}
+.physics-lab-visual{padding:16px;min-width:0}.physics-lab-visual canvas{display:block;width:100%;height:min(50vh,420px);min-height:230px;background:#0e1e23;border:1px solid #4c6d64;touch-action:none;cursor:grab}
+.physics-lab-visual p,.physics-lab-controls p{color:#d2e1d8;font-size:11px;line-height:1.6}.physics-playhead{display:grid;grid-template-columns:minmax(150px,1fr) minmax(90px,2fr) auto;gap:9px;align-items:center;margin-top:10px;font-size:11px}.physics-playhead input,.physics-lab-controls input{width:100%;accent-color:#eac4a3}.physics-playhead output,.physics-lab-controls output{font:11px var(--mono);color:#f5c9a9}
+.physics-lab-controls{padding:16px;background:#203638;border-left:1px solid #4b655d}.physics-lab-controls label{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#e3ece3;margin:12px 0 4px}.lab-kicker{font:700 9px var(--mono);letter-spacing:.12em;color:#a8c9bc}.physics-lab-controls button{width:100%;margin:10px 0}.physics-readout{padding:10px;background:#13282b;border-left:2px solid #e7bd9f;font:11px/1.65 var(--mono);color:#e7eee4;overflow-wrap:anywhere}.physics-readout strong{color:#ffca9e}
+@media(max-width:700px){.physics-lab-grid{display:flex;flex-direction:column}.physics-lab-visual{padding:10px}.physics-lab-visual canvas{height:min(38vh,300px);min-height:200px}.physics-lab-controls{border-left:0;border-top:1px solid #4b655d;padding:14px}.physics-playhead{grid-template-columns:1fr auto}.physics-playhead label{grid-column:1/-1}}
+
+.clock-presets{display:flex;gap:6px}.clock-presets button{flex:1}.clock-event-table{max-width:100%;overflow:auto;margin-top:12px}.clock-event-table table{width:100%;border-collapse:collapse;color:#e5ede6;font:11px var(--mono)}.clock-event-table th,.clock-event-table td{text-align:left;padding:6px;border-bottom:1px solid #48635d;white-space:nowrap}.clock-event-table th{color:#a7c9bd}.clock-event-table tr.is-now{background:#435c54;color:#ffe3c9}
+
+#slice-canvas{touch-action:none;cursor:grab}
+
+/* Small bounded still-frame cache controls, kept inside the existing drawer. */
+.frame-cache-controls{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:10px}.frame-cache-controls button{min-width:0;min-height:32px;padding:3px 6px;border:1px solid #657771;border-radius:3px;background:#24363a;color:#eff2e8;font-size:10px;cursor:pointer}.frame-cache-controls button[aria-pressed="true"]{border-color:#f0c4a3;background:#eac1a2;color:#19262b;font-weight:600}.frame-cache-controls button:last-child{grid-column:1/-1}.frame-cache-controls button:disabled{opacity:.55;cursor:not-allowed}.frame-cache-controls button:focus-visible{outline:2px solid #a8f4e6;outline-offset:2px}
+
+.cache-indicator{position:absolute;z-index:5;top:64px;right:65px;max-width:calc(100% - 100px);padding:6px 10px;border:1px solid #9dbcb0;border-radius:3px;background:#17352ff0;color:#e7fff4;font-size:10px;line-height:1.4;pointer-events:none}.cache-indicator[hidden]{display:none}@media(max-width:620px){.cache-indicator{top:50px;right:12px;max-width:calc(100% - 24px)}.render-fallback:not([hidden])~.cache-indicator{top:100px}}
+
+/* Finished frames are the cached canvases themselves, not extra copies. */
+.cache-gallery{margin:9px 0;padding:9px;border:1px solid #536b65;background:#1b3032;color:#e8f0e8;font-size:10px}
+.cache-gallery summary{cursor:pointer;color:#f1d0b5;font-weight:700}.cache-gallery summary span{color:#b9cdc2;font-weight:400}
+.cache-gallery-list{display:grid;gap:6px;max-height:340px;overflow:auto;overscroll-behavior:contain}.cache-gallery-list:empty{display:none}
+.cache-gallery-item{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;align-items:center;width:100%;min-height:62px;padding:5px;text-align:left;border:1px solid #526c65;border-radius:3px;background:#263c3b;color:#e8f0e9;cursor:pointer}
+.cache-gallery-item:hover,.cache-gallery-item:focus-visible{border-color:#f1c6a5;outline:2px solid #f1c6a5;outline-offset:1px}.cache-gallery-item[aria-pressed="true"]{border-color:#8ad1bc;background:#304b47}.cache-gallery-item:disabled{opacity:.56;cursor:not-allowed}
+.cache-gallery-item canvas{width:88px;height:52px;object-fit:contain;background:#14272d;pointer-events:none}.cache-gallery-item span{min-width:0;display:grid;gap:3px}.cache-gallery-item strong{font-size:10px}.cache-gallery-item small{font-size:9px;line-height:1.4;color:#c5d6cb;overflow-wrap:anywhere}

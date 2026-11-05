@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111c22">
+  <meta name="description" content="在车站、街道、长廊、山路和港口货场中对照狭义相对论的光行时照片、同时形状与高速观察者视野。">
+  <title>光抵达的世界 · 狭义相对论实验</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23111c22'/%3E%3Cpath d='M8 25L20 8l12 17M8 25h24M20 8v24' fill='none' stroke='%23efc09a' stroke-width='2'/%3E%3Ccircle cx='20' cy='25' r='3' fill='%23a9d7d7'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-33">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="relativity.css?v=20261105-10">
+  <script defer src="relativity-assets.js?v=20261105-10"></script>
+  <script defer src="relativity-model.js?v=20261105-10"></script>
+  <script defer src="relativity-foliage-mask.js?v=20261105-10"></script>
+  <script defer src="relativity-worlds.js?v=20261105-10"></script>
+  <script defer src="relativity-geometry-pack.js?v=20261105-10"></script>
+  <script defer src="relativity-spectrum-data.js?v=20261105-10"></script>
+  <script defer src="relativity-spectrum.js?v=20261105-10"></script>
+  <script defer src="relativity-surface.js?v=20261105-10"></script>
+  <script defer src="relativity-measured-data.js?v=20261105-10"></script>
+  <script defer src="relativity-material-spectrum.js?v=20261105-10"></script>
+  <script defer src="relativity-probe-spectrum.js?v=20261105-10"></script>
+  <script defer src="relativity-mirror.js?v=20261105-10"></script>
+  <script defer src="relativity-light-clock.js?v=20261105-10"></script>
+  <script defer src="relativity-light-clock-ui.js?v=20261105-10"></script>
+  <script defer src="relativity-mirror-ui.js?v=20261105-10"></script>
+  <script defer src="relativity-optics.js?v=20261105-10"></script>
+  <script defer src="relativity-light-path.js?v=20261105-10"></script>
+  <script defer src="relativity-camera.js?v=20261105-10"></script>
+  <script defer src="relativity-renderer.js?v=20261105-10"></script>
+  <script defer src="relativity-observables.js?v=20261105-10"></script>
+  <script defer src="relativity-ray-space.js?v=20261105-10"></script>
+  <script defer src="relativity-spacetime-slice.js?v=20261105-10"></script>
+  <script defer src="relativity-spacetime.js?v=20261105-10"></script>
+  <script defer src="relativity-overlays.js?v=20261105-10"></script>
+  <script defer src="relativity-experiments.js?v=20261105-10"></script>
+  <script defer src="relativity-frame-cache.js?v=20261105-10"></script>
+  <script defer src="relativity-comparison.js?v=20261105-10"></script>
+  <script defer src="relativity-comparison-ui.js?v=20261105-10"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="relativity.js?v=20261105-10"></script>
+</head>
+<body class="relativity-lab">
+<a class="skip-link" href="#relativity-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#relativity-scene" data-jump="stage"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M7 26 20 8l13 18M7 26h26M20 8v23"/><circle cx="20" cy="26" r="2.3"/></svg></span><span><strong>CHAOS / LAB</strong><small>光抵达的世界</small></span></a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status"><span class="status-light"></span><span id="header-status">准备光线</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame"><div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="ising.html"><span>自旋相变</span><small>08</small></a>
+    </div><input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list"></div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓ 拖动滑块或滚动查看 · 8 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" data-initial-panels="closed" aria-label="狭义相对论光线实验台">
+  <h1 class="visually-hidden">光抵达的世界：光行时、同时形状与相对论光行差</h1>
+  <article class="model-panel" aria-label="三维相对论实验场景">
+    <div class="model-stage" id="relativity-stage" data-status="loading">
+      <canvas id="relativity-scene" data-lab-canvas tabindex="0" aria-label="三维实验场景。拖动旋转视角，点击采样光线，滚轮或加减号缩放；方向键旋转，Shift 加方向键选择采样点，回车采样画面中心，空格播放或暂停。"></canvas>
+      <div id="camera-preview" class="camera-preview" aria-hidden="true" hidden></div>
+      <canvas id="geometry-contour" aria-hidden="true" hidden></canvas>
+      <div class="scene-wash" aria-hidden="true"></div>
+      <div id="observation-legend" class="observation-legend" aria-live="off" hidden><span id="contour-legend" hidden>青色虚线：观察时刻的同时几何投影（含被遮挡部分）</span><span id="emission-legend" hidden><b>发射时刻伪彩色</b><i></i>晚 / 0　← t<sub>发射</sub> − t<sub>观察</sub> →　−20 / 更早<br>超出范围截断；天空无有限发射时刻</span></div>
+      <div class="scene-title" aria-hidden="true"><span>EXPERIMENT 09 <i></i> SPECIAL RELATIVITY</span><strong>光抵达的世界<span>。</span></strong><small id="scene-title-detail">一张照片，不是同一时刻的世界。</small></div>
+      <div class="scene-meta" aria-hidden="true"><span id="scene-environment">车站站台 / INERTIAL FRAME</span><span>c = 1</span></div>
+      <div class="scene-note" id="scene-note" aria-hidden="true"><span class="note-number">01</span><div><strong id="scene-note-title">高速掠过</strong><small id="scene-note-sub">来自不同过去时刻的光</small></div></div>
+      <div class="split-overlay" id="split-overlay" hidden aria-hidden="true"><span class="split-line"></span><span class="split-badge" id="split-left-label">光锥照片</span><span class="split-badge split-right" id="split-right-label">同时几何</span></div><button type="button" id="split-handle" class="split-handle" role="slider" aria-label="拖动左右对照分界线" aria-valuemin="10" aria-valuemax="90" aria-valuenow="50" aria-valuetext="50%" hidden>↔</button>
+      <span id="material-photo-marker" class="material-marker material-marker-photo" aria-hidden="true" hidden></span><span id="material-geometry-marker" class="material-marker material-marker-geometry" aria-hidden="true" hidden></span>
+      <span class="probe-marker reference-marker" id="reference-marker" hidden aria-hidden="true"></span><span class="probe-marker" id="probe-marker" hidden aria-hidden="true"></span>
+      <div class="stage-hint" id="stage-hint">拖动改变视角 <b>·</b> 点击采样并可固定 A/B</div>
+      <div class="render-fallback" id="render-fallback" role="status" hidden>WebGL 不可用或场景编译失败：已切换到同一光锥计算的低分辨率 Canvas 光线求交。</div>
+      <div class="cache-indicator" id="cache-indicator" role="status" aria-live="polite" hidden></div>
+      <div class="scene-preparing" id="scene-preparing" role="status" hidden>正在生成新画面，可继续操作…</div>
+      <div class="scene-quality" id="scene-quality" role="progressbar" aria-label="高清画面生成进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><span id="quality-phase">高清生成中</span><strong id="quality-percent">0%</strong><small id="quality-hint">等待匹配预览 · 可继续操作</small></div>
+      <div class="scene-loading" id="scene-loading" role="status">正在建立三维光路…</div>
+    </div>
+  </article>
+
+  <section class="experiment-dock" id="experiment-dock" aria-label="场景、对照和时间控制">
+    <button type="button" id="toggle-dock" class="dock-toggle" aria-controls="dock-content" aria-expanded="true">收起底部控制区 ⌄</button>
+    <div id="dock-content"><div class="dock-heading"><div><span class="dock-label">WORLD / 09</span><strong id="dock-title">运动物体</strong></div><div class="dock-stat"><span>速度 β</span><strong id="dock-beta">+0.60 <small>c</small></strong></div><div class="dock-stat"><span>洛伦兹因子 γ</span><strong id="dock-gamma">1.25</strong></div></div>
+    <div class="world-switch" role="group" aria-label="切换三维环境"><span aria-hidden="true">场景</span><button type="button" data-environment="station" aria-pressed="true">车站站台</button><button type="button" data-environment="street" aria-pressed="false">城市街道</button><button type="button" data-environment="corridor" aria-pressed="false">工业长廊</button><button type="button" data-environment="mountain" aria-pressed="false">山间公路</button><button type="button" data-environment="harbor" aria-pressed="false">港口货场</button></div>
+    <div class="quick-optics" role="group" aria-label="光谱和阴影快捷对照"><span>光学</span><button type="button" id="dock-doppler" aria-pressed="true" aria-describedby="dock-optics-note">多普勒光谱</button><button type="button" id="spectrum-split" aria-pressed="false" aria-describedby="dock-optics-note">光谱开 / 关对照</button><button type="button" id="dock-shadows" aria-pressed="true">投射阴影</button><small id="dock-optics-note" aria-live="polite">假设光谱 · 左侧调曝光</small></div>
+    <div class="dock-controls">
+      <div class="view-switch" role="group" aria-label="比较视图">
+        <button type="button" data-view="photo" aria-pressed="true" id="view-photo">光锥照片</button>
+        <button type="button" data-view="geometry" aria-pressed="false" id="view-geometry">同时几何</button>
+        <button type="button" data-view="split" aria-pressed="false">左右对照</button>
+      </div>
+      <div class="dock-actions"><button type="button" id="play" class="dock-play" aria-label="播放时间"><span id="play-icon" aria-hidden="true">▶</span><span id="play-text">播放</span></button><button type="button" id="reset" class="icon-button" aria-label="重置时间" title="重置时间">↺</button><button type="button" id="reset-view" class="icon-button" aria-label="恢复视角" title="恢复视角">⌾</button></div>
+    </div>
+    <div class="time-row"><label for="event-time"><span id="time-label">实验室时间 t</span><output id="time-value" for="event-time">0.00</output></label><input id="event-time" type="range" min="-3" max="3" step="0.01" value="0" aria-label="实验室观察事件时间"><label class="time-rate" for="playback-rate">速率 <select id="playback-rate" aria-label="时间播放速率" aria-describedby="playback-rate-note" title="1× 每现实秒推进 0.65 个实验室时间单位；低帧率会跳过中间事件，不改变物体速度"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label><span>c = 1</span></div>
+    <span id="playback-rate-note" class="visually-hidden">1 倍播放每现实秒推进 0.65 个实验室时间单位；低帧率会跳过中间事件，页面隐藏时停止推进。倍率不改变物体速度。</span>
+    <div class="split-control" id="split-control" hidden><label for="split-position">对照分界 <output id="split-value" for="split-position">50%</output></label><input id="split-position" type="range" min="10" max="90" value="50" step="1" aria-label="左右对照分界位置"></div></div>
+  </section>
+
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="相对论实验控制台">
+      <div class="panel-top"><div><span class="panel-kicker">FRAME CONSOLE / 09</span><h2>实验控制台<span>。</span></h2></div></div>
+      <p class="panel-description">换一个参照系，或等待光追上你。</p>
+      <div class="control-section"><div class="control-heading"><span>01 / 选择实验</span><small>EXPERIMENT</small></div>
+        <div class="scenario-options" role="group" aria-label="选择实验场景"><button type="button" data-scenario="flyby" aria-pressed="true"><strong>运动物体</strong><small>实验室相机静止 · 物体匀速运动</small></button><button type="button" data-scenario="observer" aria-pressed="false"><strong>高速观察者</strong><small>环境静止 · 相机匀速运动</small></button></div>
+      </div>
+      <details class="experiment-guide" id="experiment-guide"><summary>引导实验 / 五个可验证的问题</summary><div class="guide-list" role="group" aria-label="载入引导实验"><button type="button" data-experiment="terrell">照片与同时形状</button><button type="button" data-experiment="aberration">迎面与远离</button><button type="button" data-experiment="shadow">延迟阴影</button><button type="button" data-experiment="spectrum">谱线的红移与蓝移</button><button type="button" data-experiment="shutter">有限快门与时间</button></div><p id="experiment-instruction" role="status">选择一个实验载入完整参数；载入会清除当前两束光采样，但不切换渲染模式。</p><ol class="guide-steps" id="guide-steps" hidden><li><strong>01 / 操作</strong><p id="guide-operate"></p></li><li><strong>02 / 观察</strong><p id="guide-observe"></p></li><li><strong>03 / 验证</strong><p id="guide-verify"></p></li></ol></details>
+      <div class="control-section" id="object-section"><div class="control-heading"><span>02 / 物体形状</span><small>REST SHAPE</small></div><div class="option-pills" role="group" aria-label="物体静止系形状"><button type="button" data-shape="artifact" aria-pressed="true">场景物件</button><button type="button" data-shape="cube" aria-pressed="false">标准方块</button><button type="button" data-shape="sphere" aria-pressed="false">理想球体</button></div><p class="control-note">场景物件有不同尺寸与立体零件；标准方块主体为正方体，仍带场景零件。表面图案固定在物体静止系。</p><p class="control-note" id="object-material">当前物件：带滚轮和提手的旅行箱；仍为简化几何。</p></div>
+      <div class="control-section"><div class="control-heading"><span>03 / 速度</span><small>FRACTION OF LIGHT</small></div><div class="speed-value"><strong id="beta-big">+0.60</strong><span>c</span><small id="direction-label">物体向右运动 →</small></div>
+        <label class="visually-hidden" for="beta">速度 β，相对于光速的比例</label><input class="range beta-range" id="beta" type="range" min="-0.98" max="0.98" step="0.01" value="0.60" aria-label="速度 β，相对于光速的比例"><div class="range-ends"><span>−0.98 c</span><span>0</span><span>+0.98 c</span></div>
+        <div class="speed-presets" role="group" aria-label="速度预设"><button type="button" data-beta="0">静止</button><button type="button" data-beta="0.60" aria-pressed="true">0.60c</button><button type="button" data-beta="0.86">0.86c</button><button type="button" data-beta="0.98">0.98c</button><button type="button" id="reverse-speed">反向</button></div>
+        <div class="slider-row"><label for="motion-angle">水平运动轴</label><output id="motion-angle-value" for="motion-angle">0°</output></div>
+        <input class="range" type="range" id="motion-angle" min="-180" max="180" step="5" value="0" aria-label="水平运动方向角">
+        <div class="speed-presets" role="group" aria-label="运动方向预设"><button type="button" data-motion-angle="-90">迎面</button><button type="button" data-motion-angle="0" aria-pressed="true">横向 →</button><button type="button" data-motion-angle="90">远离</button><button type="button" data-motion-angle="180">横向 ←</button></div>
+        <div class="slider-row"><label for="motion-elevation">运动轴仰角</label><output id="motion-elevation-value" for="motion-elevation">0°</output></div>
+        <input class="range" type="range" id="motion-elevation" min="-90" max="90" step="5" value="0" aria-label="运动轴仰角，正角向上，负角向下">
+        <div class="option-pills"><button type="button" id="toggle-velocity-arrow" aria-pressed="true">场景速度箭头：开</button></div>
+        <div id="second-body-controls"><div class="option-pills"><button type="button" id="toggle-second-body" aria-pressed="false">第二个运动物体 B：关</button></div><div id="second-body-settings" hidden><div class="slider-row"><label for="second-beta">B 的速度 β</label><output id="second-beta-value" for="second-beta">−0.60 c</output></div><input class="range" type="range" id="second-beta" min="-0.98" max="0.98" step="0.01" value="-0.60"><div class="slider-row"><label for="second-angle">B 的水平运动轴</label><output id="second-angle-value" for="second-angle">0°</output></div><input class="range" type="range" id="second-angle" min="-180" max="180" step="5" value="0"><div class="slider-row"><label for="second-elevation">B 的运动轴仰角</label><output id="second-elevation-value" for="second-elevation">0°</output></div><input class="range" type="range" id="second-elevation" min="-90" max="90" step="5" value="0"><div class="speed-presets"><button type="button" id="second-opposite">设为与 A 相反</button><button type="button" id="second-independent">B 恢复 −0.60 c</button></div></div><p class="control-note">B 使用与 A 相同的简化几何和尺寸，主体以冷色区分；两者有各自的三维匀速世界线、光行时、频移和相互遮挡。允许穿透，不模拟碰撞、力或加速。固定材料点 M 和钟面读数属于 A；探针可选 A 或 B。此功能仅用于运动物体模式。</p></div>
+        <button type="button" id="open-parameter-comparison" class="compare-example">比较两组运动参数 ↗</button>
+        <p class="control-note">固定观察事件与镜头；生成两张独立照片和角点发射时差曲线，与右侧的两束光 A/B 不同。</p>
+        <p class="control-note" id="motion-angle-note">正 β 时，0° 向右，−90° 迎面，90° 远离；负 β 反向。更改速度或方向会重置当前事件与采样；均为匀速。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>04 / 镜头</span><small>CAMERA</small></div><div class="slider-row"><label for="fov">基准竖直视场</label><output id="fov-value" for="fov">58°</output></div><input class="range" type="range" id="fov" min="35" max="100" step="1" value="58"><p class="control-note">拖动场景转动视角，滚轮缩放；也可用方向键和加减号。窄屏会自动扩展竖向视场以容纳横向场景。</p></div>
+      <details class="advanced-physics" id="advanced-physics"><summary><span>进阶物理设置</span><small>轮廓 / 光谱 / 阴影</small></summary>
+      <div class="control-section"><div class="control-heading"><span>05 / 同事件对照</span><small>EVENT OVERLAYS</small></div>
+        <div class="option-pills"><button type="button" id="toggle-contour" aria-pressed="false">同时轮廓：关</button><button type="button" id="toggle-emission" aria-pressed="false">发射时刻伪彩：关</button></div>
+        <p class="control-note">虚线将同一观察时刻的收缩几何投影到照片上，可透过遮挡物；只适用于运动物体。伪彩色以 t<sub>发射</sub> − t<sub>观察</sub> = −距离/c 固定映射有限表面，暖色较晚、蓝色较早；同时几何与无穷远天空不着色。这不是实际光谱颜色。</p>
+      </div>
+      <div class="control-section optics-controls"><div class="control-heading"><span>06 / 光谱与阴影</span><small>LIGHT &amp; SHADOW</small></div>
+        <div class="optics-toggle-row"><button type="button" id="toggle-doppler" aria-pressed="true" aria-describedby="spectral-switch-note">多普勒光谱：开</button><button type="button" id="toggle-shadows" aria-pressed="true">光线遮挡：开</button></div>
+        <p class="control-note" id="spectral-switch-note">关闭后画面保留材质和光照原色，暂停所有假设光源谱、材料谱及光谱曝光；再次开启会恢复原设置。发射时刻伪彩是独立开关。</p>
+        <div class="option-pills"><button type="button" id="toggle-scene-mirror" aria-pressed="false" aria-describedby="scene-mirror-note">场景理想镜面：关</button></div>
+        <div id="scene-mirror-controls" hidden>
+          <div class="slider-row"><label for="scene-mirror-x">镜面横向位置</label><output id="scene-mirror-x-value" for="scene-mirror-x">−2.25</output></div><input class="range" type="range" id="scene-mirror-x" min="-4" max="4" step="0.05" value="-2.25">
+          <div class="slider-row"><label for="scene-mirror-angle">镜面水平旋转</label><output id="scene-mirror-angle-value" for="scene-mirror-angle">0°</output></div><input class="range" type="range" id="scene-mirror-angle" min="-45" max="45" step="1" value="0">
+          <p class="control-note" id="scene-mirror-note">放置带实体边框的静止理想镜板。照片视图中追踪一次真实场景反射，镜中可见运动物体及其过去位置；镜板两侧均作不吸收、不着色的理想反射。镜面自身不运动，不模拟粗糙镜面、玻璃透射或第二次反弹。现有车窗、金属仍使用天空近似。几何切片和发射时刻伪彩只显示镜板本身。开启会增加计算量，首次 WebGL 编译可能等待。</p>
+        </div>
+        <div class="option-pills"><button type="button" id="toggle-soft-shadows" aria-pressed="false">面积光软阴影：关</button></div>
+        <div class="slider-row"><label for="shadow-samples">软阴影光线数</label></div><select id="shadow-samples" aria-describedby="soft-sampling-note"><option value="4">4 条 · 默认</option><option value="8">8 条 · 更多采样</option><option value="16">16 条 · 最慢</option></select>
+        <p class="control-note" id="soft-sampling-note">开启软影时，每处按所选数量追踪几何遮挡；传播延迟模式分别回溯各条光线的遮挡时刻。样本越多通常越平滑，但明显更慢，动态预览仍可能降分辨率。面积光均匀采样，照明强度和环境光仍是近似。</p>
+        <div class="option-pills" role="group" aria-label="阴影时间模型"><button type="button" data-shadow-timing="retarded" aria-pressed="true">传播延迟</button><button type="button" data-shadow-timing="instant" aria-pressed="false">冻结参考</button><button type="button" data-shadow-timing="split" aria-pressed="false">左右对照</button></div>
+        <p class="control-note">延迟模式沿光线回溯遮挡时刻；冻结参考把物体固定在表面事件时刻，故意忽略光源至表面的传播时间，并非真实光路。左右对照自动使用同一照片事件。</p>
+        <div id="point-light-controls"><div class="slider-row"><label for="light-x">主光中心横向位置 x</label><output id="light-x-value" for="light-x">0.0</output></div><input class="range" type="range" id="light-x" min="-3" max="3" step="0.1" value="0"><div class="slider-row"><label for="light-z">主光中心纵向偏移 z</label><output id="light-z-value" for="light-z">0.0</output></div><input class="range" type="range" id="light-z" min="-3" max="3" step="0.1" value="0">
+          <div class="slider-row"><label for="light-width">矩形灯面宽度倍率</label><output id="light-width-value" for="light-width">1.56 单位（1.00×）</output></div><input class="range" type="range" id="light-width" min="0.25" max="2.5" step="0.05" value="1">
+          <div class="slider-row"><label for="light-depth">矩形灯面纵深倍率</label><output id="light-depth-value" for="light-depth">0.50 单位（1.00×）</output></div><input class="range" type="range" id="light-depth" min="0.25" max="2.5" step="0.05" value="1">
+          <p class="control-note">灯面尺寸同时改变可见灯具几何；打开软影后，采样落在该矩形内。关闭软影则以灯面中心作为点光源。</p>
+        </div>
+        <div id="direction-light-controls" hidden><div class="slider-row"><label for="light-yaw">室外光方向水平旋转</label><output id="light-yaw-value" for="light-yaw">0°</output></div><input class="range" type="range" id="light-yaw" min="-180" max="180" step="5" value="0"><div class="slider-row"><label for="light-elevation">室外光仰角调整</label><output id="light-elevation-value" for="light-elevation">0°</output></div><input class="range" type="range" id="light-elevation" min="-40" max="35" step="5" value="0">
+          <div class="slider-row"><label for="sun-radius">室外光源角半径</label><output id="sun-radius-value" for="sun-radius">4.58°</output></div><input class="range" type="range" id="sun-radius" min="0.1" max="8" step="0.01" value="4.58" aria-describedby="sun-size-note">
+          <div class="speed-presets" role="group" aria-label="室外光源角半径预设"><button type="button" data-sun-radius="0.27">真实太阳约 0.27°</button><button type="button" data-sun-radius="4.58">夸大演示 4.58°</button></div>
+          <p class="control-note" id="sun-size-note">角半径不是直径。太阳视角半径约 0.27°，实际半影通常很窄；默认 4.58° 是明显夸大的教学光源，不是真实太阳。按均匀圆盘近似，不含太阳边缘昏暗。</p>
+        </div>
+        <p class="control-note">站台、长廊及货场使用可移动的主光；其余灯具只是装饰。街道与山路使用无限远方向光；关闭软影时为单方向。</p><button type="button" id="reset-light" class="compare-example">重置光源与软影参数</button>
+        <div class="slider-row"><label for="exposure">固定曝光</label><output id="exposure-value" for="exposure">0.0 EV</output></div><input class="range" id="exposure" type="range" min="-8" max="4" step="0.5" value="0" aria-label="光谱显示的固定曝光">
+        <div class="slider-row"><label for="surface-mode">物体表面光学假设</label></div><select id="surface-mode"><option value="reflection">灰反射：分别计算入射 / 出射频移</option><option value="emission">自发光频率参考：只计算出射频移</option></select>
+        <p class="control-note">灰反射假设物体静止系反射不改变频率，合成 D = D<sub>入</sub>D<sub>出</sub>；只以主光中心方向代表软光源光谱；经验环境光也近似使用此频移，不模拟多次反射、色散或角度相关 BRDF。自发光参考仅改变频移，亮度仍含经验照明与阴影，并非纯自发光辐射模型。RGB 贴图只是近似参考，不是实测材料光谱。</p>
+        <div class="slider-row"><label for="material-spectrum">主体的波长反射响应</label></div>
+        <select id="material-spectrum" aria-label="主体的反射光谱"><option value="texture">沿用纹理 RGB 假设谱</option><option value="fabric">假设布料 · 靛蓝响应</option><option value="wood">假设木材 · 暖色响应</option><option value="metal">假设金属 · 平缓响应</option><option value="usgs-paint">实测 GDS333 · 浅灰油漆铝板</option><option value="usgs-pine">实测 GDS365 · 松木胶合板</option><option value="usgs-nylon">实测 GDS431 · 红色尼龙布</option></select>
+        <p class="control-note">仅作用于主体反射模式，纹理只提供明暗；RGB 选项使用 6504 K 假设照明。三个 USGS 样本为 350–2500 nm 实测反射率，采样间线性插值；带外端点外推是猜测。样本不是场景纹理本身、镜面 BRDF 或实测光源。<a href="data/usgs-splib07a/README.md" target="_blank" rel="noopener">样本与复现</a> · <a href="https://doi.org/10.5066/F7RR1WDJ" target="_blank" rel="noopener">USGS 数据与 CC0</a></p>
+        <div class="slider-row"><label for="roughness-scale">场景粗糙度倍率</label><output id="roughness-scale-value" for="roughness-scale">1.00×</output></div><input class="range" type="range" id="roughness-scale" min="0.5" max="1.5" step="0.05" value="1">
+        <p class="control-note">不同表面使用假设的粗糙度和金属性，直接高光采用近似 GGX 微表面模型；一般金属还反射有界 SDR 天空贴图；仅开启的独立镜板追踪一次场景反射。室内点光按软化、截顶的反平方规律随距离衰减；朝天与朝地表面使用不同的半球环境光，室内距离雾弱于室外。这些只是经验近似，不是全局光照或实测大气。纹理、粗糙度、金属性和光强均非实测；选用 USGS 曲线时也不是完整物理渲染。</p>
+        <div class="slider-row"><label for="tone-map">高亮色调映射</label></div><select id="tone-map" aria-label="高亮色调映射"><option value="reinhard">固定 Reinhard（默认）</option><option value="filmic">柔和高光肩部</option></select>
+        <p class="control-note">色调映射作用于线性采样累积后；高光肩部压缩峰值并保留 RGB 比例，不是测量 HDR，也不能恢复 JPEG 中已剪切的细节。曝光以 EV 为单位手动固定，不自动随镜头变化。</p>
+        <div class="slider-row"><label for="spectrum-model">参考光谱（反射模式为主光；自发光模式为表面）</label></div><select id="spectrum-model" aria-label="物体表面的参考发射光谱"><option value="rgb">纹理 RGB 的假设基谱（默认）</option><option value="blackbody">黑体连续谱</option><option value="line">单条高斯谱线</option></select>
+        <div id="temperature-controls" hidden><div class="slider-row"><label for="spectrum-temperature">黑体温度</label><output id="temperature-value" for="spectrum-temperature">6500 K</output></div><input class="range" type="range" id="spectrum-temperature" min="2500" max="12000" step="100" value="6500"></div>
+        <div id="line-controls" hidden><div class="slider-row"><label for="spectrum-line">发射谱线中心</label><output id="line-value" for="spectrum-line">656.3 nm</output></div><input class="range" type="range" id="spectrum-line" min="380" max="780" step="0.1" value="656.3"><div class="speed-presets" role="group" aria-label="参考谱线预设"><button type="button" data-line="656.3">Hα 656.3</button><button type="button" data-line="486.1">Hβ 486.1</button><button type="button" data-line="589.3">Na D 589.3</button></div></div>
+        <p class="control-note">黑体与谱线在灰反射模式下代表假设的主光源，在自发光模式下代表表面参考发射谱；均保留纹理明暗作权重。谱线人为展宽 σ=8 nm，强度按 D=1 的可见亮度归一，不是材料实测；右侧可比较频谱。</p>
+        <div class="slider-row"><label for="wavelength">探针参考谱线</label><output id="wavelength-value" for="wavelength">550 nm</output></div><input class="range" id="wavelength" type="range" min="380" max="780" step="0.1" value="550" aria-label="探针参考谱线的发射波长">
+        <button type="button" class="inline-lab-button" id="open-mirror-lab">进入高速镜面实验 ↗</button>
+        <button type="button" class="inline-lab-button" id="open-light-clock">进入双端光钟实验 ↗</button>
+        <p class="control-note">独立的有限理想镜片；在镜面静止系反射，再变换回实验室系。不是主场景中物体表面的真实 BRDF。</p>
+        <p class="control-note">颜色来自光谱模型并经固定色调映射；光源及 RGB 纹理是近似，即使选择实测样本也不等于实景测量。原 RGB 不能唯一还原真实光谱。高速画面过亮或过暗时，可调整上方固定曝光；「探针参考谱线」只用于读数，不改变发射谱。默认室内为点光源、室外为平行光；可选 4 / 8 / 16 条面积光采样。</p>
+      </div>
+      </details>
+      <div class="control-section"><div class="control-heading"><span>07 / 渲染负载</span><small>PERFORMANCE</small></div>
+        <div class="option-pills" role="group" aria-label="选择渲染模式"><button type="button" data-render-mode="safe" aria-pressed="true">流畅优先</button><button type="button" data-render-mode="webgl" aria-pressed="false">WebGL 高画质</button></div>
+        <p class="control-note" id="render-mode-note">流畅优先先显示完整预览，暂停时再逐步细化；转动或播放时暂用较粗的画面。WebGL 高画质可生成更清晰的静帧，首次启用可能卡顿。</p>
+        <div class="slider-row"><label for="dynamic-quality">播放 / 拖动的画质下限</label></div><select id="dynamic-quality"><option value="responsive">响应优先 · 至少约 1 万像素</option><option value="balanced" selected>均衡 · 至少约 1.6 万像素</option><option value="sharp">清晰优先 · 至少约 3.2 万像素</option></select>
+        <p class="control-note">画布本身更小时以实际尺寸为限。提高下限会增加逐帧光线计算，慢设备或软阴影/快门下可能更卡；停止后仍生成清晰静帧。下方帧率只统计真正完成并显示的物理帧，不包括视角重投影。</p><p class="render-detail" id="physical-fps" aria-live="off">物理帧率：暂停</p>
+        <div class="frame-cache-controls" role="group" aria-label="已完成画面缓存"><button type="button" id="toggle-still-cache" aria-pressed="true">清晰帧缓存：开</button><button type="button" id="previous-cached-view" disabled>返回上一缓存视角</button><button type="button" id="clear-still-cache" disabled>清空缓存</button></div>
+        <p class="render-detail" id="still-cache-status" aria-live="polite">清晰帧缓存准备中…</p>
+        <details class="cache-gallery" id="still-cache-gallery" open><summary>已完成的场景与视角 <span id="still-cache-count">0 张</span></summary>
+          <p class="control-note">选择缩略图会恢复该帧保存的实验参数与真实相机；视窗尺寸或渲染模式不同时不能直接复用。</p>
+          <p class="control-note" id="still-cache-empty">尚无完整静帧。暂停并等待画面细化后会自动加入。</p>
+          <div id="still-cache-list" class="cache-gallery-list" role="list" aria-label="已完成的场景与视角"></div>
+        </details>
+        <p class="control-note" id="intermediate-cache-note">流畅模式在暂停、瞬时快门且未开启场景镜面时，可按内存预算复用精确的逐像素几何、部分或全部材质和遮挡，不靠插值降低静帧分辨率。首次切换而未命中完整帧时仍需重新计算颜色；光源或几何变化会失效，软影和遮挡时序变化会重新求遮挡。WebGL、快门和镜面不使用这项中间缓存；清空缓存也会释放它。</p>
+        <p class="control-note">只保存已完成的静帧；其已算宽视场也可用于拖动预览并计入预算。场景、时间、速度、光学设置、视角和画布一致时直接复用。拖动松手接近已缓存视角时（约 1.15° 内）会吸附到该视角，保证画面与读数一致。缓存只在本页内存中，达到上限会淘汰旧帧；显示的是按像素估算的大小，实际占用可能更高。首次改变多普勒需要更新整张图的颜色；阴影变化可能需要重新求遮挡。</p>
+        <p class="control-note">底部播放速率 1× 每现实秒推进 0.65 个实验室时间单位，不改变物体速度 β。低帧率会跳过中间事件；页面隐藏时停止推进。</p>
+        <div class="option-pills"><button type="button" id="toggle-antialias" aria-pressed="false" disabled>静止抗锯齿：关</button></div><p class="control-note">可选 4 次子像素采样；只用于最终静帧，计算时间可能明显增加。</p>
+        <div class="slider-row"><label for="shutter">快门持续时间 Δt</label><output id="shutter-value" for="shutter">0.0</output></div><input class="range" type="range" id="shutter" min="0" max="1.6" step="0.1" value="0" aria-label="快门持续时间，实验室系 c 等于一"><div class="speed-presets" role="group" aria-label="快门时间预设"><button type="button" data-shutter="0">瞬时</button><button type="button" data-shutter="0.8">0.8</button><button type="button" data-shutter="1.6">1.6</button></div><p class="control-note">非零时在所选观察时间前后取 4 个独立的中点事件，各自追踪完整光线与阴影后平均；不是屏幕拖尾。预览降分辨率，高清与抗锯齿可能很慢。四帧先在近似线性光强中平均，再做固定色调映射与 sRGB 编码。光强由 RGB 贴图及假设光谱重建，裁剪与量化无法恢复真实 HDR；探针和轮廓只代表快门中心事件。</p>
+        <p class="render-detail" id="render-detail" aria-live="off">正在准备画面…</p>
+      </div>
+      <div class="control-section snapshot-controls"><div class="control-heading"><span>08 / 保存实验</span><small>OFFLINE SNAPSHOT</small></div><p class="control-note">保存物理参数、固定材料点、当前探针和 A/B 测量结果；本机保存使用浏览器本地存储，JSON 可下载备份或导入。播放时请先暂停，并等待匹配画面。</p><div class="snapshot-buttons"><button type="button" id="save-local">保存到本机</button><button type="button" id="restore-local">恢复本机</button><button type="button" id="export-snapshot">下载 JSON</button><button type="button" id="import-snapshot">导入 JSON</button></div><input type="file" id="snapshot-file" accept=".json,application/json" hidden><p class="control-note" id="snapshot-status" role="status">尚未保存；恢复不会自动切换 WebGL 模式。</p></div>
+      <div class="control-section panel-foot"><span>THE SETUP</span><p>左右对照共享同一观察事件与相机方向；它们不是两次不同时刻的动画。</p><button type="button" id="compare-example" class="compare-example">载入一个清晰的对照示例 ↗</button></div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">↓ 向下滚动</div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M7 4l5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-label="相对论知识卡片">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES / 09</span><h2>看见的物理<span>。</span></h2></div></div>
+      <p class="panel-description">改变参数，观察画面而不只是数字。</p>
+      <div class="knowledge-card"><div class="card-index"><span id="card-index">01 / LIGHT TRAVEL TIME</span><span>c = 1</span></div><h3 id="card-title">不同位置的光，来自不同过去</h3><p id="card-copy">摄影机的每个像素都沿过去光锥寻找物体表面。物体在光飞行期间继续运动，因此照片不等于同一时刻的几何切片。</p><div class="equation" id="card-equation">t<sub>发射</sub> = t<sub>观察</sub> − 距离 / c</div><div class="key-numbers"><div><span>洛伦兹因子 γ</span><strong id="metric-gamma">1.25</strong></div><div><span>运动方向长度 / 静止长度</span><strong id="metric-contraction">0.80</strong></div></div><p class="card-note" id="card-note">“同时几何”是实验室同一时刻的形状（含洛伦兹收缩），不是相机照片。对照时保持同一观察事件。</p></div>
+      <article class="knowledge-card clock-card" aria-label="物体时钟和固定材料点">
+        <div class="card-index"><span>CLOCK &amp; MATERIAL POINT</span><span>同一物体</span></div><h3>一只钟，两个事件</h3>
+        <p>物体表面的表盘跟随材料一起运动。下面比较同一只钟在实验室同时切片上的读数与光发出时的读数。</p>
+        <dl class="event-readouts"><div><dt>画面观察事件 t</dt><dd id="clock-observation">计算中…</dd></div><div><dt>同时切片 · 固有时间 τ</dt><dd id="clock-now">计算中…</dd></div><div><dt>照片中收到的 · τ</dt><dd id="clock-seen">计算中…</dd></div><div><dt>对应发射时刻 t</dt><dd id="clock-emission">—</dd></div></dl>
+        <p class="card-note" id="clock-note">表盘以物体静止系的中心事件为零点；光行时和运动方向都会影响观察到的读数与走时。</p>
+        <div class="material-readout"><div class="card-index"><span>M / 固定材料点</span><span id="material-mode">默认表面</span></div>
+          <p id="material-status" aria-live="off">正在计算标记点…</p><p id="material-announce" class="visually-hidden" role="status"></p><dl class="event-readouts"><div><dt>物体静止系坐标</dt><dd id="material-rest">—</dd></div><div><dt>观察时的同时位置</dt><dd id="material-sim">—</dd></div><div><dt>过去光锥交点 / t</dt><dd id="material-emit">—</dd></div></dl>
+          <div class="ray-actions"><button type="button" id="mark-probe" disabled>将采样的物体 A 表面设为 M</button><button type="button" id="reset-material">回到默认表面</button></div>
+          <p class="pair-footnote">金色为照片位置，青色为同时几何；遮挡或画面外不会伪装成可见点。虚线轮廓上的青点是透视示意。有限快门取中心事件。</p>
+        </div>
+      </article>
+      <div class="probe-card"><div class="card-index"><span>RAY PROBE / 光线采样</span><span id="probe-mode">未采样</span></div><p id="probe-summary">点击画面中任意位置，或采样画面正中央。计算该方向的光路；移动视角或改变实验后会清除。</p><button type="button" id="probe-center">采样画面中心 ↗</button><button type="button" id="show-sampled-spectrum" aria-controls="spectrum-card">查看采样频谱 ↓</button><dl id="probe-data" hidden><div><dt id="probe-dt-label">光程 / c</dt><dd id="probe-distance">—</dd></div><div><dt id="probe-event-label">发射时刻</dt><dd id="probe-time">—</dd></div><div><dt id="probe-extra-label">表面</dt><dd id="probe-extra">—</dd></div><div><dt>合成频率比 D</dt><dd id="probe-doppler">—</dd></div><div><dt>参考谱线观察波长</dt><dd id="probe-wavelength">—</dd></div><div><dt>主光源遮挡</dt><dd id="probe-shadow">—</dd></div><div><dt id="probe-block-label">遮挡时刻 t</dt><dd id="probe-block-time">—</dd></div></dl><canvas id="ray-plot" width="260" height="118" aria-hidden="true"></canvas><p id="plot-caption" class="plot-caption">示意图在采样后显示；物体与光线路径使用所选事件。</p><section class="ray-pair" aria-label="两束光对照"><div class="card-index"><span>TWO RAYS / 两束光对照</span><span>同一观察事件</span></div><p id="pair-status" role="status">先采样一束光，固定为 A，再点击画面选择 B。</p><div class="ray-actions"><button type="button" id="pin-ray" disabled>固定当前光线为 A</button><button type="button" id="clear-reference" hidden>取消固定 A</button></div><dl id="pair-data" hidden><div><dt>A 发射时刻</dt><dd id="pair-a">—</dd></div><div><dt>B 发射时刻</dt><dd id="pair-b">—</dd></div><div><dt>发射时差 B − A</dt><dd id="pair-delta">—</dd></div></dl><p class="pair-footnote">单位为实验室系光行时间；天空和「同时几何」视图不提供发射时刻。</p></section><button type="button" id="open-ray-space" disabled>打开三维光路与时空图 ↗</button><p class="plot-caption">可旋转第三视角，或查看世界线和事件时间轴；固定 A 并选择 B 可对照两条光路。</p></div>
+      <article id="spectrum-card" class="knowledge-card spectrum-card"><div class="card-index"><span>SPECTRUM / 频谱对照</span><span>参考模型</span></div><h3>发射谱与观察谱</h3><p id="spectrum-status">默认显示单位线性白的 RGB 假设参考谱；采样光线后可比较该方向的频移。</p><canvas id="spectrum-plot" width="260" height="132" role="img" aria-describedby="spectrum-status spectrum-caption" aria-label="参考发射谱和观察谱对照：横轴波长 200 至 1200 纳米，纵轴相对谱辐亮度。"></canvas><p id="spectrum-caption" class="plot-caption"><span class="spectrum-emitted">青色虚线：发射</span>；<span class="spectrum-observed">橙色实线：观察</span>；绿色点线（有选定材料时）：反射响应 0–1，使用右侧隐含尺度；浅色区：380–780 nm；实测材料带外响应以暗点线标示。青橙共用相对强度尺度，图外频谱不显示。</p><p class="card-note">采样后读取当前画面最近像素的颜色输入，按渲染器使用的 RGB 基谱、黑体或谱线和所选材料响应作图；无采样时显示单位白参考。RGB 不能唯一还原光谱；假设材料曲线不是实测，USGS 选项的材料响应来自指定实测样本，光源及贴图仍为假设。曲线显示相对形状，不额外展示环境雾、整体阴影增益、曝光和最终色调映射；采样输入的局部高光会受遮挡影响。窄谱线对有限带宽做数值积分；可见带边缘、查表和色域裁剪仍会影响颜色。Planck 光谱与 I<sub>λ,观察</sub>(λ)=D⁵I<sub>λ,源</sub>(Dλ)；颜色积分采用 <a href="https://cie.co.at/datatable/cie-1931-colour-matching-functions-2-degree-observer-5nm" target="_blank" rel="noopener">CIE 1931 2°，5 nm（DOI 10.25039/CIE.DS.rmcs7wkw）</a>。氢和钠谱线中心为参考近似空气波长，数据可查 <a href="https://physics.nist.gov/PhysRefData/ASD/lines_form.html" target="_blank" rel="noopener">NIST Atomic Spectra Database</a>；宽度是教学设定，非实测谱线。</p></article>
+      <article class="knowledge-card optics-knowledge"><div class="card-index"><span>OPTICS / 光谱与阴影</span><span>同一观察事件</span></div><h3>频移改变颜色，遮挡也需要时间</h3><div class="equation">D = ν<sub>观察</sub> / ν<sub>发射</sub><br>λ<sub>观察</sub> = λ<sub>发射</sub> / D<br>I<sub>λ,观察</sub>(λ) = D⁵ I<sub>λ,源</sub>(Dλ)</div><p>可见色由所选光谱模型积分得到，不是简单地把物体染红或染蓝。点击场景可读取 D 和参考谱线的观察波长；它可能移入红外或紫外。</p><p class="card-note">从可见表面沿主光源方向回溯，若光源前有遮挡几何就形成阴影；可选面积光以 4 / 8 / 16 条独立光线估计半影。运动物体的位置取遮挡发生时，而不是把阴影粘在当前物体下面。点击阴影可查看遮挡物及其时刻。</p></article>
+      <details class="scope"><summary>模型边界与计算方法</summary><p>采用惯性系中的平直时空，c = 1。场景物件、方块或球（以及另一场景中的观察者）匀速运动，像素沿过去光锥求交；「同时几何」不是照片。可选第二物体 B 使用独立惯性世界线并参与遮挡，允许穿透，不模拟碰撞或加速；固定材料点 M 与钟面读数属于 A。</p><p><strong>多普勒颜色基于光谱模型，而非纹理的实测光谱；可选的 USGS 材料样本仅是反射率输入。</strong>RGB 无法唯一还原光谱：这里用七组非负谱基近似原色，380–780 nm 外用 6504 K 黑体形状延拓，经 CIE 1931 色度积分、相对论频移与固定色调映射显示；曝光和显示色域会改变画面。</p><p>街道和山路使用平行光，站台、长廊和货场使用点光源；可选 4 / 8 / 16 个样本近似软阴影，并可调整室内灯面宽深或室外角半径。太阳实际视角半径约 0.27°；默认 4.58° 是夸大演示。遮挡由有限三维几何的光线求交计算；每条光线都在遮挡发生的过去时刻与运动物体求交。有限样本可能出现阶梯，环境光和材质为近似，远山与天空是无穷远贴图。</p><p>树冠由两张相交的镂空纹理平面近似，树干、车轮、管道和其他设施采用简化几何；它们参与同一光线与阴影求交，但不是逐片树叶或精确车辆模型。站台近两节车厢的门、窗、门框和斜顶也是实体；车窗是不透明示意表面，并非透明玻璃或可见车内。地面细纹和反光仍是材质近似。微表面高光、金属性、有限 SDR 天空反射及软化截顶的反平方点光衰减均为假设，不是实测 HDR 或完整全局光照。</p><p>表盘是印在物体表面的理想示意时钟，不模拟机械与玻璃；每个像素按自己的表面事件读取钟面。表盘中心的同时读数与发射读数使用同一个静止系同步约定，观察走时还受光行时/多普勒影响。</p><p>布料、木材和金属示例是教学假设；USGS GDS333、GDS365、GDS431 是特定样本 350–2500 nm 实测反射率，带外端点延拓不属于实测，不能当作纹理或 BRDF 的测量。颜色查表 D 限于 0.1–10（读数保留真实 D）。独立静止镜板只追踪一次场景反射，其他金属与车窗仍是天空近似。未模拟完整材料 BRDF、多次反射、全局光照、太阳边缘昏暗、真实相机曝光、碰撞或广义相对论。有限采样、色域和分辨率影响结果，Canvas 使用相同模型但像素更粗。</p></details>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">↓ 向下滚动</div>
+  </div>
+  <noscript><div class="noscript">此实验需要 JavaScript 才能计算光线和交互。</div></noscript>
+</main>
+<dialog id="clock-dialog" class="parameter-dialog physics-dialog" aria-labelledby="clock-title" aria-describedby="clock-caption">
+  <header class="parameter-header"><div><span>TIME &amp; SIMULTANEITY / 02</span><h2 id="clock-title">双端光钟 · 时钟与消息</h2></div><button type="button" id="close-light-clock" aria-label="关闭双端光钟实验">关闭 ✕</button></header>
+  <div class="physics-lab-grid"><div class="physics-lab-visual"><canvas id="clock-canvas" tabindex="0" role="img" aria-label="双端光钟的实验室同时位置、内部光脉冲与发向静止接收器的次级闪光；拖动或方向键旋转视角。"></canvas>
+    <div class="physics-playhead"><label for="clock-time">实验室时间 <output id="clock-time-label" for="clock-time">0.00</output></label><input id="clock-time" type="range" min="0" max="1000" value="0"><button type="button" id="clock-animate">播放</button></div>
+    <p id="clock-caption">青色点是镜间光脉冲；橙色虚线/光点是每次碰镜时另发往静止接收器的次级闪光。点的到达时间包含传播延迟，不能直接当成光钟周期。仅追踪前两个往返；拖动或方向键旋转。</p>
+    <div class="clock-event-table" role="region" aria-label="光钟事件和信号到达时间" tabindex="0"><table><thead><tr><th>事件</th><th>钟静止系 τ</th><th>实验室 t</th><th>闪光到达 t</th></tr></thead><tbody id="clock-events"></tbody></table></div>
+  </div><div class="physics-lab-controls"><span class="lab-kicker">REST-SYNCHRONIZED ENDS</span>
+    <label for="clock-beta">光钟速度 β <output id="clock-beta-value" for="clock-beta">+0.60</output></label><input id="clock-beta" type="range" min="-0.9" max="0.9" step="0.01" value="0.60">
+    <label for="clock-angle">镜间方向（静止系） <output id="clock-angle-value" for="clock-angle">90°</output></label><input id="clock-angle" type="range" min="0" max="180" step="1" value="90">
+    <label for="clock-arm">静止镜间距 L <output id="clock-arm-value" for="clock-arm">3.0</output></label><input id="clock-arm" type="range" min="1" max="5" step="0.1" value="3">
+    <div class="clock-presets" role="group" aria-label="镜间方向预设"><button type="button" data-clock-angle="0">纵向</button><button type="button" data-clock-angle="90">横向</button></div>
+    <div id="clock-readout" class="physics-readout"></div>
+    <p>两端时钟在光钟静止系 Einstein 同步。展示的是实验室同一时刻读数：B − A = −βL cosθ。纵向两单程实验室时间通常不等，但 A→B→A 的固有周期是 2L、实验室周期是 2γL。</p>
+    <p>理想、无损、匀速；接收器静止，次级闪光为额外假设，不模拟加速、机械杆应力或真实光源。</p>
+  </div></div>
+</dialog>
+<dialog id="mirror-dialog" class="parameter-dialog physics-dialog" aria-labelledby="mirror-title" aria-describedby="mirror-caption">
+  <header class="parameter-header"><div><span>RELATIVISTIC OPTICS / 01</span><h2 id="mirror-title">高速镜面 · 一束光的相遇</h2></div><button type="button" id="close-mirror-lab" aria-label="关闭高速镜面实验">关闭 ✕</button></header>
+  <div class="physics-lab-grid"><div class="physics-lab-visual"><canvas id="mirror-canvas" tabindex="0" role="img" aria-label="实验室同时切片中的有限镜片与光路；拖动或方向键旋转三维视角。"></canvas>
+    <div class="physics-playhead"><label for="mirror-time">实验室时间进度 <output id="mirror-time-label" for="mirror-time">0.00</output></label><input id="mirror-time" type="range" min="0" max="1000" value="0"><button type="button" id="mirror-animate">播放</button></div>
+    <p id="mirror-caption">青色为入射，橙色为反射；半透明片是实验室同一时刻的镜面，虚线为相遇时位置。拖动或方向键旋转。接收面是实验室静止的 x=0 平面，交点不是预先放好的小探测器。</p></div>
+    <div class="physics-lab-controls"><span class="lab-kicker">MIRROR REST FRAME</span>
+      <label for="mirror-beta">镜面速度 β <output id="mirror-beta-value" for="mirror-beta">+0.60</output></label><input id="mirror-beta" type="range" min="-0.9" max="0.9" step="0.01" value="0.60">
+      <label for="mirror-angle">镜面法线角（静止系） <output id="mirror-angle-value" for="mirror-angle">0°</output></label><input id="mirror-angle" type="range" min="-75" max="75" step="1" value="0">
+      <label for="mirror-velocity-angle">速度方向 <output id="mirror-velocity-angle-value" for="mirror-velocity-angle">0°</output></label><input id="mirror-velocity-angle" type="range" min="-80" max="80" step="1" value="0">
+      <label for="mirror-incident-angle">入射光方向 <output id="mirror-incident-angle-value" for="mirror-incident-angle">0°</output></label><input id="mirror-incident-angle" type="range" min="-30" max="30" step="1" value="0">
+      <button type="button" id="mirror-normal-case">恢复正面解析情形</button><div id="mirror-readout" class="physics-readout" aria-live="polite"></div>
+      <p>有限镜面若未被光线击中，不产生反射。理想、双面、无损，镜面始终匀速；不模拟加速、反冲、衍射或真实反射率。颜色仅是线路标记。</p>
+    </div></div>
+</dialog>
+<dialog id="parameter-dialog" class="parameter-dialog" aria-labelledby="parameter-title" aria-describedby="parameter-caption">
+  <header class="parameter-header"><div><span>PARAMETER STUDY / 09</span><h2 id="parameter-title">两组参数 · 同一观察事件</h2></div><button type="button" id="close-parameter-dialog" aria-label="关闭参数对照">关闭 ✕</button></header>
+  <div class="parameter-body">
+    <p id="parameter-caption">固定实验室观察位置、时间、镜头和物体同时中心，分别追踪两组速度与方向。这里的参数组 A/B 不是右侧探针中的两束光 A/B。角点若被遮挡，只是光锥交点，不代表光已抵达。</p>
+    <div class="parameter-lock"><strong>共同条件</strong><span id="parameter-context">—</span><button type="button" id="comparison-lock-current">用主实验台当前状态重新锁定</button></div>
+    <div class="parameter-groups">
+      <fieldset class="parameter-group"><legend>参数组 A</legend>
+        <label for="group-a-beta">速度 β <output id="group-a-beta-value" for="group-a-beta">+0.30 c</output></label><input type="range" id="group-a-beta" min="-0.98" max="0.98" step="0.01" value="0.30">
+        <label for="group-a-angle">水平轴 <output id="group-a-angle-value" for="group-a-angle">0°</output></label><input type="range" id="group-a-angle" min="-180" max="180" step="5" value="0">
+        <label for="group-a-elevation">仰角 <output id="group-a-elevation-value" for="group-a-elevation">0°</output></label><input type="range" id="group-a-elevation" min="-90" max="90" step="5" value="0">
+      </fieldset>
+      <fieldset class="parameter-group"><legend>参数组 B</legend>
+        <label for="group-b-beta">速度 β <output id="group-b-beta-value" for="group-b-beta">+0.86 c</output></label><input type="range" id="group-b-beta" min="-0.98" max="0.98" step="0.01" value="0.86">
+        <label for="group-b-angle">水平轴 <output id="group-b-angle-value" for="group-b-angle">0°</output></label><input type="range" id="group-b-angle" min="-180" max="180" step="5" value="0">
+        <label for="group-b-elevation">仰角 <output id="group-b-elevation-value" for="group-b-elevation">0°</output></label><input type="range" id="group-b-elevation" min="-90" max="90" step="5" value="0">
+      </fieldset>
+    </div>
+    <div class="parameter-actions"><button type="button" id="comparison-run">生成两组对照</button><button type="button" id="comparison-export-image" disabled>下载对照 PNG</button><button type="button" id="comparison-export-data" disabled>下载数据 JSON</button><button type="button" id="comparison-import">导入对照 JSON</button><input type="file" id="comparison-file" accept=".json,application/json" hidden></div>
+    <p class="parameter-status" id="comparison-status" role="status">调整两组参数后生成。计算使用独立 Canvas 光线追踪，可能需要等待。</p>
+    <div class="comparison-results" id="comparison-results" data-stale="true">
+      <div class="comparison-images"><figure><figcaption id="comparison-label-a">参数组 A</figcaption><canvas id="comparison-image-a" width="360" height="225" role="img" aria-label="参数组 A 的独立光锥照片"></canvas></figure><figure><figcaption id="comparison-label-b">参数组 B</figcaption><canvas id="comparison-image-b" width="360" height="225" role="img" aria-label="参数组 B 的独立光锥照片"></canvas></figure></div>
+      <p>图中 L / R 是前表面上方左右角附近的固定材料点（球体取对应表面点）；只标出真正可见且位于画面内的点。两组图均为独立 Canvas 光锥照片（单次空间采样，保留快门）；若主画面为阴影左右对照，此处使用传播延迟。非交互重投影预览。</p>
+      <div class="comparison-data"><div class="comparison-table-wrap"><table><caption>角点候选发射事件（c = 1）</caption><thead><tr><th scope="col">参数组</th><th scope="col">L 发射 t</th><th scope="col">R 发射 t</th><th scope="col">R − L</th></tr></thead><tbody id="comparison-table"></tbody></table><p id="comparison-visibility">—</p></div><figure class="comparison-chart"><figcaption>速度 β 与候选发射时差 · 青 A / 橙 B</figcaption><canvas id="comparison-curve" width="500" height="220" role="img" aria-label="两组运动方向下速度与左右材料点发射时差的曲线"></canvas><p>曲线分别固定 A / B 的方向并扫描速度；点标出各组当前速度。遮挡不会删除候选交点。高速观察者模式下，固定同一实验室观察事件与静止物体时，角点发射时差不随观察者速度变化，但视方向与频移仍会变化。</p></figure></div>
+    </div>
+  </div>
+</dialog>
+<dialog id="ray-space-dialog" class="ray-space" aria-labelledby="ray-space-title" aria-describedby="ray-space-caption">
+  <header class="ray-space-header"><div><span>LIGHT PATH / THIRD PERSON</span><h2 id="ray-space-title">从第三视角看光抵达</h2></div><button type="button" id="close-ray-space" aria-label="关闭三维光路">关闭 ✕</button></header>
+  <div class="ray-space-body"><div class="ray-space-view"><div class="diagram-tabs" role="group" aria-label="切换图示"><button type="button" data-diagram="space" aria-pressed="true">三维空间光路</button><button type="button" data-diagram="light-path" aria-pressed="false">主光路径动态</button><button type="button" data-diagram="spacetime" aria-pressed="false">1+1 投影</button><button type="button" data-diagram="slice" aria-pressed="false">2+1 时空切片</button></div><canvas id="ray-space-canvas" tabindex="0" aria-label="三维光路。拖动旋转，滚轮或加减号缩放；方向键旋转，Home 恢复视角。"></canvas><canvas id="slice-canvas" tabindex="0" role="img" aria-label="二维空间平面与时间组成的 2+1 时空切片：显示过去光锥、物体主体世界管截面及其交线。拖动或方向键旋转。" hidden></canvas><canvas id="spacetime-canvas" role="img" aria-label="时空图：水平轴为选定空间方向投影，垂直轴为实验室时间 ct；显示观察者、物体与材料点世界线、采样光线和事件时间轴。" hidden></canvas><div class="ray-space-toolbar" id="ray-space-toolbar" role="group" aria-label="三维光路视角控制"><button type="button" data-space-action="left" aria-label="向左旋转">←</button><button type="button" data-space-action="right" aria-label="向右旋转">→</button><button type="button" data-space-action="up" aria-label="抬高视角">↑</button><button type="button" data-space-action="down" aria-label="降低视角">↓</button><button type="button" data-space-action="zoom-in" aria-label="放大">＋</button><button type="button" data-space-action="zoom-out" aria-label="缩小">−</button><button type="button" data-space-action="reset">复位</button></div><p id="space-hint">拖动旋转 · 滚轮缩放 · 方向键与 + / − 可操控</p><div id="light-path-controls" class="spacetime-controls" hidden><label for="light-path-time">观察事件 t <output id="light-path-time-value" for="light-path-time">0.00</output></label><input id="light-path-time" type="range" min="-3" max="3" step="0.01" value="0"><button type="button" id="light-path-play">播放光路</button><button type="button" id="light-path-reset">回到主画面时刻</button><p id="light-path-status" role="status">选择采样光线后显示主光路径。</p><p>保持采样的屏幕方向，独立计算所选观察时刻，不改变或冒充主画面。绿线为主光中心方向的入射，橙线为到观察者；红色虚线只表示从表面向遮挡物回溯，不是已经抵达的光。面积光只展示中心光线；诊断始终使用传播延迟，即使画面关闭了阴影或选择冻结参考。</p></div><div id="slice-controls" class="spacetime-controls" hidden><label for="slice-plane">切片空间平面</label><select id="slice-plane"><option value="xz">实验室 xz · 过观察者</option><option value="xy">实验室 xy · 过观察者</option><option value="yz">实验室 yz · 过观察者</option><option value="A">包含光线 A 的平面</option><option value="B">包含光线 B 的平面</option><option value="当前">包含当前光线的平面</option><option value="M">包含材料点 M 的平面</option></select><label for="slice-time">观察事件 t <output id="slice-time-value" for="slice-time">0.00</output></label><input id="slice-time" type="range" min="-3" max="3" step="0.01" value="0"><p id="slice-status" role="status">等待物理事件。</p><p>网格为过去光锥的真实平面切片；浅色线是主体世界管在不同时刻的平面截线与采样边界连线（不是材料点轨迹），橙色是两者的数值交线（前 / 后表面）。光锥与主体的几何交点可能被场景遮挡，并不自动代表收到的光。</p><p>空间平面穿过观察事件；只画位于该平面上的 A/B/M，其他事件报告离面距离而不投影进图。主体不含附加小部件；图中的三维视图是这个 2+1 切片的投影，不是完整四维时空。角度/截面离散可能漏掉极细切面。</p></div><div id="spacetime-controls" class="spacetime-controls" hidden><label for="spacetime-axis">空间投影轴</label><select id="spacetime-axis"><option value="x">实验室 x</option><option value="y">实验室 y</option><option value="z">实验室 z</option><option value="sight">当前光线方向</option></select><label for="spacetime-time">观察事件 t <output id="spacetime-time-value" for="spacetime-time">0.00</output></label><input id="spacetime-time" type="range" min="-3" max="3" step="0.01" value="0" aria-label="改变观察事件时间并重新追踪 A、B"><p id="spacetime-status" role="status">按当前画面重新计算；A/B 保留屏幕采样方向，M 保留物体静止系坐标。</p><p>白：观察者 · 灰：物体中心 · 金：材料点 M · 青/橙：光线 A/B。空心点 × 是被遮挡的光锥交点，不是已抵达的光。</p><p>这是实验室系的一维空间 + 时间投影，并非完整四维时空；丢弃横向距离后，光线投影不一定为 45°。</p></div></div>
+    <div class="ray-space-readout"><span>ONE OBSERVATION EVENT</span><h3>同一观察事件</h3><p id="ray-space-observation">—</p><div id="ray-space-rays" aria-live="polite"></div><p id="ray-space-delta">—</p><p id="ray-space-marker">—</p><p id="ray-space-caption">实线及箭头是探针算出的有限光路；彩色线框为物体主体在该光发出时的位置，灰色线框为观察时的同时位置（未绘小部件），均不是额外的照片。虚线视线或天空方向不提供发射时刻。金色 M 连接同一固定材料点；若被遮挡，只标光锥交点，不画已抵达的光。坐标为实验室系，c = 1；网格仅作空间参考。</p></div>
+  </div>
+</dialog>
+</body>
+</html>

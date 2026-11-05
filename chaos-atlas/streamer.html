@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#091820">
+  <meta name="description" content="用漂移、扩散、碰撞电离和自洽电场探索局部流注。">
+  <title>局部流注 · Drift–Diffusion Lab</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%230d2029'/%3E%3Cpath d='M20 4v8m0 16v8m-7-16h14M20 12c-6 3-6 13 0 16 6-3 6-13 0-16Z' fill='none' stroke='%238de6ee' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-24">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="vortex.css?v=20261031-24">
+  <link rel="stylesheet" href="lightning.css?v=20261031-30">
+  <link rel="stylesheet" href="streamer.css?v=20261031-25">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="streamer-model.js?v=20261031-24"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="streamer.js?v=20261031-25"></script>
+</head>
+<body class="vortex-lab streamer-lab">
+<a class="skip-link" href="#streamer-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#streamer-scene" data-jump="stage"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><path d="M20 7v6m0 14v6m-7-13h14M20 13c-5 3-5 11 0 14 5-3 5-11 0-14Z"/></svg></span><span><strong>CHAOS / LAB</strong><small>局部流注物理</small></span></a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status paused"><span class="status-light"></span><span id="header-status">正在求解初始电场</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame"><div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长对照</span><small>07</small></a>
+      <a href="ising.html"><span>自旋晶格</span><small>08</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div><input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list"></div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓ 拖动滑块或滚动查看 · 9 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" aria-label="局部流注物理实验台">
+  <h1 class="visually-hidden">局部流注：电子与离子输运、电离和自洽电场</h1>
+  <article class="model-panel" aria-label="三维局部流注计算场景">
+    <div class="model-stage" id="streamer-stage" data-status="loading">
+      <canvas id="streamer-scene" data-lab-canvas tabindex="0" aria-label="三维电子与离子密度场。拖动旋转，滚轮缩放；方向键旋转，空格播放或暂停。"></canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">SOLVING POISSON FIELD</b></div><div>密度场 <i>/</i> 非完整雷电</div></div>
+      <div class="compact-model-label">流注密度场 · 非完整雷电</div>
+      <div class="vortex-index" aria-hidden="true"><span>FIG.</span><strong>07B</strong><span>— SPACE CHARGE</span></div>
+      <div class="vortex-caption" aria-hidden="true"><span>01 / DRIFT · DIFFUSION · IONIZATION</span><strong>密度场，不是电子轨迹</strong><small>局部流注模型 · 不是完整真实闪电</small></div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend streamer-legend"><span><i class="legend-electron"></i> 电子密度</span><span><i class="legend-ion"></i> 正离子密度</span><span><i class="legend-iso"></i> 电子等值面</span><span><i class="legend-field"></i> 电场方向</span></div><div class="stage-instruction" id="stage-instruction">↔ 拖动旋转 · 滚轮缩放</div></div>
+      <div class="stage-error" id="stage-error" role="status" aria-live="polite"><div><p id="stage-error-text">正在求解三维泊松场与电子输运，请稍候……</p></div></div>
+    </div>
+  </article>
+  <div class="lab-bottom">
+    <div class="stage-fallback" id="stage-fallback" role="status" hidden>WebGL 不可用，已切换为相同数据的 Canvas 投影。</div>
+    <div class="stage-notice" id="stage-notice" role="status" aria-live="polite" hidden></div>
+    <section class="telemetry" aria-label="流注实时数据">
+      <div class="telemetry-item"><span>模拟时间 t</span><strong id="time-readout">—</strong></div>
+      <div class="telemetry-item"><span>电子峰值 nₑ</span><strong id="electron-readout">—</strong></div>
+      <div class="telemetry-item"><span>最大场强 |E|</span><strong id="field-readout">—</strong></div>
+      <div class="telemetry-item"><span>泊松残差</span><strong id="residual-readout">—</strong></div>
+    </section>
+    <div class="transport" aria-label="演化与视角控制">
+      <div class="transport-left"><button type="button" id="play" class="play-button" aria-label="播放演化" disabled><span id="play-symbol" aria-hidden="true">▶</span><span id="play-text">播放</span></button>
+        <button type="button" class="tool-button" id="step" aria-label="前进一个自适应时间步" title="前进一个自适应时间步" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button>
+        <button type="button" class="tool-button" id="reset" aria-label="按当前参数回到初态" title="按当前参数回到初态" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button></div>
+      <div class="transport-right"><div class="speed-options" role="group" aria-label="目标演化速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="流注物理控制台">
+      <div class="panel-top"><div><span class="panel-kicker">STREAMER CONSOLE</span><h2>流注控制台<span>。</span></h2></div></div>
+      <p class="panel-description">这是局部电子与离子密度场，不是电子轨迹，也不是完整雷电。</p>
+      <a class="fluid-mode-link" href="lightning.html">↗ 返回原随机闪电模型（DBM）对照</a>
+      <div class="control-section"><div class="control-heading"><span>实验预设</span><small>STARTING CONDITIONS</small></div>
+        <div class="preset-grid vortex-presets streamer-presets" role="group" aria-label="流注初态预设">
+          <button type="button" data-preset="default" class="active" aria-pressed="true"><span aria-hidden="true">✧</span>自洽流注</button>
+          <button type="button" data-preset="weak" aria-pressed="false"><span aria-hidden="true">↟</span>弱场漂移</button>
+          <button type="button" data-preset="charge" aria-pressed="false"><span aria-hidden="true">◉</span>空间电荷</button>
+          <button type="button" data-preset="offset" aria-pressed="false"><span aria-hidden="true">↘</span>错位电极</button>
+        </div><p class="preset-detail" id="preset-description">实际预演到约 t = 6；重置可从初态观察。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>指针工具</span><small>POINTER / TOUCH</small></div>
+        <div class="ring-orientation lightning-tools" role="group" aria-label="实验台指针工具"><button type="button" data-tool="orbit" aria-pressed="true">旋转视角</button><button type="button" data-tool="probe" aria-pressed="false">剖面探针</button><button type="button" data-tool="source" aria-pressed="false">移动负极</button><button type="button" data-tool="target" aria-pressed="false">移动正极</button></div>
+        <p class="control-note" id="tool-description">拖动空白处旋转视角；滚轮或滑块缩放。</p>
+        <button type="button" class="lightning-action" id="probe-peak">◈　探测电子密度峰值</button>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>外场与粒子</span><small>DIMENSIONLESS MODEL</small></div>
+        <div class="slider-row"><label for="field">极板平均场 E₀</label><output id="field-value" for="field">0.65</output></div><input id="field" class="range" type="range" min="0" max="1.2" step="0.01" value="0.65">
+        <div class="slider-row second"><label for="diffusion">电子扩散 Dₑ</label><output id="diffusion-value" for="diffusion">0.16</output></div><input id="diffusion" class="range" type="range" min="0" max="0.5" step="0.01" value="0.16">
+        <div class="slider-row second"><label for="amplitude">初始种子峰值 n₀</label><output id="amplitude-value" for="amplitude">0.012</output></div><input id="amplitude" class="range" type="range" min="0.001" max="0.1" step="0.001" value="0.012">
+        <div class="slider-row second"><label for="ion-mobility">正离子迁移率 μᵢ</label><output id="ion-mobility-value" for="ion-mobility">0.015</output></div><input id="ion-mobility" class="range" type="range" min="0" max="0.08" step="0.005" value="0.015">
+        <div class="display-switches"><label for="feedback"><span>空间电荷反馈到电场</span><input id="feedback" type="checkbox" checked><b aria-hidden="true"></b></label></div>
+        <p class="control-note">E₀ 决定两板电势差；针尖的局部场不等于 E₀。关闭反馈后仍计算输运与电离，但泊松方程不接收电荷；切换会重置，便于在相近 t 对比。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>电极位置</span><small>VOXEL BOUNDARIES</small></div>
+        <div class="slider-row"><label for="source-x">负极 X</label><output id="source-x-value" for="source-x">0.0</output></div><input id="source-x" class="range" type="range" min="-100" max="100" step="1" value="0">
+        <div class="slider-row second"><label for="source-z">负极 Z</label><output id="source-z-value" for="source-z">0.0</output></div><input id="source-z" class="range" type="range" min="-100" max="100" step="1" value="0">
+        <div class="slider-row second"><label for="target-x">正极 X</label><output id="target-x-value" for="target-x">0.0</output></div><input id="target-x" class="range" type="range" min="-100" max="100" step="1" value="0">
+        <div class="slider-row second"><label for="target-z">正极 Z</label><output id="target-z-value" for="target-z">0.0</output></div><input id="target-z" class="range" type="range" min="-100" max="100" step="1" value="0">
+        <p class="control-note">上下为固定电势极板；两针位置吸附网格并重新求解，种子随负极移动。图中圆柱为体素电极的示意。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>观察与精度</span><small>VOLUME / SLICE</small></div>
+        <div class="display-switches"><label for="show-electrons"><span>显示电子密度</span><input id="show-electrons" type="checkbox" checked><b aria-hidden="true"></b></label><label for="show-ions"><span>显示正离子密度</span><input id="show-ions" type="checkbox" checked><b aria-hidden="true"></b></label><label for="show-iso"><span>电子密度等值面 · 当帧峰值 25%</span><input id="show-iso" type="checkbox" checked><b aria-hidden="true"></b></label><label for="show-slice"><span>显示网格剖面与电场箭头</span><input id="show-slice" type="checkbox"><b aria-hidden="true"></b></label></div>
+        <label class="quality-label" for="slice-mode">剖面显示 <small>固定色阶</small></label><select id="slice-mode" disabled><option value="charge">空间电荷 nᵢ − nₑ</option><option value="potential">电势 φ / V</option></select>
+        <div class="slider-row second"><label for="slice-z">剖面位置 Z</label><output id="slice-z-value" for="slice-z">0.0</output></div><input id="slice-z" class="range" type="range" min="-100" max="100" step="1" value="0" disabled>
+        <div class="slider-row second"><label for="exposure">密度显示参考值</label><output id="exposure-value" for="exposure">0.030</output></div><input id="exposure" class="range" type="range" min="-3" max="0" step="0.05" value="-1.52">
+        <label class="quality-label" for="grid-quality">三维网格 <small>更密更慢</small></label><select id="grid-quality"><option value="quick">快速 · 17 × 25 × 17</option><option value="standard" selected>标准 · 25 × 37 × 25</option><option value="fine">精细 · 33 × 49 × 33</option></select>
+        <label class="quality-label" for="solver-accuracy">泊松最大残差 <small>越小越慢</small></label><select id="solver-accuracy"><option value="0.0001">快速 · 10⁻⁴</option><option value="0.00002" selected>标准 · 2×10⁻⁵</option><option value="0.000001">精细 · 10⁻⁶</option></select>
+        <div class="slider-row second"><label for="camera-zoom">观察缩放</label><output id="camera-zoom-value" for="camera-zoom">1.00×</output></div><input id="camera-zoom" class="range" type="range" min="0.55" max="1.65" step="0.01" value="1">
+        <p class="control-note">密度点的颜色和光晕仅为可视化；参考值只改变亮度，不改变方程。电荷色阶在 |ρ| = 0.04 饱和，电势使用 φ/V 的 0–1 色阶；箭头长度按当前剖面归一。网格与精度变化会重置。</p>
+      </div>
+      <div class="console-foot"><span>✳</span>局部、无量纲教学模型，不是完整云地闪电，也不标定真实空气。</div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h2 id="knowledge-title">知识卡片<span>。</span></h2></div></div>
+      <p class="panel-description">从电子漂移到空间电荷，读出每一步的计算。</p>
+      <div class="lesson-tabs vortex-tabs" role="group" aria-label="选择知识卡片">
+        <button type="button" data-note="transport" class="active" aria-pressed="true"><span class="lesson-icon">↟</span><span><strong>漂移与电离</strong><small>两种粒子如何演化</small></span><b>01</b></button>
+        <button type="button" data-note="charge" aria-pressed="false"><span class="lesson-icon">±</span><span><strong>自洽空间电荷</strong><small>电荷重新塑造电场</small></span><b>02</b></button>
+        <button type="button" data-note="probe" aria-pressed="false"><span class="lesson-icon">◎</span><span><strong>局部网格探针</strong><small>读取密度、场强与电势</small></span><b>03</b></button>
+        <button type="button" data-note="limits" aria-pressed="false"><span class="lesson-icon">∇</span><span><strong>守恒与模型边界</strong><small>残差、吸收和适用范围</small></span><b>04</b></button>
+      </div>
+      <section class="lesson-detail vortex-detail" data-note-content="transport" aria-label="电子输运和碰撞电离">
+        <div class="lesson-top"><span>观察卡片 / 01</span><span>01 — 04</span></div><h3>密度如何演化，<br><em>不是粒子运动轨迹。</em></h3>
+        <p>电子沿电场反方向漂移并扩散；正离子沿电场方向慢速漂移。电子碰撞电离时，同一网格增加等量电子和正离子。</p>
+        <div class="vortex-formula">∂ₜnₑ + ∇·Γₑ = S　 Γₑ = −nₑE − Dₑ∇nₑ<br>∂ₜnᵢ + ∇·Γᵢ = S　 Γᵢ = μᵢnᵢE − Dᵢ∇nᵢ<br>S = nₑ|E| exp(−1/|E|)</div>
+        <div class="lesson-metric"><span>累计产生 / 当前积分速率</span><strong id="card-production">—</strong></div>
+        <p class="lesson-note">调低外场观察漂移与增殖变化；场为零时没有本模型中的碰撞电离。离子扩散取 Dᵢ = μᵢDₑ。亮点显示网格密度，并非被跟踪的真实电子；半透明壳是 nₑ 等于当帧峰值 25% 的插值等值面，不是放电通道或自然发光。Canvas 降级显示该面的稀疏线段。</p>
+        <button type="button" class="lesson-action" id="transport-probe">探测电子密度峰值 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="charge" aria-label="空间电荷和泊松电场" hidden>
+        <div class="lesson-top"><span>观察卡片 / 02</span><span>02 — 04</span></div><h3>产生的电荷，<br><em>反过来改变电场。</em></h3>
+        <p>电子与正离子分离形成空间电荷；每个时间步重新求解泊松方程，得到下一步使用的三维场。关闭反馈可从同一初态比较固定外场。</p>
+        <div class="vortex-formula">ρ = nᵢ − nₑ　 ∇²φ = −ρ　 E = −∇φ</div>
+        <div class="lesson-metric"><span>净电荷 / 最大场强</span><strong id="card-charge">—</strong></div><div class="lesson-metric"><span>电场模式</span><strong id="card-feedback">—</strong></div>
+        <p class="lesson-note">打开剖面：暖色为正空间电荷，冷色为负空间电荷；箭头是计算电场在剖面内的投影，长度按当前剖面最大值缩放。颜色和亮度并非自然发光强度。</p>
+        <button type="button" class="lesson-action" id="charge-slice">显示空间电荷剖面 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="probe" aria-label="局部密度和电场探针" hidden>
+        <div class="lesson-top"><span>观察卡片 / 03</span><span>03 — 04</span></div><h3>在一个网格点，<br><em>读取真实计算值。</em></h3>
+        <p>选择「剖面探针」并点击剖面，或直接探测电子密度峰值；探测暂停演化，并等待已提交的一批时间步完成。</p>
+        <div class="probe-box" id="probe-readout" role="status">尚未选择网格点。</div>
+        <div class="lesson-metric"><span>nₑ / nᵢ</span><strong id="probe-density">—</strong></div><div class="lesson-metric"><span>ρ / 电势 φ</span><strong id="probe-charge">—</strong></div><div class="lesson-metric"><span>三维场强 |E| / 电离率 S</span><strong id="probe-field">—</strong></div>
+        <p class="lesson-note">网格点场强由相邻电势的中心差分得到；电极内没有粒子读数。剖面位置随峰值自动移动，选择后可继续调整。</p>
+        <button type="button" class="lesson-action" id="probe-peak-card">探测电子密度峰值 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="limits" aria-label="守恒、残差与模型限制" hidden>
+        <div class="lesson-top"><span>观察卡片 / 04</span><span>04 — 04</span></div><h3>计算有守恒，<br><em>也有边界。</em></h3>
+        <div class="lesson-metric"><span>电荷收支误差 / 泊松残差</span><strong id="card-budget">—</strong></div><div class="lesson-metric"><span>电子 / 离子累计吸收</span><strong id="card-absorbed">—</strong></div><div class="lesson-metric"><span>网格 / 自适应 Δt</span><strong id="card-numerics">—</strong></div>
+        <p class="lesson-note">面通量有限体积、一级迎风和显式自适应步长；每步要求泊松残差达标。残差不是全局误差上界。吸收电极与绝缘侧壁是教学边界，网格改变时离散针极形状也变化，不是严格收敛实验。</p>
+        <p class="lesson-note">不含附着、复合、光电离、气体加热、声、先导与回击。没有空气参数标定，也不能预测真实闪电、分叉或放电距离；粗网格和数值扩散可能抹去前沿细节。</p>
+      </section>
+      <div class="knowledge-foot"><span>MODEL / 07B</span><p>局部三维漂移–扩散–泊松系统<br>无量纲教学模型，不用于工程预测。</p></div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">局部流注实验需要 JavaScript，请启用后重新打开。</div></noscript>
+</body>
+</html>
