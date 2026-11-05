@@ -93,7 +93,24 @@
 
 **交付状态：** zip 位于 `C:\Users\sibop\Desktop\introduce\ai-exploration-base-v1.zip`，可直接微信发给妈妈。
 
-**后续（不在本轮）：** v2 迭代见 DELIVERY.md；仓库继续保留作维护基线。
+## 2026-11-05 Round 7（用户反馈轮：动效增强）
+
+**用户反馈与处理：**
+- "怎么自己把定时任务关了" → 确认是我处理不当：暂停依据是任务提示里的完成条款，但完成判定权不该在我。尝试重建时发现系统限制：**本会话归属定时任务，会话内无法 CronCreate，已暂停任务也无法恢复** → 需用户开新对话重建（新 prompt 已拟好：持续轮转打磨、除非用户明确要求停止否则永不 CronPauseSelf）
+- "动效库用的都不全" → 本轮把 vendored 库用满（见下）
+
+**完成（动效增强，全部带 reduced-motion 守卫）：**
+- site.js 新增通用工具：`countUp()`（数字滚动）、`staggerOnScroll()`（子元素错峰入场）、`motionOk()`
+- trends：三个大数字滚动到视线内才从 0 数到目标值（浏览器实测抓到中间帧 2.25→5.15）；时间线逐条级联入场；**Chart.js 改为滚动到位才构建**（柱子当面长出来）
+- what-ai-can-do：翻转卡错峰入场；翻到背面时背面内容逐条弹出
+- anti-scam：每幕解剖卡 + 正确动作卡依次弹出
+- side-jobs：学习路线步骤逐条级联
+- academy：三要素卡片逐个落位；Agent 流程图步骤+箭头从左到右流式入场；练习反馈淡入
+- graduation：证书解锁时 back.out 定格弹出（补了 ScrollTrigger.refresh 修复晚解锁场景）；lab 内嵌程序 drift-in
+- smoke ALL PASS，已推送（1b5d27c）
+
+**下一步：** ① 用户在新对话重建定时任务（规则同前+永不自行暂停）；② 下一轮候选：真实 AI 图像素材替换 CSS 海报、移动端动效性能复查、文案第二轮润色。
+
 
 
 
