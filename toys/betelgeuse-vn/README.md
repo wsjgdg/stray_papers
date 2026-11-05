@@ -100,3 +100,4 @@ sceneId: {
   next: "sceneId"                              // omit for an ending
 }
 ```
+- Real-astronomy hook (2026-11): VLT captured the clearest image yet of Betelgeuse's elusive companion "Betelgeuse B" (2-3x Sun mass). Potential sequel/extra-chapter inspiration: a second consciousness beside the archive.
