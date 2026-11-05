@@ -38,6 +38,19 @@
       padding: 0.2em 0.85em;
       margin-bottom: 0.6rem;
     }
+    /* Real-news declaration beside the 🎭 badge. */
+    .sim-real-note {
+      display: inline-block;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+      margin-bottom: 0.6rem;
+    }
+    /* Real-news source line at the bottom of each anatomy card. */
+    .anatomy-report { margin: 0.7em 0 0; font-size: 0.9rem; }
+    .anatomy-report a { color: var(--accent-dark); font-weight: 600; }
+    /* Source line for phrase-dictionary / toolkit cards. */
+    .phrase-src { font-size: 0.9rem; margin: 0.5em 0 0; }
+    .phrase-src a { color: var(--accent-dark); }
     /* Case-board progress chain: 8 step chips, lit up stage by stage. */
     .sim-chain {
       display: flex;
@@ -118,6 +131,7 @@
       <div class="sim-topbar">
         <span class="sim-stage-tag" id="sim-stage-tag">第 1 幕 · 共 8 幕</span>
         <span class="sim-demo-badge">🎭 模拟演示 · 非真实群聊</span>
+        <span class="sim-real-note">📰 剧本是模拟的，但<strong>每一幕都有真实案件报道</strong>——点每幕底部的链接看真事</span>
       </div>
       <div class="sim-chain" id="sim-chain"></div>
       <div class="chat sim-chat" id="sim-chat"></div>
@@ -197,7 +211,9 @@
       <ul>
         <li>涉老健康养生诈骗案（400 余名老人、涉案 3000 万余元）：公安部新闻发布会通报，2026 年 6 月，<a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank" rel="noopener">公安部官网</a></li>
         <li>2025 年侦破电诈案件 25.8 万起、拦截诈骗电话 36 亿次：公安部通报，<a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank" rel="noopener">新华网报道</a>，2026 年 1 月</li>
-        <li>模拟器剧本为典型杀猪盘手法的综合示意，非特定案件改编</li>
+        <li>模拟器剧本为典型杀猪盘手法的综合示意（演示样例），非特定案件改编；剧本是模拟的，但每一幕都有真实案件报道——链接见各幕解剖卡底部</li>
+        <li>模拟器全链条真实案例：单亲妈妈 10 天被骗 150 万全过程（真实聊天记录曝光），<a href="https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml" target="_blank" rel="noopener">中国长安网</a>（中央政法委官网），2021 年 9 月</li>
+        <li>话术词典来源：公安部公布十大高发电信网络诈骗类型，<a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener">人民网全文转载</a>，2024 年 6 月</li>
       </ul>
     </div>
 
@@ -242,14 +258,18 @@
         window.SCAM_PHRASES.map(function (p) {
           return '<div class="card col-6 phrase-card">' +
             '<h3 style="margin-top:0;" class="phrase">' + p.phrase + '</h3>' +
-            '<p class="decode">' + p.decode + '</p></div>';
+            '<p class="decode">' + p.decode + '</p>' +
+            (p.url ? '<p class="phrase-src">来源：<a href="' + p.url + '" target="_blank" rel="noopener">' + p.src + '</a></p>' : '') +
+            '</div>';
         }).join(''));
 
       inject('toolkit',
         window.SCAM_TOOLKIT.map(function (t) {
           return '<div class="card col-4">' +
             '<h3 style="margin-top:0;">🛡️ ' + t.name + '</h3>' +
-            '<p class="decode">' + t.how + '</p></div>';
+            '<p class="decode">' + t.how + '</p>' +
+            (t.link ? '<p class="phrase-src">官方说明：<a href="' + t.link.url + '" target="_blank" rel="noopener">' + t.link.src + '</a></p>' : '') +
+            '</div>';
         }).join(''));
 
       if (S.rescanReveal) S.rescanReveal();
@@ -397,10 +417,19 @@
         });
       }
 
+      /* Real-news line(s) at the bottom of an anatomy card. */
+      function reportLine(r, label) {
+        if (!r || !r.url) return '';
+        return '<p class="anatomy-report"><a href="' + r.url + '" target="_blank" rel="noopener">📰 ' + label + r.src + '</a></p>';
+      }
+
       function anatomyCard(stage) {
         anatomyEl.innerHTML =
           '<div class="anatomy-card"><h4>' + stage.hookTitle + '</h4>' +
-          '<p style="margin:0.4em 0 0;">' + stage.anatomy + '</p></div>' +
+          '<p style="margin:0.4em 0 0;">' + stage.anatomy + '</p>' +
+          reportLine(stage.report, '这一幕在真实案件里 → ') +
+          reportLine(stage.chainReport, '整条链条都有真实判例和警方通报（见每幕底部的报道链接） → ') +
+          '</div>' +
           '<div class="correct-move"><h4>✓ 正确动作</h4>' +
           '<p style="margin:0.4em 0 0;">' + stage.correctMove + '</p></div>';
         if (window.gsap && S.motionOk()) {
@@ -433,7 +462,8 @@
           var note = document.createElement('div');
           note.className = 'anatomy-card';
           note.innerHTML = '<h4>解剖这条"晒单"</h4>' +
-            '<p style="margin:0.4em 0 0;">' + side.decode + '</p>';
+            '<p style="margin:0.4em 0 0;">' + side.decode + '</p>' +
+            reportLine(side.report, '真实案件对照 → ');
           anatomyEl.appendChild(note);
           animateIn(note);
         });
