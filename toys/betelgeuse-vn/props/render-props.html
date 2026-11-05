@@ -121,7 +121,24 @@ function buildCRT() {
   shell.scale.set(0.9, 1, 0.85);
   shell.position.y = -0.9;
   g.add(shell);
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.28), M.crtScreen);
+  // CRT screen texture: the story's email, rendered as a canvas texture so
+  // the terminal displays actual content instead of a blank glow
+  const sc = document.createElement('canvas');
+  sc.width = 512; sc.height = 384;
+  const sg = sc.getContext('2d');
+  sg.fillStyle = '#081522'; sg.fillRect(0, 0, 512, 384);
+  sg.fillStyle = '#7fc9f5'; sg.font = '22px monospace';
+  const emailLines = [
+    '收件人：陈屿', '发件人：沈眠', '主题：定时发送·第三封', '',
+    '> 差五分钟。', '> 定时任务走到这里就会', '> 把我写给你的话送出去。',
+    '', '> 去一趟天文台。',
+  ];
+  emailLines.forEach(function (l, i) { sg.fillText(l, 28, 46 + i * 34); });
+  for (let y = 0; y < 384; y += 4) { sg.fillStyle = 'rgba(0,0,0,0.22)'; sg.fillRect(0, y, 512, 2); }
+  const screenTex = new THREE.CanvasTexture(sc);
+  screenTex.colorSpace = THREE.SRGBColorSpace;
+  const screenMat = new THREE.MeshStandardMaterial({ map: screenTex, emissive: 0x8fd0ff, emissiveMap: screenTex, emissiveIntensity: 1.15, roughness: 0.25 });
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.28), screenMat);
   screen.position.set(0, 0.28, 1.06);
   screen.rotation.x = -0.06;
   g.add(screen);

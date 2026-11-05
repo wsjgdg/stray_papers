@@ -159,6 +159,36 @@ body {
   height: auto;
   filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5));
   transition: opacity 0.8s ease;
+  transform-origin: 50% 100%; /* idle sway pivots at the ground contact */
+}
+
+/* idle life: each prop breathes subtly so stills never read as dead
+   stickers; all die under the reduced-motion kill list */
+.vn-prop-umbrella {
+  animation: vn-idle-sway 5.2s ease-in-out infinite;
+}
+
+.vn-prop-crt {
+  animation: vn-idle-glow 3.4s ease-in-out infinite;
+}
+
+.vn-prop-telescope {
+  animation: vn-idle-glint 7s ease-in-out infinite;
+}
+
+@keyframes vn-idle-sway {
+  0%, 100% { transform: rotate(-1.1deg); }
+  50% { transform: rotate(1.1deg); }
+}
+
+@keyframes vn-idle-glow {
+  0%, 100% { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1); }
+  50% { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1.14) drop-shadow(0 0 22px rgba(111, 195, 255, 0.18)); }
+}
+
+@keyframes vn-idle-glint {
+  0%, 100% { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)); }
+  38%, 52% { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1.1) drop-shadow(0 0 16px rgba(201, 161, 90, 0.2)); }
 }
 
 .vn-bg-canvas {
@@ -2104,6 +2134,9 @@ input.vn-range {
   #vn-app #vn-start,
   #vn-app #vn-start::after,
   #vn-app .vn-auto-bar i.vn-auto-run,
+  #vn-app .vn-prop.vn-prop-umbrella,
+  #vn-app .vn-prop.vn-prop-crt,
+  #vn-app .vn-prop.vn-prop-telescope,
   #vn-app .vn-ending-mark.vn-collected[data-ending="ending_true"] {
     animation: none !important;
   }

@@ -965,7 +965,7 @@
         return;
       }
       var img = document.createElement("img");
-      img.className = "vn-prop";
+      img.className = "vn-prop vn-prop-" + p.id;
       img.src = store[p.id];
       img.alt = "";
       img.style.left = typeof p.left === "string" ? p.left : "50%";
