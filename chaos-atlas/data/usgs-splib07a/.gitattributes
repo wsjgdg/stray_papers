@@ -1,0 +1,4 @@
+# These source data and metadata are kept byte-for-byte for provenance and
+# SHA-256 verification, including on checkouts with core.autocrlf enabled.
+splib07a_*.txt -text
+*.html -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

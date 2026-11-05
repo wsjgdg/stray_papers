@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10171b">
+  <meta name="description" content="一个可以拖拽、调参、观察的三维多重摆实验室：自由摆动、添加摆球，用真实数值模拟理解混沌与能量交换。">
+  <title>空间摆实验室 · 可扩展的 3D 混沌实验</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23151e22'/%3E%3Cpath d='M20 4v9l7 7-5 11' fill='none' stroke='%23f5b874' stroke-width='2'/%3E%3Ccircle cx='20' cy='13' r='3' fill='%23f5b874'/%3E%3Ccircle cx='27' cy='20' r='4' fill='%23f5b874'/%3E%3Ccircle cx='22' cy='31' r='4' fill='%237bd7c8'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-23">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="spatial-model.js?v=20261031-23"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="pendulum.js?v=20261031-23"></script>
+</head>
+<body>
+<a class="skip-link" href="#pendulum-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#pendulum-scene" data-jump="stage">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="19" r="15"/><path d="M20 5v9l6 5-5 10"/><circle cx="20" cy="14" r="2"/><circle cx="26" cy="19" r="3"/><circle cx="21" cy="29" r="3"/></svg></span>
+      <span><strong>CHAOS / LAB</strong><small>空间摆实验台</small></span>
+    </a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status"><span class="status-light"></span><span id="header-status">实验进行中</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame">
+    <div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="ising.html"><span>自旋晶格</span><small>08</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div>
+    <input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list">
+    </div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓  拖动滑块或滚动查看 · 8 项</div>
+  </nav>
+</header>
+
+<main id="workbench" class="lab-workbench" aria-label="空间摆实验台">
+  <h1 class="visually-hidden">空间摆实验室</h1>
+  <article class="model-panel" aria-label="可交互三维多重摆模型">
+        <div class="model-stage" id="model-stage">
+          <canvas id="pendulum-scene" tabindex="0" aria-label="空间多重摆模型。拖动摆球设置三维初始位置，拖动空白处旋转，滚轮缩放；键盘方向键旋转，加号和减号缩放，空格播放或暂停。"></canvas>
+          <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">SIMULATION LIVE</b></div><div>3D MODEL <i>/</i> SPATIAL PENDULUM</div></div>
+          <div class="model-tag" id="tag-selected" aria-hidden="true"><span></span> 已选 <small id="tag-number">02</small> 号球</div>
+          <button class="exit-focus" type="button" id="exit-focus" hidden>退出聚焦 <span aria-hidden="true">↗</span></button>
+          <div class="interaction-tip" id="interaction-tip" role="status" aria-live="polite">拖动摆球，可设置三维初始位置</div>
+          <div class="stage-bottom" aria-hidden="true"><div class="model-legend"><span><i class="legend-main"></i> 主链 A</span><span id="legend-twin-item" hidden><i class="legend-twin"></i> 对照链 B</span><span><i class="legend-trail"></i> 末端轨迹</span></div><div class="stage-instruction"><span>↕</span> 拖动摆球设位置 <b>·</b> 拖空白旋转视角</div></div>
+          <div class="stage-fallback" id="stage-fallback" hidden>WebGL 不可用，已切换到 2D 投影。实验和数据仍可使用。</div>
+          <div class="stage-error" id="stage-error" role="status" aria-live="polite">实验正在加载。如果长时间没有显示，请刷新页面。</div>
+        </div>
+  </article>
+  <div class="lab-bottom">
+    <section class="telemetry" aria-label="实验实时数据">
+      <div class="telemetry-item"><span>仿真时间</span><strong id="time-readout">0.00 <small>s</small></strong></div>
+      <div class="telemetry-item"><span>双轨距离</span><strong id="distance-readout">0.0017 <small>m</small></strong></div>
+      <div class="telemetry-item"><span>动能 / 势能</span><strong><span id="kinetic-readout">0.00</span><i>/</i><span id="potential-readout">0.00</span> <small>J</small></strong></div>
+      <div class="telemetry-item"><span>总能量误差</span><strong id="drift-readout">0.0000 <small>%</small></strong><small class="visually-hidden" id="drift-label">相对初始总能量</small></div>
+    </section>
+        <div class="transport" aria-label="模拟和视角控制">
+          <div class="transport-left"><button type="button" id="play" class="play-button" aria-label="暂停模拟"><span id="play-symbol" aria-hidden="true">Ⅱ</span><span id="play-text">暂停</span></button><button type="button" class="tool-button" id="step" aria-label="单步推进 1/60 秒" title="单步推进 1/60 秒（请先暂停）" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button><button type="button" class="tool-button" id="reset" aria-label="重置实验" title="按当前参数重置"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button></div>
+          <div class="transport-right"><div class="speed-options" role="group" aria-label="模拟速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+        </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+      <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="空间摆实验控制台">
+        <div class="panel-top"><div><span class="panel-kicker">CONTROL CONSOLE</span><h3>实验控制台<span>。</span></h3></div></div>
+        <p class="panel-description">添加球体，设定每一级的初始位置。</p>
+        <div class="control-section">
+          <div class="control-heading"><span>实验预设</span><small>PRESETS</small></div>
+          <div class="preset-grid" role="group" aria-label="实验预设">
+            <button type="button" data-preset="butterfly" class="active" aria-pressed="true"><span>✳</span> 蝴蝶效应</button>
+            <button type="button" data-preset="gentle" aria-pressed="false"><span>◌</span> 微小摆动</button>
+            <button type="button" data-preset="energetic" aria-pressed="false"><span>↝</span> 高能摆动</button>
+          </div>
+        </div>
+        <div class="control-section ball-section">
+          <div class="control-heading"><span>摆球管理</span><small>LINKED BODIES</small></div>
+          <div class="ball-buttons" role="group" aria-label="球体操作">
+            <button type="button" id="add-bob"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg><span>添加球体</span></button>
+            <button type="button" id="remove-bob" aria-label="移除选中球体" title="移除选中球体"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12"/></svg><span>移除选中</span></button>
+          </div>
+          <div class="ball-select-row"><label for="ball-select">当前球体</label><div><span class="ball-select-wrap"><select id="ball-select" aria-label="选择球体"><option value="0">01 号球</option><option value="1" selected>02 号球</option></select></span><button type="button" id="focus-bob" title="聚焦选中球体" aria-label="聚焦选中球体" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4.5"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3"/></svg><span>聚焦</span></button></div></div>
+          <p class="control-note" id="ball-count">共 2 个球体 · 无预设数量上限</p>
+        </div>
+        <div class="control-section">
+          <div class="control-heading"><span>选中球体方向</span><small>INITIAL POSITION</small></div>
+          <div class="slider-row"><label for="angle1"><i>θ</i> 离竖直夹角</label><output id="angle1-value" for="angle1">65°</output></div>
+          <input id="angle1" class="range" type="range" min="0" max="180" step="1" value="65">
+          <div class="slider-row second"><label for="angle2"><i>φ</i> 空间方位角</label><output id="angle2-value" for="angle2">55°</output></div>
+          <input id="angle2" class="range" type="range" min="-180" max="180" step="1" value="55">
+          <p class="control-note">可直接拖动球体，或用两个角度设定球面上的位置。</p>
+        </div>
+        <div class="control-section physical-settings">
+          <div class="control-heading"><span>物理参数</span><small>PARAMETERS</small></div>
+          <div class="slider-row"><label for="gravity"><i>g</i> 重力加速度</label><output id="gravity-value" for="gravity">9.8 <small>m/s²</small></output></div>
+          <input id="gravity" class="range" type="range" min="2" max="15" step="0.1" value="9.8">
+          <div class="slider-row second"><label for="mass"><i>mₙ/m₁</i> 后续球质量比</label><output id="mass-value" for="mass">1.0</output></div>
+          <input id="mass" class="range" type="range" min="0.5" max="2.5" step="0.1" value="1">
+        </div>
+        <div class="control-section perturbation-section">
+          <div class="control-heading"><span>末节方向偏差 <i>Δα</i></span><small>PERTURBATION</small></div>
+          <div class="delta-options" role="group" aria-label="末节初始方向偏差"><button type="button" data-delta="0.01" aria-pressed="false">0.01°</button><button type="button" data-delta="0.1" class="active" aria-pressed="true">0.1°</button><button type="button" data-delta="1" aria-pressed="false">1°</button></div>
+        </div>
+        <div class="display-switches"><label><span>显示蓝色对照链 <small>微扰链 B</small></span><input type="checkbox" id="show-twin" aria-describedby="twin-explanation"><b aria-hidden="true"></b></label><p class="control-note twin-explanation" id="twin-explanation">初始方向略有偏差；开启后两链几乎重合，播放后可能分开。</p><label><span>显示运动轨迹 <small>末端路径</small></span><input type="checkbox" id="show-trail" checked><b aria-hidden="true"></b></label></div>
+        <div class="console-foot"><span aria-hidden="true">✳</span> 参数在本地实时计算</div>
+      </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+      <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+        <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h3 id="knowledge-title">知识卡片<span>。</span></h3></div></div>
+        <p class="panel-description">点击卡片，把观察变成理解。</p>
+        <div class="lesson-tabs" role="group" aria-label="选择知识卡片">
+          <button type="button" data-lesson="sensitivity" class="active" aria-pressed="true"><span class="lesson-icon">✳</span><span><strong>敏感依赖</strong><small>一点偏差，两个未来</small></span><b>01</b></button>
+          <button type="button" data-lesson="energy" aria-pressed="false"><span class="lesson-icon">◒</span><span><strong>能量守恒</strong><small>动能与势能的交换</small></span><b>02</b></button>
+          <button type="button" data-lesson="coupling" aria-pressed="false"><span class="lesson-icon">∿</span><span><strong>空间耦合</strong><small>每一级如何影响彼此</small></span><b>03</b></button>
+        </div>
+        <article class="lesson-detail" aria-live="off">
+          <div class="lesson-top"><span id="lesson-kicker">观察卡片 / 01</span><span id="lesson-counter">01 — 03</span></div>
+          <h4 id="lesson-title">两条几乎重合的未来</h4>
+          <p id="lesson-copy">两条摆链遵循同一组方程，末节初始方向只相差 0.1°。微小差异可能在运动中不断放大。</p>
+          <div class="lesson-metric"><span id="lesson-metric-label">当前末端距离</span><strong id="lesson-metric">0.0017 <small>m</small></strong></div>
+          <div class="chart-head"><span id="chart-title">双轨距离 / 对数刻度</span><span id="chart-legend">A ↔ B</span></div>
+          <canvas id="insight-chart" role="img" aria-label="两个摆球末端距离随时间变化的对数图"></canvas>
+          <div class="chart-caption"><span id="chart-left">开始</span><span id="chart-right">现在 →</span></div>
+          <p class="lesson-note" id="lesson-note">蓝色链是微扰对照，可在控制台开关。距离按真实位置计算，可能增长也可能缩小。</p>
+          <button type="button" class="lesson-action" id="lesson-action">复现对照实验 <span aria-hidden="true">↗</span></button>
+        </article>
+        <div class="knowledge-foot"><span>MODEL / 01</span><p>理想球铰 · 无摩擦<br>数值实验并非长期预测</p></div>
+      </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">三维实验需要 JavaScript。请启用 JavaScript 后重新打开页面。</div></noscript>
+</body>
+</html>

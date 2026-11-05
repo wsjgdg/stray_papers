@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10171b">
+  <meta name="description" content="在三维实验台中探索自由刚体翻转、中间轴不稳定性与恒力作用。">
+  <title>刚体翻转实验 · 自由旋转与恒力作用</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23151e22'/%3E%3Cpath d='M9 12 26 7l6 8-17 6zM9 12v13l6 8V21M15 33l17-6V15' fill='none' stroke='%23efbb86' stroke-width='1.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-23">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="rigid.css?v=20261031-23">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="rigid-model.js?v=20261031-23"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="rigid-body.js?v=20261031-23"></script>
+</head>
+<body class="rigid-lab">
+<a class="skip-link" href="#rigid-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#rigid-scene" data-jump="stage">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><path d="m9 16 16-6 6 6-16 6zm0 0v10l6 5V22m0 9 16-6v-9"/></svg></span>
+      <span><strong>CHAOS / LAB</strong><small>刚体翻转实验</small></span>
+    </a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status"><span class="status-light"></span><span id="header-status">实验进行中</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame">
+    <div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="ising.html"><span>自旋晶格</span><small>08</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div>
+    <input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list">
+    </div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓  拖动滑块或滚动查看 · 8 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" aria-label="刚体翻转与恒力实验台">
+  <h1 class="visually-hidden">刚体翻转实验：自由旋转与恒力作用</h1>
+  <article class="model-panel" aria-label="可交互的三维刚体模型">
+    <div class="model-stage" id="rigid-stage">
+      <canvas id="rigid-scene" data-lab-canvas tabindex="0" aria-label="三维刚体运动。可在控制台施加恒力；力与质心速度的实时数据可在知识卡查看。拖动刚体设置初始姿态并暂停；拖动空白处改变视角，滚轮缩放。方向键旋转视角，Alt 加方向键调整初始姿态，加减号缩放，空格播放或暂停。"></canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">SIMULATION LIVE</b></div><div><span id="motion-mode">TORQUE FREE</span> <i>/</i> RIGID BODY</div></div>
+      <div class="rigid-index" aria-hidden="true"><span>FIG.</span><strong>03</strong><span id="index-mode">— FREE ROTATION</span></div>
+      <div class="rigid-caption" aria-hidden="true"><span>01 / BODY FRAME</span><strong id="caption-title">自由旋转的刚体</strong><small id="caption-mode">无支点 · 无外力矩</small></div>
+      <div class="world-frame" id="world-frame" aria-hidden="true" hidden><span>空间坐标 / XYZ</span><svg viewBox="0 0 84 72"><circle cx="40" cy="40" r="1.8" fill="#c8d5c8"/><line id="world-x" x1="40" y1="40" stroke="#efa98e"/><line id="world-y" x1="40" y1="40" stroke="#9ac6ec"/><line id="world-z" x1="40" y1="40" stroke="#c5a5df"/><text id="world-x-label" fill="#efa98e">X</text><text id="world-y-label" fill="#9ac6ec">Y</text><text id="world-z-label" fill="#c5a5df">Z</text></svg></div>
+      <div class="interaction-tip" id="interaction-tip" role="status" aria-live="polite"></div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend rigid-legend"><span><i class="legend-axis"></i> 刚体主轴</span><span><i class="legend-momentum"></i> 质心角动量 L</span><span><i class="legend-omega"></i> 角速度 ω</span><span id="velocity-legend" hidden><i class="legend-velocity"></i> 质心速度 v</span><span id="force-legend" hidden><i class="legend-force"></i> 恒力 F</span><span id="center-trail-legend" hidden><i class="legend-center-trail"></i> 质心轨迹</span><span><i class="legend-trail"></i> 中间轴轨迹</span></div><div class="stage-instruction"><span>↔</span> 拖动刚体设姿态 <b>·</b> 拖空白旋转视角</div></div>
+      <div class="stage-error" id="stage-error" role="status" aria-live="polite">实验正在加载。如果长时间没有显示，请刷新页面。</div>
+    </div>
+  </article>
+  <div class="lab-bottom">
+    <div class="stage-fallback" id="stage-fallback" role="status" aria-live="polite" hidden>WebGL 不可用，已切换至二维投影；运动仍按三维方程计算。</div>
+    <section class="telemetry" aria-label="实验实时数据">
+      <div class="telemetry-item"><span>仿真时间</span><strong id="time-readout">0.00 <small>s</small></strong></div>
+      <div class="telemetry-item"><span>旋转动能</span><strong id="energy-readout">0.00 <small>J</small></strong></div>
+      <div class="telemetry-item"><span>质心角动量</span><strong id="momentum-readout">0.00</strong></div>
+      <div class="telemetry-item"><span>中间轴与 L 对齐</span><strong id="alignment-readout">1.000</strong></div>
+    </section>
+    <div class="transport" aria-label="模拟和视角控制">
+      <div class="transport-left"><button type="button" id="play" class="play-button" aria-label="暂停模拟"><span id="play-symbol" aria-hidden="true">Ⅱ</span><span id="play-text">暂停</span></button><button type="button" class="tool-button" id="step" aria-label="单步推进 1/60 秒" title="单步推进 1/60 秒（请先暂停）" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button><button type="button" class="tool-button" id="reset" aria-label="重置实验" title="按当前初始条件重置"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button></div>
+      <div class="transport-right"><div class="speed-options" role="group" aria-label="模拟速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="刚体实验控制台">
+      <div class="panel-top"><div><span class="panel-kicker">CONTROL CONSOLE</span><h3>实验控制台<span>。</span></h3></div></div>
+      <p class="panel-description">设置初态与外力，观察刚体运动。</p>
+      <div class="control-section">
+        <div class="control-heading"><span>对照实验</span><small>01 / SPIN</small></div>
+        <div class="preset-grid rigid-presets" role="group" aria-label="旋转轴对照实验">
+          <button type="button" data-axis-preset="small" aria-pressed="false"><span>↺</span>小惯量轴</button>
+          <button type="button" data-axis-preset="middle" class="active" aria-pressed="true"><span>↝</span>中间轴</button>
+          <button type="button" data-axis-preset="large" aria-pressed="false"><span>↻</span>大惯量轴</button>
+        </div>
+        <p class="control-note" id="preset-note">每个预设都含微小偏转，便于观察稳定性。</p>
+      </div>
+      <div class="control-section force-section">
+        <div class="control-heading"><span>外力实验</span><small>02 / FORCE</small></div>
+        <div class="display-switches force-switch"><label><span>施加恒力 F</span><input type="checkbox" id="enable-force" aria-controls="force-controls"><b aria-hidden="true"></b></label></div>
+        <p class="control-note">调力立即生效，不重置运动；关闭后保留当前速度。</p>
+        <div id="force-controls" hidden>
+          <div class="slider-row"><label for="force-magnitude">力的大小</label><output id="force-magnitude-value" for="force-magnitude">1.00 N</output></div><input id="force-magnitude" class="range" type="range" min="0" max="3" step="0.05" value="1">
+          <div class="slider-row second"><label for="force-azimuth">水平角 φ</label><output id="force-azimuth-value" for="force-azimuth">90°</output></div><input id="force-azimuth" class="range" type="range" min="-180" max="180" step="5" value="90" aria-describedby="force-direction-help">
+          <div class="slider-row second"><label for="force-elevation">仰角 α</label><output id="force-elevation-value" for="force-elevation">20°</output></div><input id="force-elevation" class="range" type="range" min="-90" max="90" step="5" value="20" aria-describedby="force-direction-help">
+          <p class="control-note" id="force-direction-help">每次调节后力保持恒定；方向以空间坐标为准：水平 0° 指向 +X、90° 指向 +Z；仰角 90° 指向 +Y。</p>
+          <p class="force-components">空间分量 <output id="force-components">(0.00, 0.34, 0.94) N</output></p>
+          <div class="force-point-heading">方向快捷</div>
+          <div class="force-directions" role="group" aria-label="空间坐标方向快捷选择">
+            <button type="button" class="axis-x" data-force-direction="px" aria-label="沿空间正 X 方向" aria-pressed="false">+X</button>
+            <button type="button" class="axis-y" data-force-direction="py" aria-label="沿空间正 Y 方向" aria-pressed="false">+Y</button>
+            <button type="button" class="axis-z" data-force-direction="pz" aria-label="沿空间正 Z 方向" aria-pressed="false">+Z</button>
+            <button type="button" class="axis-x" data-force-direction="nx" aria-label="沿空间负 X 方向" aria-pressed="false">−X</button>
+            <button type="button" class="axis-y" data-force-direction="ny" aria-label="沿空间负 Y 方向" aria-pressed="false">−Y</button>
+            <button type="button" class="axis-z" data-force-direction="nz" aria-label="沿空间负 Z 方向" aria-pressed="false">−Z</button>
+          </div>
+          <div class="force-point-heading">作用位置</div>
+          <div class="force-points" role="group" aria-label="恒力的作用位置">
+            <button type="button" data-force-point="center" aria-pressed="false">质心</button>
+            <button type="button" data-force-point="surface" class="active" aria-pressed="true">刚体 +X 面</button>
+          </div>
+          <p class="control-note" id="force-point-help">偏心作用可产生力矩；作用点跟随刚体转动。</p>
+        </div>
+        <div id="force-monitor" hidden>
+          <div class="force-readouts"><div><span>质心位移</span><output id="force-position">0.00 m</output></div><div><span>质心速度</span><output id="force-velocity">0.00 m/s</output></div><div><span>当前力矩</span><output id="force-torque">0.00 N·m</output></div></div>
+          <p class="control-note">质心轨迹记录空间路径，底网只是空间参考。</p>
+        </div>
+      </div>
+      <div class="control-section">
+        <div class="control-heading"><span>主转动惯量</span><small>03 / INERTIA</small></div>
+        <div class="slider-row"><label for="inertia-x"><i class="axis-x">I<sub>x</sub></i> 刚体 X 轴</label><output id="inertia-x-value" for="inertia-x">1.00</output></div><input id="inertia-x" class="range" type="range" min="0.5" max="3" step="0.05" value="1" aria-describedby="inertia-help">
+        <div class="slider-row second"><label for="inertia-y"><i class="axis-y">I<sub>y</sub></i> 刚体 Y 轴</label><output id="inertia-y-value" for="inertia-y">2.00</output></div><input id="inertia-y" class="range" type="range" min="0.5" max="3" step="0.05" value="2" aria-describedby="inertia-help">
+        <div class="slider-row second"><label for="inertia-z"><i class="axis-z">I<sub>z</sub></i> 刚体 Z 轴</label><output id="inertia-z-value" for="inertia-z">2.60</output></div><input id="inertia-z" class="range" type="range" min="0.5" max="3" step="0.05" value="2.6" aria-describedby="inertia-help">
+        <p class="control-note" id="inertia-help">单位 kg·m²。滑块范围自动满足均匀长方体的惯量约束；调整会重置实验。</p>
+      </div>
+      <div class="control-section">
+        <div class="control-heading"><span>初始角速度</span><small>04 / BODY FRAME</small></div>
+        <div class="slider-row"><label for="omega-x"><i class="axis-x">ω<sub>x</sub></i> 绕 X 轴</label><output id="omega-x-value" for="omega-x">0.10</output></div><input id="omega-x" class="range" type="range" min="-4" max="4" step="0.05" value="0.1">
+        <div class="slider-row second"><label for="omega-y"><i class="axis-y">ω<sub>y</sub></i> 绕 Y 轴</label><output id="omega-y-value" for="omega-y">3.20</output></div><input id="omega-y" class="range" type="range" min="-4" max="4" step="0.05" value="3.2">
+        <div class="slider-row second"><label for="omega-z"><i class="axis-z">ω<sub>z</sub></i> 绕 Z 轴</label><output id="omega-z-value" for="omega-z">0.15</output></div><input id="omega-z" class="range" type="range" min="-4" max="4" step="0.05" value="0.15">
+        <p class="control-note">单位 rad/s，分量相对刚体自身坐标轴。修改后从初始姿态重新开始。</p>
+      </div>
+      <div class="display-switches">
+        <label><span>显示刚体主轴</span><input type="checkbox" id="show-axes" checked><b aria-hidden="true"></b></label>
+        <label><span>显示质心角动量 L <small>空间方向</small></span><input type="checkbox" id="show-momentum" checked><b aria-hidden="true"></b></label>
+        <label><span>显示角速度 ω</span><input type="checkbox" id="show-omega" checked><b aria-hidden="true"></b></label>
+        <label><span>显示质心速度 v <small>空间方向</small></span><input type="checkbox" id="show-velocity" checked><b aria-hidden="true"></b></label>
+        <label><span>显示中间轴轨迹</span><input type="checkbox" id="show-trail" checked><b aria-hidden="true"></b></label>
+        <label><span>显示质心轨迹 <small>空间路径</small></span><input type="checkbox" id="show-center-trail" checked><b aria-hidden="true"></b></label>
+        <p class="control-note">L、ω 箭头长度固定；F 与 v 使用各自的显示比例，较小的可见值保留最短长度，v 在高速时不再增长。不同物理量不能直接比较箭头长度。</p>
+        <p class="control-note">当前 |ω|：<output id="omega-magnitude">3.21 rad/s</output></p>
+      </div>
+      <div class="rigid-pose"><button type="button" id="reset-pose">恢复默认姿态 <span aria-hidden="true">↺</span></button><p class="control-note">拖动刚体会暂停并设置新初态；拖动空白处仅改变视角。</p></div>
+      <div class="console-foot"><span aria-hidden="true">✳</span> 刚体方程在本地实时计算</div>
+    </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h3 id="knowledge-title">知识卡片<span>。</span></h3></div></div>
+      <p class="panel-description">从真实运动出发，理解刚体动力学。</p>
+      <div class="lesson-tabs rigid-tabs" role="group" aria-label="选择知识卡片">
+        <button type="button" data-note="flip" class="active" aria-pressed="true"><span class="lesson-icon">↝</span><span><strong>为什么会翻转</strong><small>中间轴不稳定性</small></span><b>01</b></button>
+        <button type="button" data-note="conservation" aria-pressed="false"><span class="lesson-icon">◎</span><span><strong>什么保持不变</strong><small>能量与角动量</small></span><b>02</b></button>
+        <button type="button" data-note="inertia" aria-pressed="false"><span class="lesson-icon">▱</span><span><strong>三个主轴</strong><small>形状与转动惯量</small></span><b>03</b></button>
+        <button type="button" data-note="equations" aria-pressed="false"><span class="lesson-icon">ƒ</span><span><strong>运动方程</strong><small>欧拉方程与数值方法</small></span><b>04</b></button>
+        <button type="button" data-note="motion" aria-pressed="false"><span class="lesson-icon">↗</span><span><strong>力与速度</strong><small>转向过程与惯性</small></span><b>05</b></button>
+      </div>
+      <section class="lesson-detail rigid-detail" data-note-content="flip" aria-label="中间轴不稳定性">
+        <div class="lesson-top"><span>观察卡片 / 01</span><span>01 — 05</span></div>
+        <h4>旋转到一半，<br><em>为什么翻过来了？</em></h4>
+        <p>无外力矩且三个惯量互不相同时，绕中间惯量轴旋转的微小偏离会增长；绕最大或最小惯量轴则是稳定的。</p>
+        <div class="lesson-metric"><span id="flip-axis-label">中间轴与 L 的方向余弦</span><strong id="flip-alignment">1.000</strong></div>
+        <div class="chart-head"><span>轴方向 · −1 到 +1</span><span>BODY ↔ L</span></div>
+        <svg id="flip-chart" viewBox="0 0 240 76" role="img" aria-label="中间主轴与角动量方向的夹角余弦随模拟时间变化。正负号改变表示该轴相对角动量方向翻转；虚线标记最近一次受力改变。"><path id="flip-grid" fill="none" stroke="rgba(173,149,155,.2)" stroke-width="0.7"></path><g fill="#91a69b" font-family="ui-monospace, monospace" font-size="8" dominant-baseline="middle"><text id="flip-label-top">+1</text><text id="flip-label-middle">0</text><text id="flip-label-bottom">−1</text></g><line id="flip-segment-line" stroke="#e7b589" stroke-width="1" stroke-dasharray="3 3" opacity=".8" visibility="hidden"></line><path id="flip-line" fill="none" stroke="#9ed9ca" stroke-width="1.5" stroke-linejoin="round"></path><circle id="flip-last" r="2.3" fill="#c8f3df"></circle></svg>
+        <div class="chart-caption"><span>开始</span><span id="flip-segment-caption" hidden>┊ 最近受力改变</span><span>现在 →</span></div>
+        <p class="lesson-note">精确绕中间轴旋转可以持续；预设加入微小偏转，才会看到不稳定性。它不等同于混沌：理想自由刚体是可积模型。L 为零时方向未定义，显示为「—」。</p>
+        <p class="lesson-note" id="flip-force-note" hidden>偏心恒力可产生外力矩；此时翻转也可能由外力驱动，不能直接套用自由刚体的稳定性结论。</p>
+        <button type="button" class="lesson-action" data-try-axis="middle">复现中间轴实验 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail rigid-detail" data-note-content="conservation" aria-label="能量与动量" hidden>
+        <div class="lesson-top"><span>观察卡片 / 02</span><span>02 — 05</span></div>
+        <h4>翻转了，<br><em>仍有东西不变。</em></h4>
+        <p id="conservation-free">没有外力矩时，绕质心的角动量 L 在空间中的大小和方向都守恒；旋转动能也守恒。刚体的朝向和角速度仍可变化。</p>
+        <p id="conservation-forced" hidden>恒力改变质心运动；偏心施力还可改变绕质心的 L 和旋转动能。受力不变的每一段，平动、转动与恒力势能之和守恒。</p>
+        <p class="diagnostic-segment" id="conservation-segment">本段起点 0.00 s</p>
+        <div class="rigid-metrics"><div><span id="energy-drift-label">动能相对误差</span><strong id="energy-drift">0.00e−0</strong></div><div><span id="momentum-drift-label">L 向量相对误差</span><strong id="momentum-drift">0.00e−0</strong></div></div>
+        <div class="rigid-formula" id="free-energy-formula">E<sub>rot</sub> = ½ (I<sub>x</sub>ω<sub>x</sub>² + I<sub>y</sub>ω<sub>y</sub>² + I<sub>z</sub>ω<sub>z</sub>²)<br>L = R · (I<sub>x</sub>ω<sub>x</sub>, I<sub>y</sub>ω<sub>y</sub>, I<sub>z</sub>ω<sub>z</sub>)</div>
+        <div class="rigid-formula" id="forced-energy-formula" hidden>E = E<sub>rot</sub> + ½m|v|² − F · r<sub>作用点</sub><br>m(v − vₛ) = F (t − tₛ)</div>
+        <p class="lesson-note" id="conservation-note">误差从本段起点计算；改变受力后更新基准，初值为零时显示绝对误差。数值误差仍会累积。</p>
+      </section>
+      <section class="lesson-detail rigid-detail" data-note-content="inertia" aria-label="形状和主转动惯量" hidden>
+        <div class="lesson-top"><span>观察卡片 / 03</span><span>03 — 05</span></div>
+        <h4>形状决定<br><em>三个主惯量。</em></h4>
+        <p>刚体的三条主轴与它一起转动。沿各轴转动的惯量取决于质量如何分布；中间轴由数值大小决定，不固定是某个颜色。</p>
+        <div class="lesson-metric"><span>当前惯量从小到大</span><strong id="axis-order">X &lt; Y &lt; Z</strong></div>
+        <div class="rigid-formula">I<sub>x</sub> = m(b² + c²)/12<br>I<sub>y</sub> = m(a² + c²)/12<br>I<sub>z</sub> = m(a² + b²)/12</div>
+        <p class="lesson-note">模型为质量 1 kg 的均匀长方体；几何尺寸按惯量比例计算，装饰线和箭头不计入质量。主惯量必须满足严格三角不等式。</p>
+      </section>
+      <section class="lesson-detail rigid-detail" data-note-content="equations" aria-label="欧拉方程与数值方法" hidden>
+        <div class="lesson-top"><span>观察卡片 / 04</span><span>04 — 05</span></div>
+        <h4>刚体坐标系里的<br><em>运动方程。</em></h4>
+        <p>角速度的三个分量是在随刚体旋转的主轴系中测量的；即使空间中的 L 不变，这些分量也可以互相交换。</p>
+        <div class="rigid-formula">I<sub>x</sub> dω<sub>x</sub>/dt = (I<sub>y</sub> − I<sub>z</sub>)ω<sub>y</sub>ω<sub>z</sub> + τ<sub>x</sub><br>I<sub>y</sub> dω<sub>y</sub>/dt = (I<sub>z</sub> − I<sub>x</sub>)ω<sub>z</sub>ω<sub>x</sub> + τ<sub>y</sub><br>I<sub>z</sub> dω<sub>z</sub>/dt = (I<sub>x</sub> − I<sub>y</sub>)ω<sub>x</sub>ω<sub>y</sub> + τ<sub>z</sub><br>m r̈ = F；τ<sub>空间</sub> = (R a) × F<br>τ<sub>刚体</sub> = Rᵀ τ<sub>空间</sub></div>
+        <p class="lesson-note">a 是刚体坐标中的作用点相对质心的位置。默认 F = 0；每次调力后，力在空间中保持不变，刚体系的力矩可随姿态变化。无摩擦；用固定步长 1/240 s 的四阶 Runge–Kutta 并归一化姿态四元数。</p>
+      </section>
+      <section class="lesson-detail rigid-detail motion-detail" data-note-content="motion" aria-label="力与速度的方向" hidden>
+        <div class="lesson-top"><span>观察卡片 / 05</span><span>05 — 05</span></div>
+        <h4>力决定加速度，<br><em>速度不会瞬间转向。</em></h4>
+        <p>珊瑚色 F 指向加速度，浅色 v 指向质心速度。改变力的方向不会抹去已有速度；关闭力后，质心仍会按惯性运动。</p>
+        <div class="lesson-metric"><span>F 与 v 的空间夹角</span><strong id="motion-angle">—</strong></div>
+        <div class="rigid-metrics motion-metrics"><div><span>质心速度 |v|</span><strong id="motion-speed">0.00 m/s</strong></div><div><span>质心加速度 |r̈|</span><strong id="motion-acceleration">0.00 m/s²</strong></div><div><span>当前力矩 |τ|</span><strong id="motion-torque">0.00 N·m</strong></div><div><span>作用位置</span><strong id="motion-point">无外力</strong></div></div>
+        <div class="rigid-formula">m r̈ = F；τ = (R a) × F</div>
+        <p class="lesson-note">a 为刚体系中的施力臂，R 将其转到空间。F 或 v 为零时方向未定义；大小不超过 10⁻¹⁰（分别以 N、m/s 计）时为避免数值噪声也显示「—」。两箭头同向时可能重叠，长度只作各自缩放，不可直接比较。</p>
+        <p class="lesson-note">按钮按当前初态<strong>重置并暂停</strong>：质心受 1.5 N，先沿 +X 作用 1 秒，再转向 +Y。自动打开 v 与质心轨迹；播放继续，窄屏会收起卡片。橙线叠加显示真实质心路径，并非表面划痕。</p>
+        <button type="button" class="lesson-action" id="try-force-turn">演示先加速，再转向 <span aria-hidden="true">↗</span></button>
+      </section>
+      <div class="knowledge-foot"><span>MODEL / 03</span><p>理想均匀长方体 · 无摩擦<br>参考底网只是空间坐标，不与刚体接触。</p></div>
+    </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">刚体实验需要 JavaScript。请启用 JavaScript 后重新打开页面。</div></noscript>
+</body>
+</html>

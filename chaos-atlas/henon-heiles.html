@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10171b">
+  <meta name="description" content="探索 Hénon–Heiles 势能地形、保守运动与真实采样的庞加莱截面。">
+  <title>势能地形实验 · Hénon–Heiles</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23151e22'/%3E%3Cpath d='M5 25c5-12 8-11 15-2 7-9 10-10 15 2M5 25l15 8 15-8M20 23v10' fill='none' stroke='%23e9bd8e' stroke-width='1.4'/%3E%3Ccircle cx='20' cy='22' r='2.5' fill='%23f2c58e'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-23">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="henon.css?v=20261031-23">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="henon-model.js?v=20261031-23"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="henon.js?v=20261031-23"></script>
+</head>
+<body class="henon-lab">
+<a class="skip-link" href="#henon-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#henon-scene" data-jump="stage">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><path d="M7 24c5-8 8-8 13-1 5-7 8-7 13 1M7 24l13 7 13-7"/><circle cx="20" cy="22" r="2"/></svg></span>
+      <span><strong>CHAOS / LAB</strong><small>势能地形实验</small></span>
+    </a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status"><span class="status-light"></span><span id="header-status">实验进行中</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame">
+    <div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="ising.html"><span>自旋晶格</span><small>08</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div>
+    <input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list">
+    </div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓  拖动滑块或滚动查看 · 8 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" aria-label="Hénon–Heiles 势能地形实验台">
+  <h1 class="visually-hidden">Hénon–Heiles 势能地形实验</h1>
+  <article class="model-panel" aria-label="可交互的三维势能图">
+    <div class="model-stage" id="henon-stage">
+      <canvas id="henon-scene" data-lab-canvas tabindex="0" aria-label="三维势能地形。高度是势能，物理运动在 x、y 平面。点击地形放置青色探针，拖动探针不改变轨道；拖动金色状态点重设初态并暂停。拖空白旋转，滚轮缩放；方向键旋转视角，加减号缩放，空格播放或暂停。探针可在控制台用键盘调整。"></canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">SIMULATION LIVE</b></div><div>ENERGY LANDSCAPE <i>/</i> HAMILTONIAN</div></div>
+      <div class="henon-index" aria-hidden="true"><span>FIG.</span><strong>04</strong><span>— HÉNON–HEILES</span></div>
+      <div class="henon-caption" aria-hidden="true"><span>01 / POTENTIAL SURFACE</span><strong>势能地形</strong><small>高度表示 V(x, y)，不是物理高度</small></div>
+      <div class="interaction-tip" id="interaction-tip" role="status" aria-live="polite"></div>
+      <section class="probe-widget" id="probe-widget" aria-label="地形探针读数">
+        <div class="probe-widget-title"><span><i></i> 地形探针 Q</span><small>INDEPENDENT</small></div>
+        <div id="probe-coordinates" class="probe-coordinates">x 0.400　y −0.250</div>
+        <div class="probe-widget-values"><span>V <b id="probe-potential">0.0765</b></span><span>|F| <b id="probe-force-mag">0.252</b></span></div>
+        <small class="probe-widget-help">点地形或拖青点，不改变轨道</small>
+      </section>
+      <div class="terrain-hover" id="terrain-hover" aria-hidden="true" hidden></div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend henon-legend"><span><i class="legend-particle"></i> 状态点</span><span><i class="legend-probe"></i> 探针</span><span><i class="legend-path"></i> 映射轨迹</span><span><i class="legend-boundary"></i> V = E</span><span><i class="legend-saddle"></i> 鞍点</span><span><i class="legend-velocity"></i> 速度</span><span><i class="legend-force"></i> 力</span><span><i class="legend-gradient"></i> 梯度</span></div><div class="stage-instruction"><span>↔</span> 点地形放探针 <b>·</b> 拖空白旋转</div></div>
+      <div class="stage-error" id="stage-error" role="status" aria-live="polite">实验正在加载。如果长时间没有显示，请刷新页面。</div>
+    </div>
+  </article>
+  <div class="lab-bottom">
+    <div class="stage-fallback" id="stage-fallback" role="status" aria-live="polite" hidden>WebGL 不可用，已切换到二维投影；动力学仍按同一方程计算。</div>
+    <div class="stage-notice" id="stage-notice" role="status" aria-live="polite" hidden></div>
+    <section class="telemetry" aria-label="实验实时数据">
+      <div class="telemetry-item"><span>仿真时间</span><strong id="time-readout">0.00</strong></div>
+      <div class="telemetry-item"><span>总能量 E</span><strong id="energy-readout">0.1250</strong></div>
+      <div class="telemetry-item"><span>势能 V</span><strong id="potential-readout">0.0112</strong></div>
+      <div class="telemetry-item"><span>能量相对误差</span><strong id="drift-readout">0.0e−0</strong></div>
+    </section>
+    <div class="transport" aria-label="模拟和视角控制">
+      <div class="transport-left"><button type="button" id="play" class="play-button" aria-label="暂停模拟"><span id="play-symbol" aria-hidden="true">Ⅱ</span><span id="play-text">暂停</span></button><button type="button" class="tool-button" id="step" aria-label="单步推进 1/60 模拟时间" title="单步推进 1/60（请先暂停）" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button><button type="button" class="tool-button" id="reset" aria-label="重置实验" title="按当前初始条件重置"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button></div>
+      <div class="transport-right"><div class="speed-options" role="group" aria-label="模拟速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="势能地形实验控制台">
+      <div class="panel-top"><div><span class="panel-kicker">CONTROL CONSOLE</span><h2>实验控制台<span>。</span></h2></div></div>
+      <p class="panel-description">设定能量与初态，比较真实轨迹。</p>
+      <div class="control-section">
+        <div class="control-heading"><span>对照实验</span><small>01 / PRESETS</small></div>
+        <div class="preset-grid henon-presets" role="group" aria-label="轨迹预设">
+          <button type="button" data-preset="regular" class="active" aria-pressed="true"><span>◎</span>环状截面</button>
+          <button type="button" data-preset="complex" aria-pressed="false"><span>✳</span>复杂轨道</button>
+          <button type="button" data-preset="open" aria-pressed="false"><span>↗</span>开放通道</button>
+        </div>
+        <p class="control-note">前两项的总能量相同，仅初态不同；选择预设会重置轨迹。</p>
+      </div>
+      <div class="control-section">
+        <div class="control-heading"><span>总能量</span><small>02 / ENERGY</small></div>
+        <div class="slider-row"><label for="energy"><i>E</i> 初始总能量</label><output id="energy-value" for="energy">0.125</output></div>
+        <input id="energy" class="range" type="range" min="0.030" max="0.240" step="0.001" value="0.125" aria-describedby="energy-help">
+        <div class="threshold-readout"><span>鞍点阈值 E = 1/6 ≈ 0.1667</span><strong id="energy-state">中心通道未开启</strong></div>
+        <p class="control-note" id="energy-help">使用无量纲单位；调整初始条件会重置轨迹，保留播放状态。</p>
+      </div>
+      <div class="control-section">
+        <div class="control-heading"><span>初始位置与速度</span><small>03 / INITIAL STATE</small></div>
+        <div class="slider-row"><label for="initial-x"><i>x₀</i> 水平位置</label><output id="initial-x-value" for="initial-x">0.15</output></div><input id="initial-x" class="range" type="range" min="-0.95" max="0.95" step="0.01" value="0.15" aria-describedby="initial-help">
+        <div class="slider-row second"><label for="initial-y"><i>y₀</i> 水平位置</label><output id="initial-y-value" for="initial-y">0.00</output></div><input id="initial-y" class="range" type="range" min="-0.95" max="0.95" step="0.01" value="0" aria-describedby="initial-help">
+        <div class="slider-row second"><label for="initial-angle"><i>φ</i> 初速度方向</label><output id="initial-angle-value" for="initial-angle">90°</output></div><input id="initial-angle" class="range" type="range" min="-180" max="180" step="0.1" value="90" aria-describedby="initial-help">
+        <p class="control-note" id="initial-help">拖动金色点可设位置并暂停；φ 从 +x 向 +y 测量。速度大小由 E − V(x₀,y₀) 决定；仅允许中心观察区内 V ≤ E 的初态。</p>
+        <div class="initial-readout"><span>初始动量 (pₓ, pᵧ)</span><output id="initial-momentum">(0.000, 0.477)</output></div>
+      </div>
+      <div class="control-section" id="probe-controls">
+        <div class="control-heading"><span>地形探针 Q</span><small>04 / PROBE</small></div>
+        <p class="control-note" id="probe-help">点选地形或拖动青色探针；也可用滑块和方向键调整。探针独立于真实轨道。</p>
+        <div class="slider-row"><label for="probe-x"><i>x</i> 探针坐标</label><output id="probe-x-value" for="probe-x">0.400</output></div><input id="probe-x" class="range" type="range" min="-1.50" max="1.50" step="0.01" value="0.40" aria-describedby="probe-help">
+        <div class="slider-row second"><label for="probe-y"><i>y</i> 探针坐标</label><output id="probe-y-value" for="probe-y">−0.250</output></div><input id="probe-y" class="range" type="range" min="-1.50" max="1.50" step="0.01" value="-0.25" aria-describedby="probe-help">
+        <div class="initial-readout probe-readout"><span>探针处 F = −∇V</span><output id="probe-force">(−0.200, 0.152)</output></div>
+        <div class="probe-actions"><button type="button" id="probe-follow">移到质点</button><button type="button" id="probe-apply">设为初态</button></div>
+        <p class="control-note" id="probe-availability" role="status" aria-live="polite">探针处可设为初态；应用后暂停并重新采样。</p>
+      </div>
+      <div class="control-section vector-controls">
+        <div class="control-heading"><span>物理矢量</span><small>05 / VECTORS</small></div>
+        <p class="control-note">速度始终跟随质点；力与梯度可选择观察位置。</p>
+        <div class="vector-source" role="group" aria-label="力和梯度的观察位置"><button type="button" data-vector-source="particle" aria-pressed="true">质点处</button><button type="button" data-vector-source="probe" aria-pressed="false">探针处</button></div>
+      </div>
+      <div class="display-switches">
+        <label><span>显示地形探针</span><input type="checkbox" id="show-probe" checked><b aria-hidden="true"></b></label>
+        <label><span>显示映射轨迹</span><input type="checkbox" id="show-trail" checked><b aria-hidden="true"></b></label>
+        <label><span>显示 V = E 边界</span><input type="checkbox" id="show-contour" checked><b aria-hidden="true"></b></label>
+        <label><span>显示构型平面投影</span><input type="checkbox" id="show-projection" checked><b aria-hidden="true"></b></label>
+        <label><span>显示平面速度箭头</span><input type="checkbox" id="show-velocity" checked><b aria-hidden="true"></b></label>
+        <label><span>显示平面受力 F</span><input type="checkbox" id="show-force" checked><b aria-hidden="true"></b></label>
+        <label><span>显示势能梯度 ∇V</span><input type="checkbox" id="show-gradient"><b aria-hidden="true"></b></label>
+        <p class="control-note">地形显示 r ≤ 1.5、V ≤ 0.36 的部分，纵向放大 4 倍；裁切与放大只影响画面。</p>
+      </div>
+      <div class="console-foot"><span aria-hidden="true">✳</span> 哈密顿方程在本地实时计算</div>
+    </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h2 id="knowledge-title">知识卡片<span>。</span></h2></div></div>
+      <p class="panel-description">从势能图与轨道出发，理解保守系统。</p>
+      <div class="lesson-tabs henon-tabs" role="group" aria-label="选择知识卡片">
+        <button type="button" data-note="section" class="active" aria-pressed="true"><span class="lesson-icon">✳</span><span><strong>轨道的截面</strong><small>庞加莱采样</small></span><b>01</b></button>
+        <button type="button" data-note="landscape" aria-pressed="false"><span class="lesson-icon">⌁</span><span><strong>地形是什么</strong><small>势能与动能</small></span><b>02</b></button>
+        <button type="button" data-note="threshold" aria-pressed="false"><span class="lesson-icon">↗</span><span><strong>三个通道</strong><small>鞍点与可达区域</small></span><b>03</b></button>
+        <button type="button" data-note="equations" aria-pressed="false"><span class="lesson-icon">ƒ</span><span><strong>运动方程</strong><small>守恒与数值方法</small></span><b>04</b></button>
+      </div>
+      <section class="lesson-detail henon-detail" data-note-content="section" aria-label="庞加莱截面">
+        <div class="lesson-top"><span>观察卡片 / 01</span><span>01 — 04</span></div>
+        <h3>一条轨道，<br><em>留下怎样的截面？</em></h3>
+        <p>每当轨道向上穿过 y = 0 时，记录当时的 (x, pₓ)。曲线与散点呈现不同的有限时间运动形态。</p>
+        <div class="section-heading"><span>y = 0, pᵧ &gt; 0</span><span id="section-count">实时 0 · 采样 0</span></div>
+        <p class="section-instructions" id="section-instructions">点/拖选初态 · 方向键微调（Shift 加速）</p>
+        <svg id="section-chart" viewBox="0 0 240 204" role="group" tabindex="0" aria-label="可交互的庞加莱截面。横轴 x，纵轴 pₓ；选取圆内位置会暂停并重新采样。方向键微调，Shift 加速。" aria-describedby="section-instructions section-selection">
+          <rect x="18" y="6" width="204" height="192" rx="3" fill="#1d2d2b" stroke="#41584d"/>
+          <circle cx="120" cy="102" r="78" fill="none" stroke="#667d6b" stroke-width="1"/>
+          <path d="M42 102H198 M120 24V180" stroke="#51695c" stroke-width=".7"/>
+          <g id="section-reference" fill="#97adc9" opacity=".8"></g><g id="section-sampled" fill="#8fd3be" opacity=".85"></g><g id="section-live" fill="#f1bf89"></g>
+          <g id="section-initial" transform="translate(143.4 102)" aria-hidden="true"><circle r="5" fill="#1d2d2b" stroke="#f5cf9c" stroke-width="1.4"/><path d="M-7 0H7 M0 -7V7" stroke="#f5cf9c" stroke-width="1.2"/></g>
+          <text x="203" y="105" fill="#adc1b0" font-size="9">x</text><text x="124" y="19" fill="#adc1b0" font-size="9">pₓ</text><text id="section-scale-x" x="192" y="116" text-anchor="end" fill="#93a89a" font-size="8">0.500</text><text id="section-scale-p" x="113" y="31" text-anchor="end" fill="#93a89a" font-size="8">0.500</text>
+        </svg>
+        <p class="section-selection" id="section-selection" role="status" aria-live="polite">初态 x₀ = 0.150，pₓ₀ = 0.000，pᵧ₀ = 0.477</p>
+        <div class="section-legend"><span><i class="dot-live"></i>实时</span><span><i class="dot-sample"></i>快速采样</span><span><i class="dot-reference"></i>保留对照</span><span><i class="dot-initial"></i>初态</span></div>
+        <div class="section-actions"><button type="button" id="sample-section">重新采样</button><button type="button" id="pin-section">保留对照</button><button type="button" id="clear-reference" disabled>清除对照</button></div>
+        <p class="lesson-note" id="section-status" role="status" aria-live="polite">准备采样当前初态。</p>
+        <p class="lesson-note">快速采样用同一初态的独立数值副本，不推进实时钟。可保留一次截面，再选相同能量的另一初态；改变能量会清除对照。有限点形态不是混沌的严格证明。</p>
+      </section>
+      <section class="lesson-detail henon-detail" data-note-content="landscape" aria-label="势能地形的含义" hidden>
+        <div class="lesson-top"><span>观察卡片 / 02</span><span>02 — 04</span></div>
+        <h3>这不是山坡，<br><em>而是一张能量图。</em></h3>
+        <p>质点的物理位置是平面中的 (x, y)；画面高度只表示该位置的势能 V(x, y)，不是额外的物理坐标，也不是重力滚坡。</p>
+        <div class="lesson-metric"><span>当前势能 V / 动能 T</span><strong id="energy-parts">0.011 / 0.114</strong></div>
+        <div class="lesson-metric"><span>当前平面速率 |v|</span><strong id="speed-readout">0.477</strong></div>
+        <div class="lesson-metric"><span>质点当前受力 |F|</span><strong id="force-readout">0.152</strong></div>
+        <div class="henon-formula">V = ½(x² + y²) + x²y − y³/3<br>E = T + V；T = ½(pₓ² + pᵧ²)</div>
+        <p class="lesson-note">紫色箭头是平面速度；珊瑚色是受力 F，蓝色是势能梯度 ∇V。它们都画在构型平面，F = −∇V，力与梯度方向相反；箭头长度缩放且有显示上限，零矢量不显示。</p>
+        <p class="lesson-note">青色探针独立于轨道，可在地形上取样。力与梯度可以跟随质点或探针；只有主动选择「设为初态」才会重置轨道。</p>
+        <p class="lesson-note">地形只绘制 r ≤ 1.5、V ≤ 0.36 的区域，纵向放大 4 倍。金线是 V = E 的数值等势线；V ≤ E 是位置可达的必要条件，不代表轨道一定经过。</p>
+      </section>
+      <section class="lesson-detail henon-detail" data-note-content="threshold" aria-label="鞍点与通道" hidden>
+        <div class="lesson-top"><span>观察卡片 / 03</span><span>03 — 04</span></div>
+        <h3>越过鞍点，<br><em>通道才可能打开。</em></h3>
+        <p>中央势阱有三个同高鞍点，能量均为 1/6。低于它时，中央允许区域与外侧区域分离；高于它时，几何通道开放。</p>
+        <div class="lesson-metric"><span>当前 E / 鞍点能量</span><strong id="threshold-ratio">0.750</strong></div>
+        <p class="lesson-note">通道开放不保证该初态一定离开，也不意味着轨道必然混沌。为避免远处势能无界导致数值发散，越出半径 1.5 且向外运动时暂停；这是观察范围，不是严格逃逸证明。</p>
+        <button type="button" class="lesson-action" data-try-preset="open">重置并载入开放通道 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail henon-detail" data-note-content="equations" aria-label="哈密顿方程与数值方法" hidden>
+        <div class="lesson-top"><span>观察卡片 / 04</span><span>04 — 04</span></div>
+        <h3>没有阻尼，<br><em>能量如何守恒？</em></h3>
+        <p>这是两个自由度的自治哈密顿系统。势能和动能相互交换，轨迹可以复杂，但系统没有耗散吸引子。</p>
+        <div class="henon-formula">ẋ = pₓ；ẏ = pᵧ<br>ṗₓ = −x − 2xy<br>ṗᵧ = −y − x² + y²<br>E = ½(pₓ² + pᵧ² + x² + y²) + x²y − y³/3</div>
+        <div class="lesson-metric"><span>当前 |ΔE| / |E₀|</span><strong id="energy-error">0.0e−0</strong></div>
+        <p class="lesson-note">数值使用固定步长 1/240 的四阶 Runge–Kutta；它不是严格保能或辛积分方法。截面穿越在相邻积分步之间插值，长期结果会累积误差。</p>
+      </section>
+      <div class="knowledge-foot"><span>MODEL / 04</span><p>二维构型空间 · 无量纲单位<br>三维高度只用于显示势能。</p></div>
+    </aside>
+    <div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">势能地形实验需要 JavaScript。请启用 JavaScript 后重新打开页面。</div></noscript>
+</body>
+</html>

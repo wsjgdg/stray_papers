@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b181d">
+  <meta name="description" content="用三维伊辛晶格探索磁畴、临界涨落和有限尺寸相变。">
+  <title>自旋晶格 · Ising Criticality</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23111f25'/%3E%3Cpath d='M12 28V12m-5 5 5-5 5 5M28 12v16m-5-5 5 5 5-5' fill='none' stroke='%23b2e9e0' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-33">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="vortex.css?v=20261031-33">
+  <link rel="stylesheet" href="ising.css?v=20261101-5">
+  <link rel="stylesheet" href="crystal-lab.css?v=20261101-5">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="ising-model.js?v=20261031-3"></script>
+  <script defer src="ising-analysis.js?v=20261101-2"></script>
+  <script defer src="crystal-model.js?v=20261101-5"></script>
+  <script defer src="ising-crystal-model.js?v=20261101-5"></script>
+  <script defer src="crystal-lab.js?v=20261101-5"></script>
+  <script defer src="ising-scan.js?v=20261101-5"></script>
+  <script defer src="ising-size-ui.js?v=20261101-5"></script>
+  <script defer src="ising-micro-ui.js?v=20261101-5"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="ising.js?v=20261101-5"></script>
+</head>
+<body class="vortex-lab ising-lab">
+<a class="skip-link" href="#ising-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#ising-scene" data-jump="stage"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><path d="M14 27V13m-4 4 4-4 4 4M26 13v14m-4-4 4 4 4-4"/></svg></span><span><strong>CHAOS / LAB</strong><small>三维自旋晶格</small></span></a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status paused"><span class="status-light"></span><span id="header-status">正在建立晶格</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame"><div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="turing-patterns.html"><span>图灵斑纹</span><small>06</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div><input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list"></div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓ 拖动滑块或滚动查看 · 8 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" aria-label="三维自旋相变实验台">
+  <h1 class="visually-hidden">三维自旋晶格：伊辛模型、磁畴与临界涨落</h1>
+  <article class="model-panel" aria-label="三维自旋晶格">
+    <div class="model-stage" id="ising-stage" data-status="loading">
+      <canvas id="ising-scene" data-lab-canvas tabindex="0" aria-label="三维自旋晶格。拖动旋转，滚轮缩放；方向键旋转，加减号缩放，空格播放或暂停。"></canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">LATTICE INITIALIZING</b></div><div>3D ISING <i>/</i> <span id="spin-stage-name">简单立方 · METROPOLIS SAMPLING</span></div></div>
+      <div class="vortex-index" aria-hidden="true"><span>FIG.</span><strong>08</strong><span>— CRITICAL SPINS</span></div>
+      <div class="ising-quick-view" role="group" aria-label="快捷切换晶格显示方式"><button type="button" data-quick-view="arrows" aria-pressed="true" aria-label="自旋箭头视图">箭头</button><button type="button" data-quick-view="points" aria-pressed="false" aria-label="光点晶格视图">光点</button><button type="button" data-quick-view="voxels" aria-pressed="false" aria-label="磁畴体素视图">体素</button></div>
+      <div class="vortex-caption" aria-hidden="true"><span>01 / COLLECTIVE BEHAVIOR</span><strong>当局部选择连成整体</strong><small id="stage-caption">颜色对应实际自旋 · 光效仅作表现</small></div>
+      <div class="compact-model-label" aria-hidden="true">三维伊辛模型 · 蒙特卡洛扫描</div>
+      <div class="probe-overlay" id="probe-overlay" aria-hidden="true" hidden><span>LOCAL / NEIGHBORS</span><strong id="probe-overlay-position">—</strong><small id="probe-overlay-detail">—</small></div>
+      <button class="scan-stage-link" id="scan-open-stage" type="button" aria-haspopup="dialog"><span>相变曲线实验</span><small id="scan-stage-status">TEMPERATURE SCAN ↗</small></button>
+      <div class="boundary-label" id="boundary-label" aria-hidden="true" hidden><span>INTERFACE / 畴壁筛选</span><strong id="boundary-label-value">—</strong></div>
+      <div class="boundary-empty" id="boundary-empty" role="status" hidden>当前可见层没有界面格点；统计仍覆盖完整晶格。</div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend ising-legend"><span id="spin-legend-up"><i class="legend-up"></i> ↑ 自旋 +1</span><span id="spin-legend-down"><i class="legend-down"></i> ↓ 自旋 −1</span><span id="spin-element-legend" hidden></span><span id="spin-domain-key" hidden>团块颜色 · 箭头为自旋方向</span><span id="spin-neutral-key" hidden><i class="legend-neutral"></i> 非活跃点位</span><span><i class="legend-probe"></i> 选中点位</span><span id="flash-key"><i class="legend-change"></i> 部分净变化</span></div><div class="stage-instruction" id="stage-instruction">↔ 拖动旋转 · 滚轮缩放</div></div>
+      <div class="stage-error" id="stage-error" role="status" aria-live="polite"><div><p id="stage-error-text">正在建立三维晶格，请稍候……</p></div></div>
+    </div>
+  </article>
+  <div class="lab-bottom">
+    <div class="stage-fallback" id="stage-fallback" role="status" hidden>WebGL 不可用，已切换到相同自旋数据的 Canvas 投影。</div>
+    <div class="stage-notice" id="stage-notice" role="status" hidden></div>
+    <section class="telemetry" aria-label="自旋晶格实时数据">
+      <div class="telemetry-item"><span>蒙特卡洛扫描</span><strong id="sweep-readout">—</strong></div>
+      <div class="telemetry-item"><span>平均磁化 m</span><strong id="mag-readout">—</strong><div class="magnetization-track" id="magnetization-track" aria-hidden="true"><i></i><b></b></div></div>
+      <div class="telemetry-item"><span>每自旋能量 E/N</span><strong id="energy-readout">—</strong></div>
+      <div class="telemetry-item"><span>翻转接受率</span><strong id="accept-readout">—</strong></div>
+    </section>
+    <div class="transport" aria-label="采样和视角控制">
+      <div class="transport-left">
+        <button type="button" id="play" class="play-button" aria-label="播放采样" disabled><span id="play-symbol" aria-hidden="true">▶</span><span id="play-text">播放</span></button>
+        <button type="button" class="tool-button" id="step" aria-label="推进一次蒙特卡洛扫描" title="推进一次扫描" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button>
+        <button type="button" class="tool-button" id="reset" aria-label="按当前参数从相同初态重新开始" title="从相同初态重新开始" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button>
+      </div>
+      <div class="transport-right"><div class="speed-options" role="group" aria-label="目标采样速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="自旋晶格控制台">
+      <div class="panel-top"><div><span class="panel-kicker">SPIN CONSOLE</span><h2>相变控制台<span>。</span></h2></div></div>
+      <p class="panel-description">每个活跃位置都由自旋采样决定，不是预设花纹。</p>
+      <div class="control-section spin-structure-section"><div class="control-heading"><span>相变晶格</span><small>ACTUAL SPIN GRAPH</small></div>
+        <label class="input-label" for="spin-structure">晶体结构 <small>改变会重建采样</small></label><select id="spin-structure"><option value="simple-ising">原始简单立方 · Ising</option></select>
+        <p class="spin-graph-summary" id="spin-graph-summary">简单立方 · 六邻居 · 均一 J = 1</p><label class="input-label" for="spin-sample-shape">样品边界与形状 <small>改变计算图</small></label><select id="spin-sample-shape"><option value="periodic">周期胞 · 无自由表面</option><option value="box">开放边界 · 晶胞块</option><option value="sphere">开放边界 · 球形样品</option><option value="cylinder">开放边界 · 圆柱样品</option><option value="hex">开放边界 · 六角柱样品</option></select><button type="button" class="spin-apply-graph spin-apply-shape" id="spin-apply-shape">应用边界与形状并重建</button><p class="control-note" id="spin-shape-hint">周期边界连接胞的对侧；开放边界实际移除范围外点位与键。原快速立方切换时改用等几何的 cP 图并重建；形状不预测晶体习性。形状重建使用已应用的耦合/组元，未应用草稿不会带入。</p><p class="control-note">周期模式的框是计算胞；开放样品轮廓和尺寸由本实验人为设定，不预测晶体习性。切换结构会自动选取重复数。</p>
+        <div id="spin-graph-options" hidden>
+          <div class="slider-row"><label for="spin-cutoff">相互作用截断 / 全局最近距离</label><output id="spin-cutoff-value" for="spin-cutoff">1.08×</output></div><input id="spin-cutoff" class="range" type="range" min="1" max="1.8" step="0.01" value="1.08">
+          <div class="slider-row second"><label for="spin-j-same">同组元耦合 J / J₀</label><output id="spin-j-same-value" for="spin-j-same">+1.00</output></div><input id="spin-j-same" class="range" type="range" min="-2" max="2" step="0.1" value="1">
+          <div class="slider-row second"><label for="spin-j-different">异组元耦合 J / J₀</label><output id="spin-j-different-value" for="spin-j-different">+1.00</output></div><input id="spin-j-different" class="range" type="range" min="-2" max="2" step="0.1" value="1">
+          <fieldset id="spin-species" class="spin-species"><legend>哪些组元具有示意自旋</legend><div id="spin-species-list"></div></fieldset>
+          <label class="input-label" for="spin-color-mode">箭头颜色</label><select id="spin-color-mode"><option value="spin">按自旋方向着色</option><option value="element">按组元着色（箭头表示方向）</option><option value="domain" disabled>按同向团块着色（需分析快照）</option></select>
+          <button type="button" class="spin-apply-graph" id="spin-apply-graph">应用耦合与组元并重建</button><p class="control-note" id="spin-graph-note">参数为教学假设；修改后需点击应用并重建。</p><details class="spin-matrix"><summary>多组元 · 分壳层耦合矩阵</summary><p class="control-note">先按距离选择全局几何壳层，再编辑对称矩阵上三角；“—”表示该壳层没有此组元对。J = 0 移除该类键。</p><label class="input-label" for="spin-matrix-shell">全局距离壳层</label><select id="spin-matrix-shell"></select><div class="spin-matrix-scroll" id="spin-matrix-table"></div><div class="spin-matrix-actions"><button type="button" id="spin-matrix-apply">应用矩阵并重建</button><button type="button" id="spin-matrix-clear">清空覆盖草稿</button></div><p class="control-note" id="spin-matrix-note">矩阵值覆盖上方同/异组元默认 J；收窄截断后，超出范围的规则保留但不参与计算。</p></details><label class="input-label" for="spin-bond-highlight">高亮真实相互作用键</label><select id="spin-bond-highlight"><option value="">不高亮键</option></select><p class="control-note" id="spin-bond-note">显示实际非零耦合键；周期跨边界键和显示层外的键不画长直线。</p>
+        </div>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>实验预设</span><small>REAL SAMPLING</small></div>
+        <div class="preset-grid vortex-presets ising-presets" role="group" aria-label="自旋实验预设">
+          <button type="button" data-preset="critical" class="active" aria-pressed="true"><span aria-hidden="true">✳</span><span id="spin-preset-critical-label">临界涨落</span></button>
+          <button type="button" data-preset="cold" aria-pressed="false"><span aria-hidden="true">↑</span><span id="spin-preset-cold-label">低温有序</span></button>
+          <button type="button" data-preset="hot" aria-pressed="false"><span aria-hidden="true">⁙</span><span id="spin-preset-hot-label">高温无序</span></button>
+          <button type="button" data-preset="quench" aria-pressed="false"><span aria-hidden="true">◈</span><span id="spin-preset-quench-label">降温成畴</span></button>
+          <button type="button" data-preset="field" aria-pressed="false"><span aria-hidden="true">↗</span>外场偏置</button>
+        </div>
+        <p class="preset-detail" id="preset-description" role="status">真实预演后，从临界附近继续采样。</p>
+      </div>
+        <div class="crystal-entry"><div><span>STRUCTURE ATLAS / 08.3</span><strong>不止一种晶格。</strong><small>14 种布拉菲点阵、32 种结构原型与自定义晶胞，可应用到采样。</small></div><button type="button" id="crystal-open" aria-haspopup="dialog">进入晶体结构图谱 <span aria-hidden="true">↗</span></button></div>
+      <div class="control-section"><div class="control-heading"><span>温度与外场</span><small id="spin-unit-heading">J₀ = k<sub>B</sub> = 1</small></div>
+        <div class="scan-entry"><div><span>EXPERIMENT / 08.2</span><strong>从一个晶格，走向一条相变曲线。</strong><small>独立采样升温与降温，比较序参量和涨落。</small></div><button type="button" id="scan-open-control" aria-haspopup="dialog">进入温度扫描 <span aria-hidden="true">↗</span></button></div><div class="scan-entry micro-entry"><div><span>ANALYSIS / 08.4</span><strong>从自旋快照，走进内部结构。</strong><small>键满意度、受挫回路、团块、三维倒空间与有限尺寸研究。</small></div><button type="button" id="micro-open-control" aria-haspopup="dialog">进入微观分析台 <span aria-hidden="true">↗</span></button></div><div class="micro-live" id="micro-live" hidden><strong id="micro-live-label">—</strong><small>标色对应冻结快照；探针可选择团块。</small><button type="button" id="micro-live-clear">退出快照标色 / 回路</button></div>
+        <div class="slider-row"><label for="temperature">温度 k<sub>B</sub>T / J₀</label><output for="temperature" id="temperature-value">4.51</output></div><input id="temperature" class="range" type="range" min="0.25" max="20" step="0.01" value="4.51">
+        <div class="critical-meter" aria-hidden="true"><span></span><i></i></div><p class="parameter-hint" id="spin-temperature-hint">零场无限晶格参考 T<sub>c</sub> ≈ 4.5115；有限晶格不会出现严格突变。</p>
+        <div class="slider-row second"><label for="field">外场 h / J₀</label><output for="field" id="field-value">0.00</output></div><input id="field" class="range" type="range" min="-1.5" max="1.5" step="0.05" value="0">
+        <p class="control-note" id="parameter-status">更改参数保留当前自旋和扫描数；短窗口统计重新开始。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>晶格与随机数</span><small id="spin-cell-heading">PERIODIC CUBE</small></div>
+        <label class="input-label" for="lattice-size"><span id="spin-size-label">晶格边长 L</span> <small>改变会重建</small></label><select id="lattice-size"><option value="12">12³ · 1,728 自旋</option><option value="16">16³ · 4,096 自旋</option><option value="20" selected>20³ · 8,000 自旋</option><option value="24">24³ · 13,824 自旋</option></select>
+        <label class="input-label" for="initial-spins">初始自旋排列 <small>改变会重建</small></label><select id="initial-spins"><option value="random" selected>随机向上 / 向下</option><option value="up">全部向上 +1</option><option value="down">全部向下 −1</option><option value="domains">X 向对半磁畴</option></select>
+        <p class="control-note">选择初态从第 0 扫描重建，保留播放状态；实验预设会覆盖初态。边界由上方样品设置决定。</p>
+        <label class="input-label" for="seed">随机种子 <small>可复现采样序列</small></label><div class="seed-input"><input id="seed" type="number" min="0" max="4294967295" step="1" value="20261031" inputmode="numeric"><button type="button" id="apply-seed">应用并重建</button></div>
+        <p class="control-note" id="seed-status">生效种子：20261031；修改输入后需点「应用并重建」。</p><p class="control-note">相同初态、种子、参数和操作序列可重现结果。底部重置从初态的第 0 扫描开始；预设可能含实际预演。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>晶格观察</span><small>VIEW ONLY</small></div>
+        <div class="ring-orientation ising-view-modes" role="group" aria-label="自旋显示方式"><button type="button" data-view="arrows" aria-pressed="true">自旋箭头</button><button type="button" data-view="points" aria-pressed="false">光点晶格</button><button type="button" data-view="voxels" aria-pressed="false">磁畴体素</button></div>
+        <p class="control-note">三种样式显示同一组自旋；光点尺寸和辉光仅用于表现，不代表自旋强度。</p>
+        <div class="slider-row second"><label for="layers" id="spin-layers-label">显示的 Z 层数</label><output id="layers-value" for="layers">14 / 20</output></div><input id="layers" class="range" type="range" min="1" max="20" step="1" value="14">
+        <p class="control-note">剖开只改变可见范围；晶胞块显示剖面框，曲面样品仅隐藏层，统计始终使用完整样品。</p>
+        <label class="ising-flash-toggle boundary-toggle" for="boundary-only"><span><strong id="spin-interface-label">只显示界面格点</strong><small id="spin-interface-hint">六邻居中至少有一个方向相反</small></span><input id="boundary-only" type="checkbox"></label>
+        <p class="control-note">按完整计算图判断，隐藏内部格点仅为显示筛选，并非材料磁畴的精确边界。探针标记不受筛选。</p><label class="ising-flash-toggle boundary-toggle" for="surface-only"><span><strong>只显示几何缺邻点</strong><small>仅开放样品；与相反邻接筛选可取交集</small></span><input id="surface-only" type="checkbox" disabled></label><p class="control-note">按当前几何邻居判断样品截断处的缺邻；这不是材料实测表面积，统计仍使用完整样品。</p>
+        <label class="ising-flash-toggle" for="show-flashes"><span><strong>净变化闪光</strong><small>相邻后台快照中部分净变化的格点</small></span><input id="show-flashes" type="checkbox" checked></label>
+        <p class="control-note">闪光只提示部分相邻后台快照中的净变化；偶数次翻转不会显示。它不代表真实发光，系统要求减少动态时默认关闭。</p>
+        <div class="ring-orientation" role="group" aria-label="模型交互模式"><button type="button" data-tool="orbit" aria-pressed="true">旋转视角</button><button type="button" data-tool="probe" aria-pressed="false">点选探针</button></div>
+        <div class="coordinate-grid"><label for="probe-x">探针 X</label><label for="probe-y">Y</label><label for="probe-z">Z</label><input id="probe-x" type="number" min="0" max="19" value="10"><input id="probe-y" type="number" min="0" max="19" value="10"><input id="probe-z" type="number" min="0" max="19" value="7"></div>
+        <div class="probe-actions"><button type="button" id="set-probe">定位探针</button><button type="button" id="flip-probe">手动翻转探针</button></div>
+        <label class="input-label" id="probe-site-label" for="probe-site" hidden>晶胞内点位 <small>与坐标一起定位</small></label><select id="probe-site" hidden></select><p class="control-note" id="spin-probe-hint">探针标出当前格点及可见的六邻居；跨周期边界只标记、不画跨晶格直线。手动翻转不是 Metropolis 抽样，会清空统计窗口但不推进扫描。</p>
+      </div>
+      <div class="console-foot">ISING / 08 <span>局部规则 · 集体状态</span></div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h2 id="knowledge-title">知识卡片<span>。</span></h2></div></div>
+      <p class="panel-description">从一个自旋，到整个晶格的集体行为。</p>
+      <div class="lesson-tabs vortex-tabs" role="group" aria-label="选择知识卡片">
+        <button type="button" data-note="neighbors" class="active" aria-pressed="true"><span class="lesson-icon">⌁</span><span><strong>自旋如何翻转</strong><small id="spin-neighbor-tab">六个邻居与 Metropolis</small></span><b>01</b></button>
+        <button type="button" data-note="order" aria-pressed="false"><span class="lesson-icon">◈</span><span><strong>从有序到无序</strong><small>温度与磁化历史</small></span><b>02</b></button>
+        <button type="button" data-note="critical" aria-pressed="false"><span class="lesson-icon">✳</span><span><strong id="spin-critical-tab-label">临界涨落</strong><small>响应、涨落与有限尺寸</small></span><b>03</b></button>
+        <button type="button" data-note="field" aria-pressed="false"><span class="lesson-icon">↗</span><span><strong>外场如何偏置</strong><small>对称性与磁化方向</small></span><b>04</b></button>
+        <button type="button" data-note="domains" aria-pressed="false"><span class="lesson-icon">▦</span><span><strong>磁畴与剖面</strong><small>邻近关联与完整统计</small></span><b>05</b></button>
+        <button type="button" data-note="limits" aria-pressed="false"><span class="lesson-icon">∑</span><span><strong>模型边界</strong><small>能量、采样与时间尺度</small></span><b>06</b></button><button type="button" data-note="frustration" aria-pressed="false"><span class="lesson-icon">△</span><span><strong>反铁磁与挫折</strong><small>实际键与闭合回路</small></span><b>07</b></button><button type="button" data-note="clusters" aria-pressed="false"><span class="lesson-icon">◉</span><span><strong>团块与空间关联</strong><small>同向连通与方向关联</small></span><b>08</b></button><button type="button" data-note="reciprocal" aria-pressed="false"><span class="lesson-icon">✧</span><span><strong>倒空间与尺寸</strong><small>自旋快照与有限采样</small></span><b>09</b></button>
+      </div>
+      <section class="lesson-detail vortex-detail" data-note-content="neighbors" aria-label="局部自旋与翻转概率">
+        <div class="lesson-top"><span>观察卡片 / 01</span><span>LOCAL RULE</span></div><h3>一次翻转，<br><em>由邻居共同决定。</em></h3>
+        <p id="spin-local-explanation">每次随机选一个自旋。它与六个最近邻以及外场共同决定能量差；能量降低必定接受，能量升高则按玻尔兹曼概率接受。</p>
+        <div class="vortex-formula" id="spin-local-formula">ΔE = 2sᵢ(Σ<sub>邻居</sub>sⱼ + h)<br>P(接受) = min(1, e<sup>−ΔE/T</sup>)</div>
+        <div class="probe-box" id="probe-readout">正在选取晶格探针……</div>
+        <div class="lesson-metric"><span>探针 ΔE / 接受概率</span><strong id="card-probe">—</strong></div>
+        <p class="lesson-note">手动翻转是额外干预，不按上式随机抽样；它不会增加蒙特卡洛扫描数，也会清空统计窗口。</p>
+        <button type="button" class="lesson-action" id="card-flip">手动翻转当前探针 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" hidden data-note-content="order" aria-label="磁化与温度">
+        <div class="lesson-top"><span>观察卡片 / 02</span><span>ORDER PARAMETER</span></div><h3>有序不是命令，<br><em>而是统计结果。</em></h3>
+        <p id="spin-order-explanation">m 是所有自旋的平均值。低温时相同方向通常占优势；升温后热涨落更容易破坏排列。单次瞬时读数并不等于平衡平均。</p>
+        <div class="vortex-formula">m = (1/N) Σ sᵢ　　sᵢ = ±1<br>窗口平均 ⟨|m|⟩ ≠ |⟨m⟩|</div>
+        <div class="lesson-metric"><span>瞬时 m / 窗口 ⟨|m|⟩</span><strong id="card-order">—</strong></div>
+        <div class="chart-heading"><span>最近磁化历史</span><span>−1 至 +1</span></div><svg id="history-chart" viewBox="0 0 240 78" role="img" aria-label="最近采样的磁化历史"><path class="history-grid" d="M10 8H232 M10 39H232 M10 70H232"/><path id="history-line" d=""/><circle id="history-point" r="2.5" cx="10" cy="39"/></svg><p class="chart-note" id="history-note">横轴为实际扫描数；参数变化或手动翻转后重新记录。</p>
+        <button type="button" class="lesson-action" id="card-quench">从无序初态降温成畴 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" hidden data-note-content="critical" aria-label="临界涨落与有限尺寸">
+        <div class="lesson-top"><span>观察卡片 / 03</span><span>FINITE SIZE</span></div><h3 id="spin-critical-title">临界附近，<br><em>局部涨落可以连成大片。</em></h3>
+        <p id="spin-critical-explanation">零外场无限三维立方伊辛模型的参考临界温度约为 T<sub>c</sub> = 4.5115。当前有限晶格只会呈现被尺寸和采样时间平滑后的变化。</p>
+        <div class="vortex-formula">χ/N = N(⟨m²⟩ − ⟨m⟩²) / T<br>C/N = N(⟨e²⟩ − ⟨e⟩²) / T²</div>
+        <div class="lesson-metric"><span>窗口 χ/N / C/N</span><strong id="card-fluctuation">—</strong></div>
+        <div class="lesson-metric"><span>实际采样 / 最大窗口</span><strong id="card-samples">0 / 256</strong></div>
+        <p class="lesson-note" id="spin-critical-note">这些是最近最多 256 次扫描的波动估计，仅在充分平衡且采样足够时才有热力学意义；样本相关、有限尺寸、初态和外场都会影响结果。局部更新在临界附近可能出现临界慢化；非零外场时不能把零场 T<sub>c</sub> 当作相变边界。</p>
+        <button type="button" class="lesson-action" id="scan-open-card" aria-haspopup="dialog">用温度扫描画出涨落曲线 <span aria-hidden="true">↗</span></button>
+        <button type="button" class="lesson-action" id="card-critical">切换到临界附近 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" hidden data-note-content="field" aria-label="外场与磁化">
+        <div class="lesson-top"><span>观察卡片 / 04</span><span>EXTERNAL FIELD</span></div><h3>外场打破对称，<br><em>但不会瞬间排列。</em></h3>
+        <p>正场在能量上偏向 +1，负场偏向 −1。参数改变保留当前自旋，再由后续随机扫描逐渐响应；结果仍受温度、历史和有限采样影响。</p>
+        <div class="vortex-formula" id="spin-hamiltonian">H = − Σ<sub>⟨ij⟩</sub>sᵢsⱼ − h Σᵢsᵢ<br>每对最近邻只计一次</div>
+        <div class="lesson-metric"><span>当前 h / 向上比例</span><strong id="card-field">—</strong></div>
+        <div class="card-actions"><button type="button" id="field-positive">正向外场</button><button type="button" id="field-negative">反向外场</button><button type="button" id="field-zero">关闭外场</button></div>
+      </section>
+      <section class="lesson-detail vortex-detail" hidden data-note-content="domains" aria-label="磁畴与三维剖面">
+        <div class="lesson-top"><span>观察卡片 / 05</span><span>SPATIAL STRUCTURE</span></div><h3>剖开晶格，<br><em>看到内部的方向。</em></h3>
+        <p id="spin-domain-explanation">两种颜色分别表示 +1 和 −1；箭头只沿同一固定轴上下，不是三维连续方向。体素和箭头是同一组自旋的两种显示方式。</p>
+        <div class="lesson-metric"><span>最近邻平均关联</span><strong id="card-correlation">—</strong></div>
+        <div class="lesson-metric"><span>界面格点 / 反向邻接键</span><strong id="card-interface-value">—</strong></div>
+        <div class="lesson-metric"><span>显示层 / 完整晶格</span><strong id="card-layers">—</strong></div>
+        <p class="lesson-note" id="spin-domain-note">最近邻关联是完整晶格所有键的平均 sᵢsⱼ；反向键比例 = (1 − 关联) / 2。界面格点至少有一个反向邻居，这不是精确的材料磁畴尺寸。切片只影响显示，隐藏的自旋和跨边界连接仍参与计算。重建对半磁畴保留温度与外场，周期边界会形成两个界面。</p>
+        <button type="button" class="lesson-action" id="card-interface">只看当前晶格的界面格点 <span aria-hidden="true">↗</span></button>
+        <button type="button" class="lesson-action" id="card-slice">显示中央剖面 <span aria-hidden="true">↗</span></button><button type="button" class="lesson-action" id="card-domains">重建对半磁畴并切换体素 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" hidden data-note-content="limits" aria-label="伊辛模型与采样的边界">
+        <div class="lesson-top"><span>观察卡片 / 06</span><span>MODEL LIMITS</span></div><h3>这是统计模型，<br><em>不是磁铁的微观录像。</em></h3>
+        <p id="spin-limits-explanation">立方晶格使用铁磁最近邻相互作用、周期边界和随机点 Metropolis 更新。一次扫描尝试 N 次随机位置，允许同一位置被重复抽到。</p>
+        <div class="lesson-metric"><span>晶格 / 总自旋数</span><strong id="card-size">—</strong></div><div class="lesson-metric"><span>几何缺邻点 / 其中活跃</span><strong id="card-surface-count">周期 · 无自由表面</strong></div><button type="button" class="lesson-action" id="card-surface" disabled>只看开放样品缺邻点 <span aria-hidden="true">↗</span></button>
+        <p class="lesson-note" id="spin-limits-note">J₀ = k<sub>B</sub> = 1；温度、外场和能量均为无量纲量。蒙特卡洛扫描数是采样尺度，不是真实秒数；模型不包含连续自旋方向、实测材料磁性参数或真实磁动力学。背景与光晕仅为表现。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" hidden data-note-content="frustration" aria-label="反铁磁与几何挫折"><div class="lesson-top"><span>观察卡片 / 07</span><span>FRUSTRATION</span></div><h3>每条键各有偏好，<br><em>回路却未必能兼顾。</em></h3><p>J &gt; 0 偏好同向，J &lt; 0 偏好反向。闭合回路的耦合符号乘积为负时，不可能同时满足所有键；这与瞬时热涨落造成的不满意键不同。</p><div class="lesson-metric"><span>最近分析 / 满意键</span><strong id="card-satisfaction">—</strong></div><div class="lesson-metric"><span>符号受挫基本回路</span><strong id="card-frustration">—</strong></div><p class="lesson-note">交错磁化只在本实验判断为单连通、全负 J 且二分图时显示；基本回路计数依赖生成树，不是所有回路的总数。外场也可能使能量最低态不满足所有键。</p><button class="lesson-action" type="button" id="micro-open-frustration" aria-haspopup="dialog">分析当前相互作用图 <span aria-hidden="true">↗</span></button></section>
+      <section class="lesson-detail vortex-detail" hidden data-note-content="clusters" aria-label="同向团块和空间关联"><div class="lesson-top"><span>观察卡片 / 08</span><span>CONNECTED CLUSTERS</span></div><h3>同向相连，<br><em>才能组成一个团块。</em></h3><p>按实际非零相互作用图，把方向相同且连通的自旋归为一组；可选中团块返回三维场景，也可比较沿晶胞 a、b、c 的同基元关联。</p><div class="lesson-metric"><span>最近分析 / 团块数</span><strong id="card-clusters">—</strong></div><div class="lesson-metric"><span>最大团块 / 活跃自旋</span><strong id="card-largest">—</strong></div><p class="lesson-note">团块定义依赖所选邻接与 J = 0 截断；它不是材料实验中的磁畴尺寸。单快照关联不等于系综平均。</p><button class="lesson-action" type="button" id="micro-open-clusters" aria-haspopup="dialog">计算团块与关联 <span aria-hidden="true">↗</span></button></section>
+      <section class="lesson-detail vortex-detail" hidden data-note-content="reciprocal" aria-label="倒空间与有限尺寸"><div class="lesson-top"><span>观察卡片 / 09</span><span>RECIPROCAL SPACE</span></div><h3>把空间排列，<br><em>变成一片倒空间。</em></h3><p>对完整活跃自旋快照计算 S(q) = |Σ sᵢe<sup>i q·rᵢ</sup>|²/N。拖动三维倒空间并选择 q，可对照不同序的峰。</p><div class="lesson-metric"><span>最近分析 / 最高 S(q)</span><strong id="card-qpeak">—</strong></div><p class="lesson-note">这里没有磁形状因子、仪器、热运动或动力学：它不是实测散射图。有限尺寸、多种子与 Binder 曲线需单独运行并检查采样波动。</p><button class="lesson-action" type="button" id="micro-open-reciprocal" aria-haspopup="dialog">查看倒空间与尺寸研究 <span aria-hidden="true">↗</span></button><button class="lesson-action" type="button" id="micro-open-size" aria-haspopup="dialog">运行有限尺寸与多种子研究 <span aria-hidden="true">↗</span></button></section>
+      <div class="knowledge-foot"><span>MODEL / 08</span><p>三维伊辛晶格 · 可选边界<br>统计教学模型，不是材料预测。</p></div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<div class="scan-lab" id="scan-lab" role="dialog" aria-modal="true" aria-labelledby="scan-title" hidden>
+  <div class="scan-shell">
+    <header class="scan-header"><div class="scan-brand"><span>08.2 / INDEPENDENT EXPERIMENT</span><h2 id="scan-title">温度扫描 <em>与相变曲线</em></h2><p>锁定当前自旋图、样品边界与假设耦合 · 不同温度下独立采样</p></div><button type="button" id="scan-close" class="scan-close" aria-label="关闭温度扫描，返回晶格">返回晶格 <span aria-hidden="true">×</span></button></header>
+    <div class="scan-body">
+      <aside class="scan-setup" aria-label="扫描方案">
+        <div class="scan-section-title"><span>01 / PROTOCOL</span><h3>设置扫描</h3></div>
+        <div class="scan-range"><span>温度区间 / 15 个点</span><strong id="scan-range-value">1.0 → 8.0</strong><small id="scan-range-step">每步 ΔT = 0.5 · k<sub>B</sub> = 1</small></div>
+        <p class="scan-description">每点从上一温度的最终状态继续，先预热，再逐次扫描采样。两条曲线分别独立运行。</p>
+        <div class="scan-current"><span>下次运行将锁定主晶格参数</span><strong id="scan-current-config">—</strong><small>温度范围由平均耦合强度给出探索尺度（0.25 至 20 之间），不是临界温度预测；短采样可能未平衡。</small></div>
+        <label class="scan-select-label" for="scan-budget"><span>每点采样预算</span><select id="scan-budget"><option value="quick">快速观察 · 预热 64 / 采样 128</option><option value="long">加长采样 · 预热 256 / 采样 256</option></select></label>
+        <div class="scan-run-buttons"><button id="scan-run-heat" type="button"><span>↗</span><strong>运行升温</strong><small>从全向上开始</small></button><button id="scan-run-cool" type="button"><span>↘</span><strong>运行降温</strong><small>从随机状态开始</small></button></div>
+        <div class="scan-progress-block"><div><span id="scan-progress-label">等待运行</span><strong id="scan-progress-value">0%</strong></div><progress id="scan-progress" value="0" max="100" aria-label="温度扫描进度"></progress><button type="button" id="scan-cancel" hidden>取消本次扫描</button><p id="scan-status" role="status" aria-live="polite">点击一个方向，开始实际计算。</p></div>
+        <p class="scan-limit">每点样本高度相关，临界附近尤其慢；预算有限，不保证平衡。扫描顺序差异可能来自初态、历史和采样不足，不能当作真实热力学滞后。负 J 时总磁化未必能识别反铁磁或受挫的序。</p>
+      </aside>
+      <section class="scan-result" aria-label="温度扫描结果">
+        <div class="scan-result-heading"><div><span>02 / PHASE PROFILE</span><h3>观察集体行为如何变化</h3><p>曲线只显示本次运行实际采出的点；点选可对照，并可应用温度到主晶格。</p></div><button id="scan-clear" type="button">清空曲线</button></div>
+        <div class="scan-metric-tabs" role="group" aria-label="选择曲线指标"><button type="button" data-scan-metric="order" aria-pressed="true">序参量 <span>⟨|m|⟩</span></button><button type="button" data-scan-metric="susceptibility" aria-pressed="false">磁化涨落 <span>χ/N</span></button><button type="button" data-scan-metric="heat" aria-pressed="false">能量涨落 <span>C/N</span></button><button type="button" data-scan-metric="energy" aria-pressed="false">平均能量 <span>⟨e⟩</span></button></div>
+        <div class="scan-plot-panel"><div class="scan-plot-top"><div><span id="scan-metric-kicker">ORDER PARAMETER / 序参量</span><strong id="scan-metric-title">平均绝对磁化 ⟨|m|⟩</strong></div><span class="scan-tc-note" id="scan-tc-note">简单立方零场无限体系参考 · T<sub>c</sub> ≈ 4.5115</span></div><svg id="scan-chart" viewBox="0 0 920 430" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg><p id="scan-chart-message">尚无曲线。选择升温或降温，逐点进行模拟。</p></div>
+        <div class="scan-legend"><div class="scan-legend-item heat"><i></i><span><strong>升温</strong><small id="scan-heat-meta">尚未运行</small></span></div><div class="scan-legend-item cool"><i></i><span><strong>降温</strong><small id="scan-cool-meta">尚未运行</small></span></div></div>
+        <p class="scan-compare-note" id="scan-compare-note">升温与降温使用各自的初态和随机序列；请核对尺寸、外场、种子与采样预算。</p>
+        <div class="scan-peak"><span>已采点的磁化涨落最大值</span><strong id="scan-peak-value">—</strong><small>仅比较已采温度点与短窗口，不是临界温度拟合。</small></div>
+        <div class="scan-readout"><label for="scan-pick"><span>对照温度</span><select id="scan-pick" disabled><option value="">尚无采样点</option></select></label><div><span>升温 · 当前指标</span><strong id="scan-heat-value">—</strong></div><div><span>降温 · 当前指标</span><strong id="scan-cool-value">—</strong></div><button type="button" id="scan-apply" disabled>仅应用此温度，不更换结构 ↗</button></div>
+        <div class="scan-result-footer"><p id="scan-metric-explanation">⟨|m|⟩ 是每次扫描的绝对磁化再取平均，与 |⟨m⟩| 不同。</p><button type="button" id="scan-export" disabled>下载逐点数据 CSV ↓</button></div>
+        <details class="scan-table-details"><summary id="scan-table-summary">查看逐点数据表（0）</summary><div class="scan-table-wrap"><table><caption>独立温度扫描的实际采样结果</caption><thead><tr><th scope="col">方向</th><th scope="col">T</th><th scope="col">⟨|m|⟩</th><th scope="col">χ/N</th><th scope="col">C/N</th><th scope="col">⟨e⟩</th><th scope="col">采样数</th></tr></thead><tbody id="scan-table-body"><tr><td colspan="7">尚无采样数据</td></tr></tbody></table></div></details>
+      </section>
+    </div>
+  </div>
+</div>
+<div class="scan-lab micro-lab" id="micro-lab" role="dialog" aria-modal="true" aria-labelledby="micro-title" hidden>
+  <div class="scan-shell micro-shell"><header class="scan-header"><div class="scan-brand"><span>08.4 / SNAPSHOT & FINITE SIZE LAB</span><h2 id="micro-title">微观结构 <em>与倒空间</em></h2><p>真实自旋快照 · 实际相互作用图 · 独立尺寸研究</p></div><button type="button" class="scan-close" id="micro-close">返回晶格 <span aria-hidden="true">×</span></button></header>
+  <div class="micro-body"><aside class="micro-side" aria-label="微观分析控制台"><div class="scan-section-title"><span>01 / SNAPSHOT</span><h3>捕获当前自旋</h3></div><p>分析会暂停主采样，锁定完整图与当前帧；显示切层不影响统计。</p><div class="micro-snapshot" id="micro-snapshot">尚未捕获快照</div><label for="micro-q-span">倒空间半宽 <small>倒格基矢单位</small></label><select id="micro-q-span"><option value="0.5">±0.5 · 包含交错 q</option><option value="1">±1.0 · 更宽范围</option><option value="2">±2.0 · 观察更远处</option></select><button class="micro-primary" type="button" id="micro-capture">冻结并分析当前快照</button><p id="micro-status" role="status" aria-live="polite">点击上方按钮开始后台计算。</p><div class="micro-side-note"><strong>模型边界</strong><p>有符号键决定偏好，不代表真实材料交换；单帧结果不是平衡平均。倒空间是理论快照，非实测衍射。研究不修改主晶格。</p></div></aside>
+  <section class="micro-main" aria-label="微观分析结果"><div class="micro-tabs" role="group" aria-label="选择微观分析"><button type="button" data-micro-tab="frustration" aria-pressed="true">01 <strong>键与挫折</strong></button><button type="button" data-micro-tab="clusters" aria-pressed="false">02 <strong>团块与关联</strong></button><button type="button" data-micro-tab="reciprocal" aria-pressed="false">03 <strong>三维倒空间</strong></button><button type="button" data-micro-tab="size" aria-pressed="false">04 <strong>有限尺寸研究</strong></button></div>
+  <div data-micro-pane="frustration"><div class="micro-section-head"><div><span>INTERACTION GRAPH / SIGNED LOOPS</span><h3>一次快照，<em>两种不满足。</em></h3><p>先测量瞬时实际键，再检查与自旋状态无关的符号挫折。</p></div></div><div class="micro-metrics"><div><span>满足偏好的键</span><strong id="micro-satisfied">—</strong><small id="micro-bonds">尚无数据</small></div><div><span>按 |J| 加权的不满足</span><strong id="micro-unsat-weight">—</strong><small>统计全部实际非零键</small></div><div><span>基本受挫回路</span><strong id="micro-loops">—</strong><small>生成树对应的回路基</small></div><div><span>适用时 |交错磁化|</span><strong id="micro-staggered">—</strong><small id="micro-staggered-note">仅全负 J、单连通二分图</small></div></div><div class="micro-explain"><div><span>01 / SNAPSHOT</span><h4>不满意键 ≠ 几何挫折</h4><p>若 Jᵢⱼsᵢsⱼ &lt; 0，此刻该键不满足自身偏好，可能由热涨落或外场造成。符号负积回路则无法让所有键同时满意。</p></div><div><span>02 / LOOP TEST</span><h4>沿生成树传播符号</h4><p id="micro-loop-detail">分析后给出一个实际闭合回路；回路数依生成树而变，而是否存在挫折不依赖快照。</p><button type="button" id="micro-show-loop" disabled>返回三维场景高亮此回路 ↗</button></div></div><p class="micro-disclaimer">这是耦合图的数学诊断，不能单凭有限样本确定材料的基态或相变。</p></div>
+  <div data-micro-pane="clusters" hidden><div class="micro-section-head"><div><span>SAME-SPIN CONNECTIVITY / CORRELATION</span><h3>看见团块，<em>也测量距离。</em></h3><p>沿实际非零键寻找同向连通分量；关联则沿晶胞 a / b / c 平移同一基元。</p></div></div><div class="micro-metrics three"><div><span>同向团块</span><strong id="micro-cluster-count">—</strong><small>按当前实际图连通</small></div><div><span>最大团块</span><strong id="micro-largest">—</strong><small id="micro-largest-note">—</small></div><div><span>全体磁化 m</span><strong id="micro-snapshot-m">—</strong><small>这是单帧读数</small></div></div><div class="micro-cluster-tools"><label for="micro-cluster-select">选择团块 <small>最多列出最大的 50 组</small></label><select id="micro-cluster-select" disabled><option value="0">全部团块分别着色</option></select><button type="button" id="micro-show-cluster" disabled>回到三维场景标色 ↗</button><p>进入后可切换探针，点击三维自旋选中对应团块；播放或翻转后标色会自动清除。</p></div><div class="micro-plot"><div><span>DIRECTIONAL CORRELATION</span><strong>C(d) = ⟨sᵢ sᵢ₊d⟩</strong></div><svg id="micro-correlation" viewBox="0 0 720 240" role="img" aria-label="沿晶胞三个方向的单快照自旋关联"></svg><p id="micro-correlation-note">尚无数据</p></div><p class="micro-disclaimer">曲线不是系综平均；不同方向采用同基元的有效点对，开放边界自动丢弃样品外点位。</p></div>
+  <div data-micro-pane="reciprocal" hidden><div class="micro-section-head"><div><span>SPIN STRUCTURE FACTOR / 3D</span><h3>自旋排列，<em>在倒空间显影。</em></h3><p>完整快照的 S(q)；拖动旋转、滚轮缩放、点击点位或用下方列表选择。</p></div></div><div class="micro-q-layout"><div class="micro-q-view"><canvas id="micro-q-canvas" tabindex="0" aria-label="三维自旋结构因子。拖动或方向键旋转，滚轮或加减号缩放，点击点位选择。"></canvas><div class="micro-q-key" aria-hidden="true">弱 <i></i> 强 · 点大小与 S(q) 对数相关</div><div class="micro-q-tip" aria-hidden="true">↔ 旋转 · ◌ 选择 · ± 缩放</div></div><aside class="micro-q-detail"><span>SELECTED WAVEVECTOR</span><h4>选择一个 q</h4><label for="micro-q-pick">网格点 / (h, k, l)</label><select id="micro-q-pick" disabled><option>尚无数据</option></select><div><small>选中 S(q)</small><strong id="micro-q-value">—</strong></div><div><small>笛卡尔 |q|</small><strong id="micro-q-norm">—</strong></div><div><small>当前网格最大 S(q)</small><strong id="micro-q-peak">—</strong></div><p>S(q) = |Σ sᵢ exp(iq·rᵢ)|²/N。q = 2π(hb₁ + kb₂ + lb₃)，基矢为倒格基矢。这里采样有限快照的连续 q，非实测衍射。</p></aside></div></div>
+  <div data-micro-pane="size" hidden><div class="micro-section-head"><div><span>INDEPENDENT FINITE-SIZE / MULTI-SEED</span><h3>换个尺寸，<em>比较涨落与 Binder 曲线。</em></h3><p>每个尺寸和随机种子独立运行一条升温链；主晶格不被改变。</p></div></div><div class="size-controls" aria-label="有限尺寸研究设置"><label>晶胞重复数 <small>2–4 项，逗号分隔</small><input id="size-lengths" type="text" value="4,6,8" inputmode="text"></label><label>独立随机种子数<select id="size-seeds"><option value="2">2 个种子</option><option value="3" selected>3 个种子</option><option value="5">5 个种子</option></select></label><label>每点采样预算<select id="size-budget"><option value="quick">预热 64 / 采样 128</option><option value="long">预热 192 / 采样 256</option></select></label><label>最低温度 T<input id="size-min" type="number" min="0.25" max="20" step="0.25" value="1"></label><label>最高温度 T<input id="size-max" type="number" min="0.25" max="20" step="0.25" value="8"></label><button type="button" id="size-run">运行尺寸研究 ↗</button><button type="button" id="size-cancel" disabled>取消</button></div><p class="size-current" id="size-current">—</p><div class="size-progress"><progress id="size-progress" max="100" value="0" aria-label="尺寸研究进度"></progress><span id="size-progress-value">0%</span><p role="status" id="size-status" aria-live="polite">设置尺寸和预算后运行；每条链由随机初态开始。</p></div><div class="size-metric-tabs" role="group" aria-label="选择尺寸研究指标"><button type="button" data-size-metric="susceptibility" aria-pressed="true">序参量涨落 χ/N</button><button type="button" data-size-metric="binder" aria-pressed="false">Binder U</button><button type="button" data-size-metric="heatCapacity" aria-pressed="false">能量涨落 C/N</button></div><div class="size-plot"><div class="size-plot-title"><div><span id="size-chart-kicker">ORDER FLUCTUATION</span><strong id="size-chart-title">序参量涨落 χ/N</strong></div><small><span id="size-error-note">误差线：逐种子估计的样本标准差</span></small></div><svg id="size-chart" viewBox="0 0 760 270" role="img" aria-label="不同尺寸的有限采样曲线"></svg><p id="size-chart-empty">尚无采样数据；运行后逐点显示。</p></div><div class="size-legend" id="size-legend"></div><div class="size-peak" id="size-peaks">涨落峰只在完成采样点中比较。</div><div class="size-picked"><label for="size-pick">选择一个已计算点<select id="size-pick" disabled><option>尚无数据</option></select></label><div><span>当前统计结果</span><strong id="size-picked-value">—</strong></div><div><span>种子间标准差</span><strong id="size-picked-sd">—</strong></div><button type="button" id="size-export" disabled>下载采样 CSV ↓</button></div><p class="micro-disclaimer" id="size-explanation">Binder U = 1 − ⟨m⁴⟩ / [3⟨m²⟩²]；合并的是所有种子的矩；若任一种子 U 无定义，则不显示 U 的种子标准差。χ/N 与 C/N 先计算每条种子链内的方差、再取平均（不是合并链后求方差），短链可能低估慢涨落。仅连通全正 J 用总磁化，连通全负 J 且二分图用交错磁化；受挫、混合符号或断连图不绘制此序参量。短链、自相关、非零外场及不同样品表面都会影响曲线，交点不是自动测得的临界温度。</p><details class="size-table"><summary>查看逐点数据与种子数量</summary><div><table><caption>有限尺寸与多种子扫描</caption><thead><tr><th scope="col">尺寸</th><th scope="col">序参量</th><th scope="col">T</th><th scope="col">种子</th><th scope="col">χ/N</th><th scope="col">U</th><th scope="col">C/N</th></tr></thead><tbody id="size-table-body"><tr><td colspan="7">尚无数据</td></tr></tbody></table></div></details></div>
+  </section></div></div>
+</div>
+<section id="crystal-lab" class="crystal-lab" role="dialog" aria-modal="true" aria-labelledby="crystal-dialog-title" hidden>
+  <div class="crystal-header"><div><span>08.3 / CRYSTAL STRUCTURE ATLAS</span><h2 id="crystal-dialog-title">晶体结构图谱</h2></div><div class="crystal-header-note">静态几何与点散射 <i>·</i> 可应用于自旋采样</div><button type="button" id="crystal-close" aria-label="关闭晶体结构图谱，返回自旋实验">返回自旋实验 <span aria-hidden="true">×</span></button></div>
+  <div class="crystal-viewport" id="crystal-viewport"><canvas id="crystal-canvas" tabindex="0" aria-label="晶体结构三维视图。拖动旋转、滚轮缩放，点击选择原子；方向键旋转，加减号缩放，回车切换晶胞点位，Home 恢复视角。"></canvas><div id="crystal-fallback" class="crystal-fallback" role="status" hidden>WebGL 不可用，已切换到同一结构的 Canvas 投影。</div><div class="crystal-zoom" role="group" aria-label="晶体视图缩放"><button type="button" id="crystal-zoom-in" aria-label="放大晶体">＋</button><button type="button" id="crystal-zoom-out" aria-label="缩小晶体">−</button></div><div class="crystal-stage-title" aria-hidden="true"><span>CRYSTAL / STRUCTURE</span><strong id="crystal-stage-name">—</strong><small id="crystal-stage-subtitle">—</small></div><div id="crystal-species-legend" class="crystal-species-legend" aria-label="组元颜色图例"></div><div class="crystal-hex-key" id="crystal-hex-key" hidden>金色六角柱：底面点阵的 Voronoi 原胞示意</div><div class="crystal-stage-tip" aria-hidden="true">拖动旋转 · 滚轮 / ± 缩放 · 点击原子</div></div>
+  <div class="crystal-drawer crystal-drawer-left" id="crystal-left-shell"><button type="button" class="crystal-drawer-toggle" id="crystal-toggle-left" aria-controls="crystal-controls" aria-expanded="true" aria-label="收起结构控制台"><span>收起</span></button><aside id="crystal-controls" class="crystal-panel" aria-label="晶体结构控制台">
+    <div class="crystal-panel-head"><span>STRUCTURE CONSOLE</span><h3>构建晶体<span>。</span></h3><p>点阵决定平移，基元决定每个胞里的原子。</p></div>
+    <div class="crystal-section"><div class="crystal-label"><strong>结构库</strong><small>14 LATTICES / 32 原型</small></div><label for="crystal-preset" class="visually-hidden">选择晶格或晶体结构</label><select id="crystal-preset"></select><div class="crystal-quick" role="group" aria-label="常见结构快捷选择"><button type="button" data-crystal-preset="cP">简单立方</button><button type="button" data-crystal-preset="cI">体心立方</button><button type="button" data-crystal-preset="cF">面心立方</button><button type="button" data-crystal-preset="hcp">六方密排</button><button type="button" data-crystal-preset="diamond">金刚石</button><button type="button" data-crystal-preset="perovskite">钙钛矿</button></div><p class="crystal-note" id="crystal-preset-note">—</p></div>
+    <div class="crystal-section"><div class="crystal-label"><strong>观察范围</strong><small>DISPLAY ONLY</small></div><div class="crystal-slider-label"><label for="crystal-repeat">每方向重复晶胞</label><output id="crystal-repeat-value" for="crystal-repeat">2 × 2 × 2</output></div><input id="crystal-repeat" type="range" min="1" max="4" step="1" value="2"><div class="crystal-slider-label"><label for="crystal-cutoff">邻居距离 / 最近距离</label><output id="crystal-cutoff-value" for="crystal-cutoff">1.08×</output></div><input id="crystal-cutoff" type="range" min="1" max="1.8" step="0.01" value="1.08"><label class="crystal-check"><input id="crystal-show-links" type="checkbox" checked>显示截断距离内的连线</label><label class="crystal-check"><input id="crystal-show-ghosts" type="checkbox" checked>显示边界周期镜像</label><label class="crystal-check"><input id="crystal-spacefill" type="checkbox">放大球体（仅视觉）</label><p class="crystal-note">金框为一个所用晶胞，青框为有限重复显示范围；周期邻域按无限重复计算。连线仅表示几何距离，不自动判定化学键；边界镜像不计入原子数。</p></div>
+    <details class="crystal-editor"><summary>编辑晶胞参数与中心化</summary><p>长度为任意一致单位；角度以度为单位。编辑后可能不再保有原型对称性。</p><div class="crystal-cell-grid"><label>a<input id="crystal-a" type="number" min="0.4" max="5" step="0.01"></label><label>b<input id="crystal-b" type="number" min="0.4" max="5" step="0.01"></label><label>c<input id="crystal-c" type="number" min="0.4" max="5" step="0.01"></label><label>α<input id="crystal-alpha" type="number" min="35" max="145" step="0.1"></label><label>β<input id="crystal-beta" type="number" min="35" max="145" step="0.1"></label><label>γ<input id="crystal-gamma" type="number" min="35" max="145" step="0.1"></label></div><label class="crystal-center-label" for="crystal-center">所用晶胞的中心化<select id="crystal-center"><option value="P">P · 原始</option><option value="C">C · 底心</option><option value="I">I · 体心</option><option value="F">F · 面心</option></select></label></details>
+    <details class="crystal-editor"><summary>编辑多元素基元</summary><p>填写全部基元位置；坐标为 [0,1) 分数坐标，中心化平移自动展开。X1–X3 是占位符，不是元素。</p><div class="crystal-basis-head" aria-hidden="true"><span>元素</span><span>x</span><span>y</span><span>z</span><span></span></div><div id="crystal-basis-rows"></div><datalist id="crystal-elements"></datalist><button type="button" id="crystal-add-basis" class="crystal-secondary">＋ 添加基元位置</button><p class="crystal-note">最多 32 个基元位置；不自动生成空间群其他对称位置。</p></details>
+    <button type="button" id="crystal-apply" class="crystal-apply">应用晶胞与基元</button><button type="button" id="crystal-use-spins" class="crystal-use-spins">用当前结构进行相变采样 ↗</button><p class="crystal-note">会按当前几何和距离阈值重建自旋相互作用；耦合与活跃组元可在相变控制台调整。</p><p id="crystal-edit-status" class="crystal-edit-status" role="status" aria-live="polite">选择原型后可编辑；应用前模型不会改变。</p>
+    <p class="crystal-panel-foot">进入图谱会暂停采样；只有主动应用后，才按所选几何重建主实验。</p>
+  </aside></div>
+  <div class="crystal-drawer crystal-drawer-right" id="crystal-right-shell"><button type="button" class="crystal-drawer-toggle" id="crystal-toggle-right" aria-controls="crystal-notes" aria-expanded="true" aria-label="收起结构知识卡"><span>收起</span></button><aside id="crystal-notes" class="crystal-panel" aria-label="晶体结构知识卡">
+    <div class="crystal-panel-head"><span>FIELD NOTES</span><h3>结构如何被看见<span>。</span></h3><p>从周期几何，到相位相消。</p></div>
+    <section class="crystal-fact-card"><div class="crystal-card-kicker">01 / CELL & BASIS</div><h4 id="crystal-fact-title">—</h4><p id="crystal-fact-description">—</p><div class="crystal-fact-row"><span>晶胞点位 / 组元</span><strong id="crystal-fact-count">—</strong></div><div class="crystal-fact-row"><span>最近周期距离</span><strong id="crystal-fact-distance">—</strong></div><div class="crystal-fact-row"><span>显示范围内原子 / 镜像</span><strong id="crystal-fact-supercell">—</strong></div><p class="crystal-note">晶胞里的颜色代表元素或占位组元，不是自旋；球体大小和材质是视觉表现。</p></section>
+    <section class="crystal-fact-card"><div class="crystal-card-kicker">02 / LOCAL ENVIRONMENT</div><h4>选择一个原子，<br><em>数出周期邻居。</em></h4><p id="crystal-selection" aria-live="polite">—</p><div class="crystal-site-nav" role="group" aria-label="依次选择晶胞点位"><button type="button" id="crystal-previous-site">← 上一点位</button><button type="button" id="crystal-next-site">下一点位 →</button></div><div class="crystal-fact-row"><span>截断内的周期邻居</span><strong id="crystal-neighbors">—</strong></div><p id="crystal-neighbor-species" class="crystal-note">—</p><p id="crystal-neighbor-shells" class="crystal-note">—</p><p class="crystal-note">依据完整周期位置与当前距离阈值计算；不代表化学配位数或实测键。</p></section>
+    <section class="crystal-fact-card"><div class="crystal-card-kicker">03 / STRUCTURE FACTOR</div><h4>同一个晶格，<br><em>为什么有些反射消失？</em></h4><p>各原子贡献的相位由分数坐标决定；点击柱条或输入指数，图中是选定指数的 <strong>|F|²</strong>，不是实验衍射强度。</p><div class="crystal-formula">F(hkl) = Σⱼ fⱼ exp[2πi(hxⱼ + kyⱼ + lzⱼ)]</div><label class="crystal-center-label" for="crystal-weight">点散射权重<select id="crystal-weight"><option value="equal">所有原子等权 f = 1</option><option value="z">按原子序数 Z 近似常数</option></select></label><svg id="crystal-reflections" viewBox="0 0 240 90" role="img" aria-label="常见晶面指数的结构因子相对强度"></svg><p class="crystal-note">柱高在这组指数中归一化；不含角度相关形状因子、温度因子、吸收或仪器效应。占位符的 Z 权重仅为示例。</p><div class="crystal-hkl"><label>h<input id="crystal-h" type="number" min="-8" max="8" step="1" value="1"></label><label>k<input id="crystal-k" type="number" min="-8" max="8" step="1" value="0"></label><label>l<input id="crystal-l" type="number" min="-8" max="8" step="1" value="0"></label><button type="button" id="crystal-reflection-apply">计算</button></div><div class="crystal-fact-row"><span>当前 |F|² / 晶面间距 d</span><strong id="crystal-reflection-value">—</strong></div><p id="crystal-reflection-status" class="crystal-note" role="status" aria-live="polite">—</p></section>
+    <p class="crystal-panel-foot">14 种布拉菲点阵不是全部晶体结构。此处没有空间群自动展开、热运动、缺陷或真实材料参数。</p>
+  </aside></div>
+  <div class="crystal-bottom" aria-label="晶体结构状态"><div><span>唯一晶胞点位</span><strong id="crystal-bottom-cell">—</strong></div><div><span>最近周期距离</span><strong id="crystal-bottom-distance">—</strong></div><div class="crystal-bottom-species"><span>当前组元</span><strong id="crystal-bottom-species">—</strong></div><div class="crystal-tools"><button type="button" id="crystal-reset-view" aria-label="恢复晶体视角"><span class="crystal-tool-long">恢复视角</span><span class="crystal-tool-short">复位</span></button><button type="button" id="crystal-save" aria-label="下载晶体结构截图"><span class="crystal-tool-long">保存图像 ↓</span><span class="crystal-tool-short">保存 ↓</span></button></div></div>
+</section>
+<noscript><p class="noscript">此实验需要 JavaScript 和后台 Worker 才能进行真实采样。</p></noscript>
+</body>
+</html>

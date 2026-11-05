@@ -1,0 +1,41 @@
+/* The rigid-body lab shares the fullscreen shell; these are its instruments. */
+.rigid-lab .panel,.rigid-lab .lab-bottom{backdrop-filter:none}
+/* Keep the projection notice in the instrument bar rather than over the model. */
+.rigid-lab .stage-fallback{position:static;transform:none;max-width:none;border:0;border-bottom:1px solid #897963;border-radius:0;padding:5px 10px;line-height:1.4}
+#rigid-scene{display:block;position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+#rigid-scene:active{cursor:grabbing}
+.rigid-lab .brand-mark svg circle{fill:none;stroke:#efbd8d}
+.rigid-index{position:absolute;top:95px;left:var(--left-gutter);display:flex;align-items:baseline;gap:6px;color:#93a69b;font:9px var(--mono);pointer-events:none}
+.rigid-index strong{font:500 18px/1 var(--sans);color:#e5bd98}
+.rigid-caption{position:absolute;left:var(--left-gutter);top:140px;display:grid;gap:3px;pointer-events:none}
+.rigid-caption>span{font:9px var(--mono);letter-spacing:.08em;color:#a3b7a9}.rigid-caption>strong{font-size:15px;font-weight:600;color:#e7d8c3}.rigid-caption>small{font-size:10px;color:#96aa9e}
+.rigid-legend .legend-axis{background:#d2a2dc;box-shadow:0 0 8px #c990d0}
+.rigid-legend .legend-momentum{background:#efbb86;box-shadow:0 0 8px #efbb86}
+.rigid-legend .legend-omega{background:#8dd8c8;box-shadow:0 0 8px #8dd8c8}
+.rigid-legend .legend-velocity{background:#e1f0f3;box-shadow:0 0 8px #d5eef5}
+.rigid-legend .legend-force{background:#ff7b6b;box-shadow:0 0 8px #ff7b6b}
+.model-legend .legend-center-trail{width:11px;height:2px;border-radius:0;background:#efaa75;box-shadow:none;vertical-align:3px}
+.rigid-lab .force-switch{margin:10px 0 0;padding:0;border:0}.force-switch label{min-height:25px}.force-switch label span{font-weight:600;color:#e7d1bb}
+.force-components{margin-top:7px;font-size:9px;color:#aebfb2}.force-components output{display:block;margin-top:3px;color:#edb1a1;font:10px var(--mono);overflow-wrap:anywhere}
+.world-frame{position:absolute;top:94px;right:var(--right-gutter);width:84px;color:#a6b7a9;font:9px var(--mono);pointer-events:none}.world-frame>span{display:block;white-space:nowrap;text-align:center}.world-frame svg{display:block;width:84px;height:72px}.world-frame line{stroke-width:1.5}.world-frame text{font:600 9px var(--mono);text-anchor:middle;dominant-baseline:middle}
+.force-point-heading{margin-top:12px;font-size:11px;color:#d9e0d4;font-weight:600}.force-points,.force-directions{display:grid;gap:5px;margin-top:7px}.force-points{grid-template-columns:1fr 1fr}.force-directions{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}.force-points button,.force-directions button{min-height:34px;padding:4px;border:1px solid #4b5d54;border-radius:3px;background:#23312f;color:#b8c8bb;font-size:10px;cursor:pointer}.force-directions button{font:600 11px var(--mono)}.force-points button:hover,.force-directions button:hover{border-color:#b99d81;color:#f2d7b9}.force-points button.active,.force-directions button.active{border-color:#d7ad87;background:#403c32;color:#f4ceaa}
+.force-readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:11px}.force-readouts div{min-width:0;padding:7px 5px;border:1px solid #40544b;border-radius:3px;background:#23342f}.force-readouts span,.force-readouts output{display:block}.force-readouts span{font-size:9px;color:#aebfb2}.force-readouts output{margin-top:3px;font:10px var(--mono);color:#eac39e;overflow-wrap:anywhere}
+.rigid-presets button{white-space:normal;line-height:1.2;min-height:54px}.rigid-presets button:disabled{opacity:.42;cursor:not-allowed}
+.rigid-lab .lesson-action:disabled{opacity:.45;cursor:not-allowed}
+.rigid-lab .axis-x{color:#efab8e}.rigid-lab .axis-y{color:#9ac6ec}.rigid-lab .axis-z{color:#c5a5df}
+.rigid-legend .legend-trail{background:#9cd8c8}
+.rigid-pose{border-top:1px solid #384746;margin-top:15px;padding-top:12px}.rigid-pose button{border:1px solid #53665c;background:#2b3a34;color:#d9e0d4;border-radius:3px;min-height:34px;padding:0 10px;font-size:10px;cursor:pointer}.rigid-pose button:hover{border-color:#d0a783;color:#f4d7b2}.rigid-pose button span{color:#e4ba91;margin-left:5px}
+.rigid-lab .console-foot{margin-top:18px}.rigid-tabs button{min-height:49px}.rigid-tabs small{font-size:9px}.rigid-detail h4 em{font-style:normal;color:#efc59e}
+.rigid-detail .lesson-metric strong{font-size:18px}#axis-order{font-size:13px}
+#flip-chart{display:block;width:100%;height:76px;margin-top:4px}#flip-segment-caption{color:#d9ad87}
+.rigid-formula{margin-top:14px;border:1px solid #4b5d50;border-radius:3px;background:#303c33;padding:10px 11px;font:10px/1.75 var(--mono);color:#f1c69e;overflow-wrap:anywhere}
+.diagnostic-segment{margin-top:12px;border-left:2px solid #d6ac80;padding-left:8px;color:#d4c2a8;font:10px var(--mono)}
+.rigid-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}.rigid-metrics div{padding:10px;border:1px solid #4b5c51;border-radius:3px;background:#283730}.rigid-metrics span,.rigid-metrics strong{display:block}.rigid-metrics span{font-size:9px;color:#a4b4a6}.rigid-metrics strong{margin-top:4px;font:11px var(--mono);color:#edc49a;overflow-wrap:anywhere}
+@media(max-width:1100px),(max-aspect-ratio:5/4){.rigid-index,.rigid-caption{left:50px}.world-frame{right:50px}.force-directions{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}}
+@media(max-width:520px){.rigid-index{top:93px;font-size:8px}.rigid-index strong{font-size:15px}.rigid-caption{top:127px}.rigid-caption>strong{font-size:12px}.rigid-lab .model-legend{font-size:8px;gap:6px 9px}.rigid-lab .telemetry-item>span{font-size:7px}}
+/* Place feedback above the legend on portrait screens, not over the compass. */
+@media(max-width:520px) and (min-height:541px){.rigid-lab .interaction-tip{top:auto;bottom:190px}}
+@media(max-width:360px){.rigid-lab .telemetry-item strong{font-size:10px}.rigid-caption{top:118px}.rigid-lab #rigid-stage[data-renderer="canvas2d"] .stage-bottom{bottom:202px}.rigid-lab #rigid-stage[data-renderer="canvas2d"] .rigid-index{top:78px}}
+@media(max-width:360px) and (min-height:541px){.rigid-lab .interaction-tip{bottom:213px}.rigid-lab #rigid-stage[data-renderer="canvas2d"] .interaction-tip{bottom:241px}}
+@media(max-height:540px){.rigid-index,.world-frame{top:62px}.rigid-caption{top:92px}.rigid-caption>small{display:none}.rigid-lab .side-shell.closed .side-toggle{top:40px;height:80px;gap:3px;padding:4px 0}.rigid-lab .interaction-tip{top:150px;left:var(--left-gutter);padding:5px 7px;font-size:8px;transform:translateY(-5px)}.rigid-lab .interaction-tip.visible{transform:translateY(0)}}
+@media(max-width:1100px) and (max-height:540px){.rigid-lab .interaction-tip{left:50px}}

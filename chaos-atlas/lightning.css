@@ -1,0 +1,39 @@
+/* The shared workbench shell frames an actual 3D lattice, not a video. */
+#lightning-scene{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#lightning-scene:active{cursor:grabbing}#lightning-scene.precise,#lightning-scene.precise:active{cursor:crosshair}
+.lightning-lab .model-stage{background:radial-gradient(ellipse 52% 62% at 50% 43%,#19353e 0%,#0d222b 46%,#071319 100%)}
+.lightning-lab .stage-error{z-index:6;background:#0d1d26ed;line-height:1.7}.lightning-lab .stage-error>div{max-width:340px;padding:17px;border:1px solid #53747b;border-radius:4px;background:#1b3138}
+.lightning-lab .stage-bottom{bottom:var(--vortex-legend-bottom,151px)}
+.lightning-lab .vortex-caption>small{max-width:265px}.lightning-lab .vortex-caption>strong{color:#d9eced}
+.lightning-legend .legend-channel{background:#b6f8ff;box-shadow:0 0 9px #8ae8ff}.lightning-legend .legend-target{background:#f2bc8a;box-shadow:0 0 7px #e9aa71}.lightning-legend .legend-frontier{background:#7ac7b0;box-shadow:0 0 7px #7ac7b0}
+.lightning-presets button{min-height:53px;white-space:normal;line-height:1.2}.preset-detail{margin-top:10px;padding:8px 9px;border-left:2px solid #96d5dc;border-radius:2px;background:#243b3c;color:#d2e8e5;font-size:10px;line-height:1.55}
+.lightning-tools{grid-template-columns:repeat(2,minmax(0,1fr))}.lightning-lab .quality-label{display:flex;justify-content:space-between;margin-top:13px;color:#d9e1d4;font-size:10px}.lightning-lab .quality-label small{font-size:9px;color:#a5b8ac}
+#grid-quality,#solver-accuracy{width:100%;min-height:33px;margin-top:5px;padding:0 8px;color:#e2e9dc;background:#243632;border:1px solid #536a5f;border-radius:3px;font-size:10px}
+.parameter-hint{margin-top:6px;color:#bfd1c6;font-size:10px;line-height:1.6}.lightning-action{width:100%;min-height:35px;margin-top:11px;padding:6px 9px;border:1px solid #668579;border-radius:3px;background:#29443e;color:#d8ebdf;text-align:left;font-size:10px;cursor:pointer}.lightning-action:hover{border-color:#b8d3be}.lightning-action[aria-pressed="true"]{border-color:#9bdce0;background:#304c4a;color:#d9fcf8}.lightning-action:disabled{opacity:.45;cursor:not-allowed}
+.seed-input{display:grid;grid-template-columns:1fr auto;gap:5px;margin-top:5px}.seed-input input{min-width:0;min-height:33px;padding:0 8px;border:1px solid #536a5f;border-radius:3px;background:#243632;color:#e2e9dc;font:11px var(--mono)}.seed-input button{border:1px solid #668579;border-radius:3px;background:#29443e;color:#d8ebdf;padding:0 9px;font-size:10px;cursor:pointer}
+.discharge-label{position:absolute;z-index:3;display:grid;gap:1px;min-width:86px;padding:5px 8px;border:1px solid #647f83;border-radius:3px;background:#112a30ed;color:#d5e9e4;transform:translate(-50%,0);pointer-events:none;text-align:center;box-shadow:0 6px 16px #06141977}.discharge-label b{font-size:10px;color:#b5e8de}.discharge-label span{font:9px var(--mono);white-space:nowrap}.discharge-label.primary-label{border-color:#c0a385}.discharge-label.primary-label b{color:#f2c79c}
+.lightning-lab .lesson-detail .lesson-metric strong{font-size:13px;white-space:normal;text-align:right}.lightning-lab .vortex-formula{font-size:10px;line-height:1.9}.probe-box{margin-top:12px;padding:9px;border-left:2px solid #87d9dc;background:#243d3c;color:#e0efea;font-size:10px;line-height:1.55}
+.lightning-lab .stage-notice,.lightning-lab .stage-fallback{line-height:1.5}.lightning-lab .play-button:disabled{opacity:.5;cursor:not-allowed}.lightning-lab .range:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:520px){.lightning-lab .telemetry-item strong{font-size:10px}.lightning-lab .telemetry-item>span{font-size:7px}.discharge-label{min-width:56px;padding:3px 5px}.discharge-label b{font-size:9px}.discharge-label span{font-size:8px}.lightning-lab .stage-error>div{max-width:230px}}
+@media(max-height:380px){.discharge-label{min-width:48px;padding:2px 4px}.discharge-label span{display:none}}
+/* The generated storm image is a backdrop, never part of the computed solution. */
+.lightning-lab .model-stage[data-appearance="glow"]{
+  background:linear-gradient(180deg,rgba(4,12,20,.50),rgba(4,12,20,.56)),url("assets/lightning-storm-bg.jpg") center center / cover no-repeat,#08141b;
+}
+.appearance-section{margin-top:15px}.appearance-section .ring-orientation{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+.compact-model-label{display:none;position:absolute;left:50px;top:56px;padding:3px 5px;border-radius:3px;background:#0a1823c9;color:#c9d8dc;font-size:9px;pointer-events:none}
+@media(max-height:540px){.compact-model-label{display:block}}
+
+.thermal-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:10px}.thermal-actions button{min-height:32px;border:1px solid #668579;border-radius:3px;background:#29443e;color:#d8ebdf;font-size:10px;cursor:pointer}.thermal-actions button[aria-pressed="true"]{border-color:#dfbd97;color:#ffe0b5}.thermal-actions button:disabled{opacity:.45;cursor:not-allowed}.thermal-readout{margin-top:9px;padding:8px;border-left:2px solid #e4bc91;background:#343b32;color:#ead9c2;font-size:10px;line-height:1.65;font-variant-numeric:tabular-nums}
+
+.lightning-study{margin-top:13px;padding-top:11px;border-top:1px solid #476159}.lightning-study h3{margin:0 0 8px;color:#d8e6db;font-size:11px}.lightning-study h3 small{float:right;color:#96aa9e;font-size:8px;letter-spacing:.08em}.study-actions{display:grid;grid-template-columns:1fr 58px;gap:5px;margin-top:9px}.study-actions button{min-height:32px;border:1px solid #668579;border-radius:3px;background:#29443e;color:#d8ebdf;font-size:10px;cursor:pointer}.study-actions button:disabled{opacity:.45;cursor:not-allowed}.study-results{margin-top:8px;padding:8px;background:#273b36;color:#c9dbce;font-size:10px;line-height:1.65;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.study-results table{width:100%;border-collapse:collapse;text-align:left}.study-results th,.study-results td{padding:2px;border-bottom:1px solid #476159;font-weight:400}.study-results th{color:#e3c5a4}
+
+.lightning-lab .control-panel select,.lightning-lab .number-input{width:100%;min-height:33px;margin-top:5px;padding:4px 8px;border:1px solid #536960;border-radius:3px;background:#253632;color:#d4e0d7;font-size:10px;color-scheme:dark}.lightning-lab .control-panel select:disabled,.lightning-lab .number-input:disabled{opacity:.45}.event-controls .study-results{white-space:pre-line}
+
+.lightning-legend .legend-negative{background:#65bfff;box-shadow:0 0 8px #65bfff}.lightning-legend .legend-positive{background:#ff926f;box-shadow:0 0 8px #ff926f;margin-left:6px}#event-legend b{font-weight:400;font-variant-numeric:tabular-nums}
+
+/* Return-stroke controls are an independent numerical experiment, not an
+   animated overlay on the DBM. All physical numbers remain visible in text. */
+.return-controls{border-top:1px solid #66877b}.return-advanced{margin-top:10px;padding:8px;border:1px solid #476159;border-radius:3px;background:#243933}.return-advanced summary{color:#d8e7d8;cursor:pointer;font-size:10px}.return-parameter{margin-top:8px;color:#c3dfd7;font:10px/1.6 var(--mono)}.return-status,.return-readout{white-space:pre-line}.return-wave-head{display:flex;justify-content:space-between;align-items:center;gap:4px;margin-top:11px;color:#c6d9cd;font-size:9px}.return-wave-head span:last-child{white-space:nowrap}.wave-ground,.wave-probe,.legend-return{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffca91;box-shadow:0 0 6px #ffb86e}.wave-probe,.legend-return{background:#81e5f6;box-shadow:0 0 7px #81e5f6}.return-chart{display:block;width:100%;height:88px;margin-top:5px;background:#122d30;border:1px solid #3e6059;border-radius:2px}.return-legend b,#return-legend b{font-weight:400;font-variant-numeric:tabular-nums}.return-readout{line-height:1.7}.return-actions{margin-top:10px}
+.model-legend .legend-return{background:#81e5f6;box-shadow:0 0 7px #81e5f6}

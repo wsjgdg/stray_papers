@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10171b">
+  <meta name="description" content="在球面反应扩散实验中观察图灵不稳定性与图案形成。">
+  <title>图灵斑纹 · Turing Patterns</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23151e22'/%3E%3Ccircle cx='20' cy='20' r='14' fill='none' stroke='%238eddd4' stroke-width='1.5'/%3E%3Ccircle cx='15' cy='15' r='4' fill='%23f1ba8c'/%3E%3Ccircle cx='26' cy='14' r='3' fill='%23f1ba8c'/%3E%3Ccircle cx='22' cy='25' r='5' fill='%23f1ba8c'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/noto/noto-subset.css?v=20261031-23">
+  <link rel="stylesheet" href="pendulum.css?v=20261105-11">
+  <link rel="stylesheet" href="vortex.css?v=20261031-23">
+  <link rel="stylesheet" href="turing.css?v=20261031-23">
+  <script defer src="vendor/three.min.js?v=0.160.1"></script>
+  <script defer src="turing-model.js?v=20261031-23"></script>
+  <script defer src="lab-shell.js?v=20261103-2"></script>
+  <script defer src="turing.js?v=20261031-23"></script>
+</head>
+<body class="vortex-lab turing-lab">
+<a class="skip-link" href="#turing-scene">跳转到实验台</a>
+<header class="topbar" id="lab-topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#turing-scene" data-jump="stage"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15"/><path d="M10 16c4-5 7-4 9 0s5 3 10-2M11 24c4-4 7-5 9 0s5 4 9 0"/></svg></span><span><strong>CHAOS / LAB</strong><small>球面图灵斑纹</small></span></a>
+    <a class="overview-return" href="overview.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3m0 0 4-4M3 8l4 4"/></svg><span>回到总览</span></a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="lab-navigation"><span>实验导航</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+    <div class="top-status paused"><span class="status-light"></span><span id="header-status">正在初始化</span></div>
+  </div>
+  <nav class="top-nav" id="lab-navigation" aria-label="实验导航" hidden>
+    <div class="nav-scroll-frame">
+    <div id="nav-scroll-list" class="nav-scroll" tabindex="0" role="group" aria-label="其他实验，可滚动查看全部">
+      <a href="index.html"><span>空间摆</span><small>01</small></a>
+      <a href="attractors.html"><span>相空间图谱</span><small>02</small></a>
+      <a href="rigid-body.html"><span>自由刚体</span><small>03</small></a>
+      <a href="henon-heiles.html"><span>势能地形</span><small>04</small></a>
+      <a href="vortex-rings.html"><span>涡环追逐</span><small>05</small></a>
+      <a href="lightning.html"><span>闪电生长</span><small>07</small></a>
+      <a href="ising.html"><span>自旋晶格</span><small>08</small></a>
+      <a href="relativity.html"><span>近光速世界</span><small>09</small></a>
+    </div>
+    <input id="nav-position" class="nav-scrollbar" type="range" min="0" max="100" step="1" value="0" aria-label="实验导航滚动位置" aria-controls="nav-scroll-list">
+    </div>
+    <div class="nav-scroll-hint" aria-hidden="true">↑↓  拖动滑块或滚动查看 · 8 项</div>
+  </nav>
+</header>
+<main id="workbench" class="lab-workbench" aria-label="图灵不稳定性实验台">
+  <h1 class="visually-hidden">图灵斑纹：球面反应扩散与扩散驱动失稳</h1>
+  <article class="model-panel" aria-label="球面浓度三维可视化">
+    <div class="model-stage" id="turing-stage">
+      <canvas id="turing-scene" data-lab-canvas tabindex="0" aria-label="球面浓度图。拖动旋转，滚轮缩放；方向键旋转，加减号缩放，空格播放或暂停。"></canvas>
+      <div class="stage-head" aria-hidden="true"><div class="stage-live"><span></span><b id="stage-status">SURFACE INITIALIZING</b></div><div>REACTION <i>/</i> DIFFUSION</div></div>
+      <div class="vortex-index" aria-hidden="true"><span>FIG.</span><strong>06</strong><span>— TURING PATTERNS</span></div>
+      <div class="vortex-caption" aria-hidden="true"><span>01 / REACTION–DIFFUSION</span><strong id="stage-title">扩散，让均匀失稳</strong><small id="stage-caption">颜色是球面上的实际 U 浓度</small></div>
+      <div id="reference-label" class="sphere-label reference-label" hidden aria-hidden="true"><b>对照 A</b><span id="reference-label-detail">等速扩散 · Dᵥ / Dᵤ = 1</span></div>
+      <div id="primary-label" class="sphere-label primary-label" hidden aria-hidden="true"><b>实验 B</b><span id="primary-label-ratio">Dᵥ / Dᵤ = 20</span></div>
+      <div class="stage-bottom" aria-hidden="true"><div class="model-legend turing-legend"><span><i class="legend-low"></i> <b id="legend-low-text">U ≤ 0.40</b></span><span><i class="legend-high"></i> <b id="legend-high-text">U ≥ 4.50</b></span><span><i class="legend-contour"></i> <b id="legend-contour-text">U = 1.25</b></span></div><div class="stage-instruction" id="stage-instruction">↔ 拖动旋转 · 滚轮缩放</div></div>
+      <div class="stage-error" id="stage-error" role="status" aria-live="polite"><div><p id="stage-error-text">正在建立球面网格与反应场，请稍候……</p></div></div>
+    </div>
+  </article>
+  <div class="lab-bottom">
+    <div class="stage-fallback" id="stage-fallback" role="status" hidden>WebGL 不可用，已切换到同一数值场的 Canvas 投影。</div>
+    <div class="stage-notice" id="stage-notice" role="status" aria-live="polite" hidden></div>
+    <section class="telemetry" aria-label="反应扩散实时数据">
+      <div class="telemetry-item"><span>模拟时间</span><strong id="time-readout">—</strong></div>
+      <div class="telemetry-item"><span>扩散比 Dᵥ/Dᵤ</span><strong id="ratio-readout">—</strong></div>
+      <div class="telemetry-item"><span>U 空间起伏</span><strong id="variance-readout">—</strong></div>
+      <div class="telemetry-item"><span id="growth-label">理论最快增长率</span><strong id="growth-readout">—</strong></div>
+    </section>
+    <div class="transport" aria-label="模拟和视角控制">
+      <div class="transport-left"><button type="button" id="play" class="play-button" aria-label="播放模拟" disabled><span id="play-symbol" aria-hidden="true">▶</span><span id="play-text">播放</span></button><button type="button" class="tool-button" id="step" aria-label="单步推进 0.2 模拟时间" title="单步推进 0.2" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M5 4l8 6-8 6z"/><path d="M15 4v12"/></svg></button><button type="button" class="tool-button" id="reset" aria-label="从初始扰动重新开始" title="从初始扰动重新开始" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6 6 0 1 1 1 5M4 4v4h4"/></svg></button></div>
+      <div class="transport-right"><div class="speed-options" role="group" aria-label="目标模拟速度"><span>速度</span><button type="button" data-speed="0.5" aria-pressed="false">0.5×</button><button type="button" data-speed="1" class="active" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button></div><span class="transport-line"></span><button type="button" class="tool-button" id="reset-view" aria-label="恢复视角" title="恢复视角"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6M10 7v6"/></svg></button><button type="button" class="tool-button" id="save-image" aria-label="下载模型截图" title="下载模型截图"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 14v3h12v-3"/></svg></button></div>
+    </div>
+  </div>
+  <div class="side-shell side-shell-left" id="controls-shell">
+    <button class="side-toggle" id="toggle-controls" type="button" aria-controls="control-panel" aria-expanded="true" aria-label="收起控制台" title="收起控制台"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 6 9l5 5"/></svg><span>收起</span></button>
+    <aside class="control-panel panel" id="control-panel" tabindex="-1" aria-label="图灵实验控制台">
+      <div class="panel-top"><div><span class="panel-kicker">PATTERN CONSOLE</span><h2>图案控制台<span>。</span></h2></div></div>
+      <p class="panel-description">花纹来自球面上的反应和扩散，不是预设贴图。</p>
+      <div class="control-section"><div class="control-heading"><span>实验预设</span><small>LIVE SIMULATION</small></div>
+        <label class="quality-label" for="reaction-model">反应扩散方程 <small>切换后重置</small></label><select id="reaction-model"><option value="brusselator">Brusselator · 扩散驱动失稳</option><option value="gray-scott">Gray–Scott · 有限幅激发</option></select>
+        <div id="bruss-presets" class="preset-grid vortex-presets turing-presets" role="group" aria-label="Brusselator 实验预设">
+          <button type="button" data-preset="bloom" aria-pressed="true" class="active"><span aria-hidden="true">✳</span>生长中的斑纹</button>
+          <button type="button" data-preset="growth" aria-pressed="false"><span aria-hidden="true">◎</span>从微扰开始</button>
+          <button type="button" data-preset="uniform" aria-pressed="false"><span aria-hidden="true">○</span>等速扩散对照</button>
+          <button type="button" data-preset="critical" aria-pressed="false"><span aria-hidden="true">≈</span>临界附近</button>
+          <button type="button" data-preset="mode" aria-pressed="false"><span aria-hidden="true">≋</span>单一球谐模态</button>
+          <button type="button" data-preset="strong" aria-pressed="false"><span aria-hidden="true">✦</span>更快 V 扩散</button>
+        </div>
+        <div id="gray-presets" class="preset-grid vortex-presets turing-presets" role="group" aria-label="Gray–Scott 实验预设" hidden>
+          <button type="button" data-preset="gray-spots" aria-pressed="false"><span aria-hidden="true">✳</span>有限幅斑纹</button>
+          <button type="button" data-preset="gray-start" aria-pressed="false"><span aria-hidden="true">◎</span>从局部种子开始</button>
+          <button type="button" data-preset="gray-worms" aria-pressed="false"><span aria-hidden="true">≋</span>条纹与连接</button>
+          <button type="button" data-preset="gray-rest" aria-pressed="false"><span aria-hidden="true">○</span>均匀静息态</button>
+        </div>
+        <p class="preset-detail" id="preset-description" role="status">从同一微扰数值预演到 t=16，继续观察图案成长。</p>
+        <p class="control-note">选择预设会重建初态；底部重置始终从 t=0 的初态重新开始。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>反应与扩散</span><small id="model-tag">BRUSSELATOR</small></div>
+        <div class="slider-row"><label for="diffusion-ratio">扩散比 Dᵥ / Dᵤ</label><output id="diffusion-ratio-value" for="diffusion-ratio">20</output></div><input id="diffusion-ratio" class="range" type="range" min="1" max="40" step="1" value="20">
+        <p class="parameter-hint" id="diffusion-hint">Dᵤ = 0.002 · Dᵥ = 0.040</p>
+        <div id="bruss-parameters">
+          <div class="slider-row second"><label for="reaction-b">反应参数 B</label><output id="reaction-b-value" for="reaction-b">1.80</output></div><input id="reaction-b" class="range" type="range" min="1.40" max="1.95" step="0.01" value="1.80">
+          <p class="control-note">即时改变参数，保留当前浓度与时间；A 固定为 1。界面范围内，均匀反应状态本身线性稳定。</p>
+        </div>
+        <div id="gray-parameters" hidden>
+          <div class="slider-row second"><label for="gray-feed">补给率 F</label><output id="gray-feed-value" for="gray-feed">0.050</output></div><input id="gray-feed" class="range" type="range" min="0.015" max="0.080" step="0.001" value="0.050">
+          <div class="slider-row second"><label for="gray-kill">移除率 k</label><output id="gray-kill-value" for="gray-kill">0.065</output></div><input id="gray-kill" class="range" type="range" min="0.045" max="0.075" step="0.001" value="0.065">
+          <p class="control-note">即时改变 F、k 与扩散比，保留当前浓度和时间。(1,0) 静息态对无限小扰动线性稳定；这些斑纹来自有限幅种子。</p>
+        </div>
+        <button type="button" class="turing-action" id="phase-card-action">▦　打开可拖动的稳定性相图</button>
+        <div class="slider-row second"><label for="sphere-radius">固定物理半径 R</label><output id="sphere-radius-value" for="sphere-radius">1.00</output></div><input id="sphere-radius" class="range" type="range" min="0.60" max="1.35" step="0.05" value="1.00">
+        <p class="control-note">R 真实改变表面扩散算子 Δₛ/R²；改变后从同一角度分布初态重置。这是比较不同的固定球面，不是包含生长稀释项的膨胀球面。</p>
+        <div class="ring-orientation turing-tools" role="group" aria-label="双球对照变量"><button type="button" data-comparison="diffusion" aria-pressed="true">扩散比</button><button type="button" data-comparison="radius" aria-pressed="false">固定半径</button><button type="button" data-comparison="model" aria-pressed="false">反应模型</button></div>
+        <button type="button" class="turing-action" id="compare-toggle" aria-pressed="false">◉　开启同初态双球对照</button>
+        <p class="control-note" id="compare-hint">开启或退出对照会重新开始：A 固定等速扩散，B 使用当前扩散比；反应、半径、初始角度分布与时间步相同。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>初态与球面网格</span><small>INITIAL STATE</small></div>
+        <div id="bruss-initial">
+          <label class="quality-label" for="seed-kind">初始微扰 <small>改变后重新开始</small></label><select id="seed-kind"><option value="noise">平滑随机微扰</option><option value="mode">单一轴对称球谐</option></select>
+          <div class="slider-row second"><label for="seed-degree">球谐阶数 l</label><output id="seed-degree-value" for="seed-degree">10</output></div><input id="seed-degree" class="range" type="range" min="1" max="18" step="1" value="10">
+          <div class="slider-row second"><label for="seed-amplitude">微扰幅度</label><output id="seed-amplitude-value" for="seed-amplitude">0.030</output></div><input id="seed-amplitude" class="range" type="range" min="0.005" max="0.080" step="0.005" value="0.030">
+        </div>
+        <div id="gray-initial" hidden>
+          <label class="quality-label" for="gray-seed-kind">Gray–Scott 初态 <small>改变后重新开始</small></label><select id="gray-seed-kind"><option value="patch">有限幅 V 局部种子</option><option value="rest">均匀静息态 (1,0)</option></select>
+          <div class="slider-row second"><label for="gray-seed-amplitude">有限幅种子强度</label><output id="gray-seed-amplitude-value" for="gray-seed-amplitude">0.500</output></div><input id="gray-seed-amplitude" class="range" type="range" min="0.10" max="0.60" step="0.05" value="0.50">
+          <p class="control-note">种子是若干真实浓度的局部高斯扰动，不是预绘斑纹；静息态无 V 时保持均匀，可用触碰加入 V。</p>
+        </div>
+        <label class="quality-label" for="mesh-quality">球面网格 <small>更密更慢</small></label><select id="mesh-quality"><option value="quick">快速 · 642 顶点</option><option value="standard" selected>标准 · 2562 顶点</option><option value="high">精细 · 10242 顶点</option></select>
+        <p class="control-note">求解发生在二维球面，不是球体内部的三维化学流体。网格与初态改变会重置时间。</p>
+      </div>
+      <div class="control-section"><div class="control-heading"><span>交互与观察</span><small>TOUCH / POINTER</small></div>
+        <div class="ring-orientation turing-tools" role="group" aria-label="指针工具"><button type="button" data-tool="orbit" aria-pressed="true">旋转视角</button><button type="button" data-tool="probe" aria-pressed="false">球面探针</button><button type="button" data-tool="paint" aria-pressed="false">触碰激发</button></div>
+        <button type="button" class="turing-action" id="probe-center" disabled>◎　探测朝向镜头的球面</button>
+        <p class="control-note">探针只读取、不会改变浓度。点击或拖动选点，或聚焦球面按 Enter；数值与 U、V 扩散通量见「球面探针」卡片。</p>
+        <div class="slider-row second"><label for="poke-strength">局部激发</label><output id="poke-strength-value" for="poke-strength">0.060</output></div><input id="poke-strength" class="range" type="range" min="0.01" max="0.15" step="0.01" value="0.06">
+        <button type="button" class="turing-action" id="poke-center" disabled>✳　激发朝向镜头的球面</button>
+        <p class="control-note" id="poke-hint">在球面点击或单指拖动施加局部扰动；也可使用上方按钮，或在激发模式下聚焦球面后按 Enter。双球模式会将同一位置的扰动同时施加到两球。</p>
+        <div class="ring-orientation turing-tools" role="group" aria-label="显示场"><button type="button" data-display="u" aria-pressed="true">实际 U</button><button type="button" data-display="v" aria-pressed="false">实际 V</button><button type="button" data-display="mode" aria-pressed="false">球谐投影</button></div>
+        <div class="slider-row second"><label for="mode-degree">投影 / 历史的球谐阶数 l</label><output id="mode-degree-value" for="mode-degree">10</output></div><input id="mode-degree" class="range" type="range" min="1" max="18" step="1" value="10">
+        <p class="control-note" id="color-scale-note">U 采用固定的 0.40–4.50 色阶与平方根映射；范围外截色，不随画面自动拉伸。等值线为 U=1.25。</p>
+        <div class="display-switches"><label for="show-contours"><span>显示等浓度线</span><input id="show-contours" type="checkbox" checked><b aria-hidden="true"></b></label></div>
+        <div class="slider-row second"><label for="camera-zoom">观察缩放</label><output id="camera-zoom-value" for="camera-zoom">1.00×</output></div><input id="camera-zoom" class="range" type="range" min="0.60" max="1.50" step="0.01" value="1.00">
+      </div>
+      <div class="console-foot"><span>✳</span>二维球面教学模型；颜色按固定浓度范围映射。</div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+  <div class="side-shell side-shell-right" id="knowledge-shell">
+    <button class="side-toggle" id="toggle-knowledge" type="button" aria-controls="knowledge-panel" aria-expanded="true" aria-label="收起知识卡片" title="收起知识卡片"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="m7 4 5 5-5 5"/></svg><span>收起</span></button>
+    <aside class="knowledge-panel panel" id="knowledge-panel" tabindex="-1" aria-labelledby="knowledge-title">
+      <div class="panel-top"><div><span class="panel-kicker">FIELD NOTES</span><h2 id="knowledge-title">知识卡片<span>。</span></h2></div></div>
+      <p class="panel-description">让每一处颜色，对应一个可检验的计算量。</p>
+      <div class="lesson-tabs vortex-tabs" role="group" aria-label="选择知识卡片">
+        <button type="button" data-note="probe" aria-pressed="false"><span class="lesson-icon">◎</span><span><strong>球面探针</strong><small>反应、扩散与通量</small></span><b>✳</b></button>
+        <button type="button" data-note="phase" aria-pressed="false"><span class="lesson-icon">▦</span><span><strong>稳定性相图</strong><small>拖动 B 与扩散比</small></span><b>✳</b></button>
+        <button type="button" data-note="comparison" class="active" aria-pressed="true"><span class="lesson-icon">◉</span><span><strong>双球对照</strong><small>扩散、半径与模型</small></span><b>01</b></button>
+        <button type="button" data-note="reaction" aria-pressed="false"><span class="lesson-icon">∂</span><span><strong>反应与均匀态</strong><small>两套数值方程</small></span><b>02</b></button>
+        <button type="button" data-note="spectrum" aria-pressed="false"><span class="lesson-icon">∿</span><span><strong>谁会增长</strong><small>球谐模态与线性预测</small></span><b>03</b></button>
+        <button type="button" data-note="nonlinear" aria-pressed="false"><span class="lesson-icon">✳</span><span><strong>从微扰到斑纹</strong><small>非线性与有限振幅</small></span><b>04</b></button>
+        <button type="button" data-note="limits" aria-pressed="false"><span class="lesson-icon">ƒ</span><span><strong>模型的边界</strong><small>球面网格与数值误差</small></span><b>05</b></button>
+      </div>
+      <section class="lesson-detail vortex-detail" data-note-content="probe" aria-label="球面探针：局部反应与扩散" hidden>
+        <div class="lesson-top"><span>观察卡片 / 探针</span><span>LOCAL FIELD</span></div><h3>一点的变化，<br><em>来自哪里？</em></h3>
+        <p>选择「球面探针」后在球面选点；探针只读取最近网格顶点，不会向场中添加扰动。</p>
+        <div class="turing-note" id="probe-empty">还没有选点。点击球面，或使用控制台「探测朝向镜头的球面」。</div>
+        <div id="probe-details" hidden>
+          <div class="spectrum-head"><span>实验 B · 当前选点</span><span id="probe-location">—</span></div>
+          <div class="lesson-metric"><span>浓度 U / V</span><strong id="probe-concentration">—</strong></div>
+          <div class="lesson-metric"><span>U · 反应 / 扩散</span><strong id="probe-u-terms">—</strong></div>
+          <div class="lesson-metric"><span>V · 反应 / 扩散</span><strong id="probe-v-terms">—</strong></div>
+          <div class="lesson-metric"><span>变化率 ∂U/∂t / ∂V/∂t</span><strong id="probe-totals">—</strong></div>
+          <div class="lesson-metric"><span>切向通量 |Jᵤ| / |Jᵥ|</span><strong id="probe-flux">—</strong></div>
+          <div class="turing-note" id="probe-reference" hidden></div>
+        </div>
+        <p class="lesson-note"><span class="probe-key u">● U</span> 与 <span class="probe-key v">● V</span> 箭头沿局部球面切向，方向为 J=−D∇ₛ浓度；两种通量采用相同长度比例，过长会截断。通量由邻点切平面最小二乘估计，扩散贡献则使用求解器的余切拉普拉斯，因此是不同的离散估计。背面探针会被球体遮挡。</p>
+      </section>
+      <section class="lesson-detail vortex-detail phase-detail" data-note-content="phase" aria-label="Brusselator 稳定性相图" hidden>
+        <div class="lesson-top"><span>观察卡片 / 相图</span><span>LINEAR THEORY</span></div><h3>跨过边界，<br><em>哪些波纹开始增长？</em></h3>
+        <div id="phase-bruss">
+        <p>拖动参数点，同时改变 B 与扩散比；球面浓度继续演化，不会因移动参数点而重置。</p>
+        <div class="spectrum-head"><span>理想固定球面 · B 与 Dᵥ/Dᵤ</span><span id="phase-radius">R=1.00</span></div>
+        <svg id="phase-chart" viewBox="0 0 280 190" role="group" tabindex="0" aria-label="稳定性相图，方向键调整 B 和扩散比" aria-describedby="phase-help">
+          <rect class="phase-stable" x="36" y="14" width="226" height="141"/><path id="phase-unstable" class="phase-unstable"/>
+          <path class="phase-grid" d="M36 14V155H262 M36 84.5H262 M149 14V155"/>
+          <path id="phase-continuous" class="phase-continuous"/><path id="phase-boundary" class="phase-boundary"/>
+          <text x="40" y="26" class="phase-area-label">预测可失稳</text><text x="182" y="148" class="phase-area-label">预测稳定</text>
+          <path id="phase-crosshair" class="phase-crosshair"/><circle id="phase-point-halo" r="8"/><circle id="phase-point" r="4"/>
+          <text x="7" y="19">40</text><text x="10" y="158">1</text><text x="36" y="172">1.40</text><text x="262" y="172" text-anchor="end">1.95</text><text x="149" y="185" text-anchor="middle">反应参数 B →</text><text x="9" y="88" transform="rotate(-90 9 88)" text-anchor="middle">扩散比</text>
+        </svg>
+        <p class="lesson-note" id="phase-help">点击或拖动相图选点；键盘聚焦后左右调整 B、上下调整扩散比。控制台滑杆也可独立调节。</p>
+        <div class="lesson-metric"><span>当前 B / 扩散比</span><strong id="phase-parameters">—</strong></div>
+        <div class="lesson-metric"><span>球面离散阶数临界比</span><strong id="phase-threshold">—</strong></div>
+        <div class="lesson-metric"><span>理想球面预测</span><strong id="phase-result">—</strong></div>
+        <div class="lesson-metric"><span>实际 U 空间起伏</span><strong id="phase-observed">—</strong></div>
+        <p class="lesson-note">实线取各整数 l 的理想球面临界曲线下包络；虚线允许波数连续变化。两者只描述均匀态附近的线性预测，不是有限网格的精确边界，也不预测已有斑纹会立即消失或最终形状。</p>
+        </div>
+        <div id="phase-gray" class="turing-note" hidden>当前为 Gray–Scott：Brusselator 的 B—扩散比边界不适用。对 (U,V)=(1,0) 的线性化在所选正参数下始终稳定；可在「球谐模态」卡片查看该基态的衰减谱。其他非零均匀态不在这里分类。</div>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="comparison" aria-label="同初态对照实验">
+        <div class="lesson-top"><span>观察卡片 / 01</span><span>01 — 05</span></div><h3 id="comparison-heading">同样的反应，<br><em>不同的扩散。</em></h3>
+        <p id="comparison-explanation">均匀反应会使小扰动最终衰减；但 U 自催化并消耗底物 V，足够快的 V 扩散可改变空间反馈，使部分波纹增长，均匀态因扩散而失稳。</p>
+        <div class="lesson-metric"><span>实验 B · U 空间起伏</span><strong id="card-current-std">—</strong></div>
+        <div class="lesson-metric"><span>对照 A · U 空间起伏</span><strong id="card-reference-std">—</strong></div>
+        <div class="lesson-metric"><span id="card-region-label">U ≥ 1.25 连通区域 · A / B</span><strong id="card-regions">—</strong></div>
+        <div class="lesson-metric"><span>实测主导模态 l · A / B</span><strong id="card-dominant">—</strong></div>
+        <p class="lesson-note">区域数按球面顶点邻接关系计数；相连的斑点或条纹算一个区域，数目依赖阈值和网格，不等于生物斑点的客观总数。模态为最近一次球谐采样。</p>
+        <div class="turing-note" id="comparison-status" role="status">开启双球：相同初态，A 等速扩散，B 使用当前扩散比。</div>
+        <button type="button" class="lesson-action" id="compare-card-action">开始同初态双球实验 <span aria-hidden="true">↗</span></button>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="reaction" aria-label="反应方程与均匀态" hidden>
+        <div class="lesson-top"><span>观察卡片 / 02</span><span>02 — 05</span></div><h3>两个浓度，<br><em>一组反应。</em></h3>
+        <p id="reaction-explanation">采用简化的 Brusselator 自催化—底物耗竭模型。U 和 V 都只存在于球面，各自扩散并参与非线性反应；V 参与促进 U 的自催化，并非直接抑制 U。</p>
+        <div class="vortex-formula" id="reaction-formula">∂U/∂t = A − (B+1)U + U²V + DᵤΔₛU<br>∂V/∂t = BU − U²V + DᵥΔₛV</div>
+        <div class="lesson-metric"><span>均匀平衡 U* / V*</span><strong id="card-equilibrium">—</strong></div>
+        <div class="lesson-metric"><span>均匀反应的最大增长率</span><strong id="card-local-growth">—</strong></div>
+        <p class="lesson-note" id="reaction-note">A=1，界面限定 B&lt;2，因此均匀反应的线性增长率为负。V 扩散更快不等于总会形成图案，仍需检查空间模态。</p>
+      </section>
+      <section class="lesson-detail vortex-detail spectrum-detail" data-note-content="spectrum" aria-label="球谐模态增长谱" hidden>
+        <div class="lesson-top"><span>观察卡片 / 03</span><span>03 — 05</span></div><h3>哪些波纹，<br><em>会被放大？</em></h3>
+        <p>固定半径 R 的理想球面上，l 阶球谐的拉普拉斯特征值为 −l(l+1)/R²。将其代入均匀态线性化，得到每个 l 的预测增长率。</p>
+        <div class="spectrum-head"><span id="theory-title">连续球面 · 预测增长率 σ</span><span id="theory-band">—</span></div>
+        <svg id="theory-chart" viewBox="0 0 260 116" role="img" aria-label="球谐阶数与线性增长率的理论曲线"><path class="chart-grid" d="M28 10V91H249"/><path id="theory-zero" class="chart-zero"/><path id="theory-line" class="theory-line"/><circle id="theory-marker" r="3"/><text x="2" y="16" id="theory-high">—</text><text x="2" y="92" id="theory-low">—</text><text x="28" y="109">l=0</text><text x="249" y="109" text-anchor="end">l=24</text></svg>
+        <div class="spectrum-head"><span>实际 U 场 · 球谐投影幅度</span><span id="measured-dominant">—</span></div>
+        <svg id="measured-chart" viewBox="0 0 260 90" role="img" aria-label="当前 U 浓度场的球谐投影幅度"><path class="chart-grid" d="M28 7V72H249"/><g id="measured-bars"></g><text x="2" y="13" id="measured-high">—</text><text x="28" y="86">l=1</text><text x="249" y="86" text-anchor="end">l=18</text></svg>
+        <div class="lesson-metric"><span id="mode-rate-label">可测模态理论增长率</span><strong id="mode-rate-predicted">—</strong></div>
+        <div class="lesson-metric"><span>实测投影的有限时间增长率</span><strong id="mode-rate-measured">等待采样</strong></div>
+        <p class="lesson-note" id="mode-rate-window">播放或单步两次以比较同一模态的实际变化。</p>
+        <p class="lesson-note" id="spectrum-note">理论适用于接近均匀态的早期；实际幅度由球面网格面积加权投影。有限网格和非线性饱和会产生差异。</p>
+        <div class="slider-row second"><label for="history-degree-input">选择投影阶数 l</label><output id="history-degree-input-value" for="history-degree-input">10</output></div><input id="history-degree-input" class="range" type="range" min="1" max="18" step="1" value="10">
+        <button type="button" class="lesson-action" id="show-mode-action">在球面显示该阶有符号投影 <span aria-hidden="true">↗</span></button>
+        <div class="spectrum-head"><span>真实演化历史 · l=<b id="history-degree">10</b></span><span id="history-range">—</span></div>
+        <div class="history-scales" role="group" aria-label="历史曲线纵轴"><button type="button" data-history-scale="log" aria-pressed="true">对数</button><button type="button" data-history-scale="linear" aria-pressed="false">线性</button></div>
+        <svg id="history-chart" viewBox="0 0 260 110" role="img" aria-label="真实球谐投影幅度与空间起伏随模拟时间的历史曲线"><path class="chart-grid" d="M34 10V87H249 M34 48H249"/><g id="history-events"></g><path id="history-std"/><path id="history-mode"/><circle id="history-latest" r="2.5"/><text x="2" y="16" id="history-high">—</text><text x="2" y="88" id="history-low">—</text><text x="34" y="103" id="history-start">—</text><text x="249" y="103" id="history-end" text-anchor="end">—</text></svg>
+        <div class="history-legend"><span><i></i>选中 l 的投影幅度</span><span><i></i>U 空间起伏</span></div>
+        <p class="lesson-note" id="history-note">曲线仅记录真实计算时的离散采样，不是回放。改变参数或触碰后标记时间；重置会清空历史。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="nonlinear" aria-label="初始扰动和非线性饱和" hidden>
+        <div class="lesson-top"><span>观察卡片 / 04</span><span>04 — 05</span></div><h3>小波纹增长，<br><em>不代表无限增长。</em></h3>
+        <p id="nonlinear-explanation">早期可以近似看作各个球谐模态独立变化；振幅变大后，U²V 反应使不同模态相互作用，线性预测不再决定最终图案。</p>
+        <div class="lesson-metric"><span>当前 U 最小 / 最大</span><strong id="card-range">—</strong></div>
+        <p class="lesson-note" id="nonlinear-note">可以选「单一球谐模态」观察早期增长，再切回随机微扰。球面颜色使用固定浓度范围，不会把微小噪声自动拉伸成强烈花纹。</p>
+      </section>
+      <section class="lesson-detail vortex-detail" data-note-content="limits" aria-label="模型和数值限制" hidden>
+        <div class="lesson-top"><span>观察卡片 / 05</span><span>05 — 05</span></div><h3>图案是结果，<br><em>不是贴图。</em></h3>
+        <p>两个浓度在封闭二维球面上计算；三维画面只是球面嵌入空间的显示，不包含球内扩散、流体运动或真实皮肤组织。</p>
+        <div class="lesson-metric"><span>球面顶点 / 三角形</span><strong id="card-mesh">—</strong></div>
+        <div class="lesson-metric"><span>固定半径 / 网格表面积</span><strong id="card-radius">—</strong></div>
+        <div class="lesson-metric"><span id="card-critical-label">连续波数临界扩散比（近似）</span><strong id="card-critical">—</strong></div>
+        <p class="lesson-note" id="limits-note">扩散使用三角网格上的余切拉普拉斯算子，反应采用自适应子步的二阶 Heun 积分。临界比允许波数连续变化；固定半径球面只允许离散的 l 阶，有限网格、扰动与非线性演化也会产生差异。此处不模拟球面随时间生长或浓度稀释。</p>
+      </section>
+      <div class="knowledge-foot"><span>MODEL / 06</span><p>闭合球面 · 无量纲单位<br>反应扩散教学模型，不是生物组织定量预测。</p></div>
+    </aside><div class="panel-scroll-hint" aria-hidden="true">向下滚动查看更多 <span>↓</span></div>
+  </div>
+</main>
+<noscript><div class="noscript">球面反应扩散实验需要 JavaScript。请启用 JavaScript 后重新打开页面。</div></noscript>
+</body>
+</html>
