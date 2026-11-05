@@ -209,11 +209,7 @@ function renderNext() {
     const box = new THREE.Box3().setFromObject(group);
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
     fitCamera(camera, box, p.dir);
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(640, 640), 0.35, 0.5, 0.92);
-    composer.addPass(bloom);
-    composer.render();
+    renderer.render(scene, camera);
     const url = renderer.domElement.toDataURL('image/webp', 0.85);
     results[p.id] = url;
     const img = document.createElement('img');
