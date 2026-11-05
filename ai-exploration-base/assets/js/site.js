@@ -139,11 +139,66 @@
     });
   }
 
+  /* Respect system reduced-motion everywhere. */
+  function motionOk() {
+    return !(
+      root.matchMedia &&
+      root.matchMedia('(prefers-reduced-motion: reduce)').matches
+    );
+  }
+
+  /* Count a number up when its element scrolls into view.
+     AISite.countUp(el, 5.15, {decimals: 2, suffix: ''}). */
+  function countUp(el, target, opts) {
+    opts = opts || {};
+    var decimals = opts.decimals || 0;
+    var duration = opts.duration || 1.6;
+    var suffix = opts.suffix || '';
+    var prefix = opts.prefix || '';
+    function render(v) {
+      el.textContent = prefix + v.toFixed(decimals) + suffix;
+    }
+    if (!motionOk() || !root.gsap) {
+      render(target);
+      return Promise.resolve();
+    }
+    var obj = { v: 0 };
+    return root.gsap.to(obj, {
+      v: target,
+      duration: duration,
+      ease: 'power1.out',
+      onUpdate: function () { render(obj.v); },
+      onComplete: function () { render(target); }
+    });
+  }
+
+  /* Stagger in any children of `container` when it first scrolls
+     into view (GSAP + ScrollTrigger; no-op fallback). */
+  function staggerOnScroll(container, selector, opts) {
+    opts = opts || {};
+    if (!root.gsap || !root.ScrollTrigger || !motionOk()) return;
+    root.gsap.registerPlugin(root.ScrollTrigger);
+    var targets = container.querySelectorAll(selector || ':scope > *');
+    if (!targets.length) return;
+    root.gsap.from(targets, {
+      opacity: 0,
+      y: opts.y || 22,
+      duration: opts.duration || 0.55,
+      stagger: opts.stagger || 0.12,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: container, start: 'top 82%' },
+      clearProps: 'all'
+    });
+  }
+
   root.AISite = {
     basePath: basePath,
     mountChrome: mountChrome,
     revealOnScroll: revealOnScroll,
     typeText: typeText,
+    motionOk: motionOk,
+    countUp: countUp,
+    staggerOnScroll: staggerOnScroll,
     pageReady: pageReady
   };
 

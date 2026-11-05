@@ -103,6 +103,12 @@
         document.getElementById('certificate-block').style.display = all ? '' : 'none';
         document.getElementById('progress-block').style.display = all ? 'none' : '';
 
+        /* Layout just changed under ScrollTrigger's feet — recompute
+           so the certificate pop actually fires when unlocked late. */
+        if (all && window.ScrollTrigger) {
+          window.setTimeout(function () { window.ScrollTrigger.refresh(); }, 120);
+        }
+
         document.getElementById('progress-count').textContent = P.badge();
 
         var remaining = P.PAGES.filter(function (p) { return !P.done(p.id); });
@@ -115,6 +121,18 @@
 
       render();
       P.onChange(render);
+
+      /* Certificate lands with a confident pop when unlocked */
+      if (window.gsap && window.AISite.motionOk()) {
+        if (window.ScrollTrigger) window.gsap.registerPlugin(window.ScrollTrigger);
+        var cert = document.querySelector('.certificate');
+        if (cert) {
+          window.gsap.from(cert, {
+            scale: 0.88, rotate: -2, duration: 0.9, ease: 'back.out(1.6)',
+            scrollTrigger: { trigger: cert, start: 'top 78%' }, clearProps: 'all'
+          });
+        }
+      }
 
       /* Full-screen celebration once, on the moment all six are done.
          On later visits the certificate simply shows without re-firing. */

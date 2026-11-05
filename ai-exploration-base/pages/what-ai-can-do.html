@@ -261,9 +261,22 @@
       'use strict';
       window.AISite.pageReady('what-ai-can-do');
 
+      /* Cards cascade in as the grid scrolls into view */
+      var grid = document.querySelector('.flip-grid');
+      if (grid) window.AISite.staggerOnScroll(grid, '.flip-card', { y: 30, stagger: 0.12 });
+
       /* Flip cards: click / Enter toggles. One flip reveals the back. */
       document.querySelectorAll('.flip-card').forEach(function (card) {
-        function flip() { card.classList.toggle('is-flipped'); }
+        function flip() {
+          card.classList.toggle('is-flipped');
+          /* Back content pops in after the 3D flip settles */
+          if (card.classList.contains('is-flipped') &&
+              window.gsap && window.AISite.motionOk()) {
+            window.gsap.fromTo(card.querySelectorAll('.flip-back > *'),
+              { opacity: 0, y: 12 },
+              { opacity: 1, y: 0, stagger: 0.06, duration: 0.45, delay: 0.25, clearProps: 'all' });
+          }
+        }
         card.addEventListener('click', flip);
         card.addEventListener('keydown', function (e) {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
