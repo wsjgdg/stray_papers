@@ -232,13 +232,27 @@
 
         S.typeText(document.getElementById('quiz-tw'), a.reply, { speed: 24 })
           .then(function () {
-            document.getElementById('quiz-note').textContent = a.note;
+            var note = document.getElementById('quiz-note');
+            note.textContent = a.note;
+            if (window.gsap && window.AISite.motionOk()) {
+              window.gsap.from(note, { opacity: 0, y: 8, duration: 0.4, clearProps: 'all' });
+            }
           });
       }
 
       document.querySelectorAll('.quiz-option').forEach(function (b) {
         b.addEventListener('click', function () { showAnswer(b.dataset.grade, b); });
       });
+
+      /* Formula chips land one by one: 角色 -> 背景 -> 要求 */
+      var formula = document.querySelector('.formula');
+      if (formula) window.AISite.staggerOnScroll(formula, '.f-item', { stagger: 0.14 });
+
+      /* Agent flow: steps and arrows stream left to right */
+      var flow = document.querySelector('.agent-flow');
+      if (flow) window.AISite.staggerOnScroll(flow, ':scope > *', { stagger: 0.12 });
+
+      /* Agent flow: steps and arrows stream left to right */
     })();
   </script>
 </body>

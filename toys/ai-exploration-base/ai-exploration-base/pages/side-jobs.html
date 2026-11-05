@@ -176,6 +176,11 @@
     (function () {
       'use strict';
       window.AISite.pageReady('side-jobs');
+
+      /* Learning-route steps cascade in per card */
+      document.querySelectorAll('.route').forEach(function (ul) {
+        window.AISite.staggerOnScroll(ul, ':scope > li', { y: 14, stagger: 0.08 });
+      });
     })();
   </script>
 </body>

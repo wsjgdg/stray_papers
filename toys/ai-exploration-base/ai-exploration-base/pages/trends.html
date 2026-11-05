@@ -90,15 +90,15 @@
     <h2 class="reveal">数字最诚实：半年翻了一番</h2>
     <div class="stat-row reveal">
       <div class="stat-box">
-        <div class="stat-num">5.15 亿</div>
+        <div class="stat-num"><span data-count="5.15" data-decimals="2"></span> 亿</div>
         <div class="stat-label">2025 年 6 月<br>我国生成式 AI 用户</div>
       </div>
       <div class="stat-box">
-        <div class="stat-num">+2.66 亿</div>
+        <div class="stat-num"><span data-count="2.66" data-decimals="2" data-prefix="+"></span> 亿</div>
         <div class="stat-label">比半年前<br>增加的用户数</div>
       </div>
       <div class="stat-box">
-        <div class="stat-num">36.5%</div>
+        <div class="stat-num"><span data-count="36.5" data-decimals="1" data-suffix="%"></span></div>
         <div class="stat-label">每 10 个中国人里<br>3.6 个在用</div>
       </div>
     </div>
@@ -178,10 +178,38 @@
     (function () {
       'use strict';
       window.AISite.pageReady('trends');
+      var M = window.AISite.motionOk;
 
-      /* CNNIC verified data: 2.49亿 (2024.12) -> 5.15亿 (2025.6) */
+      /* Big numbers count up as they scroll into view */
+      function count(el) {
+        window.AISite.countUp(el, parseFloat(el.dataset.count), {
+          decimals: +(el.dataset.decimals || 0),
+          prefix: el.dataset.prefix || '',
+          suffix: el.dataset.suffix || ''
+        });
+      }
+      var stats = document.querySelectorAll('[data-count]');
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) { count(entry.target); io.unobserve(entry.target); }
+          });
+        }, { threshold: 0.5 });
+        stats.forEach(function (el) { io.observe(el); });
+      } else {
+        stats.forEach(count);
+      }
+
+      /* Timeline items cascade in as the story unfolds */
+      var tl = document.querySelector('.timeline');
+      if (tl) window.AISite.staggerOnScroll(tl, '.timeline-item', { y: 26, stagger: 0.18 });
+
+      /* Chart builds itself only when scrolled into view, so the
+         bars grow right in front of her eyes */
       var ctx = document.getElementById('user-chart');
-      if (ctx && window.Chart) {
+      function buildChart() {
+        if (!ctx || !window.Chart || ctx.dataset.built) return;
+        ctx.dataset.built = '1';
         window.Chart.defaults.font.family =
           '"Microsoft YaHei", "PingFang SC", sans-serif';
         window.Chart.defaults.font.size = 15;
@@ -216,9 +244,16 @@
           }
         });
       }
-
-      /* Make the six-month doubling pop: value labels via title tooltips are
-         default; the big stat boxes above carry the "翻一番" narrative. */
+      if ('IntersectionObserver' in window) {
+        var cio = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) { buildChart(); cio.unobserve(ctx); }
+          });
+        }, { threshold: 0.35 });
+        cio.observe(ctx);
+      } else {
+        buildChart();
+      }
     })();
   </script>
 </body>

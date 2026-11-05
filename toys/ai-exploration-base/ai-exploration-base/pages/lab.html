@@ -121,6 +121,16 @@
     (function () {
       'use strict';
       window.AISite.pageReady('lab');
+
+      /* The embedded lab drifts in when reached */
+      var embed = document.querySelector('.lab-embed');
+      if (embed && window.gsap && window.ScrollTrigger && window.AISite.motionOk()) {
+        window.gsap.registerPlugin(window.ScrollTrigger);
+        window.gsap.from(embed, {
+          opacity: 0, scale: 0.97, duration: 0.8, ease: 'power2.out',
+          scrollTrigger: { trigger: embed, start: 'top 85%' }, clearProps: 'all'
+        });
+      }
     })();
   </script>
 </body>
