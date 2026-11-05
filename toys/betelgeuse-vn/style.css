@@ -901,6 +901,189 @@ input.vn-range {
 }
 
 /* --------------------------------------------------------------------------
+   9c. Gallery / music box (鉴赏: seen-scene thumbnails + ambient preview)
+   -------------------------------------------------------------------------- */
+.vn-gallery {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  width: min(92%, 720px);
+  max-height: 86%;
+  overflow-y: auto;
+  padding: 24px 22px;
+  background: var(--vn-panel-deep);
+  border: 1px solid var(--vn-border);
+  border-radius: 18px;
+}
+
+.vn-gallery-title {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--vn-text, rgba(238, 244, 255, 0.95));
+  margin-bottom: 14px;
+}
+
+.vn-gtabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.vn-gtab {
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--vn-border);
+  background: transparent;
+  color: var(--vn-text-dim);
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.vn-gtab[aria-selected="true"] {
+  background: var(--vn-accent, rgba(96, 165, 250, 0.28));
+  border-color: transparent;
+  color: #fff;
+}
+
+.vn-gtab:hover {
+  border-color: rgba(180, 210, 255, 0.6);
+  color: #fff;
+}
+
+.vn-gscenes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.vn-gcard {
+  padding: 8px;
+  border: 1px solid var(--vn-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.vn-gcard.vn-gseen:hover {
+  transform: translateY(-2px);
+  border-color: rgba(180, 210, 255, 0.55);
+}
+
+.vn-gthumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(8, 12, 24, 0.6);
+}
+
+.vn-gthumb .vn-gthumb-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.vn-gcard.vn-glocked .vn-gthumb {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.03) 0 6px,
+      transparent 6px 12px
+    ),
+    rgba(8, 12, 24, 0.6);
+  filter: saturate(0.3);
+}
+
+.vn-gname {
+  margin-top: 7px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--vn-text, rgba(238, 244, 255, 0.95));
+}
+
+.vn-gcard.vn-glocked .vn-gname {
+  color: var(--vn-text-faint);
+  text-shadow: 0 0 10px rgba(150, 190, 255, 0.18);
+}
+
+.vn-gmusic {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vn-mrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--vn-border);
+  border-radius: 10px;
+  transition: border-color 0.25s ease;
+}
+
+.vn-mrow:hover {
+  border-color: rgba(180, 210, 255, 0.5);
+}
+
+.vn-mrow.vn-playing {
+  border-color: rgba(255, 140, 90, 0.6);
+}
+
+.vn-mname {
+  font-size: 15px;
+  color: var(--vn-text, rgba(238, 244, 255, 0.95));
+}
+
+.vn-mline {
+  font-size: 12px;
+  color: var(--vn-text-faint);
+  margin-top: 2px;
+}
+
+.vn-mplay {
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--vn-border);
+  background: transparent;
+  color: var(--vn-text-dim);
+  cursor: pointer;
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.vn-mplay:hover {
+  border-color: rgba(180, 210, 255, 0.6);
+  color: #fff;
+}
+
+.vn-mrow.vn-playing .vn-mplay {
+  border-color: rgba(255, 140, 90, 0.65);
+  color: #ffb08c;
+}
+
+@media (max-width: 480px) {
+  .vn-gscenes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --------------------------------------------------------------------------
    10. Title screen (star drift + sheen + start ring)
    -------------------------------------------------------------------------- */
 .vn-title {
@@ -1237,6 +1420,38 @@ input.vn-range {
 }
 
 #vn-bonus:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* gallery button (鉴赏): third title entry, neutral blue-grey family —
+   always present (music box works for new players too) */
+#vn-gallery {
+  margin-top: 12px;
+  padding: 7px 24px;
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  background: rgba(18, 28, 50, 0.3);
+  border: 1px solid rgba(150, 180, 230, 0.45);
+  color: var(--vn-text-dim);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+#vn-gallery:hover {
+  background: rgba(24, 34, 58, 0.55);
+  border-color: rgba(180, 210, 255, 0.75);
+  color: #eef4ff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(130, 175, 255, 0.22);
+}
+
+#vn-gallery:active {
   transform: translateY(0) scale(0.98);
 }
 
@@ -1821,7 +2036,8 @@ input.vn-range {
 
 #vn-app .vn-menu:not(.vn-hidden),
 #vn-app .vn-settings:not(.vn-hidden),
-#vn-app .vn-backlog:not(.vn-hidden) {
+#vn-app .vn-backlog:not(.vn-hidden),
+#vn-app .vn-gallery:not(.vn-hidden) {
   animation: vn-overlay-in 0.28s ease-out;
 }
 

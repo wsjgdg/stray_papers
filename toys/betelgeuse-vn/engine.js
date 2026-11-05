@@ -348,6 +348,41 @@
     continueBtn.textContent = "继续游戏";
     continueBtn.classList.add("vn-hidden");
     continueBtn.addEventListener("click", continueGame);
+    // 鉴赏: scene gallery + music box. Always available on the title — the
+    // music half works for new players, the scene half fills as they play.
+    var galleryBtn = h("button", null, title);
+    galleryBtn.id = "vn-gallery";
+    galleryBtn.type = "button";
+    galleryBtn.textContent = "鉴赏";
+    galleryBtn.addEventListener("click", openGallery);
+
+    var gallery = h("div", "vn-gallery vn-hidden", app);
+    var galleryTitle = h("div", "vn-gallery-title", gallery);
+    galleryTitle.textContent = "鉴赏";
+    var gtabs = h("div", "vn-gtabs", gallery);
+    var gtabScenes = h("button", "vn-gtab", gtabs);
+    gtabScenes.type = "button";
+    gtabScenes.textContent = "场景";
+    gtabScenes.setAttribute("data-tab", "scenes");
+    gtabScenes.setAttribute("aria-selected", "true");
+    var gtabMusic = h("button", "vn-gtab", gtabs);
+    gtabMusic.type = "button";
+    gtabMusic.textContent = "音乐";
+    gtabMusic.setAttribute("data-tab", "music");
+    gtabMusic.setAttribute("aria-selected", "false");
+    var gpanelScenes = h("div", "vn-gpanel vn-gscenes", gallery);
+    var gpanelMusic = h("div", "vn-gpanel vn-gmusic", gallery);
+    gpanelMusic.setAttribute("hidden", "");
+    var galleryClose = h("button", "vn-close", gallery);
+    galleryClose.type = "button";
+    galleryClose.textContent = "关闭";
+    galleryClose.addEventListener("click", closeGallery);
+    gtabScenes.addEventListener("click", function () {
+      setGalleryTab("scenes");
+    });
+    gtabMusic.addEventListener("click", function () {
+      setGalleryTab("music");
+    });
 
     var chapter = h("div", "vn-chapter vn-hidden", app);
     var chapterText = h("div", "vn-chapter-text", chapter);
@@ -383,6 +418,12 @@
       volVal: volVal,
       autoRange: autoRange,
       autoVal: autoVal,
+      gallery: gallery,
+      galleryBtn: galleryBtn,
+      gtabScenes: gtabScenes,
+      gtabMusic: gtabMusic,
+      gpanelScenes: gpanelScenes,
+      gpanelMusic: gpanelMusic,
       title: title,
       titleCanvas: titleCanvas,
       titleName: titleName,
@@ -601,7 +642,8 @@
       state.mode !== "line" ||
       !els.menu.classList.contains("vn-hidden") ||
       !els.backlog.classList.contains("vn-hidden") ||
-      !els.settings.classList.contains("vn-hidden")
+      !els.settings.classList.contains("vn-hidden") ||
+      galleryVisible()
     );
   }
 
@@ -911,6 +953,7 @@
     timers.bg = setTimeout(function () {
       els.bg.style.background = bg.css;
       syncBgFx(bg, bgId);
+      recordSeen(bgId); // gallery unlock: this scene has now been visited
       audioHook("scene", bgId); // bg now active: switch the ambient loop
       els.bg.classList.remove("vn-fade");
     }, BG_FADE_MS);
@@ -929,6 +972,7 @@
     state.bg = bgId;
     els.bg.style.background = bg.css;
     syncBgFx(bg, bgId); // re-apply the restored bg's fx html + canvas scene
+    recordSeen(bgId);
     audioHook("scene", bgId); // restored bg now active: ambient loop follows
   }
 
@@ -2153,6 +2197,228 @@
     restoreFocusReturn();
   }
 
+  /* -------------------------------------------------- gallery / music box */
+
+  // 鉴赏: two-panel overlay. 场景 panel shows one card per background —
+  // unlocked (seen in play) cards render a live thumbnail via the scene's
+  // own renderer, locked cards stay mystery. 音乐 panel plays any ambient
+  // bed on demand through window.VN_AUDIO.scene(id) (click = gesture).
+  var SEEN_KEY = "vn-seen-scenes";
+  var SEEN_CAP = 32;
+
+  var GALLERY_MUSIC = [
+    { id: "apartment_night", name: "深夜·公寓", line: "屏幕冷光与远处闷雷" },
+    { id: "email_screen", name: "屏幕·未读邮件", line: "光标闪烁，等待被打开" },
+    { id: "streets_rain", name: "雨夜·环山公路", line: "雨声、霓虹与湿漉漉的倒影" },
+    { id: "observatory_night", name: "旧天文台·圆顶", line: "风、虫鸣与缓缓转动的星" },
+    { id: "server_room", name: "地下·机房", line: "低鸣的心跳与蓝绿色的灯" },
+    { id: "memory_white", name: "过曝·那一夜", line: "白得发亮的失重感" },
+    { id: "dawn_ending", name: "黎明·圆顶之外", line: "暖光里慢慢松开的手" },
+    { id: "finale_star", name: "黎明前·参宿四", line: "它还亮着" },
+  ];
+
+  function readSeen() {
+    var raw = null;
+    try {
+      raw = localStorage.getItem(SEEN_KEY);
+    } catch (err) {
+      return [];
+    }
+    if (typeof raw !== "string" || !raw) return [];
+    try {
+      var arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(function (id) {
+        return typeof id === "string" && S && S.backgrounds && S.backgrounds[id];
+      });
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function recordSeen(bgId) {
+    if (!bgId || typeof bgId !== "string") return;
+    var seen = readSeen();
+    if (seen.indexOf(bgId) !== -1) return;
+    seen.push(bgId);
+    seen = seen.slice(-SEEN_CAP);
+    try {
+      localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+    } catch (err) {
+      /* storage unavailable: seen-tracking is cosmetic, skip silently */
+    }
+  }
+
+  var galleryMusicPlaying = null; // bed id currently previewing, or null
+
+  function galleryVisible() {
+    return !!els && !els.gallery.classList.contains("vn-hidden");
+  }
+
+  function openGallery() {
+    if (!els || !S) return;
+    captureFocusReturn();
+    stopTitleCanvas();
+    els.title.classList.add("vn-hidden");
+    buildGalleryPanels();
+    els.gallery.classList.remove("vn-hidden");
+    var close =
+      typeof els.gallery.querySelector === "function"
+        ? els.gallery.querySelector(".vn-close")
+        : null;
+    if (close && typeof close.focus === "function") close.focus();
+  }
+
+  function closeGallery() {
+    if (!els) return;
+    if (galleryMusicPlaying !== null) {
+      audioHook("scene", null); // silence the preview bed
+      galleryMusicPlaying = null;
+    }
+    els.gallery.classList.add("vn-hidden");
+    restoreFocusReturn();
+    els.title.classList.remove("vn-hidden");
+    startTitleCanvas();
+  }
+
+  function buildGalleryPanels() {
+    // scenes panel: one card per background, in declaration order
+    els.gpanelScenes.textContent = "";
+    var seen = readSeen();
+    var ids = S.backgrounds ? Object.keys(S.backgrounds) : [];
+    ids.forEach(function (id) {
+      var bg = S.backgrounds[id];
+      var unlocked = seen.indexOf(id) !== -1;
+      var card = document.createElement("div");
+      card.className = "vn-gcard " + (unlocked ? "vn-gseen" : "vn-glocked");
+      var thumb = document.createElement("div");
+      thumb.className = "vn-gthumb";
+      if (unlocked) {
+        var painted = paintGalleryThumb(thumb, id, bg);
+        if (!painted && typeof bg.css === "string") {
+          thumb.style.background = bg.css; // css-only scene: mini preview
+        }
+      }
+      var name = document.createElement("div");
+      name.className = "vn-gname";
+      name.textContent = unlocked
+        ? bg.name != null
+          ? String(bg.name)
+          : id
+        : "？？？";
+      card.appendChild(thumb);
+      card.appendChild(name);
+      els.gpanelScenes.appendChild(card);
+    });
+    // music panel: rebuilt each open so the playing state resets cleanly
+    els.gpanelMusic.textContent = "";
+    GALLERY_MUSIC.forEach(function (m) {
+      var row = document.createElement("div");
+      row.className = "vn-mrow";
+      row.setAttribute("data-bed", m.id);
+      var txt = document.createElement("div");
+      txt.className = "vn-mtxt";
+      var nm = document.createElement("div");
+      nm.className = "vn-mname";
+      nm.textContent = m.name;
+      var ln = document.createElement("div");
+      ln.className = "vn-mline";
+      ln.textContent = m.line;
+      txt.appendChild(nm);
+      txt.appendChild(ln);
+      var play = document.createElement("button");
+      play.type = "button";
+      play.className = "vn-mplay";
+      play.textContent = "播放";
+      play.addEventListener("click", function () {
+        toggleMusicPreview(m.id, row, play);
+      });
+      row.appendChild(txt);
+      row.appendChild(play);
+      els.gpanelMusic.appendChild(row);
+    });
+    setGalleryTab("scenes");
+  }
+
+  // Renders an unlocked scene into the card thumb via its own renderer.
+  // Returns true when a canvas got painted (css-only scenes return false).
+  function paintGalleryThumb(thumb, id, bg) {
+    var scenes = typeof window !== "undefined" ? window.VN_SCENES : null;
+    var sc = scenes ? scenes[id] : null;
+    if (!sc || typeof sc.draw !== "function") return false;
+    try {
+      var c = document.createElement("canvas");
+      c.width = 160;
+      c.height = 90;
+      var g = c.getContext("2d");
+      if (!g) return false;
+      if (typeof sc.init === "function") {
+        g.save();
+        sc.init(g, 160, 90);
+        g.restore();
+      }
+      sc.draw(g, 160, 90, 3.5, 0.016);
+      sc.draw(g, 160, 90, 3.62, 0.016);
+      c.className = "vn-gthumb-canvas";
+      thumb.textContent = "";
+      thumb.appendChild(c);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function setGalleryTab(tab) {
+    var scenesTab = tab === "music" ? false : true;
+    els.gtabScenes.setAttribute("aria-selected", scenesTab ? "true" : "false");
+    els.gtabMusic.setAttribute("aria-selected", scenesTab ? "false" : "true");
+    if (scenesTab) {
+      els.gpanelScenes.removeAttribute("hidden");
+      els.gpanelMusic.setAttribute("hidden", "");
+    } else {
+      els.gpanelScenes.setAttribute("hidden", "");
+      els.gpanelMusic.removeAttribute("hidden");
+    }
+  }
+
+  function toggleMusicPreview(bedId, row, playBtn) {
+    if (galleryMusicPlaying === bedId) {
+      audioHook("scene", null);
+      galleryMusicPlaying = null;
+      row.classList.remove("vn-playing");
+      playBtn.textContent = "播放";
+      return;
+    }
+    audioHook("scene", bedId);
+    galleryMusicPlaying = bedId;
+    row.classList.add("vn-playing");
+    playBtn.textContent = "停止";
+    // any previously playing row flips back to 播放
+    var rows =
+      typeof els.gpanelMusic.querySelectorAll === "function"
+        ? els.gpanelMusic.querySelectorAll(".vn-mrow")
+        : [];
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i] !== row && rows[i].classList.contains("vn-playing")) {
+        rows[i].classList.remove("vn-playing");
+        var b =
+          typeof rows[i].querySelector === "function"
+            ? rows[i].querySelector(".vn-mplay")
+            : null;
+        if (b) b.textContent = "播放";
+      }
+    }
+  }
+
+  function hideGalleryNow() {
+    if (!els) return;
+    if (galleryMusicPlaying !== null) {
+      audioHook("scene", null);
+      galleryMusicPlaying = null;
+    }
+    els.gallery.classList.add("vn-hidden");
+  }
+
   /* ------------------------------------------------------ ending collection */
 
   // 结局收集: the three scenario endings are collected the moment their
@@ -2632,6 +2898,7 @@
     hideBacklog();
     hideSettings();
     hideCreditsNow();
+    hideGalleryNow();
     clearTimeout(timers.credits);
     clearTimeout(timers.creditsEnd);
     timers.credits = null;
@@ -2735,6 +3002,7 @@
       hideMenu();
       hideBacklog();
       hideSettings();
+      if (galleryVisible()) closeGallery();
       return;
     }
     // hold S to fast-skip without latching the topbar button
