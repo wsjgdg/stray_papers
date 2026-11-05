@@ -26,6 +26,9 @@ In-game canvas renders (1280×720, captured from the live engine):
   runs the finale_star scene and thanks the player
 - Credits roll after each ending (18s, click/space skips), landing on a
   「参宿四还亮着」 signature before returning to the title
+- 鉴赏 extras mode: scene gallery (unlocks as you play, live canvas
+  thumbnails), music box (all 8 ambient beds playable), sprite viewer
+  (per-character expression chips)
 - 4 characters, 7 pure-CSS backgrounds (observatory night, server room,
   rainy street, inbox, memory flashback...)
 
