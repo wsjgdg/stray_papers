@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="骗局解剖室：8 幕互动模拟，把杀猪盘的完整剧本走一遍——专家人设、小额甜头、稀缺紧迫、假 App、假收益面板、提现收费、情感施压，每一步都教你怎么识别、怎么应对，附反诈工具包。">
   <title>⑤ 骗局解剖室 — AI 探索基地</title>
+  <link rel="icon" href="../assets/favicon.svg">
   <link rel="stylesheet" href="../assets/css/main.css">
   <style>
     /* Page-local: simulator shell. Tokens from main.css. */
@@ -13,7 +15,7 @@
       box-shadow: var(--shadow-lg);
       padding: 1.5rem;
     }
-    .sim-panel .sim-chat { min-height: 120px; }
+    .sim-panel .sim-chat { min-height: 340px; }
     .sim-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
     .sim-stage-tag {
       display: inline-block;
@@ -25,6 +27,38 @@
       padding: 0.2em 0.9em;
       margin-bottom: 0.6rem;
     }
+    /* Permanent "this is a simulation" badge next to the stage tag. */
+    .sim-topbar { display: flex; align-items: flex-start; gap: 0.6rem; flex-wrap: wrap; }
+    .sim-demo-badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      background: #f1f1f1;
+      border-radius: 999px;
+      padding: 0.2em 0.85em;
+      margin-bottom: 0.6rem;
+    }
+    /* Case-board progress chain: 8 step chips, lit up stage by stage. */
+    .sim-chain {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.5rem;
+      margin: 0.2rem 0 1rem;
+    }
+    .sim-chain-node {
+      font-size: 0.85rem;
+      padding: 0.15em 0.75em;
+      border-radius: 999px;
+      background: #f1f1f1;
+      color: var(--ink-soft);
+      border: 1.5px solid transparent;
+    }
+    .sim-chain-node.lit {
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
     .positive-card {
       border-left: 6px solid var(--ok);
       background: var(--ok-soft);
@@ -35,6 +69,38 @@
     .phrase-card { align-self: start; }
     .phrase-card .decode { color: var(--ink-soft); font-size: 0.98rem; }
     .phrase-card .phrase { color: var(--danger); font-weight: 700; }
+    /* Fake investment-app dashboard (stage 5, replaces the plain bubble). */
+    .fake-dash {
+      background: linear-gradient(180deg, #f2faf5, #e7f3ec);
+      border: 2px solid var(--ok);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      max-width: 430px;
+    }
+    .fake-dash .dash-title { font-size: 0.85rem; color: var(--ink-soft); }
+    .fake-dash .dash-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      margin-top: 0.55rem;
+    }
+    .fake-dash .dash-label { color: var(--ink-soft); }
+    .fake-dash .dash-num {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--ok);
+      font-variant-numeric: tabular-nums;
+    }
+    .fake-dash .dash-chart {
+      display: block;
+      width: 100%;
+      height: 56px;
+      color: var(--ok);
+      margin-top: 0.7rem;
+    }
+    .fake-dash .dash-note { margin-top: 0.55rem; font-size: 0.85rem; color: var(--ink-soft); }
+    .dash-caption { margin-top: 0.45rem; font-size: 0.95rem; color: var(--accent-dark); }
   </style>
 </head>
 <body>
@@ -49,7 +115,11 @@
 
     <h2 class="reveal">第一场：骗局模拟器</h2>
     <div class="sim-panel reveal">
-      <div class="sim-stage-tag" id="sim-stage-tag">第 1 幕 · 共 7 幕</div>
+      <div class="sim-topbar">
+        <span class="sim-stage-tag" id="sim-stage-tag">第 1 幕 · 共 8 幕</span>
+        <span class="sim-demo-badge">🎭 模拟演示 · 非真实群聊</span>
+      </div>
+      <div class="sim-chain" id="sim-chain"></div>
       <div class="chat sim-chat" id="sim-chat"></div>
       <div id="sim-anatomy"></div>
       <div class="sim-actions" id="sim-actions"></div>
@@ -57,8 +127,9 @@
 
     <div class="card reveal" style="margin-top:1.5rem;">
       <p style="margin:0;">
-        👆 <strong>点「继续」往下走。</strong>到第四幕时，你可以自己选——
+        👆 <strong>点「继续」往下走。</strong>走到岔路口时，你自己决定怎么走——
         选错也没关系，这里亏的不是真钱，学到的是真本事。
+        聊天打字没完时，<strong>点一下就能直接跳过</strong>。
       </p>
     </div>
 
@@ -80,7 +151,7 @@
     <h2 class="reveal">数字不会说谎：为什么这一关最重要</h2>
     <div class="grid-12">
       <div class="card col-6 reveal">
-        <p class="stat-num">400 余人 · 3000 万+</p>
+        <p class="stat-num">400 余人 · <span id="stat-victims">0</span> 万+</p>
         <p>
           北京警方打掉过一个专骗老年人的团伙：以<strong>免费按摩</strong>引流，
           聊天摸清哪些老人"子女不在身边、经济条件好"，再用假"专家体检"虚构病症，
@@ -92,11 +163,11 @@
         </p>
       </div>
       <div class="card col-6 reveal">
-        <p class="stat-num">36 亿次</p>
+        <p class="stat-num"><span id="stat-calls">0</span> 亿次</p>
         <p>
           2025 年一年，全国公安会同有关部门<strong>拦截的诈骗电话有 36 亿次</strong>、
           诈骗短信 33 亿条，全年侦破电诈案件 25.8 万起。
-          平均每 9 秒，就有 1000 多个诈骗电话被打出。
+          平均每 9 秒，就有 1000 多个诈骗电话被打出（按年度拦截量 36 亿次折算）。
           <strong>骗子的"客服团队"比你想的忙得多——他们不是碰运气，是工业化的。</strong>
         </p>
         <p style="color:var(--ink-soft); font-size:0.9rem; margin:0;">
@@ -124,8 +195,8 @@
     <div class="sources">
       <p><strong>本页数据来源（可自行查证）：</strong></p>
       <ul>
-        <li>涉老健康养生诈骗案（400 余名老人、涉案 3000 万余元）：公安部新闻发布会通报，2026 年 6 月，<a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank">公安部官网</a></li>
-        <li>2025 年侦破电诈案件 25.8 万起、拦截诈骗电话 36 亿次：公安部通报，<a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank">新华网报道</a>，2026 年 1 月</li>
+        <li>涉老健康养生诈骗案（400 余名老人、涉案 3000 万余元）：公安部新闻发布会通报，2026 年 6 月，<a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank" rel="noopener">公安部官网</a></li>
+        <li>2025 年侦破电诈案件 25.8 万起、拦截诈骗电话 36 亿次：公安部通报，<a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank" rel="noopener">新华网报道</a>，2026 年 1 月</li>
         <li>模拟器剧本为典型杀猪盘手法的综合示意，非特定案件改编</li>
       </ul>
     </div>
@@ -144,29 +215,64 @@
       var S = window.AISite;
       S.pageReady('anti-scam');
 
-      /* ---------- data-driven sections ---------- */
-      document.getElementById('mechanisms').innerHTML =
+      /* ---------- data-driven sections ----------
+         P0 visibility fix: injected cards must NOT use .reveal —
+         revealOnScroll only observes elements present at pageReady(),
+         so late-injected .reveal nodes would stay invisible forever.
+         Entry animation is handled by staggerOnScroll instead (it
+         no-ops gracefully without GSAP / reduced motion, leaving the
+         cards plainly visible). Defensive rescanReveal call per the
+         shared site.js contract. */
+      function inject(id, html) {
+        var container = document.getElementById(id);
+        container.innerHTML = html;
+        if (S.staggerOnScroll) S.staggerOnScroll(container);
+      }
+
+      inject('mechanisms',
         window.SCAM_MECHANISMS.map(function (m, i) {
           var cls = i < 3 ? 'col-4' : 'col-6';
-          return '<div class="card ' + cls + ' reveal">' +
+          return '<div class="card ' + cls + '">' +
             '<h3 style="margin-top:0;">' + (i + 1) + '. ' + m.name + '</h3>' +
             '<p class="phrase">骗子会说：' + m.line + '</p>' +
             '<p class="decode">' + m.why + '</p></div>';
-        }).join('');
+        }).join(''));
 
-      document.getElementById('phrases').innerHTML =
+      inject('phrases',
         window.SCAM_PHRASES.map(function (p) {
-          return '<div class="card col-6 phrase-card reveal">' +
+          return '<div class="card col-6 phrase-card">' +
             '<h3 style="margin-top:0;" class="phrase">' + p.phrase + '</h3>' +
             '<p class="decode">' + p.decode + '</p></div>';
-        }).join('');
+        }).join(''));
 
-      document.getElementById('toolkit').innerHTML =
+      inject('toolkit',
         window.SCAM_TOOLKIT.map(function (t) {
-          return '<div class="card col-4 reveal">' +
+          return '<div class="card col-4">' +
             '<h3 style="margin-top:0;">🛡️ ' + t.name + '</h3>' +
             '<p class="decode">' + t.how + '</p></div>';
-        }).join('');
+        }).join(''));
+
+      if (S.rescanReveal) S.rescanReveal();
+
+      /* ---------- data stat cards: count up when scrolled into view ---------- */
+      function countWhenVisible(el, target, opts) {
+        if (!el) return;
+        var started = false;
+        function run() {
+          if (started) return;
+          started = true;
+          S.countUp(el, target, opts);
+        }
+        if (!('IntersectionObserver' in window)) { run(); return; }
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { run(); io.disconnect(); }
+          });
+        }, { threshold: 0.3 });
+        io.observe(el);
+      }
+      countWhenVisible(document.getElementById('stat-victims'), 3000, { duration: 1.8 });
+      countWhenVisible(document.getElementById('stat-calls'), 36, { duration: 1.6 });
 
       /* ---------- simulator engine ---------- */
       var SCRIPT = window.SCAM_SCRIPT;
@@ -174,8 +280,64 @@
       var anatomyEl = document.getElementById('sim-anatomy');
       var actionsEl = document.getElementById('sim-actions');
       var tagEl = document.getElementById('sim-stage-tag');
+      var chainEl = document.getElementById('sim-chain');
       var idx = 0;
       var tookRisk = false;
+
+      /* Case-board progress chain: one chip per stage. */
+      chainEl.innerHTML = (window.SCAM_STEPS || []).map(function (name) {
+        return '<span class="sim-chain-node">' + name + '</span>';
+      }).join('');
+      var chainNodes = chainEl.children;
+
+      function updateChain(i) {
+        for (var k = 0; k < chainNodes.length; k++) {
+          chainNodes[k].classList.toggle('lit', k <= i);
+        }
+      }
+
+      function asPromise(x) {
+        return x && typeof x.then === 'function' ? x : Promise.resolve();
+      }
+
+      /* Typewriter with click-to-skip: site.js typeText cannot be
+         interrupted, so the engine keeps its own version. Clicking
+         the chat area finishes the line instantly. */
+      function typeWithSkip(el, text, speed) {
+        return new Promise(function (resolve) {
+          if (!S.motionOk() || speed <= 0) {
+            el.textContent = text;
+            resolve();
+            return;
+          }
+          el.classList.add('typewriter-caret');
+          var i = 0;
+          var finished = false;
+          var timer = null;
+          function finish() {
+            if (finished) return;
+            finished = true;
+            if (timer) clearTimeout(timer);
+            el.textContent = text;
+            el.classList.remove('typewriter-caret');
+            chatEl.removeEventListener('click', onSkipClick);
+            chatEl.style.cursor = '';
+            resolve();
+          }
+          function onSkipClick() { finish(); }
+          chatEl.style.cursor = 'pointer';
+          chatEl.addEventListener('click', onSkipClick);
+          (function step() {
+            if (finished) return;
+            if (i < text.length) {
+              el.textContent = text.slice(0, ++i);
+              timer = setTimeout(step, speed);
+            } else {
+              finish();
+            }
+          })();
+        });
+      }
 
       function bubble(stage) {
         var div = document.createElement('div');
@@ -189,7 +351,50 @@
         div.appendChild(text);
         chatEl.appendChild(div);
         div.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        return S.typeText(text, stage.message, { speed: 26 });
+        return typeWithSkip(text, stage.message, 26);
+      }
+
+      /* Stage 5: fake investment-app dashboard replaces the bubble. */
+      function dashboardBubble(stage) {
+        var div = document.createElement('div');
+        div.className = 'bubble me';
+        var speaker = document.createElement('div');
+        speaker.className = 'bubble-speaker';
+        speaker.textContent = stage.persona;
+        var dash = document.createElement('div');
+        dash.className = 'fake-dash';
+        dash.innerHTML =
+          '<div class="dash-title">鑫汇量化基金 · 账户总览（假面板）</div>' +
+          '<div class="dash-row"><span class="dash-label">账户余额（元）</span>' +
+          '<span class="dash-num dash-balance">0</span></div>' +
+          '<div class="dash-row"><span class="dash-label">今日收益（元）</span>' +
+          '<span class="dash-num dash-profit">+0</span></div>' +
+          '<svg class="dash-chart" viewBox="0 0 220 64" role="img" aria-label="假的上涨曲线示意图">' +
+          '<polyline points="4,56 44,48 84,50 124,34 164,20 200,10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<polygon points="200,4 212,10 200,17" fill="currentColor"/>' +
+          '</svg>' +
+          '<div class="dash-note">假面板示意——真实骗局的数字比这好看得多。</div>';
+        var caption = document.createElement('div');
+        caption.className = 'dash-caption';
+        caption.textContent = stage.caption || stage.message;
+        div.appendChild(speaker);
+        div.appendChild(dash);
+        div.appendChild(caption);
+        chatEl.appendChild(div);
+        div.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        var tProfit = S.countUp(dash.querySelector('.dash-profit'), 6000, { duration: 2.2, prefix: '+' });
+        var tBalance = S.countUp(dash.querySelector('.dash-balance'), 26000, { duration: 2.2 });
+        function onSkipClick() {
+          [tProfit, tBalance].forEach(function (t) {
+            if (t && typeof t.progress === 'function') t.progress(1);
+          });
+        }
+        chatEl.style.cursor = 'pointer';
+        chatEl.addEventListener('click', onSkipClick);
+        return Promise.all([asPromise(tProfit), asPromise(tBalance)]).then(function () {
+          chatEl.removeEventListener('click', onSkipClick);
+          chatEl.style.cursor = '';
+        });
       }
 
       function anatomyCard(stage) {
@@ -198,9 +403,16 @@
           '<p style="margin:0.4em 0 0;">' + stage.anatomy + '</p></div>' +
           '<div class="correct-move"><h4>✓ 正确动作</h4>' +
           '<p style="margin:0.4em 0 0;">' + stage.correctMove + '</p></div>';
-        if (window.gsap && window.AISite.motionOk()) {
+        if (window.gsap && S.motionOk()) {
           window.gsap.from(anatomyEl.children,
             { opacity: 0, y: 16, stagger: 0.14, duration: 0.45, ease: 'power2.out', clearProps: 'all' });
+        }
+      }
+
+      function animateIn(node) {
+        if (window.gsap && S.motionOk()) {
+          window.gsap.from(node,
+            { opacity: 0, y: 16, duration: 0.45, ease: 'power2.out', clearProps: 'all' });
         }
       }
 
@@ -213,17 +425,51 @@
         return a;
       }
 
+      /* Side branch: ask about 张姐's profits (stage 3, scarcity). */
+      function askZhang() {
+        this.disabled = true;
+        var side = window.SCAM_SIDE_ZHANG;
+        bubble(side).then(function () {
+          var note = document.createElement('div');
+          note.className = 'anatomy-card';
+          note.innerHTML = '<h4>解剖这条"晒单"</h4>' +
+            '<p style="margin:0.4em 0 0;">' + side.decode + '</p>';
+          anatomyEl.appendChild(note);
+          animateIn(note);
+        });
+      }
+
+      /* Side branch: call her son (stage 7, emotional pressure). */
+      function callSon() {
+        this.disabled = true;
+        var c = window.SCAM_SON_CALL;
+        var card = document.createElement('div');
+        card.className = 'positive-card';
+        card.innerHTML = '<h4 style="margin:0.2em 0; color:var(--ok);">' + c.title + '</h4>' +
+          '<p style="margin:0.4em 0 0;">' + c.body + '</p>';
+        anatomyEl.insertBefore(card, anatomyEl.firstChild);
+        animateIn(card);
+      }
+
       function showStage(i) {
         idx = i;
         var st = SCRIPT[i];
+        updateChain(i);
         tagEl.textContent = '第 ' + st.stage + ' 幕 · 共 ' + SCRIPT.length + ' 幕' +
           (st.final ? ' · 剧终' : '');
         anatomyEl.innerHTML = '';
         actionsEl.innerHTML = '';
-        bubble(st).then(function () {
+        var shown = st.dashboard ? dashboardBubble(st) : bubble(st);
+        shown.then(function () {
           anatomyCard(st);
+          if (st.askSide) {
+            actionsEl.appendChild(btn('问群里张姐赚了多少', false, askZhang));
+          }
+          if (st.callSon) {
+            actionsEl.appendChild(btn('给儿子打电话', false, callSon));
+          }
           if (st.choice) {
-            /* Stage 4: she decides. Both paths continue the education. */
+            /* Stage 5: she decides. Both paths continue the education. */
             actionsEl.appendChild(btn('再投一点，看看能不能取出来', true, function () {
               tookRisk = true;
               showStage(i + 1);
@@ -249,10 +495,11 @@
         good.innerHTML =
           '<h4 style="margin:0.2em 0; color:var(--ok);">🎉 你停下来了——这就是最好的风控！</h4>' +
           '<p style="margin:0.4em 0 0;">' +
-          '现实里，走到第四幕还能停的人不多。不过把剧本剩下的部分也看完，' +
+          '现实里，走到岔路口还能停的人不多。不过把剧本剩下的部分也看完，' +
           '下次你就不是"恰好躲过"，而是"一眼看穿"。' +
           '</p>';
         anatomyEl.insertBefore(good, anatomyEl.firstChild);
+        updateChain(SCRIPT.length - 1);
         var st = SCRIPT[SCRIPT.length - 1];
         tagEl.textContent = '剧终 · 提前下车的聪明人';
         bubble(st).then(function () { anatomyCard(st); finish(true); });
@@ -261,6 +508,7 @@
       function finish(early) {
         window.AIProgress.mark('anti-scam');
         actionsEl.innerHTML = '';
+        updateChain(SCRIPT.length - 1);
         var line = document.createElement('p');
         line.style.cssText = 'margin:0.6rem 0; font-weight:700; color:var(--ok);';
         line.textContent = early

@@ -3,52 +3,199 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="第一关：亲眼看看 AI 已经能帮你做什么——排海报、写文案、看账目、修老照片、随问随答。每张卡都附可照抄的提示词，点开卡片翻面就懂。">
   <title>① AI 能做什么 — AI 探索基地</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="stylesheet" href="../assets/css/main.css">
   <style>
-    /* Page-local: poster demo + record blocks (kept here, tokens come from main.css) */
+    /* Page-local styles (tokens come from main.css) */
+
+    /* Keep tags pill-sized inside flex-column flip faces */
+    .flip-face > .tag { align-self: flex-start; }
+
+    /* ---------- Card 1: pure-CSS poster, upgraded ---------- */
     .poster-demo {
-      border-radius: 12px;
-      background: linear-gradient(150deg, #7a3b1e 0%, #c2542d 55%, #e8a268 100%);
-      color: #fff8f2;
-      padding: 1.4rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+      border-radius: 14px;
+      padding: 0;
       text-align: center;
-      box-shadow: var(--shadow);
+      color: #fff8f2;
+      box-shadow: var(--shadow-lg);
+      background:
+        radial-gradient(circle at 88% 6%, rgba(255, 222, 182, 0.55) 0%, rgba(255, 222, 182, 0) 36%),
+        radial-gradient(circle at 4% 100%, rgba(56, 18, 4, 0.55) 0%, rgba(56, 18, 4, 0) 52%),
+        linear-gradient(155deg, #6e2f12 0%, #b04a22 52%, #e29a5f 100%);
+    }
+    .poster-demo::before,
+    .poster-demo::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .poster-demo::before {
+      top: -38px; right: -38px;
+      width: 116px; height: 116px;
+      border: 2px solid rgba(255, 244, 228, 0.4);
+    }
+    .poster-demo::after {
+      top: -56px; right: -56px;
+      width: 152px; height: 152px;
+      border: 1px dashed rgba(255, 244, 228, 0.32);
+    }
+    .poster-deco {
+      position: absolute;
+      left: -30px; top: 34%;
+      width: 78px; height: 78px;
+      border: 1px dashed rgba(255, 244, 228, 0.3);
+      transform: rotate(18deg);
+      pointer-events: none;
+    }
+    .poster-body {
+      position: relative;
+      z-index: 1;
+      padding: 1.5rem 1.3rem 1.1rem;
     }
     .poster-demo .poster-kicker {
-      font-size: 0.8rem;
-      letter-spacing: 0.35em;
+      font-size: 0.78rem;
+      letter-spacing: 0.42em;
       opacity: 0.85;
-      margin: 0 0 0.6em;
+      margin: 0 0 0.7em;
     }
     .poster-demo .poster-title {
       font-family: var(--font-serif);
-      font-size: 1.9rem;
-      letter-spacing: 0.12em;
-      margin: 0.2em 0;
-      line-height: 1.25;
+      font-size: 2.25rem;
+      letter-spacing: 0.14em;
+      margin: 0.1em 0 0;
+      line-height: 1.2;
+      text-shadow: 0 2px 8px rgba(70, 26, 8, 0.4);
     }
     .poster-demo .poster-line {
-      width: 3em;
-      height: 2px;
-      background: rgba(255, 248, 242, 0.7);
-      margin: 0.9em auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7em;
+      margin: 0.8em 0 0.9em;
+      width: auto;
+      height: auto;
+      background: none;
+    }
+    .poster-line::before,
+    .poster-line::after {
+      content: "";
+      width: 3.2em;
+      height: 1px;
+      background: rgba(255, 248, 242, 0.65);
+    }
+    .poster-line span { font-size: 0.55em; opacity: 0.85; }
+    .poster-demo .poster-sub {
+      font-family: var(--font-serif);
+      font-size: 1.02rem;
+      letter-spacing: 0.06em;
+      margin: 0 0 0.4em;
+      opacity: 0.96;
     }
     .poster-demo .poster-meta {
-      font-size: 0.9rem;
-      opacity: 0.92;
+      font-size: 0.95rem;
       margin: 0;
+      opacity: 0.88;
       line-height: 1.8;
     }
-    .poster-demo .poster-stamp {
-      display: inline-block;
-      margin-top: 0.9em;
-      padding: 0.25em 1em;
-      border: 1px solid rgba(255, 248, 242, 0.75);
-      border-radius: 999px;
+    /* Ticket-style bottom bar with perforation notches
+       (notches are white semicircles matching the white flip face) */
+    .poster-ticket {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9em;
+      margin-top: 0.4em;
+      padding: 0.72em 1em;
+      border-top: 2px dashed rgba(255, 248, 242, 0.6);
+      background: rgba(46, 16, 5, 0.2);
       font-size: 0.8rem;
-      letter-spacing: 0.2em;
+      font-weight: 700;
+      letter-spacing: 0.3em;
     }
+    .ticket-dot { font-style: normal; font-size: 0.55em; opacity: 0.75; }
+    .poster-ticket::before,
+    .poster-ticket::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      transform: translateY(-50%);
+    }
+    .poster-ticket::before { left: -8px; }
+    .poster-ticket::after { right: -8px; }
+
+    /* ---------- Card 4: before/after repair diagram ---------- */
+    .repair-fig { margin: 1.1rem 0 0; }
+    .repair-fig svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .repair-fig figcaption {
+      margin-top: 0.5em;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+    }
+
+    /* ---------- Honesty helpers ---------- */
+    .demo-badge {
+      margin: 1rem 0 -0.4rem;
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      text-align: right;
+    }
+    .time-compare .approx {
+      font-style: normal;
+      font-weight: 400;
+      color: var(--ink-soft);
+      font-size: 0.82em;
+    }
+
+    /* ---------- "Try now" loop on every card back ---------- */
+    .try-now {
+      margin-top: auto;
+      padding-top: 0.7em;
+      border-top: 1px dashed rgba(45, 42, 38, 0.28);
+      font-weight: 700;
+    }
+    .try-now a { text-decoration: none; }
+    .try-now a:hover { text-decoration: underline; }
+
+    /* ---------- Group headings inside the grid ---------- */
+    .flip-grid h2 { margin: 1.4rem 0 0.3rem; }
+    .flip-grid h2:first-child { margin-top: 0.4rem; }
+    .h2-sub {
+      display: inline-block;
+      margin-left: 0.6em;
+      font-size: 0.72em;
+      font-weight: 400;
+      color: var(--ink-soft);
+    }
+
+    /* ---------- Companion + declaration cards (grid sidekicks) ---------- */
+    .side-card,
+    .decl-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .side-card .tag,
+    .decl-card .tag { align-self: flex-start; margin-bottom: 0.5em; }
+    .side-card p:last-child,
+    .decl-card p:last-child { margin-bottom: 0; }
+    .decl-card { border-left: 6px solid var(--accent); }
+
     .prompt-box {
       background: #fff;
       border: 1px dashed rgba(45,42,38,0.3);
@@ -73,17 +220,23 @@
 
     <div class="flip-grid grid-12">
 
+      <h2 class="reveal">✋ 会动手的 <span class="h2-sub">AI 已经做完的，和等你亲手做的</span></h2>
+
       <!-- 卡 1：AI 会做海报 -->
       <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会做海报">
         <div class="flip-inner">
           <div class="flip-face">
             <span class="tag">AI 会做图</span>
-            <div class="poster-demo" style="margin-top:1rem;">
-              <p class="poster-kicker">READ &middot; SHARE</p>
-              <p class="poster-title">秋日读书会</p>
-              <div class="poster-line"></div>
-              <p class="poster-meta">本周六 下午 3 点 · 社区活动室<br>带一本你爱读的书，换一段别人的故事</p>
-              <span class="poster-stamp">免 费 参 加</span>
+            <div class="poster-demo" style="margin-top:1rem;" role="img" aria-label="AI 排版的读书会海报示例：秋日读书会，本周六下午三点，社区活动室，免费参加，欢迎带朋友">
+              <i class="poster-deco" aria-hidden="true"></i>
+              <div class="poster-body">
+                <p class="poster-kicker">READ · SHARE · AUTUMN</p>
+                <p class="poster-title">秋日读书会</p>
+                <div class="poster-line" aria-hidden="true"><span>◆</span></div>
+                <p class="poster-sub">带一本你爱读的书 · 换一段别人的故事</p>
+                <p class="poster-meta">本周六 下午 3 点 · 社区活动室</p>
+              </div>
+              <div class="poster-ticket"><span>免费参加</span><i class="ticket-dot" aria-hidden="true">◆</i><span>欢迎带朋友</span></div>
             </div>
             <p class="flip-hint">👆 点一下，看它怎么做的</p>
           </div>
@@ -92,97 +245,87 @@
             <div class="time-compare">
               <span class="old">找设计师排版：约 3 小时</span>
               <span class="arrow">→</span>
-              <span class="new">AI：3 分钟</span>
+              <span class="new">AI：3 分钟 <i class="approx">（示意）</i></span>
             </div>
             <div class="prompt-box">
               <b>给 AI 的话（你可以照抄）：</b>
               “帮我做一张社区读书会海报的文字排版方案：主题‘秋日读书会’，暖色调，要有时间地点和一句话标语。”
             </div>
             <p class="flip-note">
-              这张海报的配色、字体、版式，全部由 AI 生成，没有设计师参与。
-              你看到它时它已经在屏幕上了——这就是 AI 的排版功夫。
+              这张海报的版式，是 AI 写代码直接渲染出来的——你看不到任何一个手工调过的像素。
             </p>
+            <p class="try-now">想自己排一张？<a href="academy.html">现在就试 →</a></p>
           </div>
         </div>
       </div>
 
-      <!-- 卡 2：AI 会写作 -->
-      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会写作">
-        <div class="flip-inner">
-          <div class="flip-face">
-            <span class="tag">AI 会写作</span>
-            <div class="chat" style="margin-top:1rem;">
-              <div class="bubble them">
-                <div class="bubble-speaker">AI 写的小红书笔记</div>
-                <span class="typewriter" data-tw="55岁才想明白：钱不是攒出来的，是管出来的💰\n年轻时只敢把钱放银行，后来才懂，让钱闲着也是一种亏。\n现在我把家里的账分成三份：要用的、应急的、 long-term 的。\n不追高、不贪快，睡得着觉的理财才是好理财。\n姐妹们，什么时候开始都不晚🌱\n#中年理财 #普通人的钱 #生活感悟"></span>
-              </div>
-            </div>
-            <p class="flip-hint">👆 点一下，看提示词</p>
-          </div>
-          <div class="flip-face flip-back">
-            <span class="tag">背面</span>
-            <div class="time-compare">
-              <span class="old">自己憋文案：1 小时</span>
-              <span class="arrow">→</span>
-              <span class="new">AI：30 秒</span>
-            </div>
-            <div class="prompt-box">
-              <b>给 AI 的话（你可以照抄）：</b>
-              “我想给 50-60 岁的姐妹分享稳健理财心得，不推销任何产品，只分享生活感悟。请写一篇小红书笔记，口语化，带表情，300 字以内，最后加话题标签。”
-            </div>
-            <p class="flip-note">
-              左边这篇就是 AI 按这句话写出来的。你可以一字不差地把这句话发给豆包，看看它给你写什么。
-            </p>
-          </div>
-        </div>
+      <!-- 导览卡：怎么玩这一组 -->
+      <div class="card side-card reveal">
+        <span class="tag">导览 · 怎么玩</span>
+        <p><strong>每张卡都能点一下翻面</strong>，背面藏着三样东西：</p>
+        <ul style="margin:0.4em 0; padding-left:1.2em;">
+          <li>一句<strong>能照抄</strong>的提示词；</li>
+          <li>一个“现在就试”的入口；</li>
+          <li>一句老实话——哪些是演示，哪些是真的。</li>
+        </ul>
+        <p>本页没有一张伪装成实拍的照片——画出来的图，都明明白白标着“示意”。</p>
       </div>
 
-      <!-- 卡 3：AI 会看账 -->
-      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会看账">
-        <div class="flip-inner">
-          <div class="flip-face">
-            <span class="tag">AI 会看账</span>
-            <div class="chat" style="margin-top:1rem;">
-              <div class="bubble me">把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。</div>
-              <div class="bubble them typewriter" data-tw="看了你发的表，说三点：\n1. 通讯费 168 元偏高，同档套餐有 79 元的，一年能省 1 千多；\n2. 打车 22 次里 14 次是 3 公里内的短途，骑车或公交每月能省 300 左右；\n3. 会员续费有 4 个，两个上个月根本没用过。\n想让我把调整后的账帮你排一遍吗？"></div>
-            </div>
-            <p class="flip-hint">👆 点一下，看提示词</p>
-          </div>
-          <div class="flip-face flip-back">
-            <span class="tag">背面</span>
-            <div class="time-compare">
-              <span class="old">自己对着表格看半天</span>
-              <span class="arrow">→</span>
-              <span class="new">AI：1 分钟，还带建议</span>
-            </div>
-            <div class="prompt-box">
-              <b>给 AI 的话：</b>
-              “把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。”
-            </div>
-            <p class="flip-note">
-              你做了三十年财务，看账的本事比 AI 深。但 AI 三分钟就能替你做初筛——
-              这就是“老手 + AI”的用法：它跑腿，你判断。
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 卡 4：AI 会修照片（行动卡，不放假图） -->
-      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会修照片">
+      <!-- 卡 4：AI 会修照片（主卡，示意图 + 亲手做） -->
+      <div class="flip-card col-12 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会修照片">
         <div class="flip-inner">
           <div class="flip-face">
             <span class="tag">AI 会修照片</span>
-            <div class="card" style="box-shadow:none; margin:1rem 0 0;">
-              <p style="font-size:2.6rem; text-align:center; margin:0.3em 0;">🖼️✨</p>
-              <p style="text-align:center;">
-                泛黄的老照片、模糊的合影、缺了一角的旧照——
-                <strong>AI 能把它们修得清清楚楚，还能上色</strong>。
-              </p>
-              <p style="text-align:center; color:var(--ink-soft); font-size:0.95rem;">
-                这张卡不放假图给你看——它教你 <strong>30 秒亲手做一次</strong>。
-              </p>
-            </div>
-            <p class="flip-hint">👆 点一下，看怎么做</p>
+            <p style="margin:0.9rem 0 0;">
+              <strong>泛黄的老照片、模糊的合影、缺了一角的旧照</strong>——
+              AI 能把它们修得清清楚楚，还能上色。
+            </p>
+            <figure class="repair-fig">
+              <svg viewBox="0 0 640 300" role="img" aria-label="老照片修复前后对比示意图：左半边是灰暗、模糊、带划痕和裂痕的旧照片，右半边是色彩明亮、清晰的同一张照片，中间一支箭头从左指向右">
+                <defs>
+                  <linearGradient id="rfSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#9ed4f0"/>
+                    <stop offset="1" stop-color="#ffecc2"/>
+                  </linearGradient>
+                  <filter id="rfBlur" x="-8%" y="-8%" width="116%" height="116%">
+                    <feGaussianBlur stdDeviation="2.4"/>
+                  </filter>
+                </defs>
+                <!-- 修复前：灰暗、模糊 -->
+                <g filter="url(#rfBlur)">
+                  <rect x="16" y="22" width="268" height="226" rx="8" fill="#cabca4"/>
+                  <circle cx="232" cy="76" r="25" fill="#dcd1bc"/>
+                  <path d="M16 192 Q 92 144 152 180 T 284 170 L 284 248 L 16 248 Z" fill="#a2937a"/>
+                  <path d="M16 218 Q 112 190 192 212 T 284 206 L 284 248 L 16 248 Z" fill="#8a7c66"/>
+                </g>
+                <!-- 划痕与裂痕（保持清晰，突出“旧”） -->
+                <g fill="none" stroke="#f2ead9" stroke-width="2" opacity="0.9">
+                  <path d="M62 30 L96 242"/>
+                  <path d="M198 26 L176 244"/>
+                </g>
+                <polyline points="122,22 130,66 114,100 128,146 116,192 126,242" fill="none" stroke="#6d5f4c" stroke-width="3" stroke-linejoin="round"/>
+                <!-- 缺角 -->
+                <path d="M284 22 L284 62 L246 22 Z" fill="#ffffff"/>
+                <!-- 中间箭头 -->
+                <g stroke="#c2542d" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M304 135 H336"/>
+                  <path d="M326 121 L342 135 L326 149"/>
+                </g>
+                <!-- 修复后：明亮 -->
+                <g>
+                  <rect x="356" y="22" width="268" height="226" rx="8" fill="url(#rfSky)"/>
+                  <circle cx="572" cy="76" r="25" fill="#ffcf5c"/>
+                  <ellipse cx="446" cy="66" rx="34" ry="12" fill="#ffffff" opacity="0.92"/>
+                  <ellipse cx="478" cy="78" rx="24" ry="9" fill="#ffffff" opacity="0.85"/>
+                  <path d="M356 192 Q 432 144 492 180 T 624 170 L 624 248 L 356 248 Z" fill="#7dbb6a"/>
+                  <path d="M356 218 Q 452 190 532 212 T 624 206 L 624 248 L 356 248 Z" fill="#4f9152"/>
+                </g>
+                <text x="150" y="292" text-anchor="middle" font-size="19" fill="#6b6459">修复前</text>
+                <text x="490" y="292" text-anchor="middle" font-size="19" font-weight="bold" fill="#a34320">修复后</text>
+              </svg>
+              <figcaption>效果示意图——背面教你 30 秒亲手做真的</figcaption>
+            </figure>
+            <p class="flip-hint">👆 点一下，30 秒亲手做一次</p>
           </div>
           <div class="flip-face flip-back">
             <span class="tag">背面 · 亲手试试</span>
@@ -197,12 +340,80 @@
               <li>等几秒——你会看到它焕然一新。发给亲戚群，他们大概会问你是找谁修的 🙂</li>
             </ol>
             <p class="flip-note">修好后记得把原图留档。AI 修的是“看起来”，原片才是底。</p>
+            <p class="try-now">想让修复效果更自然？<a href="academy.html">现在就试 →</a></p>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="reveal">💬 会动嘴的 <span class="h2-sub">会打字就行，一句话的事</span></h2>
+
+      <!-- 卡 2：AI 会写作 -->
+      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会写作">
+        <div class="flip-inner">
+          <div class="flip-face">
+            <span class="tag">AI 会写作</span>
+            <div class="chat" style="margin-top:1rem;">
+              <div class="bubble me">帮我写一条发朋友圈的，说说这个月跳舞班的开心事</div>
+              <div class="bubble them">
+                <div class="bubble-speaker">AI 写的朋友圈文案</div>
+                <span class="typewriter" data-tw="这个月的跳舞班，快乐翻倍💃\n上个月还同手同脚，这周已经能跟完整首曲子了；\n王姐把扇子拿反了，满屋子笑成一团，老师也没绷住。\n出了一身汗，回家路上腿是酸的，心情是飞的。\n姐妹们，爱动的人，运气都不会太差😊\n#跳舞打卡 #开心每一天 #退休生活"></span>
+              </div>
+            </div>
+            <p class="flip-hint">👆 点一下，看提示词</p>
+          </div>
+          <div class="flip-face flip-back">
+            <span class="tag">背面</span>
+            <div class="time-compare">
+              <span class="old">自己憋文案：1 小时</span>
+              <span class="arrow">→</span>
+              <span class="new">AI：30 秒 <i class="approx">（示意）</i></span>
+            </div>
+            <div class="prompt-box">
+              <b>给 AI 的话（你可以照抄）：</b>
+              “帮我写一条发朋友圈的，说说这个月跳舞班的开心事。口语一点，别像广告，最后加两三个话题标签。”
+            </div>
+            <p class="flip-note">
+              上面那条就是 AI 按这句话写出来的。你可以一字不差地发给豆包，看看它替你写出什么。
+            </p>
+            <p class="try-now">想让 AI 写出你的味道？<a href="academy.html">现在就试 →</a></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 卡 3：AI 会看账 -->
+      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会看账">
+        <div class="flip-inner">
+          <div class="flip-face">
+            <span class="tag">AI 会看账</span>
+            <p class="demo-badge">🎭 演示对话 · 数字为示意</p>
+            <div class="chat" style="margin-top:0.5rem;">
+              <div class="bubble me">把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。</div>
+              <div class="bubble them typewriter" data-tw="看了你发的表，说三点：\n1. 通讯费偏高——同档位多半有更便宜的套餐，值得打个电话问问；\n2. 打车费里短途占比不小，几步路的车换骑车或公交，能省下不少；\n3. 好几个自动续费的会员，有的已经一两个月没打开过，先关掉不亏。\n想让我陪你把每一项都过一遍吗？"></div>
+            </div>
+            <p class="flip-hint">👆 点一下，看提示词</p>
+          </div>
+          <div class="flip-face flip-back">
+            <span class="tag">背面</span>
+            <div class="time-compare">
+              <span class="old">自己对着表格看半天</span>
+              <span class="arrow">→</span>
+              <span class="new">AI：1 分钟，还带建议 <i class="approx">（示意）</i></span>
+            </div>
+            <div class="prompt-box">
+              <b>给 AI 的话：</b>
+              “把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。”
+            </div>
+            <p class="flip-note">
+              你做了三十年财务，看账的本事比 AI 深。但 AI 一分钟就能替你做完初筛——
+              这就是“老手 + AI”的用法：它跑腿，你判断。
+            </p>
+            <p class="try-now">想让 AI 替你干更多跑腿活？<a href="academy.html">现在就试 →</a></p>
           </div>
         </div>
       </div>
 
       <!-- 卡 5：AI 随时问 -->
-      <div class="flip-card col-12 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 随时问">
+      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 随时问">
         <div class="flip-inner">
           <div class="flip-face">
             <span class="tag">AI 随时问</span>
@@ -217,7 +428,7 @@
             <div class="time-compare">
               <span class="old">网上搜半天，广告一大堆</span>
               <span class="arrow">→</span>
-              <span class="new">AI：直接给你步骤</span>
+              <span class="new">AI：直接给你步骤 <i class="approx">（示意）</i></span>
             </div>
             <div class="prompt-box">
               <b>给 AI 的话：</b>
@@ -227,8 +438,17 @@
               这就是 AI 最日常的用法：它不烦、不嫌问题小、24 小时在线。
               手机上任何不明白的事，都可以先问它。
             </p>
+            <p class="try-now">想问得好？<a href="academy.html">现在就试 →</a></p>
           </div>
         </div>
+      </div>
+
+      <!-- 统一诚实声明卡（与卡 5 并排） -->
+      <div class="card decl-card reveal">
+        <span class="tag">诚实声明</span>
+        <p>本页所有对话和数字都是<strong>演示样例</strong>，重点看方法和思路。</p>
+        <p>每张卡背面都有提示词原文——欢迎照着发给<strong>豆包</strong>，亲自验证。</p>
+        <p>真实的东西也有：这个网站本身、每句提示词、还有你亲手试出来的结果。</p>
       </div>
 
     </div><!-- /flip-grid -->

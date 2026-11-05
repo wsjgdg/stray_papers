@@ -9,7 +9,7 @@
 <body>
   <main class="section">
 
-    <h1>🎓 结业这一页</h1>
+    <h1>🎓 结业证书</h1>
     <p class="lead">逛完 6 关，这里有一份给你的证书；就算还没逛完，这里也有一份马上就能用的行动清单。</p>
 
     <!-- 证书：集齐 6 关才显示 -->
@@ -26,6 +26,7 @@
           从今天起，你也可以让 AI 帮你干活了。
         </p>
         <p style="margin-top:1.5em; color:var(--ink-soft);">颁发人：<strong style="color:var(--accent-dark);">爱你的儿子</strong>（和 AI 一起）</p>
+        <p style="margin:0.3em 0 0; color:var(--ink-soft);">颁发日期：<span id="cert-date"></span></p>
       </div>
       <p style="text-align:center; color:var(--ink-soft); margin-top:1rem;">🎉 恭喜！这一路你不是看客，是把六关都走完的探索者。</p>
     </div>
@@ -34,6 +35,7 @@
     <div id="progress-block" class="card reveal" style="margin-top:2rem;">
       <h3 style="margin-top:0;">证书还没解锁 🔒</h3>
       <p>当前进度：<strong id="progress-count"></strong></p>
+      <div id="progress-dots" class="progress-dots"></div>
       <p id="remaining-list"></p>
       <a class="btn" href="../index.html">回到探索地图继续 →</a>
     </div>
@@ -41,7 +43,10 @@
     <h2 class="reveal">行动清单：不用等结业，今天就能开始</h2>
 
     <div class="card reveal">
-      <h3 style="margin-top:0;">📅 今天（5 分钟）</h3>
+      <h3 class="action-head" style="margin-top:0;">
+        <button class="action-check" type="button" data-action="today" aria-pressed="false" aria-label="标记「今天（5 分钟）」为已完成">✓</button>
+        <span>📅 今天（5 分钟）</span>
+      </h3>
       <p>
         在手机上装一个 <strong>豆包</strong>（应用商店搜"豆包"，免费的），
         或者浏览器打开 <strong>doubao.com</strong>。
@@ -56,7 +61,10 @@
     </div>
 
     <div class="card reveal">
-      <h3 style="margin-top:0;">📦 本周（半小时）</h3>
+      <h3 class="action-head" style="margin-top:0;">
+        <button class="action-check" type="button" data-action="week" aria-pressed="false" aria-label="标记「本周（半小时）」为已完成">✓</button>
+        <span>📦 本周（半小时）</span>
+      </h3>
       <p>
         用 AI 做<strong>一件小作品</strong>发到朋友圈：
         让 AI 帮你画一张节日祝福图、写一段配文，或者把今天想发的内容先请 AI 润色一遍再发。
@@ -65,7 +73,10 @@
     </div>
 
     <div class="card reveal">
-      <h3 style="margin-top:0;">🗓️ 本月（选一条路）</h3>
+      <h3 class="action-head" style="margin-top:0;">
+        <button class="action-check" type="button" data-action="month" aria-pressed="false" aria-label="标记「本月（选一条路）」为已完成">✓</button>
+        <span>🗓️ 本月（选一条路）</span>
+      </h3>
       <p>
         回到 <a href="side-jobs.html">副业地图</a>，从三条路里挑一条最顺眼的，
         只要求自己走完<strong>第一步</strong>（每一关都写好了第一步是什么）。
@@ -90,6 +101,8 @@
 
   </main>
 
+  <script src="../assets/vendor/gsap.min.js"></script>
+  <script src="../assets/vendor/ScrollTrigger.min.js"></script>
   <script src="../assets/vendor/confetti.min.js"></script>
   <script src="../assets/js/progress.js"></script>
   <script src="../assets/js/site.js"></script>
@@ -97,6 +110,7 @@
     (function () {
       'use strict';
       var P = window.AIProgress;
+      var S = window.AISite;
 
       function render() {
         var all = P.isAllDone();
@@ -111,16 +125,69 @@
 
         document.getElementById('progress-count').textContent = P.badge();
 
+        /* Six journey dots: lit when that page is done */
+        var dots = document.getElementById('progress-dots');
+        if (dots) {
+          dots.innerHTML = P.PAGES.map(function (p) {
+            var ok = P.done(p.id);
+            return '<span class="progress-dot' + (ok ? ' is-done' : '') + '">' + p.title + '</span>';
+          }).join('');
+        }
+
         var remaining = P.PAGES.filter(function (p) { return !P.done(p.id); });
         document.getElementById('remaining-list').innerHTML = remaining.length
           ? '还差这几关：' + remaining.map(function (p) {
-              return '<a href="' + p.url + '">' + p.title + '</a>';
+              /* p.url is site-root-relative ('pages/xxx.html'); this file
+                 lives in /pages/, so re-anchor to the site root. */
+              return '<a href="' + S.basePath() + '/' + p.url + '">' + p.title + '</a>';
             }).join('、')
           : '';
       }
 
       render();
       P.onChange(render);
+
+      /* Certificate issue date: the day this page is opened */
+      var dateEl = document.getElementById('cert-date');
+      if (dateEl) {
+        var now = new Date();
+        dateEl.textContent = now.getFullYear() + ' 年 ' +
+          (now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日';
+      }
+
+      /* Checkable action list (today / week / month), persisted as
+         {today,week,month} in localStorage under 'ai-base-actions'. */
+      var ACTIONS_KEY = 'ai-base-actions';
+
+      function loadActions() {
+        try {
+          var obj = JSON.parse(localStorage.getItem(ACTIONS_KEY) || '{}');
+          return (obj && typeof obj === 'object') ? obj : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function paintActions() {
+        var state = loadActions();
+        var btns = document.querySelectorAll('.action-check');
+        Array.prototype.forEach.call(btns, function (btn) {
+          var on = !!state[btn.getAttribute('data-action')];
+          btn.classList.toggle('is-done', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      }
+
+      Array.prototype.forEach.call(document.querySelectorAll('.action-check'), function (btn) {
+        btn.addEventListener('click', function () {
+          var key = btn.getAttribute('data-action');
+          var state = loadActions();
+          state[key] = !state[key];
+          try { localStorage.setItem(ACTIONS_KEY, JSON.stringify(state)); } catch (e) {}
+          paintActions();
+        });
+      });
+      paintActions();
 
       /* Certificate lands with a confident pop when unlocked */
       if (window.gsap && window.AISite.motionOk()) {

@@ -94,6 +94,85 @@ strong { color: var(--accent-dark); }
   color: var(--ink-soft);
 }
 
+/* Big stat numbers (shared site-wide; was page-local on trends).
+   Usage: <p class="stat-num">400 余人</p> */
+.stat-num {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+  line-height: 1.2;
+}
+
+/* ---------- journey dots (graduation progress) ---------- */
+
+.progress-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.4rem;
+  margin: 0.8rem 0 1.2rem;
+}
+
+.progress-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.progress-dot::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  border: 2px solid rgba(45, 42, 38, 0.3);
+  background: transparent;
+}
+
+.progress-dot.is-done {
+  color: var(--ink);
+}
+
+.progress-dot.is-done::before {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* ---------- checkable action list (graduation) ---------- */
+
+.action-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.action-check {
+  flex: 0 0 auto;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  border: 2px dashed rgba(45, 42, 38, 0.35);
+  background: transparent;
+  color: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.action-check:hover {
+  border-color: var(--accent);
+}
+
+.action-check.is-done {
+  border: 2px solid var(--ok);
+  background: var(--ok);
+  color: #fff;
+}
+
 /* ---------- reveal on scroll ----------
    Hidden state is scoped under html.js so content stays
    visible if JavaScript fails to load. */
