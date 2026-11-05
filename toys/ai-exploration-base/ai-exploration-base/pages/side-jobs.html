@@ -4,9 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>④ 副业地图 — AI 探索基地</title>
+  <meta name="description" content="三条 AI 副业路线全铺开：不用学的、学一点就能行的、值得下功夫学的。不保证收入、不卖课，只给你能落地的第一步。中老年友好。">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="stylesheet" href="../assets/css/main.css">
   <style>
     /* Page-local: tier cards. Tokens from main.css. */
+    :root {
+      --tier3: #5b4a9e;
+      --tier3-soft: #e8e4f5;
+    }
     .tier-tag {
       display: inline-block;
       font-size: 0.9rem;
@@ -17,11 +23,13 @@
     }
     .tier-tag.t1 { background: var(--ok-soft); color: var(--ok); }
     .tier-tag.t2 { background: var(--accent-soft); color: var(--accent-dark); }
-    .tier-tag.t3 { background: #e8e4f5; color: #5b4a9e; }
+    .tier-tag.t3 { background: var(--tier3-soft); color: var(--tier3); }
+    .tier-h2 { margin-top: 0.2em; border-left: none; padding-left: 0; }
     .route { padding-left: 1.2em; }
     .route li { margin: 0.4em 0; }
     .tool-line { color: var(--ink-soft); font-size: 0.92rem; }
     .risk-line { color: var(--danger); font-size: 0.92rem; }
+    .pace-note { margin: 1rem 0 0; color: var(--ink-soft); }
   </style>
 </head>
 <body>
@@ -36,7 +44,7 @@
     <!-- 第一层 -->
     <div class="card reveal">
       <span class="tier-tag t1">第一层 · 今天就能做</span>
-      <h2 style="margin-top:0.2em; border-left:none; padding-left:0;">不用学，先赢一次</h2>
+      <h2 class="tier-h2">不用学，先赢一次</h2>
       <div class="grid-12">
         <div class="col-6">
           <h3>🌱 AI 图文发朋友圈 / 小红书</h3>
@@ -45,7 +53,7 @@
             <strong>这一步不为赚钱，为的是跑通第一次</strong>——
             你会发现"我也能做出别人点赞的东西"。
           </p>
-          <p class="tool-line">🧰 工具：豆包（写文案）、即梦（配图）——都免费</p>
+          <p class="tool-line">🧰 工具：豆包（写文案）、即梦（配图）——都有免费额度，入门够用</p>
         </div>
         <div class="col-6">
           <h3>🎯 第一周目标</h3>
@@ -62,7 +70,7 @@
     <!-- 第二层 -->
     <div class="card reveal">
       <span class="tier-tag t2">第二层 · 学 1-3 个月</span>
-      <h2 style="margin-top:0.2em; border-left:none; padding-left:0;">学一点，正儿八经做起来</h2>
+      <h2 class="tier-h2">学一点，正儿八经做起来</h2>
       <div class="grid-12">
         <div class="col-4">
           <h3>🎬 保险知识短视频获客</h3>
@@ -108,12 +116,13 @@
           <p class="risk-line">⚠️ 合规红线：不荐股、不代客理财、不说"保证收益"——讲认知不讲产品。</p>
         </div>
       </div>
+      <p class="pace-note">⏱️ 上面写的"第几周"只是参考节奏，按自己的速度来。</p>
     </div>
 
     <!-- 第三层 -->
     <div class="card reveal">
       <span class="tier-tag t3">第三层 · 学 3-12 个月</span>
-      <h2 style="margin-top:0.2em; border-left:none; padding-left:0;">值得下功夫的技能投资</h2>
+      <h2 class="tier-h2">值得下功夫的技能投资</h2>
       <p style="color:var(--ink-soft);">
         这一层前期没有收入，但<strong>学会之后天花板最高</strong>——它让 AI 从"工具"变成"帮你干活的员工"。
       </p>
@@ -133,9 +142,10 @@
             资源全免费：B 站视频课 + 官方文档。
             <strong>等你走到这一步，咱们母子一起做一个 agent。</strong>
           </p>
-          <p class="tool-line">🧰 Python + 豆包/DeepSeek API（都有免费额度）</p>
+          <p class="tool-line">🧰 Python + 大模型 API：豆包有免费网页版；DeepSeek API 按量付费，但很便宜（几分钱一次问答的量级）</p>
         </div>
       </div>
+      <p class="pace-note">⏱️ 上面写的"第几个月"只是参考节奏，按自己的速度来。</p>
       <div class="correct-move" style="margin-bottom:0;">
         <p style="margin:0.3em 0 0;">
           ⚠️ <strong>第三层最重要的避坑：</strong>凡是让你"先交钱、保证学会、包赚钱"的培训班——
@@ -152,6 +162,10 @@
         谁保证，谁就是骗子。
         第一目标永远是：跑通一次，拿到第一个反馈（一个赞、一个客户、一句谢谢）。
         钱是随之而来的事。
+      </p>
+      <p style="margin:0.4em 0 0;">
+        三层里每条路都有人做成，也都有人半途放下——差别不在运气，在"走完第一步之后还走不走第二步"。
+        这里不编收入数字，等你选定方向，我们一起找真实案例。
       </p>
     </div>
 

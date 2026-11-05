@@ -44,14 +44,27 @@
     });
   }
 
-  /* GSAP ScrollTrigger when available; IntersectionObserver fallback. */
+  /* GSAP ScrollTrigger when available; IntersectionObserver fallback.
+     Idempotent: elements already processed carry data-reveal-bound,
+     so re-calling only picks up nodes added later (late injections).
+     Reduced-motion users get everything visible immediately. */
   function revealOnScroll(selector) {
-    var els = Array.prototype.slice.call(document.querySelectorAll(selector || '.reveal'));
+    var els = Array.prototype.slice.call(document.querySelectorAll(selector || '.reveal'))
+      .filter(function (el) { return !el.dataset.revealBound; });
     if (!els.length) return;
+
+    if (!motionOk()) {
+      els.forEach(function (el) {
+        el.dataset.revealBound = '1';
+        el.classList.add('is-visible');
+      });
+      return;
+    }
 
     if (root.gsap && root.ScrollTrigger) {
       root.gsap.registerPlugin(root.ScrollTrigger);
       els.forEach(function (el) {
+        el.dataset.revealBound = '1';
         root.gsap.fromTo(el,
           { opacity: 0, y: 24 },
           {
@@ -63,7 +76,10 @@
     }
 
     if (!('IntersectionObserver' in root)) {
-      els.forEach(function (el) { el.classList.add('is-visible'); });
+      els.forEach(function (el) {
+        el.dataset.revealBound = '1';
+        el.classList.add('is-visible');
+      });
       return;
     }
     var io = new IntersectionObserver(function (entries) {
@@ -74,7 +90,16 @@
         }
       });
     }, { threshold: 0.15 });
-    els.forEach(function (el) { io.observe(el); });
+    els.forEach(function (el) {
+      el.dataset.revealBound = '1';
+      io.observe(el);
+    });
+  }
+
+  /* Scan for .reveal elements added after pageReady (late injections).
+     Safe to call any time — only processes not-yet-bound elements. */
+  function rescanReveal(selector) {
+    revealOnScroll(selector || '.reveal');
   }
 
   /* Typewriter. Usage: AISite.typeText(el, text, {speed: 40}). Resolves
@@ -132,6 +157,10 @@
       }
     }
     paint();
+
+    /* Keep the button in sync when the page marks itself programmatically
+       (e.g. the scam simulator auto-checking this page). */
+    root.AIProgress.onChange(paint);
 
     btn.addEventListener('click', function () {
       root.AIProgress.mark(pageId);
@@ -195,6 +224,7 @@
     basePath: basePath,
     mountChrome: mountChrome,
     revealOnScroll: revealOnScroll,
+    rescanReveal: rescanReveal,
     typeText: typeText,
     motionOk: motionOk,
     countUp: countUp,

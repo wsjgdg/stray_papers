@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>② AI 趋势与行业 — AI 探索基地</title>
+  <meta name="description" content="用大白话看懂 AI 这两年的变化：用户半年翻一番、各行各业正在被改写。写给想入门 AI 的普通人，不吹不吓，中老年友好。">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="stylesheet" href="../assets/css/main.css">
   <style>
     /* Page-local: timeline. Base tokens come from main.css. */
@@ -37,6 +39,21 @@
     }
     .stat-num { font-size: 2rem; font-weight: 700; color: var(--accent-dark); line-height: 1.2; }
     .stat-label { font-size: 0.9rem; color: var(--ink-soft); }
+    /* Accent-colored micro-fact line for industry cards */
+    .fact-line {
+      margin: 0.7em 0 0;
+      padding: 0.5em 0.9em;
+      background: var(--accent-soft);
+      border-radius: 10px;
+      color: var(--accent-dark);
+    }
+    /* Pictogram: 10 persons, ~3.6 highlighted in accent color */
+    .people-chart { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto; }
+    .people-chart .p-on { fill: var(--accent); }
+    .people-chart .p-part { fill: var(--accent); opacity: 0.55; }
+    .people-chart .p-off { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; opacity: 0.55; }
+    .people-caption { text-align: center; margin: 0.7em 0 0.2em; }
+    .people-src { text-align: center; margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
     .chart-wrap { position: relative; height: 300px; }
     @media (max-width: 480px) { .chart-wrap { height: 260px; } }
   </style>
@@ -76,13 +93,28 @@
       </div>
     </div>
     </div>
-    <div class="col-4">
+    <div class="col-4 reveal">
       <div class="card" style="height:100%; display:flex; flex-direction:column; justify-content:center;">
-        <p class="stat-num" style="font-size:2.6rem;">5.15 亿</p>
-        <p style="margin:0; color:var(--ink-soft);">中国人在用生成式 AI（2025 年 6 月）</p>
-        <div style="height:1px; background:var(--accent-soft); margin:1rem 0;"></div>
-        <p class="stat-num" style="font-size:2.2rem;">半年翻一番</p>
-        <p style="margin:0; color:var(--ink-soft);">2024 年底才 2.49 亿人——增长还在最陡的那一段</p>
+        <svg class="people-chart" viewBox="0 0 256 97" role="img" aria-label="示意图：10 个人形图标里约 3.6 个填充强调色，代表每 10 个中国人约有 3.6 个在用生成式 AI">
+          <defs>
+            <symbol id="person-icon" viewBox="0 0 24 30">
+              <circle cx="12" cy="5.5" r="5"></circle>
+              <path d="M12 13c-5.5 0-9 4.5-9 10v6h18v-6c0-5.5-3.5-10-9-10z"></path>
+            </symbol>
+          </defs>
+          <use href="#person-icon" class="p-on" x="0" y="0" width="36" height="45"></use>
+          <use href="#person-icon" class="p-on" x="55" y="0" width="36" height="45"></use>
+          <use href="#person-icon" class="p-on" x="110" y="0" width="36" height="45"></use>
+          <use href="#person-icon" class="p-part" x="165" y="0" width="36" height="45"></use>
+          <use href="#person-icon" class="p-off" x="220" y="0" width="36" height="45"></use>
+          <use href="#person-icon" class="p-off" x="0" y="52" width="36" height="45"></use>
+          <use href="#person-icon" class="p-off" x="55" y="52" width="36" height="45"></use>
+          <use href="#person-icon" class="p-off" x="110" y="52" width="36" height="45"></use>
+          <use href="#person-icon" class="p-off" x="165" y="52" width="36" height="45"></use>
+          <use href="#person-icon" class="p-off" x="220" y="52" width="36" height="45"></use>
+        </svg>
+        <p class="people-caption">每 10 个中国人里，约 <strong>3.6 个</strong>在用生成式 AI</p>
+        <p class="people-src">CNNIC，2025 年 6 月</p>
       </div>
     </div>
     </div>
@@ -122,23 +154,28 @@
     <div class="grid-12">
     <div class="card col-6 reveal">
       <h3 style="margin-top:0;">🛒 电商与销售</h3>
-      <p>商品图、详情页文案、客服回复，大量交给 AI 生成；小商家一个人就能撑起过去一个小团队的活儿。<strong>对你的启示：</strong>做销售出身的人，懂客户 + 会用 AI 出内容，就是新打法。</p>
+      <p>商品图、详情页文案、客服回复，越来越多交给 AI 生成；小商家一个人就能撑起过去一个小团队的活儿。<strong>对你的启示：</strong>做销售出身的人，懂客户 + 会用 AI 出内容，就是新打法。</p>
+      <p class="fact-line">比如：淘宝商家后台就有"AI 生成商品图"这类公开功能，点几下就能换背景、改构图，不用请美工。</p>
     </div>
     <div class="card col-6 reveal">
       <h3 style="margin-top:0;">📱 自媒体与内容</h3>
       <p>写稿、配音、剪辑、画图，全流程都有 AI 工具；内容行业的门槛从"会技能"变成了"会表达"。<strong>对你的启示：</strong>你会讲保险、会算账，正好是 AI 替代不了的"真话"，缺的只是把内容做出来的手——AI 补上这只手。</p>
+      <p class="fact-line">比如：剪映的"图文成片"——贴一段文字进去，自动配上画面和配音，几分钟出一条视频。</p>
     </div>
     <div class="card col-6 reveal">
       <h3 style="margin-top:0;">💼 金融与保险</h3>
-      <p>保险行业已经普遍用 AI 做产品解读、客户答疑、朋友圈和短视频获客内容；智能客服成了银行标配。<strong>对你的启示：</strong>你现在做的保险，获客打法正在从"熟人推销"转向"内容获客"——这正是 AI 最擅长的活（第 4 关副业地图细讲）。</p>
+      <p>产品解读、朋友圈文案、短视频脚本，这些"第一稿"越来越多交给 AI；银行的智能客服背后也越来越多是 AI。<strong>对你的启示：</strong>你现在做的保险，获客打法正在从"熟人推销"转向"内容获客"——这正是 AI 最擅长的活（第 4 关副业地图细讲）。</p>
+      <p class="fact-line">微事实：越来越多保险公司用 AI 做客户答疑和获客内容。</p>
     </div>
     <div class="card col-6 reveal">
       <h3 style="margin-top:0;">📊 财务与办公</h3>
-      <p>发票识别、报表摘要、合同审阅，AI 三分钟出初稿，人做最终把关。<strong>对你的启示：</strong>三十年财务经验是"最终把关"的资格——老经验 + 新工具，比纯新手强十倍。</p>
+      <p>发票识别、报表摘要、合同审阅，AI 几分钟出初稿（示意），人做最终把关。<strong>对你的启示：</strong>三十年财务经验是"最终把关"的资格——老经验 + 新工具，比纯新手强得多。</p>
+      <p class="fact-line">比如：发票识别、报表摘要，如今不少办公软件里就有现成的 AI 功能。</p>
     </div>
     <div class="card col-12 reveal">
       <h3 style="margin-top:0;">🎓 教育与健康</h3>
-      <p>孩子用 AI 答疑解惑，老人用 AI 问诊导诊、读懂体检报告。AI 正在成为每个家庭的新"家庭教师"和"导诊台"。</p>
+      <p>孩子用 AI 答疑解惑，老人用 AI 问诊导诊。AI 正在成为每个家庭的新"家庭教师"和"导诊台"。</p>
+      <p class="fact-line">比如："AI 读体检报告"——把报告拍照发给 AI，它能用大白话解释每项指标的含义（关键结论仍要听医生的）。</p>
     </div>
     </div><!-- /grid-12 industries -->
 
@@ -160,9 +197,10 @@
     <div class="sources">
       <p><strong>本页数据来源（可自行查证）：</strong></p>
       <ul>
-        <li>生成式 AI 用户规模：CNNIC《生成式人工智能应用发展报告（2025）》——<a href="https://www.news.cn/fortune/20251018/95ddc306f29f494fb188ed41ad8e5cca/c.html" target="_blank">新华网报道</a>、<a href="http://paper.people.com.cn/rmrbhwb/pc/content/202510/21/content_30110422.html" target="_blank">人民日报海外版报道</a></li>
+        <li>生成式 AI 用户规模：CNNIC《生成式人工智能应用发展报告（2025）》——<a href="https://www.news.cn/fortune/20251018/95ddc306f29f494fb188ed41ad8e5cca/c.html" target="_blank">新华网报道</a>、<a href="http://paper.people.com.cn/rmrbhwb/pc/content/202510/21/content_30110422.html" target="_blank">人民日报海外版报道</a>；报告原文可在 <a href="https://www.cnnic.net.cn/" target="_blank">CNNIC 官网（www.cnnic.net.cn）</a>查询</li>
         <li>行业应用描述：同上报告"各领域应用"章节（定性描述）</li>
         <li>ChatGPT 两个月用户破亿：优步（Uber）用了约 6 年，Instagram 约 2.5 个月——ChatGPT 约 2 个月，为公开可查的普遍报道口径</li>
+        <li>时间线条目日期均为公开报道口径，用于呈现趋势先后，不作为精确时间依据</li>
       </ul>
     </div>
 
