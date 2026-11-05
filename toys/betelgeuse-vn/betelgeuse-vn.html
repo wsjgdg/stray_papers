@@ -1035,6 +1035,79 @@ input.vn-range {
   gap: 8px;
 }
 
+/* 立绘 panel: character cards with a feel-chip row */
+.vn-gsprites {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.vn-gchar-stage {
+  height: 170px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(120, 160, 230, 0.14),
+    rgba(8, 12, 24, 0.55) 70%
+  );
+}
+
+.vn-sprite-bust {
+  width: 120px;
+  height: auto;
+  line-height: 0;
+}
+
+.vn-sprite-bust svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.vn-feelchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.vn-feelchip {
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vn-border);
+  background: transparent;
+  color: var(--vn-text-dim);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.vn-feelchip:hover {
+  border-color: rgba(180, 210, 255, 0.55);
+  color: #fff;
+}
+
+.vn-feelchip.vn-feel-on {
+  background: var(--vn-accent, rgba(96, 165, 250, 0.28));
+  border-color: transparent;
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .vn-gsprites {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .vn-mrow {
   display: flex;
   align-items: center;
@@ -7460,9 +7533,16 @@ window.SCENARIO = {
     gtabMusic.textContent = "音乐";
     gtabMusic.setAttribute("data-tab", "music");
     gtabMusic.setAttribute("aria-selected", "false");
+    var gtabSprites = h("button", "vn-gtab", gtabs);
+    gtabSprites.type = "button";
+    gtabSprites.textContent = "立绘";
+    gtabSprites.setAttribute("data-tab", "sprites");
+    gtabSprites.setAttribute("aria-selected", "false");
     var gpanelScenes = h("div", "vn-gpanel vn-gscenes", gallery);
     var gpanelMusic = h("div", "vn-gpanel vn-gmusic", gallery);
     gpanelMusic.setAttribute("hidden", "");
+    var gpanelSprites = h("div", "vn-gpanel vn-gsprites", gallery);
+    gpanelSprites.setAttribute("hidden", "");
     var galleryClose = h("button", "vn-close", gallery);
     galleryClose.type = "button";
     galleryClose.textContent = "关闭";
@@ -7472,6 +7552,9 @@ window.SCENARIO = {
     });
     gtabMusic.addEventListener("click", function () {
       setGalleryTab("music");
+    });
+    gtabSprites.addEventListener("click", function () {
+      setGalleryTab("sprites");
     });
 
     var chapter = h("div", "vn-chapter vn-hidden", app);
@@ -7512,8 +7595,10 @@ window.SCENARIO = {
       galleryBtn: galleryBtn,
       gtabScenes: gtabScenes,
       gtabMusic: gtabMusic,
+      gtabSprites: gtabSprites,
       gpanelScenes: gpanelScenes,
       gpanelMusic: gpanelMusic,
+      gpanelSprites: gpanelSprites,
       title: title,
       titleCanvas: titleCanvas,
       titleName: titleName,
@@ -8674,6 +8759,7 @@ window.SCENARIO = {
       els.name.style.color = color;
       els.name.style.borderColor = color;
       showSprite(speakerId, line.feel);
+      recordMet(speakerId); // gallery 立绘 unlock: this character has spoken
       pushBacklog(nameText, text);
       if (els.srLive)
         els.srLive.textContent = nameText + "：" + text; // full line, once
@@ -9428,6 +9514,103 @@ window.SCENARIO = {
       els.gpanelMusic.appendChild(row);
     });
     setGalleryTab("scenes");
+    buildSpritePanel();
+  }
+
+  // 立绘 panel: one card per character (met in play = unlocked), each with
+  // a feel-chip row that swaps the injected CHAR_ART bust live.
+  var MET_KEY = "vn-met-chars";
+  var FEELS = ["normal", "happy", "sad", "surprised", "angry"];
+
+  function readMet() {
+    var raw = null;
+    try {
+      raw = localStorage.getItem(MET_KEY);
+    } catch (err) {
+      return [];
+    }
+    if (typeof raw !== "string" || !raw) return [];
+    try {
+      var arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(function (id) {
+        return (
+          typeof id === "string" && S && S.characters && S.characters[id]
+        );
+      });
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function recordMet(charId) {
+    if (!charId || typeof charId !== "string") return;
+    var met = readMet();
+    if (met.indexOf(charId) !== -1) return;
+    met.push(charId);
+    try {
+      localStorage.setItem(MET_KEY, JSON.stringify(met));
+    } catch (err) {
+      /* cosmetic tracking: skip silently */
+    }
+  }
+
+  function buildSpritePanel() {
+    els.gpanelSprites.textContent = "";
+    var met = readMet();
+    var art = typeof window !== "undefined" ? window.CHAR_ART : null;
+    var ids = S.characters ? Object.keys(S.characters) : [];
+    ids.forEach(function (id) {
+      var ch = S.characters[id];
+      var unlocked = met.indexOf(id) !== -1;
+      var card = document.createElement("div");
+      card.className = "vn-gcard vn-gchar " + (unlocked ? "vn-gseen" : "vn-glocked");
+      var stage = document.createElement("div");
+      stage.className = "vn-gchar-stage";
+      var bust = document.createElement("div");
+      bust.className = "vn-sprite-bust";
+      bust.style.setProperty("--vn-color", ch.color != null ? String(ch.color) : "#9bd4e8");
+      if (unlocked && art && art[id]) {
+        bust.innerHTML = art[id].normal || "";
+      } else {
+        bust.textContent = unlocked && ch.name ? String(ch.name).charAt(0) : "？";
+      }
+      stage.appendChild(bust);
+      card.appendChild(stage);
+      var name = document.createElement("div");
+      name.className = "vn-gname";
+      name.textContent = unlocked
+        ? ch.name != null
+          ? String(ch.name)
+          : id
+        : "？？？";
+      card.appendChild(name);
+      if (unlocked && art && art[id]) {
+        var chips = document.createElement("div");
+        chips.className = "vn-feelchips";
+        FEELS.forEach(function (f) {
+          var chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "vn-feelchip" + (f === "normal" ? " vn-feel-on" : "");
+          chip.textContent = { normal: "平常", happy: "开心", sad: "低落", surprised: "惊讶", angry: "生气" }[f] || f;
+          chip.addEventListener("click", (function (feel) {
+            return function () {
+              bust.innerHTML = art[id][feel] || art[id].normal || "";
+              var all =
+                typeof chips.querySelectorAll === "function"
+                  ? chips.querySelectorAll(".vn-feelchip")
+                  : [];
+              for (var i = 0; i < all.length; i++)
+                all[i].classList.remove("vn-feel-on");
+              chip.classList.add("vn-feel-on");
+            };
+          })(f));
+          chips.appendChild(chip);
+        });
+        card.appendChild(chips);
+      }
+      els.gpanelSprites.appendChild(card);
+    });
   }
 
   // Renders an unlocked scene into the card thumb via its own renderer.
@@ -9459,15 +9642,26 @@ window.SCENARIO = {
   }
 
   function setGalleryTab(tab) {
-    var scenesTab = tab === "music" ? false : true;
-    els.gtabScenes.setAttribute("aria-selected", scenesTab ? "true" : "false");
-    els.gtabMusic.setAttribute("aria-selected", scenesTab ? "false" : "true");
-    if (scenesTab) {
+    var want = { scenes: false, music: false, sprites: false };
+    if (want.hasOwnProperty(tab)) want[tab] = true;
+    els.gtabScenes.setAttribute("aria-selected", want.scenes ? "true" : "false");
+    els.gtabMusic.setAttribute("aria-selected", want.music ? "true" : "false");
+    els.gtabSprites.setAttribute(
+      "aria-selected",
+      want.sprites ? "true" : "false",
+    );
+    if (want.scenes) {
       els.gpanelScenes.removeAttribute("hidden");
       els.gpanelMusic.setAttribute("hidden", "");
-    } else {
+      els.gpanelSprites.setAttribute("hidden", "");
+    } else if (want.music) {
       els.gpanelScenes.setAttribute("hidden", "");
       els.gpanelMusic.removeAttribute("hidden");
+      els.gpanelSprites.setAttribute("hidden", "");
+    } else {
+      els.gpanelScenes.setAttribute("hidden", "");
+      els.gpanelMusic.setAttribute("hidden", "");
+      els.gpanelSprites.removeAttribute("hidden");
     }
   }
 

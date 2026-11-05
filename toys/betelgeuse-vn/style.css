@@ -1023,6 +1023,79 @@ input.vn-range {
   gap: 8px;
 }
 
+/* 立绘 panel: character cards with a feel-chip row */
+.vn-gsprites {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.vn-gchar-stage {
+  height: 170px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(120, 160, 230, 0.14),
+    rgba(8, 12, 24, 0.55) 70%
+  );
+}
+
+.vn-sprite-bust {
+  width: 120px;
+  height: auto;
+  line-height: 0;
+}
+
+.vn-sprite-bust svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.vn-feelchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.vn-feelchip {
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vn-border);
+  background: transparent;
+  color: var(--vn-text-dim);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.vn-feelchip:hover {
+  border-color: rgba(180, 210, 255, 0.55);
+  color: #fff;
+}
+
+.vn-feelchip.vn-feel-on {
+  background: var(--vn-accent, rgba(96, 165, 250, 0.28));
+  border-color: transparent;
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .vn-gsprites {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .vn-mrow {
   display: flex;
   align-items: center;
