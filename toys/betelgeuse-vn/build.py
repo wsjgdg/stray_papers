@@ -13,6 +13,7 @@ def main() -> None:
     scenes_a = (DIR / "scenes_a.js").read_text(encoding="utf-8")
     scenes_b = (DIR / "scenes_b.js").read_text(encoding="utf-8")
     audio = (DIR / "audio.js").read_text(encoding="utf-8")
+    props_data = (DIR / "props" / "props-data.js").read_text(encoding="utf-8")
     engine = (DIR / "engine.js").read_text(encoding="utf-8")
     # Guard against '</script>' sequences inside inline JS.
     scenario = scenario.replace("</script>", "<\\/script>")
@@ -20,6 +21,7 @@ def main() -> None:
     scenes_a = scenes_a.replace("</script>", "<\\/script>")
     scenes_b = scenes_b.replace("</script>", "<\\/script>")
     audio = audio.replace("</script>", "<\\/script>")
+    props_data = props_data.replace("</script>", "<\\/script>")
     engine = engine.replace("</script>", "<\\/script>")
     favicon = (
         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
@@ -46,6 +48,7 @@ def main() -> None:
         f"<script>\n{art}\n</script>\n"
         f"<script>\n{scenes_a}\n</script>\n"
         f"<script>\n{scenes_b}\n</script>\n"
+        f"<script>\n{props_data}\n</script>\n"
         f"<script>\n{audio}\n</script>\n"
         f"<script>\n{engine}\n</script>\n"
         "<script>VN.start(window.SCENARIO);</script>\n</body>\n</html>\n"

@@ -207,6 +207,8 @@
 
     var bg = h("div", "vn-bg", app);
     var bgFx = h("div", "vn-bg-fx", bg); // animated fx markup, synced per bg
+    // 3D-rendered prop sprites (window.VN_PROPS), synced per scene
+    var propsLayer = h("div", "vn-props", bg);
     // Always-present cinematic layers, between .vn-bg and .vn-sprites; the
     // engine only creates them — all styling lives in style.css.
     var vignette = h("div", "vn-vignette", app);
@@ -406,6 +408,7 @@
       app: app,
       bg: bg,
       bgFx: bgFx,
+      propsLayer: propsLayer,
       vignette: vignette,
       grain: grain,
       sprites: sprites,
@@ -942,7 +945,36 @@
   function syncBgFx(bg, bgId) {
     if (!els || !els.bgFx) return;
     els.bgFx.innerHTML = typeof bg.html === "string" ? bg.html : "";
+    syncProps(bg, bgId);
     updateCanvasScene(bgId);
+  }
+
+  // 3D prop sprites: scene declares props: [{ id, left, bottom, width }]
+  // (percent strings). Images come from window.VN_PROPS (webp data-URIs);
+  // layer sits inside .vn-bg so grade/dolly grade it together with the scene.
+  function syncProps(bg, bgId) {
+    if (!els || !els.propsLayer) return;
+    els.propsLayer.textContent = "";
+    var list = bg && Array.isArray(bg.props) ? bg.props : [];
+    var store = typeof window !== "undefined" ? window.VN_PROPS : null;
+    list.forEach(function (p) {
+      if (!p || typeof p.id !== "string" || !store || typeof store[p.id] !== "string") {
+        if (p && typeof p.id === "string") {
+          console.warn("[VN] unknown prop: " + p.id);
+        }
+        return;
+      }
+      var img = document.createElement("img");
+      img.className = "vn-prop";
+      img.src = store[p.id];
+      img.alt = "";
+      img.style.left = typeof p.left === "string" ? p.left : "50%";
+      img.style.bottom = typeof p.bottom === "string" ? p.bottom : "8%";
+      img.style.width = typeof p.width === "string" ? p.width : "30vw";
+      if (p.flip) img.style.transform = "scaleX(-1)";
+      if (typeof p.opacity === "number") img.style.opacity = String(p.opacity);
+      els.propsLayer.appendChild(img);
+    });
   }
 
   function applyBg(bgId) {

@@ -145,6 +145,22 @@ body {
   pointer-events: none;
 }
 
+/* 3D-rendered prop sprite layer: sits above fx, below canvas — props are
+   pre-rendered webp stills positioned per-scene by the engine */
+.vn-props {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.vn-prop {
+  position: absolute;
+  height: auto;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5));
+  transition: opacity 0.8s ease;
+}
+
 .vn-bg-canvas {
   position: absolute;
   inset: 0;
