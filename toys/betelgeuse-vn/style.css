@@ -176,6 +176,28 @@ body {
   animation: vn-idle-glint 7s ease-in-out infinite;
 }
 
+/* micro-narrative props: quieter life — the calendar page trembles when the
+   draft passes, the keys hang almost still, the mug never moves (she left it) */
+.vn-prop-calendar {
+  animation: vn-idle-tremble 6.5s ease-in-out infinite;
+}
+
+.vn-prop-keys {
+  animation: vn-idle-hang 8s ease-in-out infinite;
+  transform-origin: 50% 0%;
+}
+
+@keyframes vn-idle-tremble {
+  0%, 92%, 100% { transform: rotate(0deg); }
+  94% { transform: rotate(0.6deg); }
+  97% { transform: rotate(-0.4deg); }
+}
+
+@keyframes vn-idle-hang {
+  0%, 100% { transform: rotate(-0.8deg); }
+  50% { transform: rotate(0.8deg); }
+}
+
 @keyframes vn-idle-sway {
   0%, 100% { transform: rotate(-1.1deg); }
   50% { transform: rotate(1.1deg); }
@@ -2137,6 +2159,8 @@ input.vn-range {
   #vn-app .vn-prop.vn-prop-umbrella,
   #vn-app .vn-prop.vn-prop-crt,
   #vn-app .vn-prop.vn-prop-telescope,
+  #vn-app .vn-prop.vn-prop-calendar,
+  #vn-app .vn-prop.vn-prop-keys,
   #vn-app .vn-ending-mark.vn-collected[data-ending="ending_true"] {
     animation: none !important;
   }

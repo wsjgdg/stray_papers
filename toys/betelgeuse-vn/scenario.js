@@ -11,7 +11,12 @@ window.SCENARIO = {
       name: "深夜·公寓",
       css: "radial-gradient(ellipse at 78% 30%, rgba(140,180,230,0.22), transparent 55%), radial-gradient(ellipse at 18% 85%, rgba(70,90,130,0.14), transparent 60%), linear-gradient(165deg, #06070d 0%, #0b0f1c 55%, #101627 100%)",
       html: '<style>.apt-fx{position:absolute;top:0;left:0;width:100%;height:100%}.apt-fx i{position:absolute}.apt-glow{top:12%;right:4%;width:46%;height:46%;background:radial-gradient(ellipse at 62% 42%,rgba(140,185,235,.15),transparent 65%);animation:apt-gl 6.5s ease-in-out infinite}.apt-dust{top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle,rgba(150,185,225,.13) 1px,transparent 1.6px);background-size:96px 72px;animation:apt-rs 30s linear infinite}.apt-dp{width:2px;border-radius:2px;background:linear-gradient(180deg,transparent,rgba(175,205,240,.3) 35%,rgba(175,205,240,.1) 75%,transparent);opacity:.4;transform:translateY(6vh)}.apt-d1{top:8%;right:8%;height:58px;animation:apt-dp 12s linear infinite;animation-delay:-4s}.apt-d2{top:14%;right:16%;height:44px;animation:apt-dp 15.5s linear infinite;animation-delay:-9s}.apt-d3{top:5%;right:23%;height:66px;animation:apt-dp 17s linear infinite;animation-delay:-13s}.apt-d4{top:20%;right:12%;height:50px;animation:apt-dp 13.5s linear infinite;animation-delay:-1.5s}.apt-d5{top:11%;right:27%;height:40px;animation:apt-dp 16s linear infinite;animation-delay:-7s}.apt-flash{top:0;left:0;width:100%;height:100%;background:linear-gradient(165deg,rgba(190,215,255,.5),rgba(140,170,220,.2) 60%,transparent);opacity:0;animation:apt-fl 13.5s linear infinite}@keyframes apt-gl{0%,100%{opacity:.5}18%{opacity:.72}37%{opacity:.55}56%{opacity:.9}73%{opacity:.6}86%{opacity:.78}}@keyframes apt-dp{0%{opacity:0;transform:translateY(-8vh)}10%{opacity:.55}82%{opacity:.5}100%{opacity:0;transform:translateY(58vh)}}@keyframes apt-fl{0%,91%{opacity:0}92%{opacity:.09}93.5%{opacity:.02}95%{opacity:.06}97%,100%{opacity:0}}@keyframes apt-rs{to{transform:translateY(-72px)}}@media (prefers-reduced-motion:reduce){.apt-fx,.apt-fx *{animation:none !important}}</style><div class="apt-fx"><i class="apt-glow"></i><i class="apt-dust"></i><i class="apt-dp apt-d1"></i><i class="apt-dp apt-d2"></i><i class="apt-dp apt-d3"></i><i class="apt-dp apt-d4"></i><i class="apt-dp apt-d5"></i><i class="apt-flash"></i></div>',
-      props: [{ id: "crt", left: "56%", bottom: "14%", width: "30vw" }],
+      props: [
+        { id: "crt", left: "56%", bottom: "14%", width: "30vw" },
+        { id: "mug", left: "38%", bottom: "10%", width: "9vw" },
+        { id: "calendar", left: "22%", bottom: "38%", width: "13vw" },
+        { id: "keys", left: "47%", bottom: "9%", width: "10vw" },
+      ],
     },
     email_screen: {
       name: "屏幕·未读邮件",
