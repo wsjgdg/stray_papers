@@ -124,3 +124,17 @@
 .page-lab .lab-repo{display:block;margin:12px 0 4px;color:#b9f4d1;font-size:11px;font-weight:700;text-decoration:none;border-bottom:1px solid #b9f4d166}
 .page-lab .lab-repo:hover,.page-lab .lab-repo:focus-visible{border-color:#b9f4d1}
 @media(max-width:760px){.page-lab .lab-projects{border-left:0;border-top:1px solid #9bbdb28f;padding:18px 0 0}}
+
+/* 真源正文填进老页各节（③ 起用）：版式沿用实验台的细线格子，不另起一张纸 */
+.page-lab .lab-fill{display:grid;gap:9px;max-width:660px;margin-top:4px}
+.page-lab .lab-fill>p{margin:0;font-size:13px;line-height:1.85;color:#c9d8d4}
+.page-lab .lab-fill>p strong{color:#eaf3c3}
+.page-lab .lab-modes{display:grid;gap:10px;margin:8px 0 0;padding:14px 16px;border:1px solid #9dc5ba7d;background:#0e232c;box-shadow:6px 6px 0 #06141d}
+.page-lab .lab-modes p{display:grid;grid-template-columns:118px minmax(0,1fr);gap:12px;align-items:baseline;margin:0;font-size:12.5px;line-height:1.8;color:#c9d8d4}
+.page-lab .lab-modes strong{color:#d7ec9d;font-size:12px;letter-spacing:.02em}
+.page-lab .lab-fill-note{display:block;margin-top:12px;font-size:11.5px;line-height:1.75;color:#a8c6b6}
+.page-lab .lab-coda{margin:26px clamp(17px,4vw,75px) 40px;padding:20px 22px;border-left:2px solid #b9f4d1;background:#0e232c}
+.page-lab .lab-coda p{margin:8px 0 0;font-size:13px;line-height:1.85;color:#c9d8d4}
+.page-lab .lab-projects p{display:grid;gap:3px;align-items:start}
+.page-lab .lab-projects p span{max-width:none;font-size:12px;line-height:1.75;color:#c2d4cf}
+.page-lab .lab-projects p a{margin-top:2px}

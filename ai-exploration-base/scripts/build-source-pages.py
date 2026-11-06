@@ -434,9 +434,10 @@ PAGES = [
          kicker="PLAYABLE PROTOTYPE / 可玩原型 · 六个频道"),
     dict(file="chapter-01.html", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
          cards=True, stage=[]),
-    dict(file="chapter-02.html", key="02", docs=["p2-trends.md", "sources-p123.md"],
-         deck="chapter02", deck_sources="sources-p123.md",
-         world=True, deck_js=["prototype-reveal.js?v=reveal-01"], stage=[]),
+    dict(file="chapter-02.html", key="02", docs=["p2-trends.md"], legacy=True,
+         legacy_src="legacy/chapter-02.html",
+         legacy_sources="sources-p123.md",
+         legacy_keys=["CNNIC", "时间线事件来源", "P2 五卡", "演示验证渠道"], stage=[]),
     dict(file="chapter-03.html", key="03", docs=["p3-lab.md"], legacy=True,
          legacy_src="legacy/chapter-03.html",
          legacy_sources="sources-p123.md", legacy_key="第 ③ 关", stage=[]),
@@ -717,9 +718,11 @@ def build(spec: dict) -> str:
         # 正文由数据层喂进去，页面骨架不再重建。
         body = re.search(r'<main[^>]*>([\s\S]*)</main>', src)
         scene = body.group(1).strip() if body else ""
-        # 重复跑构建时，把上一次补上去的导航与来源表摘掉，免得越堆越多
+        # 重复跑构建时，把上一次补上去的导航与来源表摘掉，免得越堆越多；
+        # 老页自己那条页尾导航也摘掉，统一用台面页的 deck-nav
         scene = re.sub(r'<nav class="deck-onward"[\s\S]*?</nav>', "", scene)
         scene = re.sub(r'<section class="ktable-sec"[\s\S]*?</section>', "", scene)
+        scene = re.sub(r'<nav\b[\s\S]*?</nav>', "", scene)
         stage = ""
         stage_bits = []
         # 断 JS 的静态兜底 + 撕纸之后的正文附录，都吃同一份解析结果
@@ -746,6 +749,12 @@ def build(spec: dict) -> str:
             )
             scene = re.sub(r'<div class="nojs-fallback">[\s\S]*?</div>',
                            lambda _m: fallback, scene, count=1)
+        # 真源正文直接填进老页的各节（③ 起用），填过的页不再往后挂纸
+        import legacy_pages as _LP
+        if _LP.FILLERS.get(spec["key"]):
+            _md = "\n\n".join((DOCS / d).read_text(encoding="utf-8") for d in spec["docs"])
+            scene = _LP.fill(spec["key"], scene, _md)
+
         if doc5:
             # 上一版构建塞进来的正文附录先摘掉（src 就是本页自己）
             j = find_element(scene, "section", lambda t: 'src-verbatim' in t)
@@ -756,7 +765,14 @@ def build(spec: dict) -> str:
         if spec.get("legacy_sources"):
             import deckkit as _K
             src_md = (DOCS / spec["legacy_sources"]).read_text(encoding="utf-8")
-            rows = source_rows_any(src_md, spec.get("legacy_key", "第⑤关"))
+            keys = spec.get("legacy_keys") or [spec.get("legacy_key", "第⑤关")]
+            rows, seen = [], set()
+            for k in keys:
+                for row in source_rows_any(src_md, k):
+                    if row["url"] in seen:
+                        continue
+                    seen.add(row["url"])
+                    rows.append(row)
             links = _K.linktable(rows, "本页来源",
                                  "每一幕底下都挂着一条真实案件报道；剧本本身是综合示意，不是某个具体案件。")
 
@@ -796,8 +812,10 @@ def build(spec: dict) -> str:
     )
 
     paper_html = ""
-    if spec.get("legacy") and not spec.get("legacy_noscript"):
-        # ③④⑥：老交互台原样留着，真源正文逐字排成一张纸接在后面
+    import legacy_pages as _LP0
+    if (spec.get("legacy") and not spec.get("legacy_noscript")
+            and not _LP0.FILLERS.get(spec["key"])):
+        # ④⑥：真源正文按老版式排成一张纸接在后面（③ 已经填进页面各节，见下）
         md_text = "\n\n".join((DOCS / d).read_text(encoding="utf-8") for d in spec["docs"])
         paper_html = legacy_paper(title, lead, readable_paper(md_text))
         article = ""
