@@ -232,4 +232,4 @@
 
 **③ 手机端控制行**：「运行一步 / 连续运行 / 回到起点」三项在 375 上会折成两行，改成 `nowrap` + 更小字号，并把「连续运行」定为紫色实心主按钮，另两项走细线下划线。
 
-**验证：** `smoke`、`test`、`content-wiring2`（14 项）、`integrated-tear`（含撕纸全流程）、`holistic-audit`（28 次检查 0 报错）、`holistic-nojs`（7 页回退）、`route-index-13`、`scam-act` 全 PASS；CSS 版本升到 `?v=dala-04`。
+**验证：** `smoke`、`test`、`content-wiring2`（14 项）、`integrated-tear`（含撕纸全流程）、`holistic-audit`（28 次检查 0 报错）、`holistic-nojs`（7 页回退）、`route-index-13`、`scam-act` 全 PASS；CSS 版本升到 `?v=dala-05`；⑥ 的「试投这一版」收成贴右的紧凑胶囊（原来被拉成 250px 宽的一条），试验台空态高度收紧。
