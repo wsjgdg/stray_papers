@@ -142,6 +142,22 @@
       else cancelAnimationFrame(raf);
     });
     if (!reduce) loop();
+    /* 滚过首屏后把星群压暗，正文不再和粒子线互相穿 */
+    var scrolled = false, ticking = false;
+    function syncScroll() {
+      var next = window.scrollY > window.innerHeight * 0.62;
+      if (next !== scrolled) {
+        scrolled = next;
+        document.documentElement.classList.toggle('is-past-hero', next);
+      }
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(syncScroll);
+    }, { passive: true });
+    syncScroll();
     document.documentElement.classList.add('constellation-ready');
   }
 

@@ -2638,3 +2638,63 @@ body:not(#void) .route-graphic i[data-active="true"]:nth-of-type(3) {
   background: var(--spark) !important;
 }
 body:not(#void) .route-graphic i[data-active="true"]::after { background: var(--spark) !important; }
+
+/* ============================================================
+   压住星群：滚过首屏后星群退到背景，正文区底色加到 50%
+   ============================================================ */
+body:not(#void) .constellation { transition: opacity .55s ease !important; }
+html.is-past-hero body:not(#void) .constellation { opacity: .32 !important; }
+
+body:not(#void) :where(
+  .route-context, .disclosure-copy, .context-warning, .disclosure-group,
+  .profile-panel, .paths-head, .reading, .reading-body, .phrases,
+  .dossier, .dossier-part, .dossier-block, .dossier-quote, .dossier-quote-block,
+  .trial-console, .lab-note, .bench-hint, .machine-help, .machine-foot,
+  .guide-row, .data-exhibit, .outcome-note, .report-content,
+  .week-simulation, .route-detail, .planning-columns, .debrief, .verdict,
+  .analysis-side, .editorial-note, .feed, .sort-desk
+) {
+  background-color: rgba(0, 0, 0, .5) !important;
+}
+
+body:not(#void) :where(
+  .choice-group button, .reset-conditions, .tool-links a, .step-choice,
+  .module-chip, #scheduled-tasks > *, .route-lane,
+  .rule-choices button, .plan-choices button,
+  .signal-card, .bin, .card-stack > *,
+  .machine-controls button, .tear-return a, .tear-return button,
+  .bench-actions button, .trial-header > button, .opening-jump,
+  .sample-selector button, .task-field, .route-ticket #ticket-copy, .drum-window
+) {
+  background-color: rgba(0, 0, 0, .42) !important;
+}
+
+/* 字晕再厚一层，粒子线彻底不穿字 */
+body:not(#void) main :where(p, li, h1, h2, h3, h4, h5, small, strong, em, span, a, button, legend, summary, label, dt, dd, blockquote) {
+  text-shadow: 0 0 6px rgba(0, 0, 0, 1), 0 0 18px rgba(0, 0, 0, .95), 0 0 34px rgba(0, 0, 0, .8) !important;
+}
+
+/* 再退一档：滚动后星群只留 22%，文字区底色 55% */
+html.is-past-hero body:not(#void) .constellation { opacity: .22 !important; }
+body:not(#void) :where(
+  .route-context, .disclosure-copy, .context-warning, .disclosure-group,
+  .profile-panel, .paths-head, .reading, .reading-body, .phrases,
+  .dossier, .dossier-part, .dossier-block, .dossier-quote, .dossier-quote-block,
+  .trial-console, .lab-note, .bench-hint, .machine-help, .machine-foot,
+  .guide-row, .data-exhibit, .outcome-note, .report-content,
+  .week-simulation, .route-detail, .planning-columns, .debrief, .verdict,
+  .analysis-side, .editorial-note, .feed, .sort-desk
+) {
+  background-color: rgba(0, 0, 0, .55) !important;
+}
+body:not(#void) :where(
+  .choice-group button, .reset-conditions, .tool-links a, .step-choice,
+  .module-chip, #scheduled-tasks > *, .route-lane,
+  .rule-choices button, .plan-choices button,
+  .signal-card, .bin, .card-stack > *,
+  .machine-controls button, .tear-return a, .tear-return button,
+  .bench-actions button, .trial-header > button, .opening-jump,
+  .sample-selector button, .task-field, .route-ticket #ticket-copy, .drum-window
+) {
+  background-color: rgba(0, 0, 0, .45) !important;
+}
