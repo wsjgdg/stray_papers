@@ -125,121 +125,164 @@ def parse(md: str) -> dict:
 
 
 # ------------------------------------------------------------------ 渲染
+# 排版沿用塞原文前那张趋势台：大标题两侧留白、细线分栏、数据展台压在纸上。
+# 只是把原来台子自己的文案换成真源逐字。
 
-def _timeline_tile(entries: list[dict]) -> str:
-    items = "".join(
-        '<li class="tl-item">'
-        f'<span class="tl-when">{K.esc(e["when"])}</span>'
-        + "".join(f"<p>{K.rich(p)}</p>" for p in e["paras"])
-        + "</li>"
-        for e in entries
-    )
-    return K.tile("timeline", f'<ol class="tl">{items}</ol>', span=4, tag="时间线")
+def _lead(md: str) -> str:
+    """页首导语：真源「页首标题与导语」里 lead 那两句，逐字。"""
+    m = re.search(r"^(?:- )?导语[^\n]*\n((?:\s*>.*\n?)+)", md, flags=re.M)
+    if not m:
+        return ""
+    lines = [ln.strip().lstrip(">").strip() for ln in m.group(1).splitlines()]
+    return " ".join(x for x in lines if x)
 
 
-def _people_tile(people: dict) -> str:
-    icons = []
+def _h1(md: str) -> str:
+    m = re.search(r"主标题（H1）[：:]\s*`?([^`\n]+)`?", md)
+    return K.strip_md(m.group(1)) if m else ""
+
+
+def _wire(entries: list[dict]) -> str:
+    out = []
+    for i, e in enumerate(entries):
+        body = "".join(f"<p>{K.rich(p)}</p>" for p in e["paras"])
+        out.append(
+            '<li class="wire-item" data-reveal style="--d:%.2fs">' % min(i * 0.05, 0.3)
+            + '<span class="wire-when">%s</span>' % K.esc(e["when"])
+            + f'<div class="wire-body">{body}</div></li>'
+        )
+    return '<ol class="wire">' + "".join(out) + "</ol>"
+
+
+def _people_block(people: dict) -> str:
+    dots = []
     for i in range(10):
         fill = 1 if i < 3 else (0.6 if i == 3 else 0)
-        style = f"--fill:{fill}"
-        icons.append(f'<span class="pp-figure" style="{style}" aria-hidden="true"></span>')
-    return K.tile(
-        "people",
-        '<div class="pp-grid" role="img" aria-label="' + K.esc(people["aria"]) + '">'
-        + "".join(icons) + "</div>"
-        f'<p class="pp-label">{K.rich(people["label"])}</p>'
-        f'<p class="pp-source">{K.esc(people["source"])}</p>',
-        span=2, tag="示意图",
+        dots.append(f'<span class="pp-dot" style="--fill:{fill}" aria-hidden="true"></span>')
+    return (
+        '<div class="trend-people" data-reveal>'
+        '<div class="pp-row" role="img" aria-label="%s">%s</div>'
+        '<p class="pp-caption">%s<small>%s</small></p></div>'
+        % (K.esc(people["aria"]), "".join(dots),
+           K.rich(people["label"]), K.esc(people["source"]))
     )
 
 
-def _stat_tiles(stats: list[dict]) -> str:
-    return "".join(
-        K.tile("stat",
-               f'<p class="st-big">{K.esc(s["big"])}</p>'
-               f'<p class="st-small">{K.esc(s["small"])}</p>',
-               span=2, tag=f"数字 {s['no']}")
-        for s in stats
-    )
-
-
-def _chart_tile(chart: dict) -> str:
+def _exhibit(stats: list[dict], chart: dict) -> str:
     top = max((v for _, v in chart["points"]), default=1)
     bars = "".join(
-        '<div class="ch-col">'
-        f'<span class="ch-val">{val:g} 亿</span>'
-        '<i class="ch-track">'
-        f'<i class="ch-bar" style="--h:{(val / top) * 100:.1f}%"></i></i>'
-        f'<span class="ch-lab">{K.esc(lab)}</span>'
-        "</div>"
-        for lab, val in chart["points"]
+        '<div class="exhibit-bar%s"><span>%s</span>'
+        '<b style="--length:%.0f%%">%s <small>亿人</small></b></div>'
+        % (" late" if i else " early", K.esc(lab).replace(" 年 ", " / ").replace(" 月", ""),
+           (val / top) * 100, ("%g" % val))
+        for i, (lab, val) in enumerate(chart["points"])
     )
-    return K.tile(
-        "chart",
-        f'<p class="ch-legend">{K.esc(chart["legend"])}</p>'
-        f'<div class="ch-plot">{bars}</div>'
-        f'<p class="ch-source">{K.rich(chart["source"])}</p>',
-        span=4, tag="数据",
+    metrics = "".join(
+        '<span><b>%s</b><small>%s</small></span>' % (K.esc(s["big"]), K.esc(s["small"]))
+        for s in stats
     )
-
-
-def _note_tile(paras: list[str]) -> str:
-    body = "".join(f"<p>{K.rich(p)}</p>" for p in paras)
-    return K.tile("note", f'<div class="nt-body">{body}</div>', span=2, tag="怎么读")
-
-
-def _industry_tile(card: dict) -> str:
-    span = 6 if card["wide"] else 3
-    fact = (f'<p class="in-fact">{K.rich(card["fact"])}</p>'
-            if card["fact"] else "")
-    return K.tile(
-        "industry",
-        '<div class="in-head">'
-        f'<span class="in-emoji" aria-hidden="true">{K.esc(card["emoji"])}</span>'
-        f'<h4 class="in-name">{K.esc(card["name"])}</h4>'
-        f'<span class="in-no">{K.esc(card["no"])}</span></div>'
-        f'<p class="in-body">{K.rich(card["body"])}</p>'
-        + fact,
-        span=span,
+    return (
+        '<div class="data-exhibit" data-reveal>'
+        f'<span class="exhibit-eyebrow">{K.esc(chart["legend"])}</span>'
+        f'<div class="exhibit-metrics">{metrics}</div>'
+        f'<div class="exhibit-axis">{bars}</div>'
+        f'<p class="exhibit-source">{K.rich(chart["source"])}</p></div>'
     )
 
 
-def _group_tiles(group: dict) -> tuple[str, str]:
-    """返回 (tiles_html, rail_class)。"""
-    tiles = []
-    for item in group["items"]:
-        if item["type"] == "timeline":
-            tiles.append(_timeline_tile(item["entries"]))
-        elif item["type"] == "people":
-            tiles.append(_people_tile(item))
-        elif item["type"] == "stats":
-            tiles.append(_stat_tiles(item["stats"]))
-        elif item["type"] == "chart":
-            tiles.append(_chart_tile(item))
-        elif item["type"] == "note":
-            tiles.append(_note_tile(item["paras"]))
-        elif item["type"] == "industry":
-            tiles.append(_industry_tile(item))
-    return "".join(tiles), "cardrail"
+def _rows(items: list[dict]) -> str:
+    out = []
+    for i, item in enumerate(items):
+        fact = (f'<p class="row-fact">{K.rich(item["fact"])}</p>' if item["fact"] else "")
+        out.append(
+            '<li class="trend-row" data-reveal style="--d:%.2fs">' % min(i * 0.06, 0.36)
+            + f'<span class="row-no">{K.esc(item["no"]).zfill(2)}</span>'
+            + '<div class="row-main">'
+            + f'<h3><span aria-hidden="true">{K.esc(item["emoji"])}</span>{K.esc(item["name"])}</h3>'
+            + f'<p class="row-body">{K.rich(item["body"])}</p>'
+            + fact + "</div></li>"
+        )
+    return '<ul class="trend-rows">' + "".join(out) + "</ul>"
 
 
 def render(md: str, sources_md: str = "") -> tuple[str, str]:
     doc = parse(md)
-    groups = "".join(
-        K.group(g["title"], g["sub"], *_group_tiles(g)[:1]) for g in doc["groups"]
+
+    def group(key: str) -> dict:
+        for g in doc["groups"]:
+            if key in g["title"]:
+                return g
+        return {"title": "", "sub": "", "items": []}
+
+    g_time, g_num, g_trade = group("这两年"), group("数字"), group("各行各业")
+
+    def item(g: dict, kind: str) -> dict:
+        for it in g["items"]:
+            if it["type"] == kind:
+                return it
+        return {}
+
+    timeline = _wire(item(g_time, "timeline").get("entries", []))
+    people = _people_block(item(g_time, "people")) if item(g_time, "people") else ""
+    exhibit = _exhibit(item(g_num, "stats").get("stats", []),
+                       item(g_num, "chart") or {"legend": "", "points": [], "source": ""})
+    note = item(g_num, "note")
+    note_html = ""
+    if note:
+        note_html = ('<div class="trend-note" data-reveal>'
+                     + "".join(f"<p>{K.rich(p)}</p>" for p in note["paras"]) + "</div>")
+
+    head_one = g_time["title"] or "这两年，发生了什么"
+    head_two = g_num["title"] or "数字最诚实：半年翻一番"
+    head_three = g_trade["title"] or "各行各业，正在被改写"
+
+    summary = ""
+    if doc.get("summary"):
+        summary = (
+            '<section class="trend-close" data-reveal>'
+            f'<span class="trend-kicker">{K.esc(doc["summary"]["title"])}</span>'
+            + "".join(f"<p>{K.rich(p)}</p>" for p in doc["summary"]["paras"])
+            + "</section>"
+        )
+
+    world = (
+        '<div class="trend-world">'
+        '<section class="trend-opening">'
+        '<div class="opening-copy">'
+        f'<span class="eyebrow"><span class="live-dot"></span>{K.esc(_h1(md))}</span>'
+        "<h1>它不是风，<br><em>是电</em></h1>"
+        "</div>"
+        f'<p class="trend-lead">{K.rich(_lead(md))}</p>'
+        "</section>"
+
+        '<section class="trend-block" aria-labelledby="trend-t1">'
+        '<header class="trend-block-head">'
+        '<span class="trend-kicker">01 / TIMELINE</span>'
+        f'<h2 id="trend-t1">{K.esc(head_one)}</h2></header>'
+        + timeline + people +
+        "</section>"
+
+        '<section class="trend-block" aria-labelledby="trend-t2">'
+        '<header class="trend-block-head">'
+        '<span class="trend-kicker">02 / THE NUMBER</span>'
+        f'<h2 id="trend-t2">{K.esc(head_two)}</h2></header>'
+        f'<div class="trend-data">{exhibit}{note_html}</div>'
+        "</section>"
+
+        '<section class="trend-block" aria-labelledby="trend-t3">'
+        '<header class="trend-block-head">'
+        '<span class="trend-kicker">03 / INDUSTRIES</span>'
+        f'<h2 id="trend-t3">{K.esc(head_three)}</h2></header>'
+        + _rows(g_trade["items"]) +
+        "</section>"
+
+        + summary +
+        "</div>"
     )
-    head = K.head(
-        "THE TREND DESK / 趋势台",
-        "它不是一阵风，**是电**。",
-        note="下面每一件都能自己看：一条时间线、一张示意图、三个数字、一张柱状图，"
-             "还有五个行业里正在发生的事。",
-    )
-    floor = K.castfloor(head, groups,
-                        K.summary(doc["summary"]["title"], doc["summary"]["paras"])
-                        if doc.get("summary") else "")
+
     table = ""
     if sources_md:
         rows = K.source_rows(sources_md, ("P2",))
         table = K.linktable(rows, "本页来源",
                             "数字与事件都能点开核对；标“反爬”的链接浏览器可以直接打开。")
-    return floor, table
+    return world, table
