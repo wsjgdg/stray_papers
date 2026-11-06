@@ -437,16 +437,19 @@ PAGES = [
     dict(file="chapter-02.html", key="02", docs=["p2-trends.md", "sources-p123.md"],
          deck="chapter02", deck_sources="sources-p123.md",
          world=True, deck_js=["prototype-reveal.js?v=reveal-01"], stage=[]),
-    dict(file="chapter-03.html", key="03", docs=["p3-lab.md", "sources-p123.md"],
-         deck="chapter03", deck_sources="sources-p123.md", stage=[]),
-    dict(file="chapter-04.html", key="04", docs=["p4-side-jobs.md", "sources-p456.md"],
-         deck="chapter04", deck_sources="sources-p456.md", stage=[]),
+    dict(file="chapter-03.html", key="03", docs=["p3-lab.md"], legacy=True,
+         legacy_src="legacy/chapter-03.html",
+         legacy_sources="sources-p123.md", legacy_key="第 ③ 关", stage=[]),
+    dict(file="chapter-04.html", key="04", docs=["p4-side-jobs.md"], legacy=True,
+         legacy_src="legacy/chapter-04.html",
+         legacy_sources="sources-p456.md", legacy_key="第④关", stage=[]),
     dict(file="chapter-05.html", key="05", docs=["p5-anti-scam.md", "real-cases-p5.md",
                                                  "sources-p456.md"],
          legacy=True, legacy_sources="sources-p456.md", legacy_key="第⑤关",
          legacy_noscript="p5-anti-scam.md", stage=[]),
-    dict(file="chapter-06.html", key="06", docs=["p6-academy.md"],
-         deck="chapter06", deck_js=["prototype-academy-quiz.js?v=quiz-01"], stage=[]),
+    dict(file="chapter-06.html", key="06", docs=["p6-academy.md"], legacy=True,
+         legacy_src="legacy/chapter-06.html",
+         legacy_sources="sources-p456.md", legacy_key="第⑥关", stage=[]),
 ]
 
 
@@ -514,6 +517,97 @@ def scam_verbatim(doc: dict) -> str:
     return "\n".join(out)
 
 
+def source_rows_any(sources_md: str, section_hint: str) -> list[dict]:
+    """按小节标题挑来源行；列序不固定（sources-p123 是 `# | 名称 | URL | 状态码 | 用途`）。"""
+    import deckkit as _K
+    rows = _K.source_rows_urls(sources_md, section_hint)
+    if rows:
+        return rows
+    out: list[dict] = []
+    active = False
+    for line in sources_md.splitlines():
+        head = re.match(r"^#{2,4}\s+(.*)$", line)
+        if head:
+            active = section_hint in head.group(1)
+            continue
+        if not active or not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
+        url = next((c.strip("<> ") for c in cells if c.strip("<> ").startswith("http")), "")
+        if not url:
+            continue
+        status = next((c for c in cells if re.fullmatch(r"\d{3}", c)), "")
+        use = cells[-1] if cells else ""
+        name = next((c for c in cells[1:] if c and not c.startswith("http")
+                     and not re.fullmatch(r"\d{3}", c)), "")
+        title = re.split(r"[（(]", name)[0].strip() or re.sub(r"^https?://", "", url).split("/")[0]
+        out.append({"no": "", "title": title, "url": url, "code": status, "use": use})
+    return out
+
+
+def drop_sections(html_text: str, words: tuple[str, ...]) -> str:
+    """正文里只留内容：把「页面导航 / 页尾按钮 / 编辑备注」这类维护性小节摘掉。"""
+    out, pos = [], 0
+    while True:
+        i = html_text.find('<section class="src-section"', pos)
+        if i < 0:
+            out.append(html_text[pos:])
+            return "".join(out)
+        out.append(html_text[pos:i])
+        block = balanced(html_text, i, "section")
+        head = re.sub(r"<[^>]+>", "", block[: block.find("</h") + 5]) if "</h" in block else ""
+        if any(w in head for w in words):
+            pass
+        else:
+            out.append(block)
+        pos = i + len(block)
+
+
+READER_DROP = ("页面元信息", "页面导航", "页尾", "编辑备注", "本页来源", "素材清单",
+               "真实截图", "内嵌", "源码链接", "脚本行为", "元信息", "页首",
+               "（卡内）", "照页面原样", "三段式")
+
+
+def readable_paper(md_text: str) -> str:
+    """把「页面文案真源」里读者要看的那部分取出来：小标题 + 引用块（原文）+ 编号芯片。
+
+    真源文档同时记着素材路径、alt 文本、维护规则这类编辑备注，那些进不了正文。
+    """
+    out = []
+    for chunk in re.split(r"^##\s+", md_text, flags=re.M)[1:]:
+        head, _, rest = chunk.partition("\n")
+        title = re.sub(r"^\d+\.\s*", "", head.strip())
+        if any(w in title for w in READER_DROP):
+            continue
+        kept, sub = [], ""
+        for line in rest.splitlines():
+            t = line.strip()
+            if t.startswith("###"):
+                label = t.lstrip("#").strip()
+                if not any(w in label for w in READER_DROP):
+                    kept.append(f"**{label}**")
+                continue
+            if t.startswith(">") and not any(w in t for w in ("编辑约定", "维护规则", "演示样例的标注")):
+                kept.append(t)
+            elif re.match(r"^\d+\.\s", t):
+                kept.append("- " + re.sub(r"^\d+\.\s+", "", t))
+        body = "\n\n".join(kept).strip()
+        if len(re.sub(r"<[^>]+>|\s|[-*>#]", "", body)) < 12:
+            continue
+        out.append((title, md_html(body)))
+    return "".join(section_html(i + 1, t, b) for i, (t, b) in enumerate(out))
+
+
+def legacy_paper(title: str, lead: str, article_html: str) -> str:
+    """老交互页后面那张「正文」纸：真源逐字排在里面，样式与别页同一张纸。"""
+    lead_html = f'<p class="src-lead">{md_html(lead)}</p>' if lead else ""
+    return ('<section class="src-article src-verbatim" id="verbatim" '
+            'aria-labelledby="verbatim-title">'
+            '<p class="src-kicker">SOURCE TEXT / 正文 · 逐字</p>'
+            f'<h2 class="src-h2" id="verbatim-title">{html.escape(title)}</h2>'
+            f'{lead_html}{article_html}</section>')
+
+
 def strip_dossier(text: str) -> str:
     text = re.sub(r"<!-- DOSSIER:START -->[\s\S]*?<!-- DOSSIER:END -->", "", text)
     while True:
@@ -555,7 +649,8 @@ def deck_nav(key: str) -> str:
 
 def build(spec: dict) -> str:
     path = PROTO / spec["file"]
-    src = path.read_text(encoding="utf-8")
+    src = ((PROTO / spec["legacy_src"]).read_text(encoding="utf-8")
+           if spec.get("legacy_src") else path.read_text(encoding="utf-8"))
 
     head = src[: src.index("</head>") + len("</head>")]
     body_open = re.search(r'<body[^>]*>', src)
@@ -661,7 +756,7 @@ def build(spec: dict) -> str:
         if spec.get("legacy_sources"):
             import deckkit as _K
             src_md = (DOCS / spec["legacy_sources"]).read_text(encoding="utf-8")
-            rows = _K.source_rows_urls(src_md, spec.get("legacy_key", "第⑤关"))
+            rows = source_rows_any(src_md, spec.get("legacy_key", "第⑤关"))
             links = _K.linktable(rows, "本页来源",
                                  "每一幕底下都挂着一条真实案件报道；剧本本身是综合示意，不是某个具体案件。")
 
@@ -678,7 +773,7 @@ def build(spec: dict) -> str:
                                              with_cards=False)
 
     nav = ""
-    if spec.get("deck") or spec.get("legacy"):
+    if spec.get("deck") or spec.get("legacy") or spec.get("cards"):
         nav = deck_nav(spec["key"])
 
     # 真源样式表只留一份（历次构建在同一张页面上追加过很多份）
@@ -700,12 +795,18 @@ def build(spec: dict) -> str:
         + "</section>"
     )
 
+    paper_html = ""
+    if spec.get("legacy") and not spec.get("legacy_noscript"):
+        # ③④⑥：老交互台原样留着，真源正文逐字排成一张纸接在后面
+        md_text = "\n\n".join((DOCS / d).read_text(encoding="utf-8") for d in spec["docs"])
+        paper_html = legacy_paper(title, lead, readable_paper(md_text))
+        article = ""
     if (spec.get("cards") or spec.get("deck") or spec.get("no_article")
             or spec.get("legacy")):
         article = ""          # 台面已经把正文吃进去了，别再来一份
     if spec.get("deck") or spec.get("cards") or spec.get("legacy"):
-        # 先给跳转按钮，再沉一张来源索引表当附录
-        body_parts = hero + scene + nav + links + article
+        # 先给跳转按钮，再沉一张来源索引表当附录（③④⑥ 的正文纸插在交互台之后）
+        body_parts = hero + scene + paper_html + nav + links + article
     else:
         body_parts = hero + scene + links + article + nav
     main_class = "src-main src-main--world" if spec.get("world") else "src-main"
