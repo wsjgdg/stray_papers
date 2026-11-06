@@ -530,10 +530,8 @@ def build(spec: dict) -> str:
                                              with_cards=False)
 
     nav = ""
-    if onward:
-        nav = onward
-    elif spec.get("deck"):
-        # 台面页若原本没有导航，补一条同款，别让读者走到页尾没路可走
+    if spec.get("deck"):
+        # 台面页统一一条页尾导航：下一关最大，回到拨盘在右；来源索引表沉在它下面
         order = [("01", "chapter-01.html", "① AI 能做什么"),
                  ("02", "chapter-02.html", "② AI 趋势与行业"),
                  ("03", "chapter-03.html", "③ 儿子的 AI 实验室"),
@@ -542,20 +540,46 @@ def build(spec: dict) -> str:
                  ("06", "chapter-06.html", "⑥ 提示词学院")]
         key = spec["key"]
         idx = next((i for i, row in enumerate(order) if row[0] == key), -1)
-        bits = ['<a href="index.html?v=switch-13">← 回到原型拨盘</a>']
+        prev_link = ""
         if idx > 0:
-            k, f, t = order[idx - 1]
-            bits.append(f'<a href="{f}?v=deck-01">← {t}</a>')
+            _, f, t = order[idx - 1]
+            prev_link = f'<a class="deck-onward-prev" href="{f}?v=deck-01">← {t}</a>'
+        next_bit = ""
         if 0 <= idx < len(order) - 1:
-            k, f, t = order[idx + 1]
-            bits.append(f'<a href="{f}?v=deck-01">{t} ↗</a>')
-        nav = ('<nav class="forge-onward deck-onward" aria-label="原型导航">'
-               + "".join(bits) + "</nav>")
+            _, f, t = order[idx + 1]
+            next_bit = ('<span class="deck-onward-main">'
+                        '<span class="deck-onward-k">下一关 / '
+                        f'{int(key) + 1:02d} OF 06</span>'
+                        f'<a class="deck-onward-next" href="{f}?v=deck-01">'
+                        f'{t} <b aria-hidden="true">↗</b></a></span>')
+        else:
+            next_bit = ('<span class="deck-onward-main">'
+                        '<span class="deck-onward-k">六关走完 / 06 OF 06</span>'
+                        '<a class="deck-onward-next" href="index.html?v=switch-14">'
+                        '回到探索地图 <b aria-hidden="true">↗</b></a></span>')
+        nav = ('<nav class="deck-onward" aria-label="原型导航">'
+               + next_bit + prev_link
+               + '<a class="deck-onward-home" href="index.html?v=switch-14">回到原型拨盘 ↗</a>'
+               + "</nav>")
+    elif onward:
+        nav = onward
+
+    if spec.get("cards"):
+        # ① 关：正文＝卡片本身，后面不再跟一遍文章，只补一张链接表
+        c1 = _load_chapter01()
+        p1_md = (DOCS / spec["docs"][0]).read_text(encoding="utf-8")
+        cases_md = (DOCS / "real-cases-p1.md").read_text(encoding="utf-8")
+        scene = c1.render_scene(c1.parse_doc(p1_md))
+        links = c1.render_linktable(c1.parse_cases(cases_md), c1.parse_verify(p1_md))
+
+    title, lead, meta, article = article_for(spec["docs"], stage,
+                                             spec.get("stage_anchor", ""),
+                                             with_cards=False)
 
     # 真源样式表只留一份（历次构建在同一张页面上追加过很多份）
     head = re.sub(r'<link rel="stylesheet" href="prototype-source\.css[^"]*">', "", head)
     head = head.replace(
-        "</head>", '<link rel="stylesheet" href="prototype-source.css?v=source-03"></head>'
+        "</head>", '<link rel="stylesheet" href="prototype-source.css?v=source-04"></head>'
     )
 
     body_class = body_open.group(0) if body_open else "<body>"
@@ -573,7 +597,11 @@ def build(spec: dict) -> str:
 
     if spec.get("cards") or spec.get("deck"):
         article = ""          # 台面已经把正文吃进去了，别再来一份
-    body_parts = hero + scene + links + article + nav
+    if spec.get("deck") or spec.get("cards"):
+        # 先给跳转按钮，再沉一张来源索引表当附录
+        body_parts = hero + scene + nav + links + article
+    else:
+        body_parts = hero + scene + links + article + nav
     main = f'<main class="src-main" id="source-{spec["key"]}">{body_parts}</main>'
 
     out = strip_dossier(
@@ -634,6 +662,8 @@ def build(spec: dict) -> str:
         extra = "".join(
             f'<script src="{js}" defer></script>' for js in spec.get("deck_js", [])
         )
+        if spec.get("deck") and "prototype-deck-motion" not in extra:
+            extra += '<script src="prototype-deck-motion.js?v=deck-01" defer></script>'
         out = out.replace("</body>",
                           '<script src="../assets/vendor/gsap.min.js"></script>'
                           '<script src="../assets/vendor/ScrollTrigger.min.js" defer></script>'
