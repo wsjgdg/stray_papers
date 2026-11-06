@@ -2504,3 +2504,116 @@ body:not(#void) .route-telemetry a {
   font-size: 11.5px !important; color: var(--silver) !important; border-bottom: 1px solid rgba(255, 255, 255, .3) !important;
   text-decoration: none !important;
 }
+
+/* ④ 首屏图形：三条路线变成一支会动的刻度仪，跟着当前排序与选中走 */
+body:not(#void) .route-graphic {
+  position: relative !important;
+  justify-self: end !important; align-self: center !important;
+  width: min(100%, 360px) !important;
+  margin: 0 !important; padding: 4px 0 4px 26px !important;
+  border: 0 !important; border-left: 1px solid rgba(255, 255, 255, .16) !important;
+  border-radius: 0 !important;
+  background: none !important; box-shadow: none !important;
+  transform: none !important;
+}
+body:not(#void) .route-graphic > span {
+  display: block !important; margin: 0 0 26px !important;
+  font-size: 9.5px !important; font-weight: 400 !important; letter-spacing: .16em !important;
+  text-transform: uppercase !important; color: var(--ash) !important;
+  background: none !important;
+}
+body:not(#void) .route-graphic i,
+body:not(#void) .route-graphic i:nth-of-type(1),
+body:not(#void) .route-graphic i:nth-of-type(2),
+body:not(#void) .route-graphic i:nth-of-type(3) {
+  display: block !important; position: relative !important;
+  height: 1px !important; width: var(--fit, 100%) !important;
+  margin: 0 0 20px 0 !important;
+  border: 0 !important; border-radius: 0 !important;
+  background: rgba(255, 255, 255, .38) !important;
+  box-shadow: none !important; transform: none !important;
+  transition: width .6s cubic-bezier(.18, .84, .25, 1), background-color .35s ease !important;
+}
+body:not(#void) .route-graphic i::after {
+  content: "" !important; position: absolute !important; right: -3px !important; top: -2.5px !important;
+  width: 6px !important; height: 6px !important; border-radius: 50% !important;
+  background: rgba(255, 255, 255, .55) !important;
+  transition: background-color .35s ease !important;
+}
+body:not(#void) .route-graphic i[data-active="true"] { background: var(--spark) !important; }
+body:not(#void) .route-graphic i[data-active="true"]::after { background: var(--spark) !important; }
+body:not(#void) .route-graphic > strong {
+  display: block !important; margin: 8px 0 0 !important;
+  text-align: left !important;
+  font-size: 10.5px !important; font-weight: 200 !important; letter-spacing: .08em !important;
+  color: rgba(255, 255, 255, .52) !important; background: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  body:not(#void) .route-graphic i { transition: none !important; }
+}
+
+/* ============================================================
+   可读性：黑底虚空里，凡是压着星群的界面都留一层 30% 的黑，
+   字不再和 1px 粒子线互相穿；最暗的那几行说明也提一档。
+   ============================================================ */
+
+/* 30% 衬底：可点的小面 */
+body:not(#void) :where(
+  .choice-group button, .reset-conditions, .tool-links a, .step-choice,
+  .module-chip, #scheduled-tasks > *, .route-lane,
+  .rule-choices button, .plan-choices button,
+  .signal-card, .bin, .card-stack > *,
+  .machine-controls button, .tear-return a, .tear-return button,
+  .bench-actions button, .trial-header > button, .opening-jump,
+  .sample-selector button, .task-field, .week-simulation,
+  .route-ticket #ticket-copy, .drum-window
+) {
+  background-color: rgba(0, 0, 0, .3) !important;
+}
+
+/* 30% 衬底：成段的文字区 */
+body:not(#void) :where(
+  .route-context, .disclosure-copy, .context-warning, .disclosure-group,
+  .profile-panel, .paths-head, .reading, .reading-body, .phrases,
+  .dossier, .dossier-part, .dossier-block, .dossier-quote, .dossier-quote-block,
+  .trial-console, .lab-note, .bench-hint, .machine-help, .machine-foot,
+  .guide-row, .data-exhibit, .outcome-note, .report-content
+) {
+  background-color: rgba(0, 0, 0, .3) !important;
+}
+
+/* 最暗的一档说明字，从 45–55% 提到 68% */
+body:not(#void) :where(
+  .task-field > small, .sample-selector button small, .signal-card .card-pick small,
+  .bin small, .bin .bin-contents, .field-hint, .bench-hint,
+  .route-lane .lane-reason, .route-detail .detail-instruction,
+  .planner-subhead, .route-graphic > strong, #budget-status,
+  .disclosure-group > small, #scheduled-tasks > .empty-schedule,
+  .word-machine .machine-help, .machine-foot p
+) {
+  color: rgba(255, 255, 255, .68) !important;
+}
+
+/* 粒子是 1px 描边，任何位置都可能从字缝里穿过；
+   给正文一层紧贴的黑晕，比加深面板更不破坏设计 */
+body:not(#void) main :where(p, li, h1, h2, h3, h4, h5, small, strong, em, span, a, button, legend, summary, label, dt, dd, blockquote) {
+  text-shadow: 0 0 14px rgba(0, 0, 0, .92), 0 1px 2px rgba(0, 0, 0, .6) !important;
+}
+body:not(#void) main :where(input, textarea, select) { text-shadow: 0 0 14px rgba(0, 0, 0, .92) !important; }
+
+/* ② 首屏在手机上不能还是两栏（0px + 320px 会把三步条挤成竖排单字） */
+@media (max-width: 760px) {
+  body:not(#void) .trend-opening { grid-template-columns: minmax(0, 1fr) !important; gap: 22px !important; }
+  body:not(#void) .trend-opening .opening-copy { width: auto !important; min-width: 0 !important; }
+  body:not(#void) .opening-steps { flex-wrap: wrap !important; gap: 6px 10px !important; }
+  body:not(#void) .opening-steps span { white-space: nowrap !important; width: auto !important; height: auto !important; }
+}
+
+/* 卡片底部状态行也提一档 */
+body:not(#void) :where(.card-status, .card-bottom span, .drag-grip, .chip-note, .detail-rank) {
+  color: rgba(255, 255, 255, .68) !important;
+}
+
+/* ④ 首屏刻度仪：三条线之间松一点，说明别再贴着最后一条 */
+body:not(#void) .route-graphic i { margin-bottom: 22px !important; }
+body:not(#void) .route-graphic > strong { margin-top: 12px !important; color: rgba(255, 255, 255, .72) !important; }
