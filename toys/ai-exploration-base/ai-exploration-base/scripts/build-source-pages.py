@@ -23,16 +23,182 @@ PROTO = ROOT / "prototype"
 DOCS = ROOT / "docs" / "content"
 
 
-def _load_helpers():
-    """复用 build-prototype-content.py 里的 Markdown 渲染（同一套规则）。"""
-    path = pathlib.Path(__file__).with_name("build-prototype-content.py")
-    spec = importlib.util.spec_from_file_location("_bpc", path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.md_html, mod.inline
+# Markdown → HTML 的小渲染器（从旧的 dossier 生成器里搬过来，规则没变）
+DEAD_LINKS = (
+    "https://agi.taobao.com",
+    "https://kf.qq.com/product/wx_app.html",
+    "https://kf.qq.com/touch/product/weixin_app.html",
+    "https://www.bilibili.com/video/BV1YB6EB6Ekv",
+)
+DEAD_NOTE = "原链接已标注不采用 / 404，不接入"
+
+SEEN_LINKS: list[str] = []
 
 
-md_html, inline = _load_helpers()
+def _anchor(text: str, url: str) -> str:
+    url = url.strip().rstrip("，。；,;")
+    if not url.startswith("http") or url.endswith(".md"):
+        return f'<span class="dossier-ref">{text}</span>'
+    if url.startswith(DEAD_LINKS):
+        return (f'<span class="dossier-ref" title="{DEAD_NOTE}">{text}</span>'
+                f'<span class="dossier-dead">（{DEAD_NOTE}）</span>')
+    SEEN_LINKS.append(url)
+    return (f'<a href="{url}" target="_blank" rel="noopener noreferrer">{text}</a>')
+
+
+def inline(s: str) -> str:
+    s = html.escape(s, quote=False)
+    s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+    s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", lambda m: _anchor(m.group(1), m.group(2)), s)
+    s = re.sub(r"&lt;(https?://[^\s&]+)&gt;", lambda m: _anchor(m.group(1), m.group(1)), s)
+    s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
+    s = re.sub(r"(?<![\w])_([^_<>]{1,60})_(?![\w])", r"<em>\1</em>", s)
+    # 裸 URL（表格单元格、清单里直接写的地址）：只处理不在链接/代码里的片段
+    pieces = re.split(r"(<a\s[^>]*>.*?</a>|<code>.*?</code>)", s)
+    s = "".join(p if p.startswith(("<a ", "<code>")) else _autolink(p) for p in pieces)
+    return s
+
+
+def _autolink(seg: str) -> str:
+    def repl(m: "re.Match[str]") -> str:
+        url = m.group(1).rstrip(".,;:，。；、|*")
+        tail = m.group(1)[len(url):]
+        return _anchor(url, url) + tail
+    return re.sub(r"(https?://[^\s<>&\"'）】]+)", repl, seg)
+
+
+def _cells(row: str) -> list[str]:
+    return [c.strip() for c in row.strip().strip("|").split("|")]
+
+
+def md_html(text: str) -> str:
+    """Markdown → HTML，够用即可（标题、段落、列表、引用、代码、表格）。"""
+    out: list[str] = []
+    lines = text.splitlines()
+    i = 0
+    para: list[str] = []
+    quote: list[str] = []
+    list_stack: list[str] = []
+    ol_next: dict[int, int] = {}
+    fence = False
+    fence_buf: list[str] = []
+
+    def flush_para() -> None:
+        if para:
+            out.append(f"<p>{inline(' '.join(para))}</p>")
+            para.clear()
+
+    def flush_quote() -> None:
+        if not quote:
+            return
+        # 引用块里可能是段落，也可能是“- ”/“1.” 开头的清单
+        buf: list[str] = []
+        inner: list[str] = []
+        mode = None  # None / "ul" / "ol"
+
+        def flush_buf() -> None:
+            if buf:
+                inner.append(f"<p>{inline(' '.join(buf))}</p>")
+                buf.clear()
+
+        def close_mode() -> None:
+            nonlocal mode
+            if mode:
+                inner.append(f"</{mode}>")
+                mode = None
+
+        for line in quote:
+            m = re.match(r"^([-*+]|\d+\.)\s+(.*)$", line)
+            if m:
+                flush_buf()
+                kind = "ol" if m.group(1)[0].isdigit() else "ul"
+                if mode != kind:
+                    close_mode()
+                    inner.append(f"<{kind}>")
+                    mode = kind
+                inner.append(f"<li>{inline(m.group(2))}</li>")
+            else:
+                close_mode()
+                buf.append(line)
+        flush_buf()
+        close_mode()
+        out.append(f'<blockquote class="dossier-quote-block">{"".join(inner)}</blockquote>')
+        quote.clear()
+
+    def flush_list() -> None:
+        while list_stack:
+            out.append(f"</{list_stack.pop()}>")
+
+    while i < len(lines):
+        raw = lines[i]
+        line = raw.rstrip()
+        if line.startswith("```"):
+            if fence:
+                out.append('<pre class="dossier-code"><code>' + html.escape("\n".join(fence_buf)) + "</code></pre>")
+                fence_buf.clear()
+                fence = False
+            else:
+                flush_para(); flush_quote(); flush_list()
+                fence = True
+            i += 1
+            continue
+        if fence:
+            fence_buf.append(raw)
+            i += 1
+            continue
+        stripped = line.strip()
+        if not stripped or stripped in {"---", "***", "___"}:
+            flush_para(); flush_quote(); flush_list()
+            i += 1
+            continue
+        if stripped.startswith("|") and i + 1 < len(lines) and set(lines[i + 1].strip()) <= set("|-: "):
+            flush_para(); flush_quote(); flush_list()
+            head = _cells(stripped)
+            i += 2
+            rows = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                rows.append(_cells(lines[i].strip()))
+                i += 1
+            th = "".join(f"<th>{inline(c)}</th>" for c in head)
+            tb = "".join("<tr>" + "".join(f"<td>{inline(c)}</td>" for c in r) + "</tr>" for r in rows)
+            out.append(f'<div class="dossier-table"><table><thead><tr>{th}</tr></thead><tbody>{tb}</tbody></table></div>')
+            continue
+        if stripped.startswith(">"):
+            flush_para(); flush_list()
+            quote.append(stripped.lstrip("> ").strip())
+            i += 1
+            continue
+        m = re.match(r"^(#{1,6})\s+(.*)$", stripped)
+        if m:
+            flush_para(); flush_quote(); flush_list()
+            lv = min(len(m.group(1)) + 1, 5)  # ### → h4，### 之上不会出现
+            out.append(f"<h{lv}>{inline(m.group(2))}</h{lv}>")
+            i += 1
+            continue
+        m = re.match(r"^(\s*)([-*+]|\d+\.)\s+(.*)$", raw)
+        if m:
+            flush_para(); flush_quote()
+            indent = len(m.group(1).replace("\t", "  "))
+            kind = "ol" if m.group(2)[0].isdigit() else "ul"
+            depth = max(1, indent // 2 + 1)
+            while len(list_stack) > depth:
+                out.append(f"</{list_stack.pop()}>")
+            while len(list_stack) < depth:
+                start = ol_next.get(len(list_stack) + 1, 1) if kind == "ol" else 1
+                out.append(f'<ol start="{start}">' if kind == "ol" and start > 1 else f"<{kind}>")
+                list_stack.append(kind)
+            if kind == "ol":
+                num = int(m.group(2).rstrip("."))
+                ol_next[depth] = num + 1
+            out.append(f"<li>{inline(m.group(3))}</li>")
+            i += 1
+            continue
+        flush_quote(); flush_list()
+        para.append(stripped)
+        i += 1
+    flush_para(); flush_quote(); flush_list()
+    return "\n".join(out)
+
 
 
 # ------------------------------------------------------------------ DOM utils
@@ -170,6 +336,10 @@ def article_for(docs: list[str]) -> tuple[str, str, str, str]:
     return title, lead, meta, f'<article class="src-article">{sections}{foot}</article>'
 
 
+# 只留正文：交互台整块不渲染（要恢复就把这里改回 True）
+WITH_STAGE = False
+
+
 # ------------------------------------------------------------------ page spec
 
 PAGES = [
@@ -280,11 +450,10 @@ def build(spec: dict) -> str:
         + "</section>"
     )
 
-    main = (
-        f'<main class="src-main" id="source-{spec["key"]}">{hero}{stage}{article}{nav}</main>'
-    )
+    body_parts = hero + (stage if WITH_STAGE else "") + article + nav
+    main = f'<main class="src-main" id="source-{spec["key"]}">{body_parts}</main>'
 
-    return strip_dossier(
+    out = strip_dossier(
         head
         + "\n"
         + body_class
@@ -296,6 +465,19 @@ def build(spec: dict) -> str:
         + main
         + tail
     )
+    if not WITH_STAGE:
+        # 只留正文时，交互脚本没有可挂的 DOM，留着只会抛 null 错误
+        out = re.sub(r"<script\b[\s\S]*?</script>", "", out)
+        out = re.sub(r"<noscript>[\s\S]*?</noscript>", "", out)
+        # 顶栏 / 页脚 / 跳转锚点都改成“正文”的说法
+        out = re.sub(r'(<span class="prototype-tag">)交互原型', r"\1正文", out)
+        out = out.replace("/ PLAYABLE LAB", "/ 正文 READER")
+        out = re.sub(r'<a class="skip-link" href="[^"]*">[^<]*</a>',
+                     f'<a class="skip-link" href="#source-{spec["key"]}">跳到正文</a>', out)
+        out = re.sub(r"AI 探索基地 / 可玩原型", "AI 探索基地 / 正文", out)
+        out = out.replace("只展示原型 · 不更改正式打卡进度", "只有正文 · 不更改正式打卡进度")
+        out = out.replace("返回原型拨盘 ↗", "返回目录 ↗")
+    return out
 
 
 def main() -> None:
