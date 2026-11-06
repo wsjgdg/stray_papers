@@ -1470,3 +1470,282 @@ body:not(#void) .dossier-quote p { color: rgba(255, 255, 255, .72) !important; f
   body:not(#void) .opening-copy { flex-wrap: wrap !important; }
   body:not(#void) h1 { font-size: clamp(40px, 11vw, 64px) !important; }
 }
+
+/* ============================================================
+   ② 编辑台：从 2×2 卡片改为一条「通讯社电讯」竖排
+   ============================================================ */
+body:not(#void) .workbench {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 320px !important;
+  gap: 0 clamp(40px, 5vw, 88px) !important;
+  align-items: start !important;
+}
+body:not(#void) .workbench .panel-head {
+  display: flex !important; justify-content: space-between !important; align-items: baseline !important;
+  gap: 16px !important; padding-bottom: 14px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .22) !important;
+  font-size: 11px !important; letter-spacing: .08em !important; text-transform: uppercase !important;
+  color: var(--ash) !important;
+}
+body:not(#void) .workbench .panel-head strong { font-size: 11px !important; font-weight: 600 !important; color: var(--bone) !important; letter-spacing: .08em !important; }
+
+body:not(#void) .card-stack { counter-reset: wire !important; display: block !important; }
+body:not(#void) .card-stack .signal-card {
+  counter-increment: wire !important;
+  display: grid !important;
+  grid-template-columns: 62px minmax(0, 1fr) !important;
+  column-gap: 28px !important;
+  align-items: start !important;
+  border-top: 1px solid rgba(255, 255, 255, .12) !important;
+  padding: 22px 0 4px !important;
+  transition: opacity .45s var(--ease) !important;
+}
+body:not(#void) .card-stack .signal-card::before {
+  content: counter(wire, decimal-leading-zero) !important;
+  grid-column: 1 !important; grid-row: 1 !important;
+  font-family: var(--font-sans) !important;
+  font-size: 30px !important; font-weight: 200 !important; line-height: 1 !important;
+  letter-spacing: -.04em !important; color: rgba(255, 255, 255, .28) !important;
+  font-variant-numeric: tabular-nums !important;
+  transition: color .4s var(--ease), transform .5s var(--ease) !important;
+}
+body:not(#void) .card-stack .signal-card > * { grid-column: 2 !important; }
+body:not(#void) .card-stack .signal-card .card-pick { border-top: 0 !important; padding: 0 0 12px !important; }
+body:not(#void) .card-stack .signal-card .card-pick strong {
+  font-size: 21px !important; line-height: 1.45 !important;
+  transition: font-size .35s var(--ease), color .35s var(--ease) !important;
+}
+body:not(#void) .card-stack:has(.signal-card.is-selected) .signal-card:not(.is-selected) { opacity: .34 !important; }
+body:not(#void) .card-stack .signal-card.is-selected::before {
+  color: var(--spark) !important; transform: translateY(-2px) !important;
+}
+body:not(#void) .card-stack .signal-card.is-selected .card-pick strong { font-size: 26px !important; color: var(--bone) !important; }
+body:not(#void) .card-stack .signal-card.is-selected { border-top-color: var(--spark) !important; }
+body:not(#void) .card-stack .signal-card .card-bottom { padding-bottom: 12px !important; }
+
+/* 档案格：右侧竖排，计数放大，粘在视口边 */
+body:not(#void) .sort-desk { position: sticky !important; top: 84px !important; align-self: start !important; }
+body:not(#void) .bins { margin-top: 4px !important; }
+body:not(#void) .bin { padding: 22px 46px 22px 0 !important; }
+body:not(#void) .bin .bin-count { font-size: 30px !important; font-weight: 200 !important; top: 14px !important; }
+body:not(#void) .bin .bin-name { font-size: 17px !important; }
+body:not(#void) .bin.is-active { border-top-color: var(--spark) !important; }
+body:not(#void) .bin.is-active .bin-count { color: var(--spark) !important; }
+
+/* ============================================================
+   ⑤ 剧场：幕条、字幕与解剖揭幕
+   ============================================================ */
+body:not(#void) .scam-progress {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  margin: 34px 0 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, .18) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .12) !important;
+  counter-reset: act !important;
+}
+body:not(#void) .scam-progress button {
+  position: relative !important;
+  display: grid !important; gap: 10px !important; justify-items: start !important;
+  border: 0 !important; border-radius: 0 !important;
+  border-left: 1px solid rgba(255, 255, 255, .1) !important;
+  background: none !important;
+  padding: 18px 0 16px 16px !important;
+  color: rgba(255, 255, 255, .32) !important;
+  font-size: 12px !important; letter-spacing: .02em !important;
+  transition: color .35s var(--ease), background .35s var(--ease) !important;
+}
+body:not(#void) .scam-progress button:first-child { border-left: 0 !important; padding-left: 0 !important; }
+body:not(#void) .scam-progress button span {
+  font-family: var(--font-sans) !important;
+  font-size: 24px !important; font-weight: 200 !important; line-height: 1 !important;
+  letter-spacing: -.04em !important; color: inherit !important;
+  font-variant-numeric: tabular-nums !important;
+}
+body:not(#void) .scam-progress button:disabled { opacity: 1 !important; }
+body:not(#void) .scam-progress button:not(:disabled) { color: rgba(255, 255, 255, .62) !important; }
+body:not(#void) .scam-progress button:hover:not(:disabled) { color: var(--bone) !important; background: rgba(255, 255, 255, .04) !important; }
+body:not(#void) .scam-progress button.is-current,
+body:not(#void) .scam-progress button[aria-current="step"] {
+  color: var(--bone) !important;
+  background: rgba(255, 255, 255, .05) !important;
+}
+body:not(#void) .scam-progress button.is-current span,
+body:not(#void) .scam-progress button[aria-current="step"] span { color: var(--spark) !important; }
+body:not(#void) .scam-progress button.is-current::before,
+body:not(#void) .scam-progress button[aria-current="step"]::before {
+  content: "" !important; position: absolute !important;
+  left: 0 !important; right: 0 !important; top: -1px !important; height: 1px !important;
+  background: var(--spark) !important;
+}
+body:not(#void) .scam-progress button:first-child.is-current::before,
+body:not(#void) .scam-progress button:first-child[aria-current="step"]::before { left: 0 !important; }
+
+/* 字幕：幕间用遮罩擦入，只有换幕时发生 */
+@keyframes dala-act-wipe {
+  from { clip-path: inset(0 0 100% 0); opacity: 0; transform: translateY(14px); }
+  to   { clip-path: inset(0 0 0 0);     opacity: 1; transform: none; }
+}
+body:not(#void) .story-side.is-changing .story-main { animation: dala-act-wipe .72s cubic-bezier(.16,.84,.24,1) both !important; }
+body:not(#void) .story-side.is-changing .story-top,
+body:not(#void) .story-side.is-changing .route-strip { animation: dala-act-wipe .5s cubic-bezier(.16,.84,.24,1) both !important; }
+body:not(#void) .story-main blockquote {
+  font-size: clamp(26px, 3.1vw, 42px) !important;
+  line-height: 1.5 !important;
+  letter-spacing: -.035em !important;
+  font-weight: 200 !important;
+  max-width: 22em !important;
+}
+body:not(#void) .story-persona {
+  font-size: 11px !important; letter-spacing: .1em !important; text-transform: uppercase !important;
+  color: var(--spark) !important;
+  padding-left: 14px !important;
+  border-left: 2px solid var(--spark) !important;
+  line-height: 1.4 !important;
+}
+body:not(#void) .evidence-tray {
+  border: 1px solid rgba(255, 255, 255, .14) !important;
+  border-radius: 24px !important;
+  background: rgba(255, 255, 255, .02) !important;
+  transition: border-color .4s var(--ease), background .4s var(--ease) !important;
+}
+body:not(#void) .evidence-tray[data-count="1"] { border-color: rgba(255, 184, 41, .5) !important; }
+body:not(#void) .evidence-tray[data-count="2"] { border-color: var(--spark) !important; background: rgba(255, 184, 41, .05) !important; }
+body:not(#void) .evidence-tray[data-count="2"] strong { color: var(--spark) !important; }
+
+/* 解剖：右侧记录像幕布一样从左擦开 */
+body:not(#void) .analysis-content {
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  transition: clip-path .62s cubic-bezier(.16,.84,.24,1), opacity .5s ease !important;
+}
+body:not(#void) .decision-layout[data-revealed="true"] .analysis-content { clip-path: inset(0 0 0 0); opacity: 1; }
+body:not(#void) .analysis-eyebrow {
+  padding-bottom: 12px !important; border-bottom: 1px solid rgba(255, 255, 255, .18) !important;
+  display: block !important;
+}
+
+/* 剧场标题区：幕号与说明分行，像片头字幕 */
+body:not(#void) .story-top { align-items: baseline !important; gap: 20px !important; }
+body:not(#void) .story-top #stage-counter {
+  font-size: 11px !important; letter-spacing: .18em !important; text-transform: uppercase !important;
+  color: var(--bone) !important;
+}
+body:not(#void) .story-top .simulation-tag {
+  font-size: 10.5px !important; letter-spacing: .06em !important; color: rgba(255, 255, 255, .5) !important;
+  text-transform: uppercase !important;
+}
+
+@media (max-width: 900px) {
+  body:not(#void) .workbench { grid-template-columns: minmax(0, 1fr) !important; }
+  body:not(#void) .sort-desk { position: static !important; margin-top: 40px !important; }
+  body:not(#void) .card-stack .signal-card { grid-template-columns: 44px minmax(0, 1fr) !important; column-gap: 18px !important; }
+  body:not(#void) .card-stack .signal-card::before { font-size: 22px !important; }
+  body:not(#void) .scam-progress { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  body:not(#void) .scam-progress button { padding: 14px 0 12px 12px !important; }
+  body:not(#void) .scam-progress button span { font-size: 18px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body:not(#void) .story-side.is-changing .story-main,
+  body:not(#void) .story-side.is-changing .story-top,
+  body:not(#void) .story-side.is-changing .route-strip { animation: none !important; }
+  body:not(#void) .analysis-content { transition: none !important; }
+}
+
+/* ② 细节：档案格压在粒子之上，行距收紧 */
+body:not(#void) .sort-desk {
+  background: #000 !important;
+  z-index: 2 !important;
+  padding: 18px 0 8px !important;
+}
+body:not(#void) .bin { padding: 16px 44px 16px 0 !important; gap: 5px !important; }
+body:not(#void) .bin .bin-symbol { top: 15px !important; }
+body:not(#void) .bin .bin-count { top: 10px !important; }
+body:not(#void) .card-stack .signal-card::before { color: rgba(255, 255, 255, .2) !important; }
+body:not(#void) .card-stack .signal-card .card-bottom { padding: 2px 0 10px !important; }
+body:not(#void) .card-stack .signal-card .card-pick { gap: 6px !important; padding-bottom: 8px !important; }
+
+/* 幕条：只留数字，去掉旧主题给数字套的方框 */
+body:not(#void) .scam-progress button span {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  width: auto !important; height: auto !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  font-size: 28px !important;
+}
+body:not(#void) .scam-progress button.is-current,
+body:not(#void) .scam-progress button[aria-current="step"] { background: rgba(255, 255, 255, .035) !important; }
+
+/* 幕条：当前幕只保留琥珀数字与顶线，不加底色 */
+body:not(#void) .scam-progress button.is-current,
+body:not(#void) .scam-progress button[aria-current="step"],
+body:not(#void) .scam-progress button:hover:not(:disabled) { background: none !important; }
+body:not(#void) .scam-progress button.is-current,
+body:not(#void) .scam-progress button[aria-current="step"] { color: var(--bone) !important; }
+
+/* 右侧幕布文案让位给台词 */
+body:not(#void) .analysis-cover strong {
+  font-size: clamp(26px, 2.4vw, 34px) !important;
+  line-height: 1.3 !important;
+  letter-spacing: -.035em !important;
+  font-weight: 200 !important;
+  margin: 10px 0 16px !important;
+  color: var(--bone) !important;
+}
+body:not(#void) .analysis-cover { gap: 6px !important; }
+
+body:not(#void) .signal-card { overflow: visible !important; }
+body:not(#void) .card-stack .signal-card .card-status {
+  font-size: 10.5px !important; letter-spacing: .1em !important;
+  color: rgba(255, 255, 255, .45) !important;
+}
+body:not(#void) .card-stack .signal-card[data-grade="correct"] .card-status { color: #8be0c4 !important; }
+body:not(#void) .card-stack .signal-card[data-grade="wrong"] .card-status { color: var(--spark) !important; }
+body:not(#void) .card-stack .signal-card.is-selected .card-pick { transform: translateX(6px); }
+body:not(#void) .card-stack .signal-card .card-pick { transition: transform .4s var(--ease) !important; }
+
+body:not(#void) .scam-progress { width: 100% !important; max-width: 100% !important; }
+body:not(#void) .scam-progress button { min-width: 0 !important; overflow: hidden !important; }
+body:not(#void) .scam-progress button span { max-width: 100% !important; }
+
+/* 手机端幕条：横向可拨动的胶片 */
+@media (max-width: 900px) {
+  body:not(#void) .scam-progress {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: 68px !important;
+    grid-template-columns: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x proximity !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px !important;
+  }
+  body:not(#void) .scam-progress::-webkit-scrollbar { display: none; }
+  body:not(#void) .scam-progress button {
+    scroll-snap-align: start !important;
+    padding: 14px 0 12px 12px !important;
+  }
+  body:not(#void) .scam-progress button:first-child { padding-left: 0 !important; }
+}
+
+/* ② 电讯入席：新行淡入并轻微上浮（每次换领域/重排都像换了一版电讯） */
+@keyframes dala-wire-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+body:not(#void) .card-stack .signal-card { animation: dala-wire-in .34s cubic-bezier(.16,.84,.24,1) both !important; }
+body:not(#void) .card-stack .signal-card:nth-child(2) { animation-delay: .06s !important; }
+body:not(#void) .card-stack .signal-card:nth-child(3) { animation-delay: .12s !important; }
+body:not(#void) .card-stack .signal-card:nth-child(4) { animation-delay: .18s !important; }
+@media (prefers-reduced-motion: reduce) {
+  body:not(#void) .card-stack .signal-card { animation: none !important; }
+}
+
+/* 星群永远在正文之后：内容层整体抬高一层 */
+body:not(#void) main { position: relative !important; z-index: 2 !important; }
+body:not(#void) .topbar, body:not(#void) .proto-footer { position: relative !important; z-index: 3 !important; }
