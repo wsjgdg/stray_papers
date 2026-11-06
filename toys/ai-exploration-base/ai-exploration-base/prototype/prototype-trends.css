@@ -162,3 +162,22 @@
 .page-trends .track-source a:hover,.page-trends .track-source a:focus-visible{color:#f0f7d4;border-color:#cbe08f}
 .page-trends .track-source small{flex-basis:100%;color:#8fa096;font-size:10px}
 @media(max-width:760px){.page-trends .track-source{margin:0 19px 16px}.page-trends .exhibit-metrics{gap:8px 18px}}
+
+/* 真源正文填进老趋势台：时间线 / 五个行业 / 收尾，版式沿用台面的细线格 */
+.page-trends .trend-fill{padding:clamp(26px,4vw,46px) clamp(20px,5vw,90px)}
+.page-trends .fill-head{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.page-trends .fill-head>span,.page-trends .fill-kicker{color:#f0b48a;font:750 10px/1 "Noto Sans CJK SC",sans-serif;letter-spacing:.14em}
+.page-trends .fill-head h2{margin:0;font-size:clamp(22px,2.4vw,32px);line-height:1.25;letter-spacing:-.02em}
+.page-trends .tl-rows{list-style:none;margin:0;padding:0;display:grid;gap:0;border-top:1px solid #ffffff1f}
+.page-trends .tl-rows li{display:grid;grid-template-columns:132px minmax(0,1fr);gap:18px;align-items:baseline;padding:14px 0;border-bottom:1px solid #ffffff14}
+.page-trends .tl-when{color:#f0b48a;font:750 11.5px/1.6 "Noto Sans CJK SC",sans-serif;letter-spacing:.04em}
+.page-trends .tl-rows p{margin:0;font-size:13px;line-height:1.85;color:#dfe3dc}
+.page-trends .ind-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.page-trends .ind-card{padding:16px 18px;border:1px solid #ffffff1f;background:#141a1c99}
+.page-trends .ind-card.is-wide{grid-column:1/-1}
+.page-trends .ind-no{color:#f0b48a;font:750 10px/1 monospace;letter-spacing:.14em}
+.page-trends .ind-card h3{margin:8px 0 10px;font-size:15.5px;letter-spacing:.01em}
+.page-trends .ind-card p{margin:0 0 8px;font-size:12.5px;line-height:1.85;color:#d3d8d2}
+.page-trends .ind-fact{color:#9fb0aa;border-left:2px solid #ffffff24;padding-left:10px}
+.page-trends .trend-coda{padding:22px clamp(20px,5vw,90px) 34px;border-top:1px solid #ffffff1f}
+.page-trends .trend-coda p{margin:8px 0 0;font-size:13.5px;line-height:1.9;color:#e6eadf}

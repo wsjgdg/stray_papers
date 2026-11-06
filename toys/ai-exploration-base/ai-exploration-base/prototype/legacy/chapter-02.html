@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111825">
+  <title>趋势编辑室 · 可玩原型② | AI 探索基地</title>
+  <link rel="stylesheet" href="prototype.css">
+  <link rel="stylesheet" href="prototype-trends.css?v=desk-08">
+<link rel="stylesheet" href="prototype-dossier.css?v=dossier-08"></head>
+<body class="page-trends">
+  <a class="skip-link" href="#desk">跳到趋势编辑室</a><div class="grain" aria-hidden="true"></div>
+  <header class="topbar"><a class="brand" href="index.html?v=switch-13"><span class="brand-symbol">A<span>✳</span>I</span><span>探索基地 <small>/ PLAYABLE LAB</small></span></a><span class="prototype-tag">交互原型 · 02 / 06</span><a class="top-link" href="index.html?v=switch-13">返回原型拨盘 ↗</a></header>
+  <main id="desk" class="trend-world">
+    <noscript><style>.page-trends .workbench,.page-trends .track-chooser,.page-trends .verdict{display:none!important}</style></noscript>
+    <div class="nojs-fallback"><h2>不用脚本，也能先辨一条信号</h2><p>2024 年底我国生成式 AI 用户约 2.49 亿，2025 年 6 月约 5.15 亿——这是报告中的使用人数，不等于某个行业的收入一定翻倍。用虚构素材试做一件小事是可尝试的办法；凡是“保证赚钱”或要求交出客户资料的说法，都该停下来核实。</p><p>数据据 CNNIC《生成式人工智能应用发展报告（2025）》；这是一则离线原型，不调用 AI。</p><p><a href="index.html?v=switch-13">返回可玩原型首页</a></p></div>
+    <section class="trend-opening" aria-labelledby="trends-title">
+      <div class="opening-copy"><span class="eyebrow"><span class="live-dot"></span> EDITION 02 / SIGNAL DESK</span><h1 id="trends-title">风很大。<br><em>先看信号。</em></h1><p>行业新闻、可做的小事、夸张的承诺常常混在一起。选一个熟悉的领域，把四张情报投进正确的格子，再领一张能实际执行的试验票。</p><div class="opening-steps"><span>01 选领域</span><i></i><span>02 分情报</span><i></i><span>03 领试验票</span></div></div>
+      <div class="data-exhibit" aria-label="报告数据：2024 年底约 2.49 亿人，2025 年 6 月约 5.15 亿人使用生成式 AI"><span class="exhibit-eyebrow">ONE VERIFIED SIGNAL / 中国生成式 AI 用户</span><div class="exhibit-metrics"><span><b>+2.66 亿</b><small>半年增加的用户</small></span><span><b>36.5%</b><small>每 10 人里 3.6 个在用</small></span></div>
+      <div class="exhibit-axis"><div class="exhibit-bar early"><span>2024 / 12</span><b style="--length:48%">2.49 <small>亿人</small></b></div><div class="exhibit-bar late"><span>2025 / 06</span><b style="--length:100%">5.15 <small>亿人</small></b></div></div><p><strong>人数增长 ≠ 你的行业一定赚钱。</strong><br>看见增长，也要问：对我具体意味着什么？</p><small>CNNIC《生成式人工智能应用发展报告（2025）》 · 2025 年 10 月发布 · <a href="https://www.cnnic.net.cn/n4/2025/1021/c88-11391.html" target="_blank" rel="noopener noreferrer">CNNIC 原报告 ↗</a>（需联网）</small></div>
+    </section>
+    <section class="editing-room" aria-labelledby="room-title"><div class="room-heading"><span>THE EDITOR'S DESK / 分拣现场</span><h2 id="room-title">这四句话，<i>哪句能信？</i></h2><p>点情报卡，再盖分类章；桌面还可拖卡角的手柄投进档案格。分错会留下解释，可以随时改判。</p></div>
+      <div class="track-chooser" role="group" aria-label="选择要判断的领域"><button type="button" data-track="finance" aria-pressed="true"><span>01 / FIELD</span><strong>财务与保险</strong><small>客户答疑 · 脱敏账表</small></button><button type="button" data-track="retail" aria-pressed="false"><span>02 / FIELD</span><strong>电商与销售</strong><small>商品说明 · 顾客反馈</small></button><button type="button" data-track="content" aria-pressed="false"><span>03 / FIELD</span><strong>社区内容</strong><small>亲身经历 · 事实核对</small></button></div>
+      <p class="track-source" id="track-source" aria-live="polite"></p>
+      <div class="workbench"><section class="feed" aria-labelledby="feed-title"><div class="panel-head"><span>INBOX / 未分拣与已归档</span><strong id="feed-title">财务与保险 · 情报卡</strong></div><div class="card-stack" id="card-stack"></div></section><aside class="sort-desk" aria-label="分类档案格"><div class="panel-head"><span>ARCHIVE / 三个档案格</span><strong>你来决定它的去处</strong></div><div class="bins"><button class="bin" type="button" data-bin="fact"><span class="bin-symbol">✓</span><span class="bin-name">已查证</span><small>有来源的观察，不乱推断</small><span class="bin-count" id="count-fact">00</span><span class="bin-contents" id="contents-fact">还没有情报</span></button><button class="bin" type="button" data-bin="test"><span class="bin-symbol">↗</span><span class="bin-name">可小试</span><small>低风险、能自己验证的动作</small><span class="bin-count" id="count-test">00</span><span class="bin-contents" id="contents-test">还没有情报</span></button><button class="bin" type="button" data-bin="warn"><span class="bin-symbol">!</span><span class="bin-name">先警惕</span><small>承诺过满或索取敏感资料</small><span class="bin-count" id="count-warn">00</span><span class="bin-contents" id="contents-warn">还没有情报</span></button></div><div class="decision-feedback" id="decision-feedback" role="status">先点一张卡，或把卡角手柄拖到右边的档案格。</div></aside></div>
+      <section class="verdict" id="verdict" aria-labelledby="verdict-title"><div class="verdict-head"><div><span class="report-overline">FIELD REPORT / 现场报告</span><h2 id="verdict-title">你筛掉了多少噪音？</h2></div><button type="button" class="reset-track" id="reset-track">本领域重新分拣</button></div><div class="progress-rail"><div class="progress-fill" id="progress-fill"></div></div><p class="progress-label" id="progress-label" role="status">已分拣 0 / 4 · 已核对 0 / 4</p><div class="report-content" id="report-content"><p>四张情报都有去处后，才会看到本领域的判断结果。</p></div><div class="plan-stage" id="plan-stage" hidden><span class="report-overline">CHOOSE A FIRST MOVE / 只选一个小试验</span><p>不是预测你会赚多少钱；选一件能在真实生活中核对的事。</p><div class="plan-choices" id="plan-choices"></div><div class="plan-ticket" id="plan-ticket" hidden><div class="ticket-top"><span>02 / MY FIELD NOTE</span><strong>我的试验票</strong></div><h3 id="ticket-title"></h3><ol id="ticket-steps"></ol><p id="ticket-caution"></p><span class="ticket-foot">本地情景练习 · 不调用 AI · 无数据上传</span></div></div></section>
+    </section>
+    <details class="source-drawer"><summary>数据口径与玩法边界 <span aria-hidden="true">＋</span></summary><p>2.49 亿与 5.15 亿是 CNNIC《生成式人工智能应用发展报告（2025）》披露的 2024 年底、2025 年 6 月中国生成式 AI 用户规模，报告于 2025 年 10 月发布。这里把它作为“有来源的观察”，不拿它推算任何个人收入、职业替代率或成交率。<a href="https://www.cnnic.net.cn/n4/2025/1021/c88-11391.html" target="_blank" rel="noopener noreferrer">打开 CNNIC 原报告 ↗</a>；<a href="https://www.news.cn/fortune/20251018/95ddc306f29f494fb188ed41ad8e5cca/c.html" target="_blank" rel="noopener noreferrer">新华网相关报道 ↗</a>（外部页面需联网；报道不是本页互动结果）。</p><p>其他卡片是为练习设计的行动建议或待警惕话术，并非报道原文。分拣和试验票完全在浏览器本地运行，不抓取新闻、不调用 AI、不读取或上传你的资料，也不标记正式关卡进度。</p></details>
+    <!-- DOSSIER:START -->
+<section class="dossier" id="content-dossier" aria-labelledby="dossier-p2">
+  <details>
+    <summary>
+      <span class="dossier-kicker">SOURCE DOSSIER / 内容真源 · ② AI 趋势与行业</span>
+      <strong id="dossier-p2">原始文案，与<em>全部出处</em>。</strong>
+      <small>第 ② 关 · 5 个时间点 · 4 个数字 · 5 个行业 · 全文 9 节 · 20 条外链</small>
+    </summary>
+    <div class="dossier-body">
+      <p class="dossier-lead">这一关是全站唯一引用统计数据的一页。下面每个数字都能点开原始报告或权威报道核对；分拣台上的情报卡是练习，不是报道原文。 往后是按文件分节、逐字接入的<strong>全文</strong>——正式站这一关写下的每一句都在里面，可直接对照或照抄。</p>
+      <div class="dossier-grid">
+        <article class="dossier-block is-wide"><span class="dossier-no">01</span><h3>这两年，<em>发生了什么</em></h3><p>有人觉得 AI 是“一阵风”。看完这一页你会发现：它不是风，<strong>是电</strong>——二十年前你学了电脑，就领先了同事一大步；这一次，机会摆在你面前。</p>
+    <div class="dossier-quote">
+      <p><strong>2022 年 11 月</strong>　ChatGPT 发布。<strong>两个月用户破一亿</strong>——成为当时史上用户增长最快的应用。AI 第一次被普通人用上了。</p>
+      <p><strong>2024 年 5 月</strong>　GPT-4o 发布：AI 能听、能说、能看图——它开始“长出眼睛和耳朵”。</p>
+      <p><strong>2024 年 12 月</strong>　Sora 视频生成开放：一句话，AI 拍出一段像模像样的视频。视频制作第一次不再需要摄像机。<br><small>诚实备注：OpenAI 已于 2026 年 3 月宣布逐步淘汰 Sora 独立应用；“一句话生成视频”的能力已经普及到各家产品。</small></p>
+      <p><strong>2025 年 1 月</strong>　国产大模型 <strong>DeepSeek-R1</strong> 开源发布，震动全球科技圈——中国 AI 追上了第一梯队，而且免费、人人可用。</p>
+      <p><strong>2025 年</strong>　“智能体（Agent）”成为行业主线：AI 从“你说一句它答一句”，进化到“给它目标，它自己干完整件事”。</p>
+    </div>
+    <p>时间线只用来呈现趋势先后，日期均为公开报道口径，不作为精确时间依据。</p><p class="dossier-tag">每一条都能自己点开核</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="http://www.news.cn/2023-02/13/c_1129359575.htm" target="_blank" rel="noopener noreferrer">新华网：ChatGPT，变革与风险（两个月破亿的来源）</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="http://www.xinhuanet.com/tech/20240515/9a91d194f1114752bf38cc2cf6f9741f/c.html" target="_blank" rel="noopener noreferrer">新华网：新版 ChatGPT 在哪些方面“更像人”</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="http://paper.people.com.cn/rmrbhwb/html/2024-05/17/content_26058298.htm" target="_blank" rel="noopener noreferrer">人民日报海外版：GPT-4o 直播演示</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://openai.com/index/hello-gpt-4o/" target="_blank" rel="noopener noreferrer">OpenAI：Hello GPT-4o（官方原始出处）</a><small>403 官方域名，浏览器可访问</small></span></li><li><span class="mark">↗</span><span><a href="http://www.news.cn/tech/20240220/92a8a5bcb35c4e09bfd7ee0e5393d5ac/c.html" target="_blank" rel="noopener noreferrer">新华网：Sora 的突破与风险</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://openai.com/index/sora-is-here/" target="_blank" rel="noopener noreferrer">OpenAI：Sora is here（官方原始出处）</a><small>403 官方域名，浏览器可访问</small></span></li><li><span class="mark">↗</span><span><a href="https://www.news.cn/world/20260325/20c661ac2f5542d8b8eccd5c764af5c8/c.html" target="_blank" rel="noopener noreferrer">新华网：OpenAI 宣布放弃视频生成应用 Sora</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://api-docs.deepseek.com/news/news250120" target="_blank" rel="noopener noreferrer">DeepSeek：DeepSeek-R1 发布公告</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://github.com/deepseek-ai/DeepSeek-R1" target="_blank" rel="noopener noreferrer">DeepSeek-R1 开源权重（GitHub）</a><small>200 · 2026-11-05</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">02</span><h3>数字最诚实：<em>半年翻了一番</em></h3><div class="dossier-quote"><p><strong>5.15 亿</strong>　2025 年 6 月　我国生成式 AI 用户<br>
+    <strong>+2.66 亿</strong>　比半年前　增加的用户数<br>
+    <strong>36.5%</strong>　每 10 个中国人里　3.6 个在用</p></div>
+    <p>柱状图口径：2024 年 12 月 2.49 亿 → 2025 年 6 月 5.15 亿（亿人）。图下原句：数据来源中国互联网络信息中心（CNNIC）《生成式人工智能应用发展报告（2025）》，2025 年 10 月发布，新华网、人民日报均有报道。</p>
+    <p><strong>怎么读这个数：</strong>2024 年底全国才 2.49 亿人用，半年后就 5.15 亿——翻了一番。意思是，你身边的人一多半还在观望，<strong>现在开始一点都不晚</strong>；等到人人都在用的时候，才真的没有先发优势了。</p>
+    <span class="dossier-tag">数据 · 非估算</span><span class="dossier-tag">每 10 人 3.6 个为 36.5% 的换算</span><p class="dossier-tag">同一个数字，四处可对</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://www.cnnic.net.cn/n4/2025/1021/c88-11391.html" target="_blank" rel="noopener noreferrer">CNNIC：《生成式人工智能应用发展报告（2025）》发布页</a><small>第一来源 · 200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="http://www.news.cn/tech/20251020/c7c8f6c858c249e2bb69515f40eeab8b/c.html" target="_blank" rel="noopener noreferrer">新华网：我国生成式人工智能用户规模达 5.15 亿</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://www.news.cn/fortune/20251018/95ddc306f29f494fb188ed41ad8e5cca/c.html" target="_blank" rel="noopener noreferrer">新华网：报告发布报道</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="http://paper.people.com.cn/rmrbhwb/pc/content/202510/21/content_30110422.html" target="_blank" rel="noopener noreferrer">人民日报海外版：用户规模半年翻番</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://cn.wicinternet.org/2025-10/20/content_38354748.htm" target="_blank" rel="noopener noreferrer">世界互联网大会官网：较 2024 年 12 月激增 2.66 亿</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://www.cnnic.net.cn/" target="_blank" rel="noopener noreferrer">CNNIC 官网（报告原文查询入口）</a><small>200 · 2026-11-05</small></span></li></ul></article><article class="dossier-block is-wide"><span class="dossier-no">03</span><h3>各行各业，<em>正在被改写</em></h3><p>🛒 <strong>电商与销售</strong>：商品图、详情页文案、客服回复，越来越多交给 AI 生成；小商家一个人就能撑起过去一个小团队的活儿。<strong>对你的启示：</strong>做销售出身的人，懂客户 + 会用 AI 出内容，就是新打法。<br>
+    比如：淘宝商家后台就有“AI 生成商品图”这类公开功能，点几下就能换背景、改构图，不用请美工。</p>
+    <p>📱 <strong>自媒体与内容</strong>：写稿、配音、剪辑、画图，全流程都有 AI 工具；门槛从“会技能”变成“会表达”。<strong>对你的启示：</strong>你会讲保险、会算账，正好是 AI 替代不了的“真话”，缺的只是把内容做出来的手——AI 补上这只手。<br>
+    比如：剪映的“图文成片”——贴一段文字进去，自动配上画面和配音，几分钟出一条视频。</p>
+    <p>💼 <strong>金融与保险</strong>：产品解读、朋友圈文案、短视频脚本，这些“第一稿”越来越多交给 AI；银行的智能客服背后也越来越多是 AI。<strong>对你的启示：</strong>获客打法正在从“熟人推销”转向“内容获客”（第 4 关细讲）。<br>
+    微事实：越来越多保险公司用 AI 做客户答疑和获客内容。<em>（定性表述，不点名具体公司）</em></p>
+    <p>📊 <strong>财务与办公</strong>：发票识别、报表摘要、合同审阅，AI 几分钟出初稿（示意），人做最终把关。<strong>对你的启示：</strong>三十年财务经验是“最终把关”的资格——老经验 + 新工具，比纯新手强得多。</p>
+    <p>🎓 <strong>教育与健康</strong>：孩子用 AI 答疑解惑，老人用 AI 问诊导诊、读懂体检报告。AI 正在成为每个家庭的新“家庭教师”和“导诊台”。<em>关键结论仍要听医生的。</em></p><p class="dossier-tag">行业功能都有出处</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://www.wanxiang.art/" target="_blank" rel="noopener noreferrer">万相营造：一张商品图生成营销图</a><small>200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="http://www.xinhuanet.com/tech/20250115/ad0511a9bd8746399f196800e5b47bee/c.html" target="_blank" rel="noopener noreferrer">新华网：淘宝星辰·图生视频向商家开放</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://cn.chinadaily.com.cn/a/202104/01/WS606584cca3101e7ce97471f7.html" target="_blank" rel="noopener noreferrer">中国日报网：剪映“图文成片”，输入文字一键生成视频</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://www.capcut.cn" target="_blank" rel="noopener noreferrer">剪映官网（图文成片入口）</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="http://www.news.cn/tech/20251029/b02bdb2d8bce4275ad12cab941c00c86/c.html" target="_blank" rel="noopener noreferrer">新华网：生成式人工智能应用场景持续拓展</a><small>200 · 2026-11-05</small></span></li></ul></article><article class="dossier-block is-wide"><span class="dossier-no">04</span><h3>口径与边界</h3><p><strong>这一关想让你记住的一句话：</strong>用户半年翻一番的行业，<strong>你正站在它最快的那一段</strong>。不用焦虑，先逛完 6 关——你已经比观望的大多数人先出发了。</p>
+    <p>“人数增长”不等于“你的行业一定赚钱”，也不等于“你一定能接到单”。本页把它当作有来源的观察，不拿它推算任何个人收入、职业替代率或成交率；分拣台与试验票完全在浏览器本地运行。</p>
+    <p>行业应用描述来自报告“各领域应用”章节的定性描述；ChatGPT 两个月破亿为公开报道口径（优步约 6 年、Instagram 约 2.5 个月为媒体普遍引用的对比口径）。</p></article>
+      </div>
+      
+      <div class="dossier-full">
+        <h3>全文 · 逐字接入 <span>FULL TEXT / 9 节 · 77 段</span></h3>
+        <p class="dossier-tag">下面是内容真源里的原文，按小节折叠，没有缩写、没有改写；小节顺序与文件一致，文件名即出处。</p>
+        <section class="dossier-doc"><h4>p2-trends.md</h4><details class="dossier-part"><summary><span class="dossier-part-no">01</span><strong>页首：标题与导语</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>对应页面：<code>pages/trends.html</code> ｜ 引用编号见 <span class="dossier-ref">sources-p123.md</span> ｜ 写作规范见 <span class="dossier-ref">README.md</span> 访问日期（本页引用链接验证日）：2026-11-05 本页是三关中唯一引用统计数据的一页。所有数字均出自 CNNIC 官方报告及权威媒体报道，逐条标注；拿不准的数字一律未采用。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">02</span><strong>页面元信息</strong></summary><div class="dossier-part-body"><ul>
+<li>浏览器标题：<code>② AI 趋势与行业 — AI 探索基地</code></li>
+<li>页面描述（meta description）：用大白话看懂 AI 这两年的变化：用户半年翻一番、各行各业正在被改写。写给想入门 AI 的普通人，不吹不吓，中老年友好。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">03</span><strong>页首标题与导语</strong></summary><div class="dossier-part-body"><ul>
+<li>主标题（H1）：<code>② AI 趋势与行业</code></li>
+<li>导语（lead）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>有人觉得 AI 是"一阵风"。看完这一页你会发现：它不是风，<strong>是电</strong>—— 二十年前你学了电脑，就领先了同事一大步；这一次，机会摆在你面前。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">04</span><strong>区块：这两年，发生了什么</strong></summary><div class="dossier-part-body"><ul>
+<li>区块标题（H2）：<code>这两年，发生了什么</code></li>
+</ul>
+<h4>时间线（左栏，5 条）</h4>
+<p><strong>条目 1 — 2022 年 11 月</strong></p>
+<blockquote class="dossier-quote-block"><p>ChatGPT 发布。<strong>两个月用户破一亿</strong>——成为当时史上用户增长最快的应用。AI 第一次被普通人用上了。</p></blockquote>
+<ul>
+<li>依据：新华网 2023 年 2 月报道"ChatGPT 在推出约两个月后，1 月已达到 1 亿月活跃用户，成为历史上增长最快的消费者应用程序" [来源10]。页面脚注同时注明该数字为公开报道口径（瑞银研究报告口径）。</li>
+</ul>
+<p><strong>条目 2 — 2024 年 5 月</strong></p>
+<blockquote class="dossier-quote-block"><p>GPT-4o 发布：AI 能听、能说、能看图——它开始"长出眼睛和耳朵"。</p></blockquote>
+<ul>
+<li>依据：新华网特稿《新版 ChatGPT 在哪些方面"更像人"》：GPT-4o 中"o"代表"omni"（全能），既能接受文本、音频和图像的任意组合输入 [来源11]；人民日报海外版资讯栏亦报道其直播演示 [来源21]。OpenAI 官方公告页 <code>openai.com/index/hello-gpt-4o/</code> 为官方原始出处，curl 返回 403（官方域名，浏览器可访问）[来源22]。</li>
+</ul>
+<p><strong>条目 3 — 2024 年 12 月</strong></p>
+<blockquote class="dossier-quote-block"><p>Sora 视频生成开放：一句话，AI 拍出一段像模像样的视频。视频制作第一次不再需要摄像机。</p></blockquote>
+<ul>
+<li>依据：Sora 文生视频模型为 OpenAI 2024 年初发布 [来源12]；2024 年 12 月起其视频生成产品对公众开放（OpenAI 官方博客 "Sora is here"，curl 返回 403，官方域名浏览器可访问）[来源13]。</li>
+<li><strong>诚实备注（必须随文案维护）</strong>：OpenAI 已于 2026 年 3 月宣布逐步淘汰 Sora 独立应用，新华网有报道 [来源14]。本条时间线描述的是"当时的行业事件"，属实；若未来页面改版，可考虑加一句"（该应用已于 2026 年停服，但'一句话生成视频'的能力已普及到各家产品）"。</li>
+</ul>
+<p><strong>条目 4 — 2025 年 1 月</strong></p>
+<blockquote class="dossier-quote-block"><p>国产大模型 <strong>DeepSeek-R1</strong> 开源发布，震动全球科技圈——中国 AI 追上了第一梯队，而且免费、人人可用。</p></blockquote>
+<ul>
+<li>依据：DeepSeek 官方发布公告《DeepSeek-R1 发布》（2025-01-20）[来源15]；模型权重以开源许可发布在 GitHub [来源16]。</li>
+</ul>
+<p><strong>条目 5 — 2025 年</strong></p>
+<blockquote class="dossier-quote-block"><p>"智能体（Agent）"成为行业主线：AI 从"你说一句它答一句"，进化到"给它目标，它自己干完整件事"。（第 6 关会讲这个）</p></blockquote>
+<ul>
+<li>性质：<strong>定性表述，不引用数字</strong>。"智能体"术语在本页首次出现，随文解释（见括号内）。</li>
+</ul>
+<h4>示意卡：人口图（右栏）</h4>
+<ul>
+<li>图示：10 个人形图标的示意画，约 3.6 个填色。无障碍描述（aria-label）：示意图：10 个人形图标里约 3.6 个填充强调色，代表每 10 个中国人约有 3.6 个在用生成式 AI</li>
+<li>图下主文案：<code>每 10 个中国人里，约 3.6 个在用生成式 AI</code></li>
+<li>图下来源行：<code>CNNIC，2025 年 6 月</code></li>
+<li>依据：CNNIC《生成式人工智能应用发展报告（2025）》：截至 2025 年 6 月普及率 36.5% [来源4][来源5]。图示本身为<strong>示意图</strong>（非精确统计图），3.6 为 36.5% 的直观换算。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">05</span><strong>区块：数字最诚实：半年翻了一番</strong></summary><div class="dossier-part-body"><ul>
+<li>区块标题（H2）：<code>数字最诚实：半年翻了一番</code></li>
+</ul>
+<h4>三个数字卡（依次）</h4>
+<div class="dossier-table"><table><thead><tr><th>数字卡</th><th>大数字</th><th>小字说明</th></tr></thead><tbody><tr><td>1</td><td><code>5.15 亿</code></td><td><code>2025 年 6 月　我国生成式 AI 用户</code></td></tr><tr><td>2</td><td><code>+2.66 亿</code></td><td><code>比半年前　增加的用户数</code></td></tr><tr><td>3</td><td><code>36.5%</code></td><td><code>每 10 个中国人里　3.6 个在用</code></td></tr></tbody></table></div>
+<ul>
+<li>依据：三个数字均出自 CNNIC《生成式人工智能应用发展报告（2025）》（2025 年 10 月 18 日在 2025 第六届中国互联网基础资源大会发布）：截至 2025 年 6 月用户规模 5.15 亿人、普及率 36.5%；上半年用户规模增长 2.66 亿人、半年增长 106.6% [来源4]。新华网 [来源5][来源6]、人民日报海外版 [来源7]、世界互联网大会官网 [来源8] 均有交叉报道。</li>
+</ul>
+<h4>柱状图卡（图表：2.49 亿 → 5.15 亿）</h4>
+<ul>
+<li>图表数据（页内 Chart.js 渲染）：</li>
+<ul>
+<li>标题/图例：<code>生成式 AI 用户规模（亿人）</code></li>
+<li>横轴：<code>2024 年 12 月</code>（2.49）、<code>2025 年 6 月</code>（5.15）</li>
+<li>纵轴：<code>亿人</code></li>
+</ul>
+<li>图下来源行（页面原样保留）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>数据来源：中国互联网络信息中心（CNNIC）《生成式人工智能应用发展报告（2025）》，2025 年 10 月发布，新华网、人民日报均有报道。</p></blockquote>
+<ul>
+<li>依据：2.49 亿（2024 年 12 月）与 5.15 亿（2025 年 6 月）两个时点数见世界互联网大会官网转述的报告数据（"较 2024 年 12 月激增 2.66 亿"）[来源8]；报告官方发布页 [来源4]，报告原文可在 CNNIC 官网查询 [来源9]。</li>
+</ul>
+<h4>"怎么读这个数"卡</h4>
+<blockquote class="dossier-quote-block"><p><strong>怎么读这个数：</strong>2024 年底全国才 2.49 亿人用，半年后就 5.15 亿——翻了一番。 意思是，你身边的人一多半还在观望，<strong>现在开始一点都不晚</strong>； 等到人人都在用的时候，才真的没有先发优势了。</p></blockquote>
+<p>（"一多半还在观望"由 36.5% 普及率直接换算，属算术表述，无额外数据。）</p></div></details><details class="dossier-part"><summary><span class="dossier-part-no">06</span><strong>区块：各行各业，正在被改写</strong></summary><div class="dossier-part-body"><ul>
+<li>区块标题（H2）：<code>各行各业，正在被改写</code></li>
+<li>本区块五张卡的"对你的启示"均为面向读者的建议性文案；<code>fact-line</code>（微事例行）凡涉及具体产品均给官方/权威来源，凡无法给来源的一律写成定性表述。</li>
+</ul>
+<h4>卡 1：🛒 电商与销售</h4>
+<ul>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>商品图、详情页文案、客服回复，越来越多交给 AI 生成；小商家一个人就能撑起过去一个小团队的活儿。<strong>对你的启示：</strong>做销售出身的人，懂客户 + 会用 AI 出内容，就是新打法。</p></blockquote>
+<ul>
+<li>微事例行（fact-line）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>比如：淘宝商家后台就有"AI 生成商品图"这类公开功能，点几下就能换背景、改构图，不用请美工。</p></blockquote>
+<ul>
+<li>依据：阿里官方 AI 电商制图工具"万相营造"（只需一张商品图即可生成营销图，面向商家）[来源17]；阿里妈妈"淘宝星辰·图生视频"向淘宝天猫商家开放的新华网报道（同属电商 AI 内容生成能力）[来源18]。</li>
+</ul>
+<h4>卡 2：📱 自媒体与内容</h4>
+<ul>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>写稿、配音、剪辑、画图，全流程都有 AI 工具；内容行业的门槛从"会技能"变成了"会表达"。<strong>对你的启示：</strong>你会讲保险、会算账，正好是 AI 替代不了的"真话"，缺的只是把内容做出来的手——AI 补上这只手。</p></blockquote>
+<ul>
+<li>微事例行（fact-line）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>比如：剪映的"图文成片"——贴一段文字进去，自动配上画面和配音，几分钟出一条视频。</p></blockquote>
+<ul>
+<li>依据：中国日报网《剪映推出新功能"图文成片"，输入文字一键生成视频》：用户输入一段文字，剪映智能匹配图片素材、添加字幕、旁白和音乐，自动生成视频 [来源19]；剪映官网（含该功能入口）[来源3]。"几分钟出一条视频"为功能定性描述，未引用精确耗时。</li>
+</ul>
+<h4>卡 3：💼 金融与保险</h4>
+<ul>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>产品解读、朋友圈文案、短视频脚本，这些"第一稿"越来越多交给 AI；银行的智能客服背后也越来越多是 AI。<strong>对你的启示：</strong>你现在做的保险，获客打法正在从"熟人推销"转向"内容获客"——这正是 AI 最擅长的活（第 4 关副业地图细讲）。</p></blockquote>
+<ul>
+<li>微事例行（fact-line）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>微事实：越来越多保险公司用 AI 做客户答疑和获客内容。</p></blockquote>
+<ul>
+<li>依据：<strong>定性表述，不引用数字</strong>。方向依据 CNNIC 报告"生成式人工智能助力各领域发展提质增效"章节（应用场景持续拓展的总体判断）[来源4][来源20]。未指名具体保险公司，避免无来源点名。</li>
+</ul>
+<h4>卡 4：📊 财务与办公</h4>
+<ul>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>发票识别、报表摘要、合同审阅，AI 几分钟出初稿（示意），人做最终把关。<strong>对你的启示：</strong>三十年财务经验是"最终把关"的资格——老经验 + 新工具，比纯新手强得多。</p></blockquote>
+<ul>
+<li>微事例行（fact-line）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>比如：发票识别、报表摘要，如今不少办公软件里就有现成的 AI 功能。</p></blockquote>
+<ul>
+<li>依据：<strong>定性表述</strong>（"不少办公软件""几分钟出初稿"均已标"示意"），不引用数字。总体方向依据 CNNIC 报告应用场景描述（智能搜索、内容创作、办公助手等）[来源4][来源20]。</li>
+</ul>
+<h4>卡 5：🎓 教育与健康（通栏）</h4>
+<ul>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>孩子用 AI 答疑解惑，老人用 AI 问诊导诊。AI 正在成为每个家庭的新"家庭教师"和"导诊台"。</p></blockquote>
+<ul>
+<li>微事例行（fact-line）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>比如："AI 读体检报告"——把报告拍照发给 AI，它能用大白话解释每项指标的含义（关键结论仍要听医生的）。</p></blockquote>
+<ul>
+<li>依据：<strong>定性表述</strong>；括号内"关键结论仍要听医生的"为必须保留的安全提示。总体方向依据 CNNIC 报告应用场景与领域拓展描述 [来源4][来源20]。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">07</span><strong>结尾：本关小结卡</strong></summary><div class="dossier-part-body"><ul>
+<li>卡片标题：<code>这一关想让你记住的一句话</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>用户半年翻一番的行业，<strong>你正站在它最快的那一段</strong>。 不用焦虑，先逛完 6 关——你已经比观望的大多数人先出发了。</p></blockquote>
+<p>（"半年翻一番"对应 CNNIC 报告"用户规模半年翻番、半年增长 106.6%"的官方表述 [来源4]。）</p></div></details><details class="dossier-part"><summary><span class="dossier-part-no">08</span><strong>页面导航</strong></summary><div class="dossier-part-body"><ul>
+<li>主按钮：<code>下一关：儿子的 AI 实验室 →</code>（指向 <code>lab.html</code>）</li>
+<li>次链接：<code>← 回到探索地图</code>（指向 <code>../index.html</code>）</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">09</span><strong>页面"来源"区块（HTML 页脚原文，页面保留）</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p><strong>本页数据来源（可自行查证）：</strong></p><ul><li>生成式 AI 用户规模：CNNIC《生成式人工智能应用发展报告（2025）》——[新华网报道]、[人民日报海外版报道]；报告原文可在 [CNNIC 官网（www.cnnic.net.cn）] 查询</li><li>行业应用描述：同上报告"各领域应用"章节（定性描述）</li><li>ChatGPT 两个月用户破亿：优步（Uber）用了约 6 年，Instagram 约 2.5 个月——ChatGPT 约 2 个月，为公开可查的普遍报道口径</li><li>时间线条目日期均为公开报道口径，用于呈现趋势先后，不作为精确时间依据</li></ul><p> 对应链接：新华网报道 = [来源6]；人民日报海外版报道 = [来源7]；CNNIC 官网 = [来源9]。详见 <span class="dossier-ref">sources-p123.md</span>。  （维护备注：页脚"优步约 6 年、Instagram 约 2.5 个月"为媒体普遍引用的对比口径；本真源文档对该对比不再单独溯源，页面已声明"公开可查的普遍报道口径"。若未来要收紧口径，可改用新华网 2023 年报道的原句 [来源10] 并删除具体对比数字。）</p></blockquote></div></details></section>
+      </div>
+      <div class="dossier-sources">
+        <h3>本关全部外链 <span>20 LINKS / 访问日期 2026-11-05</span></h3>
+        <p>链接均取自 <code>docs/content</code> 的来源清单：状态码为清单记录值，403 / 521 为官方站点反爬，浏览器可正常打开；外部页面需要联网。</p>
+        <ul class="dossier-source-list"><li><a href="http://www.news.cn/2023-02/13/c_1129359575.htm" target="_blank" rel="noopener noreferrer">新华网：ChatGPT，变革与风险（两个月破亿的来源）</a><small>200 · 2026-11-05</small></li><li><a href="http://www.xinhuanet.com/tech/20240515/9a91d194f1114752bf38cc2cf6f9741f/c.html" target="_blank" rel="noopener noreferrer">新华网：新版 ChatGPT 在哪些方面“更像人”</a><small>200 · 2026-11-05</small></li><li><a href="http://paper.people.com.cn/rmrbhwb/html/2024-05/17/content_26058298.htm" target="_blank" rel="noopener noreferrer">人民日报海外版：GPT-4o 直播演示</a><small>200 · 2026-11-05</small></li><li><a href="https://openai.com/index/hello-gpt-4o/" target="_blank" rel="noopener noreferrer">OpenAI：Hello GPT-4o（官方原始出处）</a><small>403 官方域名，浏览器可访问</small></li><li><a href="http://www.news.cn/tech/20240220/92a8a5bcb35c4e09bfd7ee0e5393d5ac/c.html" target="_blank" rel="noopener noreferrer">新华网：Sora 的突破与风险</a><small>200 · 2026-11-05</small></li><li><a href="https://openai.com/index/sora-is-here/" target="_blank" rel="noopener noreferrer">OpenAI：Sora is here（官方原始出处）</a><small>403 官方域名，浏览器可访问</small></li><li><a href="https://www.news.cn/world/20260325/20c661ac2f5542d8b8eccd5c764af5c8/c.html" target="_blank" rel="noopener noreferrer">新华网：OpenAI 宣布放弃视频生成应用 Sora</a><small>200 · 2026-11-05</small></li><li><a href="https://api-docs.deepseek.com/news/news250120" target="_blank" rel="noopener noreferrer">DeepSeek：DeepSeek-R1 发布公告</a><small>200 · 2026-11-05</small></li><li><a href="https://github.com/deepseek-ai/DeepSeek-R1" target="_blank" rel="noopener noreferrer">DeepSeek-R1 开源权重（GitHub）</a><small>200 · 2026-11-05</small></li><li><a href="https://www.cnnic.net.cn/n4/2025/1021/c88-11391.html" target="_blank" rel="noopener noreferrer">CNNIC：《生成式人工智能应用发展报告（2025）》发布页</a><small>第一来源 · 200 · 2026-11-05</small></li><li><a href="http://www.news.cn/tech/20251020/c7c8f6c858c249e2bb69515f40eeab8b/c.html" target="_blank" rel="noopener noreferrer">新华网：我国生成式人工智能用户规模达 5.15 亿</a><small>200 · 2026-11-05</small></li><li><a href="https://www.news.cn/fortune/20251018/95ddc306f29f494fb188ed41ad8e5cca/c.html" target="_blank" rel="noopener noreferrer">新华网：报告发布报道</a><small>200 · 2026-11-05</small></li><li><a href="http://paper.people.com.cn/rmrbhwb/pc/content/202510/21/content_30110422.html" target="_blank" rel="noopener noreferrer">人民日报海外版：用户规模半年翻番</a><small>200 · 2026-11-05</small></li><li><a href="https://cn.wicinternet.org/2025-10/20/content_38354748.htm" target="_blank" rel="noopener noreferrer">世界互联网大会官网：较 2024 年 12 月激增 2.66 亿</a><small>200 · 2026-11-05</small></li><li><a href="https://www.cnnic.net.cn/" target="_blank" rel="noopener noreferrer">CNNIC 官网（报告原文查询入口）</a><small>200 · 2026-11-05</small></li><li><a href="https://www.wanxiang.art/" target="_blank" rel="noopener noreferrer">万相营造：一张商品图生成营销图</a><small>200 · 2026-11-06</small></li><li><a href="http://www.xinhuanet.com/tech/20250115/ad0511a9bd8746399f196800e5b47bee/c.html" target="_blank" rel="noopener noreferrer">新华网：淘宝星辰·图生视频向商家开放</a><small>200 · 2026-11-05</small></li><li><a href="https://cn.chinadaily.com.cn/a/202104/01/WS606584cca3101e7ce97471f7.html" target="_blank" rel="noopener noreferrer">中国日报网：剪映“图文成片”，输入文字一键生成视频</a><small>200 · 2026-11-05</small></li><li><a href="https://www.capcut.cn" target="_blank" rel="noopener noreferrer">剪映官网（图文成片入口）</a><small>200 · 2026-11-05</small></li><li><a href="http://www.news.cn/tech/20251029/b02bdb2d8bce4275ad12cab941c00c86/c.html" target="_blank" rel="noopener noreferrer">新华网：生成式人工智能应用场景持续拓展</a><small>200 · 2026-11-05</small></li></ul>
+      </div>
+      <p class="dossier-foot">上面这段文字与正式站第 ② AI 趋势与行业 关同源（<code>docs/content</code>）；改文案先改内容真源，再同步到页面。原型玩法不替代正文，也不改写原文里“演示样例”和“（示意）”的标注。</p>
+    </div>
+  </details>
+</section>
+<!-- DOSSIER:END -->
+<nav class="trend-onward" aria-label="原型导航"><a href="index.html?v=switch-13">← 回到原型拨盘</a><a href="chapter-01.html?v=press-07">① 提示词铸造台 ↗</a><a href="chapter-03.html?v=lab-05">③ 规则调试台 ↗</a></nav>
+  </main><footer class="proto-footer"><span>AI 探索基地 / 可玩原型 02</span><span>只展示原型 · 不更改正式打卡进度</span><a href="index.html?v=switch-13">返回原型拨盘 ↗</a></footer>
+  <script src="prototype-trends.js?v=desk-08" defer></script>
+</body>
+</html>
