@@ -906,8 +906,10 @@ def build(spec: dict) -> str:
 
     if spec.get("legacy"):
         out = out.replace("prototype-scam-tear.css?v=tear-in-04",
-                          "prototype-scam-tear.css?v=tear-in-05")
-        out = out.replace("prototype.js?v=case-12", "prototype.js?v=case-13")
+                          "prototype-scam-tear.css?v=tear-in-06")
+        out = out.replace("prototype-scam-tear.css?v=tear-in-05",
+                          "prototype-scam-tear.css?v=tear-in-06")
+        out = out.replace("prototype.js?v=case-12", "prototype.js?v=case-14")
         out = out.replace("scam-acts.js?v=acts-01", "scam-acts.js?v=acts-02")
         # ⑤ 关的逐字正文躺在撕纸账页里：断 JS 时 details 打不开，正文会被浏览器藏起来。
         # 这里补一份 noscript 样式，直接把账页里的正文摊平显示（先清掉上次补的那份）。
