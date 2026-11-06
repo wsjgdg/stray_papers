@@ -2944,3 +2944,179 @@ body:not(#void) #refined-output {
   body:not(#void) .press-sheet :where(span, strong) { white-space: normal !important; overflow: visible !important; }
   body:not(#void) .press-sheet { overflow: visible !important; }
 }
+
+/* ⑥ 两次试投的对照条 */
+body:not(#void) .trial-compare {
+  display: flex !important; flex-wrap: wrap !important; align-items: baseline !important;
+  gap: 4px 12px !important;
+  margin: 18px 0 4px !important; padding: 14px 0 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, .14) !important;
+  font-size: 12px !important; color: var(--ash) !important;
+  letter-spacing: .02em !important;
+}
+body:not(#void) .trial-compare > span,
+body:not(#void) .trial-compare > em {
+  font-size: 10px !important; letter-spacing: .1em !important; text-transform: uppercase !important;
+  font-style: normal !important; color: var(--ash) !important;
+}
+body:not(#void) .trial-compare > strong {
+  font-size: 15px !important; font-weight: 400 !important; color: var(--bone) !important;
+  font-variant-numeric: tabular-nums !important; letter-spacing: -.01em !important;
+}
+body:not(#void) .trial-compare > i {
+  font-style: normal !important; color: rgba(255, 255, 255, .3) !important; font-size: 13px !important;
+}
+body:not(#void) .trial-compare > b {
+  margin-left: auto !important;
+  font-size: 11.5px !important; font-weight: 400 !important; letter-spacing: .04em !important;
+  padding: 4px 10px !important; border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, .18) !important; color: var(--silver) !important;
+}
+body:not(#void) .trial-compare[data-trend="down"] > b { color: var(--spark) !important; border-color: rgba(255, 184, 41, .5) !important; }
+body:not(#void) .trial-compare[data-trend="up"] > b { color: var(--bone) !important; border-color: rgba(255, 255, 255, .34) !important; }
+@media (max-width: 760px) {
+  body:not(#void) .trial-compare { gap: 4px 8px !important; }
+  body:not(#void) .trial-compare > b { margin-left: 0 !important; }
+}
+
+/* ④ 路线票的两个动作并排 */
+body:not(#void) .route-ticket .ticket-actions {
+  display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 10px !important;
+}
+body:not(#void) .route-ticket #save-route {
+  border: 1px solid rgba(255, 255, 255, .2) !important; border-radius: 999px !important;
+  background: transparent !important; color: var(--bone) !important;
+  padding: 9px 16px !important; font-size: 12px !important; letter-spacing: .03em !important;
+}
+body:not(#void) .route-ticket #save-route:hover { border-color: var(--spark) !important; color: var(--spark) !important; }
+
+/* ---------------------------------------------------------- ⑤ 七幕幕条 → 可横向拖的进度轨 */
+body:not(#void) .scam-progress {
+  display: flex !important; flex-wrap: nowrap !important; gap: 0 !important;
+  overflow-x: auto !important; overflow-y: hidden !important;
+  scrollbar-width: none !important; -ms-overflow-style: none !important;
+  scroll-snap-type: x proximity; scroll-behavior: smooth;
+  padding: 4px 0 10px !important; cursor: grab;
+  overscroll-behavior-x: contain; touch-action: pan-x;
+}
+body:not(#void) .scam-progress::-webkit-scrollbar { display: none !important; height: 0 !important; }
+body:not(#void) .scam-progress.is-dragging { cursor: grabbing !important; scroll-snap-type: none; scroll-behavior: auto; }
+body:not(#void) .scam-progress.is-dragging button { pointer-events: none; }
+body:not(#void) .scam-progress button {
+  flex: 0 0 auto !important; display: inline-flex !important; align-items: center !important;
+  gap: 9px !important; min-height: 34px !important; padding: 6px 0 !important;
+  border: 0 !important; border-radius: 0 !important; background: transparent !important;
+  color: rgba(255, 255, 255, .42) !important; font-size: 12px !important; font-weight: 200 !important;
+  letter-spacing: .02em !important; white-space: nowrap !important;
+  scroll-snap-align: center; user-select: none;
+}
+body:not(#void) .scam-progress button::before {
+  content: ""; width: 16px; height: 1px; flex: none;
+  background: rgba(255, 255, 255, .16); transition: background .3s var(--ease), width .3s var(--ease);
+}
+body:not(#void) .scam-progress button:first-child::before { width: 8px; }
+body:not(#void) .scam-progress button::after {
+  content: ""; width: 18px; height: 1px; flex: none; margin: 0 12px 0 11px;
+  background: rgba(255, 255, 255, .16);
+}
+body:not(#void) .scam-progress button:last-child::after { margin-right: 4px; }
+body:not(#void) .scam-progress button span {
+  min-width: 14px !important; font-size: 11px !important; font-weight: 600 !important;
+  letter-spacing: .08em !important; color: rgba(255, 255, 255, .3) !important;
+}
+body:not(#void) .scam-progress button:hover { color: rgba(255, 255, 255, .82) !important; }
+body:not(#void) .scam-progress button:hover::after { background: rgba(255, 255, 255, .34); }
+body:not(#void) .scam-progress button.is-visited { color: rgba(255, 255, 255, .6) !important; }
+body:not(#void) .scam-progress button.is-visited::before,
+body:not(#void) .scam-progress button.is-visited::after { background: rgba(255, 184, 41, .38); }
+body:not(#void) .scam-progress button.is-visited span { color: rgba(255, 184, 41, .78) !important; }
+body:not(#void) .scam-progress button.is-current {
+  color: var(--bone) !important; background: transparent !important; border: 0 !important;
+}
+body:not(#void) .scam-progress button.is-current::before,
+body:not(#void) .scam-progress button.is-current::after { background: var(--spark); }
+body:not(#void) .scam-progress button.is-current span { color: var(--spark) !important; }
+body:not(#void) .scam-progress button:disabled { opacity: .3 !important; }
+body:not(#void) .scam-progress button:focus-visible { outline: 1px solid rgba(255, 184, 41, .7); outline-offset: 4px; }
+@media (max-width: 760px) {
+  body:not(#void) .scam-progress { padding: 3px 0 12px !important; }
+  body:not(#void) .scam-progress button { font-size: 11px !important; padding: 8px 0 !important; }
+  body:not(#void) .scam-progress button::after { margin: 0 9px; width: 14px; }
+}
+
+/* ⑤ 幕条：宽屏铺满成一条连续刻度线，窄屏浮成横向可拖的轨 */
+body:not(#void) .scam-progress { justify-content: flex-start !important; }
+@media (min-width: 761px) {
+  body:not(#void) .scam-progress { padding-bottom: 8px !important; }
+  body:not(#void) .scam-progress button { flex: 1 1 0 !important; min-width: 0 !important; }
+  body:not(#void) .scam-progress button::before { width: 14px; }
+  body:not(#void) .scam-progress button::after { flex: 1 1 auto; width: auto; min-width: 16px; margin: 0 14px 0 12px; }
+  body:not(#void) .scam-progress button:last-child { flex: 0 0 auto !important; }
+  body:not(#void) .scam-progress button:last-child::after { flex: 0 0 auto; width: 6px; margin-right: 0; }
+}
+
+/* ⑤ 幕条窄屏：一行排开、溢出可拖，而不是被压成竖排 */
+@media (max-width: 760px) {
+  body:not(#void) .scam-progress button {
+    flex-direction: row !important; justify-content: flex-start !important;
+    align-items: center !important; gap: 8px !important;
+    padding: 9px 0 !important; font-size: 11.5px !important; min-height: 30px !important;
+  }
+  body:not(#void) .scam-progress button::before { width: 10px; }
+  body:not(#void) .scam-progress button::after { width: 12px; margin: 0 11px 0 9px; }
+  body:not(#void) .scam-progress button span { font-size: 10.5px !important; }
+}
+
+/* ⑤ 幕条可读性：衬底 + 更明确的刻度线 */
+body:not(#void) .scam-progress {
+  background: rgba(0, 0, 0, .55) !important;
+  border-top-color: rgba(255, 255, 255, .2) !important;
+  border-bottom-color: rgba(255, 255, 255, .12) !important;
+}
+body:not(#void) .scam-progress button { color: rgba(255, 255, 255, .55) !important; }
+body:not(#void) .scam-progress button::before,
+body:not(#void) .scam-progress button::after { background: rgba(255, 255, 255, .26); }
+body:not(#void) .scam-progress button span { color: rgba(255, 255, 255, .38) !important; }
+body:not(#void) .scam-progress button.is-visited::before,
+body:not(#void) .scam-progress button.is-visited::after { background: rgba(255, 184, 41, .5); }
+body:not(#void) .scam-progress button.is-visited span { color: rgba(255, 184, 41, .9) !important; }
+body:not(#void) .scam-progress button.is-current::before,
+body:not(#void) .scam-progress button.is-current::after { background: var(--spark); }
+
+/* ⑤ 幕条刻度线：压过 main 内伪元素的统一清空 */
+body:not(#void) .scam-progress button::before,
+body:not(#void) .scam-progress button::after {
+  background: rgba(255, 255, 255, .26) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+body:not(#void) .scam-progress button.is-visited::before,
+body:not(#void) .scam-progress button.is-visited::after { background: rgba(255, 184, 41, .5) !important; }
+body:not(#void) .scam-progress button.is-current::after { background: var(--spark) !important; }
+body:not(#void) .scam-progress button:hover::after { background: rgba(255, 255, 255, .42) !important; }
+
+/* ⑤ 幕条：只留一条贯穿的横线，节点坐在线上 */
+body:not(#void) .scam-progress button::before { display: none !important; content: none !important; }
+body:not(#void) .scam-progress button { padding-left: 0 !important; padding-right: 0 !important; }
+@media (min-width: 761px) {
+  body:not(#void) .scam-progress button::after {
+    flex: 1 1 auto !important; width: auto !important; height: 1px !important;
+    min-width: 14px !important; margin: 0 20px 0 14px !important;
+  }
+  body:not(#void) .scam-progress button:last-child::after { flex: 0 0 auto !important; width: 8px !important; margin-right: 0 !important; }
+}
+@media (max-width: 760px) {
+  body:not(#void) .scam-progress button::after {
+    flex: 0 0 auto !important; width: 12px !important; height: 1px !important;
+    margin: 0 12px 0 10px !important;
+  }
+}
+
+/* ⑤ 幕条：还没到的幕也要读得清（不是消失） */
+body:not(#void) .scam-progress button:disabled { opacity: .5 !important; }
+body:not(#void) .scam-progress button.is-visited { color: rgba(255, 255, 255, .68) !important; }
+body:not(#void) .scam-progress button:disabled span { color: rgba(255, 255, 255, .34) !important; }
+
+/* ⑤ 幕条：拖动跟手，不吸附回原位 */
+body:not(#void) .scam-progress { scroll-snap-type: none !important; scroll-behavior: auto !important; }
+body:not(#void) .scam-progress button { scroll-snap-align: none !important; }

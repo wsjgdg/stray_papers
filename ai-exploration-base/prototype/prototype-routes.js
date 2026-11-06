@@ -314,11 +314,122 @@
     if (!modules().some(function (item) { return item.id === id; }) || scheduled.has(id)) return;
     scheduled.add(id); invalidateTrial(); renderPlanner(); renderTicket();
   });
+  /* 把这张路线票画成一张可以带走的图（本地 canvas，不上传任何内容） */
+  function wrapText(ctx, text, maxWidth) {
+    var lines = [], line = '';
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      var test = line + ch;
+      if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = ch; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+  function saveTicketImage() {
+    var status = document.getElementById('copy-status');
+    var title = document.getElementById('ticket-title').textContent.trim();
+    var time = document.getElementById('ticket-time').textContent.trim();
+    var steps = Array.prototype.map.call(document.querySelectorAll('#ticket-steps li'), function (li) { return li.textContent.trim(); });
+    var boundary = document.getElementById('ticket-boundary').textContent.trim();
+    if (!title) { status.textContent = '先试运行这一周，再存图片'; return; }
+    status.textContent = '正在画图…';
+    document.fonts.ready.then(function () {
+      var W = 1080, pad = 92;
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
+      var heading = '我的路线票 / MY FIRST WEEK';
+      var inner = W - pad * 2;
+      var boxes = [];
+      ctx.font = '200 20px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      var hLines = wrapText(ctx, heading, inner);
+      ctx.font = '200 52px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      var tLines = wrapText(ctx, title, inner - 12);
+      ctx.font = '200 24px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      var timeLines = wrapText(ctx, time, inner);
+      var boundaryLines = wrapText(ctx, boundary, inner);
+      ctx.font = '200 27px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      steps.forEach(function (step) { boxes.push(wrapText(ctx, step, inner - 64)); });
+
+      var H = pad + 40 + tLines.length * 70 + 24 + timeLines.length * 36 + 40;
+      boxes.forEach(function (lines) { H += lines.length * 44 + 26; });
+      H += 30 + boundaryLines.length * 38 + 96 + pad;
+      canvas.width = W * 2; canvas.height = H * 2;
+      ctx.scale(2, 2);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, W, H);
+
+      var y = pad + 6;
+      ctx.fillStyle = '#ffb829';
+      ctx.fillRect(pad, y - 22, 26, 2);
+
+      ctx.font = '200 20px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      ctx.fillStyle = '#9a9a9a';
+      hLines.forEach(function (line) { ctx.fillText(line, pad, y); y += 30; });
+
+      y += 26;
+      ctx.font = '200 52px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      tLines.forEach(function (line) { ctx.fillText(line, pad, y); y += 70; });
+
+      y += 8;
+      ctx.font = '200 24px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      ctx.fillStyle = '#bdbdbd';
+      timeLines.forEach(function (line) { ctx.fillText(line, pad, y); y += 36; });
+
+      y += 14;
+      ctx.fillStyle = 'rgba(255,255,255,.16)';
+      ctx.fillRect(pad, y, inner, 1);
+      y += 40;
+
+      ctx.font = '200 27px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      boxes.forEach(function (lines, n) {
+        ctx.fillStyle = '#ffb829';
+        ctx.font = '200 20px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+        ctx.fillText('0' + (n + 1), pad, y);
+        ctx.font = '200 27px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+        ctx.fillStyle = '#bdbdbd';
+        lines.forEach(function (line) { ctx.fillText(line, pad + 64, y); y += 44; });
+        y += 26;
+      });
+
+      y += 4;
+      ctx.fillStyle = 'rgba(255,184,41,.5)';
+      ctx.fillRect(pad, y - 26, 2, boundaryLines.length * 38 + 12);
+      ctx.font = '200 22px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      ctx.fillStyle = '#ffb829';
+      boundaryLines.forEach(function (line) { ctx.fillText(line, pad + 20, y); y += 38; });
+
+      y += 62;
+      ctx.fillStyle = 'rgba(255,255,255,.14)';
+      ctx.fillRect(pad, y - 40, inner, 1);
+      ctx.font = '200 19px "Dala Sans", "Noto Sans CJK SC", sans-serif';
+      ctx.fillStyle = '#9a9a9a';
+      ctx.fillText('AI 探索基地 · 可玩原型 04 · 本地生成的练习计划，不是收入预测', pad, y);
+      y += 30;
+      ctx.fillText(new Date().toLocaleDateString('zh-CN') + ' · 由本页在浏览器里画出，未上传任何内容', pad, y);
+
+      var name = '路线票-' + new Date().toISOString().slice(0, 10) + '.png';
+      canvas.toBlob(function (blob) {
+        if (!blob) { status.textContent = '这张图没画出来，换个浏览器再试'; return; }
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(function () { URL.revokeObjectURL(link.href); link.remove(); }, 1200);
+        status.textContent = '已存成图片：' + name;
+      }, 'image/png');
+    });
+  }
   document.getElementById('copy-route').addEventListener('click', function () {
     var area = document.getElementById('ticket-copy'), status = document.getElementById('copy-status');
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(area.value).then(function () { status.textContent = '已复制这张路线票'; }, function () { area.focus(); area.select(); status.textContent = '已选中文字，可手动复制'; });
     else { area.focus(); area.select(); status.textContent = '已选中文字，可手动复制'; }
   });
+  var saveBtn = document.getElementById('save-route');
+  if (saveBtn) saveBtn.addEventListener('click', saveTicketImage);
   buildLanes(); update(false);
   document.documentElement.classList.add('routes-ready');
 }());
