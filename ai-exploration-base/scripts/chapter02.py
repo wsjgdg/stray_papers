@@ -316,12 +316,8 @@ def desk_js(md: str) -> str:
     m = re.search(r"(\d{4} 年底全国才 [^。]*。)", note)
     scale = m.group(1) if m else note.split("。")[0] + "。"
 
-    shared = {
-        "id": "users", "short": "用户规模",
-        "title": scale,
-        "source": "CNNIC · 2025 年报告",
-        "correct": "fact",
-    }
+    # 用户规模那条只属于页首的数据展台，不再塞进每个领域（五个领域各放一份就是重复）
+    shared = None
     slugs = ["ecom", "selfmedia", "finance", "office", "edu"]
     tracks = {}
     for slug, ind in zip(slugs, industries):
@@ -330,7 +326,6 @@ def desk_js(md: str) -> str:
         obs = obs.strip().rstrip("。") + "。" if obs else body
         hint = hint.strip()
         cards = [
-            shared,
             {"id": "obs", "short": "报告里的观察", "title": obs,
              "source": "CNNIC 报告 · 行业应用", "correct": "fact"},
             {"id": "try", "short": "能自己试一件", "title": ind["fact"],
@@ -348,6 +343,7 @@ def desk_js(md: str) -> str:
         "tracks": tracks,
         "done": "两条都已核对 · 可以选一个试验",
         "count": "两条",
+        "scale": scale,
     }
     return ("/* 02 / 趋势台数据层：由 docs/content/p2-trends.md 生成，勿手改。 */\n"
             "window.TREND_DESK = " + json.dumps(payload, ensure_ascii=False, indent=1) + ";\n")

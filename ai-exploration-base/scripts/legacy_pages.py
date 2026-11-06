@@ -65,6 +65,22 @@ def modes(md: str, start: str, stops: tuple[str, ...]) -> list[tuple[str, str]]:
     return out
 
 
+def drop_section(html_text: str, marker: str) -> str:
+    """按标记整段删掉一个 <section>（含嵌套 section），不留残片。"""
+    i = html_text.find(marker)
+    if i < 0:
+        return html_text
+    start = html_text.rfind("<section", 0, i)
+    if start < 0:
+        return html_text
+    depth = 0
+    for m in re.finditer(r"<(/?)(section)\b[^>]*>", html_text[start:]):
+        depth += -1 if m.group(1) else 1
+        if depth == 0:
+            return html_text[:start] + html_text[start + m.end():]
+    return html_text
+
+
 def rich(text: str) -> str:
     """真源里的 **粗体** 还原成 strong，其余原样转义。"""
     out, pos = [], 0
@@ -234,9 +250,100 @@ def fill_02(scene: str, md: str) -> str:
     return scene
 
 
-FILLERS = {"03": fill_03, "02": fill_02}
+# ------------------------------------------------------------------ ⑤ 关
+
+def fill_05(scene: str, md: str) -> str:
+    """⑤ 骗局解剖室：撕开账页后的长读，换成真源的心理机制、数字、工具与收尾。"""
+    import chapter05 as _C5
+
+    doc = _C5.parse(md)
+
+    def mech_block() -> str:
+        items = []
+        for it in doc["mech"]:
+            subs = it.get("subs") or {}
+            bits = [f'<li><strong>{html.escape(it["name"])}</strong>']
+            if subs.get("骗子会说"):
+                bits.append(f'<p>{rich(subs["骗子会说"])}</p>')
+            if subs.get("解释"):
+                bits.append(f'<p>{rich(subs["解释"])}</p>')
+            items.append("".join(bits) + "</li>")
+        return ('<div class="reading-fill"><h4>它靠的几样东西</h4>'
+                f'<ul>{"".join(items)}</ul></div>')
+
+    def numbers_block() -> str:
+        items = "".join(
+            f'<li><strong>{html.escape(n["big"])}</strong><p>{rich(n["body"])}</p>'
+            f'<p><small>{rich(n.get("source") or "")}</small></p></li>' for n in doc["numbers"])
+        return f'<div class="reading-fill"><h4>两条真数字</h4><ul>{items}</ul></div>'
+
+    def tools_block() -> str:
+        items = "".join(
+            f'<li><strong>{html.escape(t["name"])}</strong><p>{rich(t.get("rest") or "")}</p></li>'
+            for t in doc["tools"])
+        return f'<div class="reading-fill"><h4>拿不准时，用这几样</h4><ul>{items}</ul></div>'
+
+    # 1) 撕开后的结论换成真源那两句
+    m = re.search(r'<h3>显示盈利，<br><em>不等于能提走。</em></h3><p>[\s\S]*?</p>', scene)
+    if not m:
+        raise SystemExit("⑤ 撕开后的结论段变了")
+    keep = doc["summary"]
+    scene = (scene[: m.start()]
+             + f'<h3>{html.escape(keep["title"])}</h3>'
+             + paras(keep["paras"]) + scene[m.end():])
+
+    # 2) 长读区补上心理机制 / 数字 / 工具
+    m = re.search(r'(<div class="reading-body">[\s\S]*?)(<a href="#case-sources">)', scene)
+    if not m:
+        raise SystemExit("⑤ 长读区结构变了")
+    scene = scene[: m.end(1)] + mech_block() + numbers_block() + tools_block() + scene[m.end(1):]
+
+    # 3) 页尾那张正文纸撤掉，正文已经在页里
+    scene = drop_section(scene, 'class="src-article src-verbatim"')
+    scene = scene.replace("原型-scam-tear.css?v=tear-in-04", "原型-scam-tear.css?v=tear-in-05")
+    scene = scene.replace("prototype-scam-tear.css?v=tear-in-04",
+                          "prototype-scam-tear.css?v=tear-in-05")
+    return scene
 
 
-def fill(key: str, scene: str, md: str) -> str:
+# ------------------------------------------------------------------ ④ ⑥ 关
+
+def _fill_block(title: str, article_html: str, kicker: str) -> str:
+    return ('<section class="page-fill" aria-label="本关正文">'
+            f'<div class="page-fill-head"><span>{html.escape(kicker)}</span>'
+            f'<h2>{html.escape(title)}</h2></div>'
+            f'<div class="page-fill-body">{article_html}</div></section>')
+
+
+def fill_04(scene: str, md: str, article: str) -> str:
+    """④ 副业地图：交互台不动，真源的三层卡片与收入实话接在它后面、页内。"""
+    block = _fill_block("三条路，摆在这儿", article, "THE ROUTES / 正文 · 逐字")
+    m = re.search(r'<section class="route-context"', scene)
+    if not m:
+        raise SystemExit("④ 找不到 route-context")
+    scene = scene[: m.start()] + block + scene[m.start():]
+    scene = re.sub(r'<section class="src-article src-verbatim"[\s\S]*?</section>\s*', "", scene)
+    return scene
+
+
+def fill_06(scene: str, md: str, article: str) -> str:
+    """⑥ 提示词学院：校准台不动，三课与毕业任务排在页内，再回到检查台。"""
+    block = _fill_block("三课，一句一句来", article, "THREE LESSONS / 正文 · 逐字")
+    m = re.search(r'<section class="after-station"', scene)
+    if not m:
+        raise SystemExit("⑥ 找不到 after-station")
+    scene = scene[: m.start()] + block + scene[m.start():]
+    scene = re.sub(r'<section class="src-article src-verbatim"[\s\S]*?</section>\s*', "", scene)
+    return scene
+
+
+FILLERS = {"03": fill_03, "02": fill_02, "05": fill_05, "04": fill_04, "06": fill_06}
+
+
+def fill(key: str, scene: str, md: str, article: str = "") -> str:
     fn = FILLERS.get(key)
-    return fn(scene, md) if fn else scene
+    if not fn:
+        return scene
+    if key in ("04", "06"):
+        return fn(scene, md, article)
+    return fn(scene, md)

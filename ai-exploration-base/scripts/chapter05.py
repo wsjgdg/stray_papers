@@ -338,6 +338,9 @@ def legacy_js(md: str) -> str:
             phrases = []          # 最后一幕是收网复盘，没有可封存的话术
         clues.append([{"phrase": p, "why": _first_sentence(act["aBody"])} for p in phrases])
 
+    dict_rows = [{"name": K.strip_md(x["name"]), "rest": K.strip_md(x.get("rest") or "")}
+                 for x in doc["phrases"]]
+
     def dump(obj):
         return json.dumps(obj, ensure_ascii=False, indent=1)
 
@@ -346,5 +349,6 @@ def legacy_js(md: str) -> str:
         "   八幕剧本逐字来自真源；这里是老决策室引擎（prototype.js initScam）的数据层。 */\n"
         "window.SCAM_SCRIPT = " + dump(acts) + ";\n\n"
         "window.SCAM_CLUES = " + dump(clues[:-1]) + ";\n\n"
-        "window.SCAM_REPORTS = " + dump(reports) + ";\n"
+        "window.SCAM_REPORTS = " + dump(reports) + ";\n\n"
+        "window.SCAM_DICT = " + dump(dict_rows) + ";\n"
     )

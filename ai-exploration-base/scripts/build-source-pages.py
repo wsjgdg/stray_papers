@@ -447,7 +447,8 @@ PAGES = [
          legacy_sources="sources-p456.md", legacy_key="第④关", stage=[]),
     dict(file="chapter-05.html", key="05", docs=["p5-anti-scam.md", "real-cases-p5.md",
                                                  "sources-p456.md"],
-         legacy=True, legacy_sources="sources-p456.md", legacy_key="第⑤关",
+         legacy=True, legacy_src="legacy/chapter-05.html",
+         legacy_sources="sources-p456.md", legacy_key="第⑤关",
          legacy_noscript="p5-anti-scam.md", stage=[]),
     dict(file="chapter-06.html", key="06", docs=["p6-academy.md"], legacy=True,
          legacy_src="legacy/chapter-06.html",
@@ -750,13 +751,8 @@ def build(spec: dict) -> str:
             )
             scene = re.sub(r'<div class="nojs-fallback">[\s\S]*?</div>',
                            lambda _m: fallback, scene, count=1)
-        # 真源正文直接填进老页的各节（③ 起用），填过的页不再往后挂纸
-        import legacy_pages as _LP
-        if _LP.FILLERS.get(spec["key"]):
-            _md = "\n\n".join((DOCS / d).read_text(encoding="utf-8") for d in spec["docs"])
-            scene = _LP.fill(spec["key"], scene, _md)
-
-        if doc5:
+        import legacy_pages as _LPx
+        if doc5 and not _LPx.FILLERS.get(spec["key"]):
             # 上一版构建塞进来的正文附录先摘掉（src 就是本页自己）
             j = find_element(scene, "section", lambda t: 'src-verbatim' in t)
             if j >= 0:
@@ -812,8 +808,12 @@ def build(spec: dict) -> str:
         + "</section>"
     )
 
-    paper_html = ""
     import legacy_pages as _LP0
+    if spec.get("legacy") and _LP0.FILLERS.get(spec["key"]):
+        _md = (DOCS / spec["docs"][0]).read_text(encoding="utf-8")  # 只喂内容真源，别把来源清单拼进来
+        scene = _LP0.fill(spec["key"], scene, _md, readable_paper(_md))
+
+    paper_html = ""
     if (spec.get("legacy") and not spec.get("legacy_noscript")
             and not _LP0.FILLERS.get(spec["key"])):
         # ④⑥：真源正文按老版式排成一张纸接在后面（③ 已经填进页面各节，见下）
@@ -904,6 +904,10 @@ def build(spec: dict) -> str:
         out = out.replace("</main>", "</main>" + tags, 1)
 
     if spec.get("legacy"):
+        out = out.replace("prototype-scam-tear.css?v=tear-in-04",
+                          "prototype-scam-tear.css?v=tear-in-05")
+        out = out.replace("prototype.js?v=case-12", "prototype.js?v=case-13")
+        out = out.replace("scam-acts.js?v=acts-01", "scam-acts.js?v=acts-02")
         # ⑤ 关的逐字正文躺在撕纸账页里：断 JS 时 details 打不开，正文会被浏览器藏起来。
         # 这里补一份 noscript 样式，直接把账页里的正文摊平显示（先清掉上次补的那份）。
         out = re.sub(r"<noscript><style>\.page-scam \.tear-interlude[\s\S]*?</style></noscript>",

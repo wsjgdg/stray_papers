@@ -194,3 +194,20 @@
 .page-routes .tool-links a{display:inline;padding:0;border:0;border-bottom:1px solid #e9e19f66;font-weight:600;font-size:11.5px;color:#efe8c9}
 .page-routes .tool-links a:hover,.page-routes .tool-links a:focus-visible{color:#fff6cf;border-color:#e9e19f}
 @media(max-width:900px){.page-routes .route-disclosure{grid-template-columns:1fr;gap:26px;margin-bottom:46px}}
+
+/* 真源三层卡片排在路线台之后、页内（不再另起一张纸） */
+.page-routes .page-fill{padding:clamp(26px,4vw,52px) clamp(20px,5vw,72px);border-top:1px solid #ffffff1a;background:#10182080}
+.page-routes .page-fill-head{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.page-routes .page-fill-head>span{color:#f0b48a;font:750 10px/1 "Noto Sans CJK SC",sans-serif;letter-spacing:.14em}
+.page-routes .page-fill-head h2{margin:0;font-size:clamp(22px,2.4vw,30px);line-height:1.28;letter-spacing:-.02em;color:#f2ede2}
+.page-routes .page-fill .src-section{border-top:1px solid #ffffff14;padding:20px 0}
+.page-routes .page-fill .src-h2{color:#f2ede2;font-size:19px}
+.page-routes .page-fill .src-no{color:#f0b48a}
+.page-routes .page-fill .src-body p,.page-routes .page-fill .src-body li{color:#d6d9d2;font-size:13px;line-height:1.9}
+.page-routes .page-fill .src-body strong{color:#f6efdd}
+.page-routes .page-fill .src-body h3,.page-routes .page-fill .src-body h4{color:#e8dfcc;font-size:15px}
+.page-routes .page-fill .src-body blockquote{border-left-color:#f0b48a55;background:#ffffff0a;color:#d6d9d2}
+.page-routes .page-fill .src-body a{color:#f0b48a}
+.page-routes .page-fill .src-body blockquote,.page-academy .page-fill .src-body blockquote{background:none;padding:0 0 0 12px;margin:0 0 12px}
+
+.page-routes .page-fill .src-body blockquote{border-left-color:#f0b48a66}
