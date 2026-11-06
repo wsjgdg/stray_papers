@@ -211,3 +211,15 @@
 .page-routes .page-fill .src-body blockquote,.page-academy .page-fill .src-body blockquote{background:none;padding:0 0 0 12px;margin:0 0 12px}
 
 .page-routes .page-fill .src-body blockquote{border-left-color:#f0b48a66}
+
+/* 选中的那条路线，详情里摊开真源那一层的子卡（正文在台面上，不在页尾） */
+.page-routes .route-md{margin-top:18px;border-top:1px solid #2b3a341f;padding-top:16px;display:grid;gap:12px}
+.page-routes .route-md[hidden]{display:none}
+.page-routes .route-md-k{color:#8a5a2b;font:750 10px/1 "Noto Sans CJK SC",sans-serif;letter-spacing:.14em}
+.page-routes .route-md-card{padding:12px 14px;border:1px solid #2b3a3414;background:#ffffff59}
+.page-routes .route-md-card h4{margin:0 0 8px;font-size:14px;color:#22332f}
+.page-routes .route-md-card p{margin:0 0 8px;font-size:12.5px;line-height:1.85;color:#3b4a45}
+.page-routes .route-md-steps{margin:0 0 8px;padding-left:1.2em;display:grid;gap:4px}
+.page-routes .route-md-steps li{font-size:12px;line-height:1.75;color:#41504a}
+.page-routes .route-md-note{color:#5b6a62}
+.page-routes .route-md-risk{color:#8d5230}

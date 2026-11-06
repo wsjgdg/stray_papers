@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var FILL = window.ROUTE_FILL || null;   // 真源三层卡片（route-fill.js）
   var profile = { hours: '2', field: 'start', camera: 'no', learn: 'no' };
   var selected = null, pinned = false, firstMove = null;
   var scheduled = new Set(), micro = false, trial = false, outcome = null;
@@ -254,6 +255,37 @@
     document.getElementById('ticket-copy').value = '我的一周路线票（计划，不是完成记录或收入预测）\n条件：每周约 ' + profile.hours + ' 小时 / ' + fieldName() + ' / ' + (profile.camera === 'yes' ? '愿意出镜' : '不出镜') + ' / ' + (profile.learn === 'yes' ? '愿意系统学习' : '先做一件小事') + '\n路线：' + data.title + '\n优先依据：' + data.reasons.join(' ') + '\n' + timeLine + '\n本周排程：\n' + tasks.map(function (item) { return '· ' + item.name + ' / 示例 ' + item.hours + ' 小时：' + item.detail; }).join('\n') + (scheduled.has('feedback') ? '' : '\n· 下周再找人反馈，本周不冒充已收到意见。') + '\n边界：' + data.caution + '\n不保证收入。';
     ticket.classList.remove('is-printed'); if (!reduced) { void ticket.offsetWidth; ticket.classList.add('is-printed'); }
   }
+  function renderCardsInDetail(id) {
+    var host = document.getElementById('route-md');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'route-md';
+      host.className = 'route-md';
+      var anchor = document.getElementById('detail-caution');
+      if (!anchor) return;
+      anchor.parentNode.insertBefore(host, anchor.nextSibling);
+    }
+    if (!FILL || !FILL.tiers || !FILL.tiers[id]) { host.replaceChildren(); host.hidden = true; return; }
+    host.hidden = false;
+    host.replaceChildren();
+    var tier = FILL.tiers[id];
+    host.appendChild(el('span', 'route-md-k', tier.level));
+    tier.cards.forEach(function (card) {
+      var box = el('article', 'route-md-card');
+      box.appendChild(el('h4', '', card.name));
+      (card.paras || []).forEach(function (t) { box.appendChild(el('p', '', stripBold(t))); });
+      if (card.steps && card.steps.length) {
+        var ol = el('ol', 'route-md-steps');
+        card.steps.forEach(function (t) { ol.appendChild(el('li', '', stripBold(t))); });
+        box.appendChild(ol);
+      }
+      if (card.tools) box.appendChild(el('p', 'route-md-note', '工具 / ' + stripBold(card.tools)));
+      if (card.risk) box.appendChild(el('p', 'route-md-risk', '注意 / ' + stripBold(card.risk)));
+      host.appendChild(box);
+    });
+  }
+  function stripBold(t) { return String(t).replace(/\*\*/g, ''); }
+
   function renderSelection() {
     var order = ordering(), data = description(selected);
     ids.forEach(function (id) { laneNodes[id].setAttribute('aria-pressed', String(id === selected)); });
@@ -261,6 +293,7 @@
     document.getElementById('detail-title').textContent = data.title;
     document.getElementById('detail-reason').textContent = data.reasons.join(' ');
     document.getElementById('detail-caution').textContent = '先看边界 / ' + data.caution;
+    renderCardsInDetail(selected);
     var choices = document.getElementById('step-choices'); choices.replaceChildren();
     data.options.forEach(function (option, n) {
       var button = el('button', 'step-choice'); button.type = 'button'; button.dataset.move = String(n);
