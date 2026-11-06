@@ -464,3 +464,17 @@
 **验证：** 真 Chromium 1280 / 375 各跑 7 页：0 控制台报错、0 请求失败、无横向溢出、`#content-dossier` 全部消失、每页 5–27 个正文小节、交互块 1–6 块在位；点按抽查（①＋目标、②情报卡、③复制记录、⑤幕条、⑥A/B/C 档）均有响应。
 
 **下一步：** 若用户想进一步「只留正文、交互台收到页尾或独立页」，只需在 `build-source-pages.py` 里调 `hero/stage/article` 的拼接顺序；要恢复折叠附页可从 `backup/pre-dala-50a2b7f` 取旧的 `build-prototype-content.py`。
+
+## 2026-11-06 · 第十五轮：只留正文
+
+**用户要求：** 「只留正文」——交互台整块不要，页面只留内容真源的文字。
+
+**做法：** `scripts/build-source-pages.py` 增开关 `WITH_STAGE = False`，重新生成七页。
+- 交互台不再渲染，页面就是：顶栏 → 页首（H1／导语／元信息小字）→ 正文（真源分节全文）→ 页内导航 → 页脚。
+- 没有可挂的 DOM，交互脚本（`prototype*.js`、`scam-script.js`、`gsap`）与 `<noscript>` 一并从页面里去掉，避免 `null.addEventListener` 报错（第一版没去，七页各报一条 TypeError）。
+- 顶栏标签「交互原型 · 0X / 06」改成「正文 · 0X / 06」，品牌副题 `/ PLAYABLE LAB` → `/ 正文 READER`，页脚「可玩原型 / 只展示原型」→「正文 / 只有正文」，跳转锚点从 `#desk` 这类已删除的 id 改成 `#source-0X`。
+- 交互台的源文件（`prototype-*.css/js`、字体、`scam-script.js`、Algorithm Lab 内嵌页）**没删**，只是页面上不再引用；要恢复交互就把 `WITH_STAGE` 改回 `True` 重新生成。
+
+**验证：** 真 Chromium 1280 / 375 各 7 页：**0 控制台报错、0 请求失败、无横向溢出**，`.src-play` 全部消失、`#content-dossier` 仍为 0，正文小节 5–27 节、外链 1–108 条，页面高度 5.1k–30k px（1280）。
+
+**下一步：** 待用户在预览里过一遍正文的断句、编号与出处密度；若嫌长，可以按文档分节折叠（改成点开式），或把关卡拆成「正文页 + 出处页」两页。
