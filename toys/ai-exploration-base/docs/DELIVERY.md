@@ -1,6 +1,6 @@
 # DELIVERY — 「AI 探索基地」交付说明
 
-> 交付日期：2026-11-05 ｜ 版本：v1 ｜ 交付物：`ai-exploration-base-v1.zip`（387KB，22 个文件）
+> 初版交付日期：2026-11-05 ｜ 版本：v1 ｜ 交付物：运行 `bash ai-exploration-base/scripts/build-zip.sh` 生成 `ai-exploration-base-v1.zip`（文件数及体积以当次打包结果为准）
 
 ## 怎么交到妈妈手里
 
@@ -26,6 +26,8 @@
 - 全流程打卡 1→6 测试通过，证书正确显示
 - 全部数据来源可查证（CNNIC / 公安部 / 新华网，页面脚注附链接）
 
+> 初版真浏览器验证使用本地 HTTP 服务。2026-11-05 改版后又在沙箱 Chromium 中用 `file://` 走通六关和证书，并验证关闭重开后进度仍在；但不同浏览器对本地文件存储的处理可能不同，交付前仍请在妈妈的 Edge/Chrome 设备上做一次「第 1 关打卡 → 返回首页 → 关闭重开」验收。见 `docs/REDESIGN_PLAN.md`。
+
 ## 后续迭代方向（v2 备选）
 
 - 真实 AI 图像素材替换 CSS 海报（本会话无出图工具，已用诚实标注方案）
@@ -36,5 +38,5 @@
 
 ## 维护
 
-- 修改页面后：`node scripts/smoke.js` 验证 → `git commit` → `bash scripts/build-zip.sh` 重新打包
+- 修改页面后（在 `ai-exploration-base/` 目录内）：`node scripts/test.js` → `node scripts/smoke.js` → `bash scripts/build-zip.sh` 重新打包；通过后再提交代码
 - 设计文档：`docs/superpowers/specs/`；实施计划：`docs/superpowers/plans/`；进度日志：`docs/progress.md`

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* ============================================================
    AI Exploration Base - zero-dependency smoke test
-   1) Every local script/css link in built HTML files must exist
-   2) Every JS file in assets/js must pass `node --check`
+   1) Every local script/css/page/iframe link in built HTML files must exist
+   2) Inline scripts and every JS file in assets/js must parse
    Run: node scripts/smoke.js   (exit 1 on failure)
    ============================================================ */
 'use strict';
@@ -10,11 +10,12 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..');
 
 function listHtml() {
-  const dirs = [ROOT, path.join(ROOT, 'pages')];
+  const dirs = [ROOT, path.join(ROOT, 'pages'), path.join(ROOT, 'prototype')];
   const files = [];
   dirs.forEach((dir) => {
     if (!fs.existsSync(dir)) return;
@@ -26,9 +27,10 @@ function listHtml() {
 }
 
 function extractLocalRefs(html) {
-  /* Strip script/style blocks first: inline JS legitimately contains
-     dynamic hrefs ('...+ p.url + ...') that are not file references. */
-  html = html.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, '');
+  /* Strip only block contents, not their tags: external script src
+     attributes must still be checked. Inline JS may contain dynamic
+     href strings ('...+ p.url + ...') that are not file references. */
+  html = html.replace(/<(script|style)\b([^>]*)>[\s\S]*?<\/\1\s*>/gi, '<$1$2></$1>');
   const refs = [];
   const re = /(?:src|href)\s*=\s*"([^"]+)"/g;
   let m;
@@ -36,7 +38,7 @@ function extractLocalRefs(html) {
     const url = m[1];
     if (/^(https?:)?\/\//.test(url)) continue; // external
     if (/^(#|mailto:|data:|javascript:)/.test(url)) continue;
-    refs.push(url);
+    refs.push(url.split('#')[0].split('?')[0]);
   }
   return refs;
 }
@@ -60,6 +62,39 @@ pages.forEach((file) => {
   } else {
     console.log(`PASS ${rel} (${refs.length} local refs checked)`);
   }
+
+  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
+    .filter((m) => !/\bsrc\s*=/.test(m[1]));
+  scripts.forEach((m, i) => {
+    try {
+      new vm.Script(m[2], { filename: `${rel}:inline-${i + 1}` });
+    } catch (e) {
+      failures++;
+      console.log(`FAIL inline-js ${rel} #${i + 1}: ${e.message}`);
+    }
+  });
+});
+
+// CSS artwork and fonts must exist for both the formal site and experiments.
+[path.join(ROOT, 'assets', 'css'), path.join(ROOT, 'prototype')].forEach((cssDir) => {
+  if (!fs.existsSync(cssDir)) return;
+  fs.readdirSync(cssDir).filter((f) => f.endsWith('.css')).forEach((f) => {
+    const css = fs.readFileSync(path.join(cssDir, f), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      // Inline SVG may itself contain url(%23id); it is not a local file.
+      .replace(/url\(\s*(['"])data:[\s\S]*?\1\s*\)/g, '');
+    const refs = [...css.matchAll(/url\(\s*['"]?([^)'"\s]+)['"]?\s*\)/g)]
+      .map((m) => m[1]).filter((url) => !/^(data:|https?:|\/\/|#)/.test(url))
+      .map((url) => url.split('?')[0].split('#')[0]);
+    const missing = refs.filter((ref) => !fs.existsSync(path.resolve(cssDir, ref)));
+    const label = path.relative(ROOT, path.join(cssDir, f));
+    if (missing.length) {
+      failures++;
+      console.log(`FAIL css ${label}: missing artwork: ${missing.join(', ')}`);
+    } else {
+      console.log(`PASS css ${label} (${refs.length} local assets checked)`);
+    }
+  });
 });
 
 const jsDir = path.join(ROOT, 'assets', 'js');
@@ -78,6 +113,19 @@ if (fs.existsSync(jsDir)) {
     });
 } else {
   console.log('WARN: assets/js not found yet');
+}
+
+const prototypeDir = path.join(ROOT, 'prototype');
+if (fs.existsSync(prototypeDir)) {
+  fs.readdirSync(prototypeDir).filter((f) => f.endsWith('.js')).forEach((f) => {
+    try {
+      execFileSync(process.execPath, ['--check', path.join(prototypeDir, f)], { stdio: 'pipe' });
+      console.log(`PASS js-syntax prototype/${f}`);
+    } catch (e) {
+      failures++;
+      console.log(`FAIL js-syntax prototype/${f}:\n${e.stderr}`);
+    }
+  });
 }
 
 console.log(failures === 0 ? '\nSMOKE: ALL PASS' : `\nSMOKE: ${failures} failure(s)`);

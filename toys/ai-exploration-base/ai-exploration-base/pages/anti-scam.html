@@ -36,22 +36,30 @@
     .phrase-card .decode { color: var(--ink-soft); font-size: 0.98rem; }
     .phrase-card .phrase { color: var(--danger); font-weight: 700; }
   </style>
+  <link rel="stylesheet" href="../assets/css/chapter.css">
 </head>
-<body>
+<body class="chapter chapter--anti-scam">
   <main class="section">
 
-    <h1>⑤ 骗局解剖室</h1>
-    <p class="lead">
+    <header class="chapter-intro">
+      <div class="chapter-intro__copy">
+        <span class="chapter-overline">探索手册 / 05 · 看清骗局的剧本</span>
+        <h1>骗局解剖室</h1>
+        <p class="lead">
       先说清楚：<strong>想赚钱，完全没有错</strong>——这一关不是劝你别想钱，是带你把骗子的<strong>完整剧本</strong>看一遍。
       你要演一次"差点上当的人"。放心，这里是模拟的，不花一分钱。
-      走的时候每一步都看得见，以后就没人能骗到你。
+      走的时候每一步都看得见，以后遇到类似话术，你就更容易停下来查证。
     </p>
+      </div>
+      <div class="chapter-intro__art" aria-hidden="true"><span class="chapter-art__number">05</span><span class="chapter-art__stamp">STOP · CHECK · THINK</span></div>
+      <span class="chapter-image-note">概念视觉 · 非产品截图</span>
+    </header>
 
     <h2 class="reveal">第一场：骗局模拟器</h2>
     <div class="sim-panel reveal">
-      <div class="sim-stage-tag" id="sim-stage-tag">第 1 幕 · 共 7 幕</div>
-      <div class="chat sim-chat" id="sim-chat"></div>
-      <div id="sim-anatomy"></div>
+      <div class="sim-panel__header"><span>模拟对话 / 识别话术</span><div class="sim-stage-tag" id="sim-stage-tag">第 1 幕 · 共 7 幕</div></div>
+      <div class="sim-content"><div class="chat sim-chat" id="sim-chat"></div>
+      <div id="sim-anatomy"></div></div>
       <div class="sim-actions" id="sim-actions"></div>
     </div>
 
@@ -96,7 +104,7 @@
         <p>
           2025 年一年，全国公安会同有关部门<strong>拦截的诈骗电话有 36 亿次</strong>、
           诈骗短信 33 亿条，全年侦破电诈案件 25.8 万起。
-          平均每 9 秒，就有 1000 多个诈骗电话被打出。
+          按全年平均算，仅被拦截的诈骗电话每 9 秒就有约 1000 通。
           <strong>骗子的"客服团队"比你想的忙得多——他们不是碰运气，是工业化的。</strong>
         </p>
         <p style="color:var(--ink-soft); font-size:0.9rem; margin:0;">
@@ -114,12 +122,8 @@
       </p>
     </div>
 
-    <p style="text-align:center; margin-top:2rem;">
-      <a class="btn" href="academy.html">下一关：提示词学院 →</a>
-    </p>
-    <p style="text-align:center;">
-      <a href="../index.html" style="font-size:0.9rem; color:var(--ink-soft);">← 回到探索地图</a>
-    </p>
+    <nav class="chapter-end" aria-label="章节导航"><a href="../index.html">← 回到探索地图</a><a class="btn" href="academy.html">下一关：提示词学院 →</a></nav>
+
 
     <div class="sources">
       <p><strong>本页数据来源（可自行查证）：</strong></p>
@@ -168,6 +172,10 @@
             '<p class="decode">' + t.how + '</p></div>';
         }).join('');
 
+      /* These cards did not exist when pageReady registered the initial
+         scroll reveals; without this they stay opacity:0 forever. */
+      S.revealOnScroll('#mechanisms .reveal, #phrases .reveal, #toolkit .reveal');
+
       /* ---------- simulator engine ---------- */
       var SCRIPT = window.SCAM_SCRIPT;
       var chatEl = document.getElementById('sim-chat');
@@ -176,6 +184,7 @@
       var tagEl = document.getElementById('sim-stage-tag');
       var idx = 0;
       var tookRisk = false;
+      var stoppedAtFour = false;
 
       function bubble(stage) {
         var div = document.createElement('div');
@@ -189,7 +198,7 @@
         div.appendChild(text);
         chatEl.appendChild(div);
         div.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        return S.typeText(text, stage.message, { speed: 26 });
+        return S.typeText(text, stage.message, { speed: 0 });
       }
 
       function anatomyCard(stage) {
@@ -216,7 +225,8 @@
       function showStage(i) {
         idx = i;
         var st = SCRIPT[i];
-        tagEl.textContent = '第 ' + st.stage + ' 幕 · 共 ' + SCRIPT.length + ' 幕' +
+        tagEl.textContent = (stoppedAtFour ? '已停下 · ' : '') +
+          '第 ' + st.stage + ' 幕 · 共 ' + SCRIPT.length + ' 幕' +
           (st.final ? ' · 剧终' : '');
         anatomyEl.innerHTML = '';
         actionsEl.innerHTML = '';
@@ -232,7 +242,7 @@
               stoppedEarly();
             }));
           } else if (st.final) {
-            finish();
+            finish(stoppedAtFour);
           } else {
             actionsEl.appendChild(btn('继续', true, function () {
               showStage(i + 1);
@@ -241,21 +251,20 @@
         });
       }
 
-      /* "停下查证" path: reward the instinct, still reveal the full playbook. */
+      /* Stop the pretend investment, but let her see how the scammer
+         would continue. Put the praise in the chat so later anatomy
+         updates cannot erase it. Both branches now cover all 7 acts. */
       function stoppedEarly() {
-        actionsEl.innerHTML = '';
+        stoppedAtFour = true;
         var good = document.createElement('div');
         good.className = 'positive-card';
+        good.style.width = '100%';
         good.innerHTML =
           '<h4 style="margin:0.2em 0; color:var(--ok);">🎉 你停下来了——这就是最好的风控！</h4>' +
-          '<p style="margin:0.4em 0 0;">' +
-          '现实里，走到第四幕还能停的人不多。不过把剧本剩下的部分也看完，' +
-          '下次你就不是"恰好躲过"，而是"一眼看穿"。' +
-          '</p>';
-        anatomyEl.insertBefore(good, anatomyEl.firstChild);
-        var st = SCRIPT[SCRIPT.length - 1];
-        tagEl.textContent = '剧终 · 提前下车的聪明人';
-        bubble(st).then(function () { anatomyCard(st); finish(true); });
+          '<p style="margin:0.4em 0 0;">接下来只看骗子会怎么继续说，不再投入任何钱。' +
+          '看完后面的剧本，下次就更容易一眼看穿。</p>';
+        chatEl.appendChild(good);
+        showStage(4);
       }
 
       function finish(early) {
@@ -273,6 +282,7 @@
           chatEl.innerHTML = '';
           anatomyEl.innerHTML = '';
           tookRisk = false;
+          stoppedAtFour = false;
           showStage(0);
         }));
         var next = document.createElement('a');
