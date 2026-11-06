@@ -561,7 +561,53 @@
         button.addEventListener('click', function () { show(i); });
         progress.appendChild(button);
       });
+      centerCurrent();
     }
+    /* 幕条可以横向拖动；点选仍是点选，拖过 6px 才算拖 */
+    var railDrag = { on: false, x: 0, left: 0, moved: 0 };
+    function centerCurrent() {
+      var cur = progress.querySelector('.is-current');
+      if (!cur) return;
+      var target = cur.offsetLeft - (progress.clientWidth - cur.offsetWidth) / 2;
+      if (Math.abs(progress.scrollLeft - target) < 4) return;
+      progress.scrollTo({ left: Math.max(0, target), behavior: railDrag.on ? 'auto' : 'smooth' });
+    }
+    progress.addEventListener('pointerdown', function (event) {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      railDrag.on = true; railDrag.x = event.clientX; railDrag.left = progress.scrollLeft; railDrag.moved = 0;
+      railDrag.pointer = event.pointerId; railDrag.captured = false;
+    });
+    progress.addEventListener('pointermove', function (event) {
+      if (!railDrag.on) return;
+      var dx = event.clientX - railDrag.x;
+      railDrag.moved = Math.max(railDrag.moved, Math.abs(dx));
+      if (railDrag.moved < 6) return;
+      if (!railDrag.captured) {
+        railDrag.captured = true;
+        progress.classList.add('is-dragging');
+        try { progress.setPointerCapture(event.pointerId); } catch (err) {}
+      }
+      progress.scrollLeft = railDrag.left - dx;
+      event.preventDefault();
+    });
+    function endRailDrag() {
+      if (!railDrag.on) return;
+      railDrag.on = false;
+      progress.classList.remove('is-dragging');
+      window.setTimeout(function () { railDrag.moved = 0; }, 0);
+    }
+    progress.addEventListener('pointerup', endRailDrag);
+    progress.addEventListener('pointercancel', endRailDrag);
+    progress.addEventListener('click', function (event) {
+      if (railDrag.moved < 6) return;
+      event.preventDefault(); event.stopPropagation();
+    }, true);
+    progress.addEventListener('focusin', function (event) {
+      var button = event.target.closest('button');
+      if (!button) return;
+      var target = button.offsetLeft - (progress.clientWidth - button.offsetWidth) / 2;
+      progress.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+    });
     var tearInterlude = document.getElementById('tear-interlude'), tearRequested = false;
     function ensureTear() {
       if (tearRequested) return;

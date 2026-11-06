@@ -11,7 +11,7 @@
     phone: { task: '写一份清理手机空间的操作说明', role: '耐心的手机使用讲解员', context: '给不熟悉手机设置的家人看；机型未知', spec: '按顺序列三步；提醒先备份，不确定的界面名称要核实' },
     finance: { task: '列出家庭开支表里值得复核的项目', role: '谨慎的财务整理助手', context: '给家庭成员看；不要填入真实账本、姓名和账户信息', spec: '只列可能需要核对的问题，不作投资或财务决定' }
   };
-  var state = { pinned: null, sample: null, previous: null, trial: null };
+  var state = { pinned: null, sample: null, previous: null, trial: null, lastRun: null };
   function value(id) { return inputs[id].value.trim(); }
   function snapshot() { return Object.fromEntries(fields.map(function (id) { return [id, value(id)]; })); }
   function qualityTask(text) {
@@ -184,12 +184,44 @@
     receipt.scrollIntoView({ behavior: 'instant', block: 'center' });
     document.getElementById('rerun-trial').focus({ preventScroll: true });
   }
+  /* 上一次试投和这一次的对照：改稿到底让分岔少了几处 */
+  function paintTrialCompare(branches) {
+    var console = document.getElementById('trial-console');
+    if (!console) return;
+    var prev = state.lastRun;
+    var now = { count: branches.length, fields: branches.map(function (b) { return b.field; }) };
+    var box = document.getElementById('trial-compare');
+    if (!prev) {
+      if (box) box.remove();
+      state.lastRun = now;
+      return;
+    }
+    if (!box) {
+      box = create('div', 'trial-compare');
+      box.id = 'trial-compare';
+      var line = console.querySelector('.trial-line');
+      if (line) line.insertAdjacentElement('afterend', box); else console.prepend(box);
+    }
+    var delta = prev.count - now.count;
+    box.hidden = false;
+    box.dataset.trend = delta > 0 ? 'down' : delta < 0 ? 'up' : 'same';
+    box.replaceChildren(
+      create('span', '', '上一次试投 / PREVIOUS'),
+      create('strong', '', prev.count ? prev.count + ' 处没说清' : '四栏齐了'),
+      create('i', '', '→'),
+      create('em', '', '这一次 / NOW'),
+      create('strong', '', now.count ? now.count + ' 处没说清' : '四栏齐了'),
+      create('b', '', delta > 0 ? '少 ' + delta + ' 处' : delta < 0 ? '多 ' + (-delta) + ' 处' : '没有变化')
+    );
+    state.lastRun = now;
+  }
   function runTrial() {
     document.getElementById('repair-receipt').hidden = true;
     var current = snapshot(), branches = trialBranches(current);
     state.trial = { branches: branches, selected: null, review: new Set() };
     var console = document.getElementById('trial-console'), list = document.getElementById('branch-list'), ports = document.getElementById('repair-ports');
     console.dataset.phase = branches.length ? 'branched' : 'ready';
+    paintTrialCompare(branches);
     console.classList.remove('is-running');
     if (!reduced) { void console.offsetWidth; console.classList.add('is-running'); }
     ports.insertAdjacentElement('afterend', document.getElementById('repair-dock'));
