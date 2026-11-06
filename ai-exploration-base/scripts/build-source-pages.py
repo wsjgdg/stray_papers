@@ -17,6 +17,7 @@ import html
 import importlib.util
 import pathlib
 import re
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PROTO = ROOT / "prototype"
@@ -35,12 +36,17 @@ DEAD_NOTE = "原链接已标注不采用 / 404，不接入"
 SEEN_LINKS: list[str] = []
 
 
-def _load_chapter01():
-    path = pathlib.Path(__file__).with_name("chapter01.py")
-    spec = importlib.util.spec_from_file_location("_c1", path)
+def _load_module(name: str):
+    path = pathlib.Path(__file__).with_name(name + ".py")
+    spec = importlib.util.spec_from_file_location("_" + name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules["_" + name] = mod
     spec.loader.exec_module(mod)
     return mod
+
+
+def _load_chapter01():
+    return _load_module("chapter01")
 
 
 def _anchor(text: str, url: str) -> str:
@@ -427,34 +433,18 @@ PAGES = [
          stage=[("section", 'id="mission"')]),
     dict(file="chapter-01.html", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
          cards=True, stage=[]),
-    dict(file="chapter-02.html", stage_anchor=r"各行各业", key="02", docs=["p2-trends.md", "sources-p123.md"],
-         stage=[("section", 'class="feed"'),
-                ("section", 'id="verdict"'),
-                ("section", 'class="editing-room"')]),
-    dict(file="chapter-03.html", stage_anchor=r"先玩一个", key="03", docs=["p3-lab.md"],
-         stage=[("section", 'id="lab-proof"'),
-                ("section", 'class="lab-onward"'),
-                ("section", 'class="lab-history"'),
-                ("section", 'class="lab-deck"')]),
-    dict(file="chapter-04.html", stage_anchor=r"第一层卡片|页首", key="04", docs=["p4-side-jobs.md"],
-         stage=[("section", 'id="week-planner"'),
-                ("section", 'class="path-panel"'),
-                ("section", 'class="profile-panel"'),
-                ("section", 'id="route-stage"')]),
-    dict(file="chapter-05.html", stage_anchor=r"骗局模拟器|骗子心理学", key="05", docs=["p5-anti-scam.md", "real-cases-p5.md",
+    dict(file="chapter-02.html", key="02", docs=["p2-trends.md", "sources-p123.md"],
+         deck="chapter02", deck_sources="sources-p123.md", stage=[]),
+    dict(file="chapter-03.html", key="03", docs=["p3-lab.md", "sources-p123.md"],
+         deck="chapter03", deck_sources="sources-p123.md", stage=[]),
+    dict(file="chapter-04.html", key="04", docs=["p4-side-jobs.md", "sources-p456.md"],
+         deck="chapter04", deck_sources="sources-p456.md", stage=[]),
+    dict(file="chapter-05.html", key="05", docs=["p5-anti-scam.md", "real-cases-p5.md",
                                                  "sources-p456.md"],
-         stage=[("section", 'class="phrases"'),
-                ("section", 'class="reading"'),
-                ("section", 'id="scene"'),
-                ("details", 'id="tear-interlude"'),
-                ("section", 'id="decision-room"')]),
-    dict(file="chapter-06.html", stage_anchor=r"第二课|第一课", key="06", docs=["p6-academy.md"],
-         stage=[("details", 'id="sample-expand"'),
-                ("details", 'id="after-expand"'),
-                ("section", 'id="sample-station"'),
-                ("section", 'class="after-station"'),
-                ("section", 'id="trial-bay"'),
-                ("section", 'id="calibration"')]),
+         deck="chapter05", deck_sources="sources-p456.md",
+          deck_js=["prototype-scam-sim.js?v=sim-01"], stage=[]),
+    dict(file="chapter-06.html", key="06", docs=["p6-academy.md"],
+         deck="chapter06", deck_js=["prototype-academy-quiz.js?v=quiz-01"], stage=[]),
 ]
 
 
@@ -511,6 +501,22 @@ def build(spec: dict) -> str:
 
     scene = ""
     links = ""
+    if spec.get("deck"):
+        deck = _load_module(spec["deck"])
+        deck_md = (DOCS / spec["docs"][0]).read_text(encoding="utf-8")
+        src_md = ""
+        if spec.get("deck_sources"):
+            src_md = (DOCS / spec["deck_sources"]).read_text(encoding="utf-8")
+        scene, links = deck.render(deck_md, src_md)
+        if "<!--PLAY-->" in scene and stage_bits:
+            # 交互台 DOM 原样留在台面正中（脚本、动效、id 都不动）
+            scene = scene.replace(
+                "<!--PLAY-->",
+                '<div class="src-play-body tear-interlude" data-bay>'
+                f'{"".join(stage_bits)}</div>',
+            )
+            stage = ""
+            stage_bits = []
     if spec.get("cards"):
         # ① 关：正文＝卡片本身，后面不再跟一遍文章，只补一张链接表
         c1 = _load_chapter01()
@@ -530,7 +536,7 @@ def build(spec: dict) -> str:
     # 真源样式表只留一份（历次构建在同一张页面上追加过很多份）
     head = re.sub(r'<link rel="stylesheet" href="prototype-source\.css[^"]*">', "", head)
     head = head.replace(
-        "</head>", '<link rel="stylesheet" href="prototype-source.css?v=source-02"></head>'
+        "</head>", '<link rel="stylesheet" href="prototype-source.css?v=source-03"></head>'
     )
 
     body_class = body_open.group(0) if body_open else "<body>"
@@ -540,12 +546,14 @@ def build(spec: dict) -> str:
         f'<p class="src-kicker">SOURCE TEXT / 内容真源 · 第 {spec["key"]} 关</p>'
         f"<h1>{inline(title)}</h1>"
         + (f'<p class="src-lead">{inline(lead)}</p>' if lead else "")
-        + (f'<p class="src-meta">{meta}</p>' if meta else "")
+        # 台面页面不再排「浏览器标题 / 页面描述」这类维护元信息
+        + (f'<p class="src-meta">{meta}</p>'
+           if meta and not (spec.get("cards") or spec.get("deck")) else "")
         + "</section>"
     )
 
-    if spec.get("cards"):
-        article = ""          # 卡片已经把正文吃进去了，别再来一份
+    if spec.get("cards") or spec.get("deck"):
+        article = ""          # 台面已经把正文吃进去了，别再来一份
     body_parts = hero + scene + links + article + nav
     main = f'<main class="src-main" id="source-{spec["key"]}">{body_parts}</main>'
 
@@ -584,11 +592,15 @@ def build(spec: dict) -> str:
         )
         out = re.sub(r'(跳到正文</a>)[^<]*</a>', r'\1', out)
 
-    if spec.get("cards"):
-        # 旧铸造台的脚本没有可挂的 DOM，全部摘掉，只留翻卡脚本
-        out = re.sub(r"<script\b[^>]*>[\s\S]*?</script>", "", out)
+    if spec.get("cards") or spec.get("deck"):
+        # 旧铸造台的脚本没有可挂的 DOM，全部摘掉，只留台面脚本
+        out = re.sub(
+            r'<script\b(?![^>]*type="application/json")[^>]*>[\s\S]*?</script>',
+            "", out)
         # 历次构建塞进来的 noscript 兜底样式先清干净，避免越堆越多
-        out = re.sub(r"<noscript><style>[\s\S]*?</style></noscript>", "", out)
+        out = re.sub(
+            r"<noscript><style>\.fcard\{block-size:auto!important\}"
+            r"[\s\S]*?</style></noscript>", "", out)
         # 旧铸造台（#forge）已退场，跳转锚点要指向卡片铸造台
         out = out.replace('href="#forge">跳到提示词铸造台', 'href="#castfloor">跳到卡片铸造台')
         out = out.replace("</head>",
@@ -600,11 +612,15 @@ def build(spec: dict) -> str:
                           ".back-scroll{overflow:visible!important}"
                           ".fcard-flip,.stamp{display:none}"
                           "</style></noscript></head>")
+        extra = "".join(
+            f'<script src="{js}" defer></script>' for js in spec.get("deck_js", [])
+        )
         out = out.replace("</body>",
                           '<script src="../assets/vendor/gsap.min.js"></script>'
                           '<script src="../assets/vendor/ScrollTrigger.min.js" defer></script>'
                           '<script src="../assets/vendor/TextPlugin.min.js" defer></script>'
-                          '<script src="prototype-cards.js?v=cards-02" defer></script></body>')
+                          '<script src="prototype-cards.js?v=cards-03" defer></script>'
+                          + extra + '</body>')
 
     return out
 
