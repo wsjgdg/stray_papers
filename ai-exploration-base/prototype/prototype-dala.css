@@ -1749,3 +1749,154 @@ body:not(#void) .card-stack .signal-card:nth-child(4) { animation-delay: .18s !i
 /* 星群永远在正文之后：内容层整体抬高一层 */
 body:not(#void) main { position: relative !important; z-index: 2 !important; }
 body:not(#void) .topbar, body:not(#void) .proto-footer { position: relative !important; z-index: 3 !important; }
+
+/* ---------------------------------------------------------- ② 现场报告：细线进度 + 报告卡 */
+body:not(#void) .verdict {
+  margin-top: 72px !important;
+  padding: 56px 0 24px !important;
+  border-top: 1px solid rgba(255, 255, 255, .14) !important;
+}
+body:not(#void) .verdict-head { align-items: flex-start !important; gap: 24px !important; }
+body:not(#void) .report-overline {
+  font-size: 11px !important; letter-spacing: .1em !important; text-transform: uppercase !important;
+  color: var(--ash) !important;
+}
+body:not(#void) .verdict h2 {
+  font-size: clamp(30px, 3.2vw, 44px) !important; font-weight: 200 !important;
+  letter-spacing: -.04em !important; line-height: 1.15 !important;
+  color: var(--bone) !important; margin: 10px 0 0 !important;
+}
+body:not(#void) .reset-track {
+  background: transparent !important; border: 0 !important; border-radius: 0 !important;
+  color: var(--silver) !important; font-size: 12px !important; letter-spacing: .04em !important;
+  padding: 6px 0 !important; border-bottom: 1px solid rgba(255, 255, 255, .28) !important;
+}
+body:not(#void) .reset-track:hover { color: var(--bone) !important; border-bottom-color: var(--bone) !important; }
+body:not(#void) .progress-rail {
+  height: 1px !important; background: rgba(255, 255, 255, .14) !important;
+  margin: 34px 0 14px !important; border: 0 !important; border-radius: 0 !important;
+  overflow: visible !important;
+}
+body:not(#void) .progress-fill {
+  height: 1px !important; background: var(--spark) !important; border-radius: 0 !important;
+  transition: width .7s cubic-bezier(.16,.84,.24,1) !important;
+}
+body:not(#void) .progress-label {
+  font-size: 12px !important; letter-spacing: .06em !important; color: var(--ash) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+body:not(#void) .report-content p {
+  font-size: 17px !important; line-height: 1.75 !important; color: var(--silver) !important;
+  font-weight: 200 !important; max-width: 40em !important;
+}
+body:not(#void) .plan-stage { margin-top: 40px !important; padding-top: 30px !important; border-top: 1px solid rgba(255, 255, 255, .12) !important; }
+body:not(#void) .plan-stage > p { font-size: 15px !important; color: var(--silver) !important; }
+body:not(#void) .plan-choices { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; margin: 18px 0 !important; }
+body:not(#void) .plan-choices button {
+  border: 1px solid rgba(255, 255, 255, .18) !important; border-radius: 999px !important;
+  background: transparent !important; color: var(--bone) !important;
+  padding: 9px 16px !important; font-size: 13px !important;
+}
+body:not(#void) .plan-choices button[aria-pressed="true"] {
+  border-color: var(--iris) !important; background: rgba(128, 82, 255, .16) !important;
+}
+body:not(#void) .plan-ticket {
+  border: 0 !important; border-top: 1px solid rgba(255, 255, 255, .14) !important;
+  border-radius: 0 !important; background: none !important;
+  margin-top: 26px !important; padding: 26px 0 0 !important;
+}
+body:not(#void) .plan-ticket .ticket-top span {
+  font-size: 11px !important; letter-spacing: .1em !important; color: var(--spark) !important;
+  text-transform: uppercase !important;
+}
+body:not(#void) .plan-ticket .ticket-top strong {
+  font-size: 13px !important; font-weight: 400 !important; color: var(--ash) !important; letter-spacing: .04em !important;
+}
+body:not(#void) .plan-ticket h3 {
+  font-size: clamp(22px, 2.2vw, 30px) !important; font-weight: 200 !important;
+  letter-spacing: -.03em !important; color: var(--bone) !important; margin: 14px 0 12px !important;
+}
+body:not(#void) .plan-ticket ol { counter-reset: step !important; display: grid !important; gap: 10px !important; padding: 0 !important; }
+body:not(#void) .plan-ticket li {
+  list-style: none !important; font-size: 15px !important; line-height: 1.7 !important;
+  color: var(--silver) !important; padding-left: 34px !important; position: relative !important;
+  counter-increment: step !important;
+}
+body:not(#void) .plan-ticket li::before {
+  content: counter(step, decimal-leading-zero) !important; position: absolute !important; left: 0 !important; top: 2px !important;
+  font-size: 11px !important; color: var(--spark) !important; letter-spacing: .08em !important;
+}
+body:not(#void) .plan-ticket .ticket-foot {
+  display: block !important; margin-top: 18px !important; font-size: 11.5px !important;
+  color: rgba(255, 255, 255, .45) !important; letter-spacing: .03em !important;
+}
+
+/* ---------------------------------------------------------- ⑤ 撕纸证物封套 */
+body:not(#void) .tear-interlude > summary {
+  display: grid !important; gap: 10px !important;
+  padding: 30px 0 26px !important;
+  border-top: 1px solid rgba(255, 255, 255, .16) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .12) !important;
+  cursor: pointer !important; list-style: none !important;
+  position: relative !important;
+}
+body:not(#void) .tear-interlude > summary::-webkit-details-marker { display: none !important; }
+body:not(#void) .tear-interlude > summary span,
+body:not(#void) .tear-interlude > summary small {
+  font-size: 11px !important; letter-spacing: .1em !important; text-transform: uppercase !important;
+  color: var(--ash) !important;
+}
+body:not(#void) .tear-interlude > summary strong {
+  font-size: clamp(24px, 2.5vw, 34px) !important; font-weight: 200 !important;
+  letter-spacing: -.035em !important; color: var(--bone) !important; line-height: 1.3 !important;
+  max-width: 26em !important;
+}
+body:not(#void) .tear-interlude > summary small { color: var(--spark) !important; }
+body:not(#void) .tear-interlude > summary:hover strong { color: var(--spark) !important; }
+body:not(#void) .tear-interlude[open] > summary { border-bottom-color: transparent !important; }
+
+body:not(#void) .report-content, body:not(#void) .plan-stage { min-height: 0 !important; }
+body:not(#void) .dossier summary small { max-width: none !important; white-space: normal !important; }
+
+/* ⑤ 撕纸场景：账页去掉旧主题的青绿纸色，收成黑白证物卡 */
+body:not(#void) #paper-canvas,
+body:not(#void) .theater canvas,
+body:not(#void) .paper-fallback {
+  filter: grayscale(.86) contrast(1.04) brightness(.96) !important;
+}
+body:not(#void) .scene-copy h2 em { color: var(--spark) !important; font-style: normal !important; }
+body:not(#void) .scene-kicker { color: var(--spark) !important; }
+body:not(#void) .scene-kicker i { background: var(--spark) !important; }
+body:not(#void) .underlay-core h2 em { color: var(--spark) !important; font-style: normal !important; }
+body:not(#void) .scene-route { color: var(--ash) !important; font-size: 11.5px !important; letter-spacing: .04em !important; }
+body:not(#void) .scene-route span { color: var(--silver) !important; }
+
+body:not(#void) .title-reveal,
+body:not(#void) .title-reveal .title-word,
+body:not(#void) .title-word { color: var(--spark) !important; -webkit-text-fill-color: var(--spark) !important; }
+body:not(#void) .title-reveal:hover .title-word { color: #ffc85c !important; -webkit-text-fill-color: #ffc85c !important; }
+
+body:not(#void) .trial-header > button { min-height: 0 !important; padding: 13px 18px !important; font-size: 12.5px !important; }
+body:not(#void) .trial-header > button span { margin-left: 10px !important; }
+
+/* ③ 控制行：三项在手机上不折行 */
+body:not(#void) .bench-actions {
+  display: flex !important; flex-wrap: wrap !important; gap: 10px 18px !important; align-items: center !important;
+}
+body:not(#void) .bench-actions button {
+  white-space: nowrap !important; font-size: 12.5px !important; letter-spacing: .02em !important;
+  padding: 6px 0 !important; min-height: 0 !important;
+  border: 0 !important; border-bottom: 1px solid rgba(255, 255, 255, .26) !important;
+  border-radius: 0 !important; background: none !important; color: var(--bone) !important;
+}
+body:not(#void) .bench-actions .action-play {
+  background: var(--iris) !important; color: #fff !important;
+  border: 0 !important; border-radius: 24px !important; padding: 11px 18px !important;
+}
+body:not(#void) .bench-actions .action-play:hover { background: #6f42f5 !important; }
+@media (max-width: 430px) {
+  body:not(#void) .bench-actions { gap: 8px 12px !important; }
+  body:not(#void) .bench-actions button { font-size: 12px !important; }
+  body:not(#void) .bench-actions .action-play { padding: 9px 14px !important; }
+}
+body:not(#void) :where(.field-hint, .task-field > small, .bench-hint) { color: rgba(255, 255, 255, .46) !important; }
