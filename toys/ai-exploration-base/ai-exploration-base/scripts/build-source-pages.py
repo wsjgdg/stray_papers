@@ -430,7 +430,8 @@ WITH_STAGE = True
 
 PAGES = [
     dict(file="index.html", stage_anchor=r"英雄区|两张引导卡|探索地图", key="00", docs=["p0-index-graduation.md"],
-         stage=[("section", 'id="mission"')]),
+         stage=[("section", 'id="mission"')], no_article=True,
+         kicker="PLAYABLE PROTOTYPE / 可玩原型 · 六个频道"),
     dict(file="chapter-01.html", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
          cards=True, stage=[]),
     dict(file="chapter-02.html", key="02", docs=["p2-trends.md", "sources-p123.md"],
@@ -501,6 +502,10 @@ def build(spec: dict) -> str:
     )
 
     scene = ""
+    if spec.get("no_article"):
+        # 首页不排正文：交互台（拨盘）本身就是这一页
+        scene = "".join(stage_bits)
+        stage = ""
     links = ""
     if spec.get("deck"):
         deck = _load_module(spec["deck"])
@@ -587,16 +592,16 @@ def build(spec: dict) -> str:
 
     hero = "" if spec.get("world") else (
         '<section class="src-hero">'
-        f'<p class="src-kicker">SOURCE TEXT / 内容真源 · 第 {spec["key"]} 关</p>'
+        f'<p class="src-kicker">{spec.get("kicker") or ("SOURCE TEXT / 内容真源 · 第 " + spec["key"] + " 关")}</p>'
         f"<h1>{inline(title)}</h1>"
         + (f'<p class="src-lead">{inline(lead)}</p>' if lead else "")
         # 台面页面不再排「浏览器标题 / 页面描述」这类维护元信息
         + (f'<p class="src-meta">{meta}</p>'
-           if meta and not (spec.get("cards") or spec.get("deck")) else "")
+           if meta and not (spec.get("cards") or spec.get("deck") or spec.get("no_article")) else "")
         + "</section>"
     )
 
-    if spec.get("cards") or spec.get("deck"):
+    if spec.get("cards") or spec.get("deck") or spec.get("no_article"):
         article = ""          # 台面已经把正文吃进去了，别再来一份
     if spec.get("deck") or spec.get("cards"):
         # 先给跳转按钮，再沉一张来源索引表当附录
