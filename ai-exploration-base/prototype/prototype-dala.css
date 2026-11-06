@@ -2617,3 +2617,24 @@ body:not(#void) :where(.card-status, .card-bottom span, .drag-grip, .chip-note, 
 /* ④ 首屏刻度仪：三条线之间松一点，说明别再贴着最后一条 */
 body:not(#void) .route-graphic i { margin-bottom: 22px !important; }
 body:not(#void) .route-graphic > strong { margin-top: 12px !important; color: rgba(255, 255, 255, .72) !important; }
+
+/* ④ 刻度仪：再给一点存在感（2px 线、26px 间距），别被星群吃掉 */
+body:not(#void) .route-graphic { width: min(100%, 384px) !important; }
+body:not(#void) .route-graphic i,
+body:not(#void) .route-graphic i:nth-of-type(1),
+body:not(#void) .route-graphic i:nth-of-type(2),
+body:not(#void) .route-graphic i:nth-of-type(3) {
+  height: 2px !important; margin-bottom: 26px !important;
+  background: rgba(255, 255, 255, .5) !important;
+}
+body:not(#void) .route-graphic i::after { top: -1.5px !important; width: 5px !important; height: 5px !important; }
+body:not(#void) .route-graphic > strong { font-size: 11px !important; letter-spacing: .1em !important; }
+
+/* 选中那条永远是琥珀，别被后面的通用线宽规则盖掉 */
+body:not(#void) .route-graphic i[data-active="true"],
+body:not(#void) .route-graphic i[data-active="true"]:nth-of-type(1),
+body:not(#void) .route-graphic i[data-active="true"]:nth-of-type(2),
+body:not(#void) .route-graphic i[data-active="true"]:nth-of-type(3) {
+  background: var(--spark) !important;
+}
+body:not(#void) .route-graphic i[data-active="true"]::after { background: var(--spark) !important; }
