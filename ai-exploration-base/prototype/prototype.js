@@ -25,12 +25,12 @@
 
   function initHome() {
     var channels = [
-      { name: '提示词铸造台', desc: '抽出或装回字模，压印一版自己的提问稿，再看修改前后的差别。', href: 'chapter-01.html?v=press-07', playable: true, mode: 'forge', a: '想法', b: '提问稿' },
-      { name: '趋势编辑室', desc: '选一个熟悉的领域，分清有来源的观察、可小试的动作与夸大的承诺，带走一张试验票。', href: 'chapter-02.html?v=desk-09', playable: true, mode: 'trends', a: '情报', b: '试验票' },
-      { name: '规则调试台', desc: '亲手运行细胞规则，找出偏差、修好三格灯或滑翔机，再留下一张真实计算的实验记录。', href: 'chapter-03.html?v=lab-05', playable: true, mode: 'lab', a: '规则', b: '实验记录' },
-      { name: '路线编织台', desc: '让条件改变路线，把任务塞进有限的本周时间，试出超时、漏核对或可行的第一步，再带走路线票。', href: 'chapter-04.html?v=weave-06', playable: true, mode: 'routes', a: '条件', b: '试运行' },
-      { name: '七幕反诈决策室', desc: '把可疑话术存进证据袋，在第 4 与第 6 幕作选择；第 5 幕可亲手撕开账面，带走自己的复盘。', href: 'chapter-05.html?v=case-10', playable: true, mode: 'scam', a: '话术', b: '证据' },
-      { name: '问题校准室', desc: '把含糊问题试投出分岔，亲手接回缺失线索；安排人工核对，再带走练习交接单。', href: 'chapter-06.html?v=calibrate-07', playable: true, mode: 'academy', a: '模糊问题', b: '校准稿' }
+      { name: 'AI 能做什么', desc: '五个真实场景：写作、识图、翻译、查资料、写代码——看清它做完什么、又在哪掉链子。', href: 'chapter-01.html?v=press-07', playable: true, mode: 'forge', a: '想法', b: '提问稿' },
+      { name: 'AI 趋势与行业', desc: '一条时间线、一张示意图、三个数字、一张柱状图，五个行业正在发生的事。', href: 'chapter-02.html?v=desk-09', playable: true, mode: 'trends', a: '情报', b: '试验票' },
+      { name: '儿子的 AI 实验室', desc: '把一条细胞规则真的跑起来，看它自己长出图案，再翻孩子这学期交的四个作品。', href: 'chapter-03.html?v=lab-05', playable: true, mode: 'lab', a: '规则', b: '实验记录' },
+      { name: '副业地图', desc: '三条路线摆在一张地图上，先算时间再算钱，挑一个能落地的第一步。', href: 'chapter-04.html?v=weave-06', playable: true, mode: 'routes', a: '条件', b: '试运行' },
+      { name: '骗局解剖室', desc: '八幕演完一场骗局，关键处自己踩一脚，看话术怎么一步步合围。', href: 'chapter-05.html?v=case-10', playable: true, mode: 'scam', a: '话术', b: '证据' },
+      { name: '提示词学院', desc: '角色、背景、要求三块拼一版能用的提问，再让 Agent 演示走一遍。', href: 'chapter-06.html?v=calibrate-07', playable: true, mode: 'academy', a: '模糊问题', b: '校准稿' }
     ];
     var track = document.getElementById('dial-track');
     var dial = document.getElementById('dial');

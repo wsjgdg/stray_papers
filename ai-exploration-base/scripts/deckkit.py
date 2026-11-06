@@ -262,6 +262,8 @@ def linktable(rows: list[dict], title: str = "本页来源", note: str = "",
               by: str = "来源") -> str:
     if not rows:
         return ""
+    # 每行都贴同一个标签（"对应""工具 / 依据"）等于没有信息——这种首列直接不排
+    show_by = any(row.get("no") for row in rows)
     body = []
     for row in rows:
         badge = (f'<span class="kt-status">{esc(row["code"])}</span>'
@@ -270,7 +272,8 @@ def linktable(rows: list[dict], title: str = "本页来源", note: str = "",
         label = f'来源{row["no"]}' if row.get("no") else by
         body.append(
             "<tr>"
-            f'<th scope="row" class="kt-card">{esc(label)}</th>'
+            + (f'<th scope="row" class="kt-card">{esc(label)}</th>' if show_by else "")
+            +
             '<td class="kt-material">'
             f'<span class="kt-title">{esc(row["title"])}</span>'
             + (f'<span class="kt-abstract">{esc(row["use"])}</span>' if row.get("use") else "")
@@ -287,7 +290,8 @@ def linktable(rows: list[dict], title: str = "本页来源", note: str = "",
         f'<h2 class="ktable-title" id="ktable-title">{esc(title)}</h2>'
         + note_html +
         '<div class="ktable-wrap"><table class="ktable"><thead><tr>'
-        f'<th scope="col">{esc(by)}</th><th scope="col">素材</th>'
+        + (f'<th scope="col">{esc(by)}</th>' if show_by else "")
+        + '<th scope="col">素材</th>'
         '<th scope="col">状态</th><th scope="col">链接</th>'
         "</tr></thead><tbody>" + "".join(body) + "</tbody></table></div></section>"
     )
