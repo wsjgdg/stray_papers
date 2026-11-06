@@ -85,6 +85,22 @@
       laneNodes[id] = button; lanes.appendChild(button);
     });
   }
+  function paintHero(order) {
+    var graphic = document.querySelector('.route-graphic');
+    if (!graphic) return;
+    var bars = graphic.querySelectorAll('i');
+    var fits = ['100%', '74%', '49%'];
+    order.forEach(function (id, n) {
+      var bar = bars[n];
+      if (!bar) return;
+      bar.style.setProperty('--fit', fits[n]);
+      bar.dataset.route = id;
+      bar.dataset.rank = String(n + 1);
+      if (id === selected) bar.setAttribute('data-active', 'true');
+      else bar.removeAttribute('data-active');
+    });
+    graphic.setAttribute('data-active', selected || '');
+  }
   function renderLanes(order, animate) {
     var before = {};
     ids.forEach(function (id) { before[id] = laneNodes[id].getBoundingClientRect(); });
@@ -116,6 +132,7 @@
     });
     pulse.classList.remove('is-switching');
     if (animate && !reduced) { void pulse.offsetWidth; pulse.classList.add('is-switching'); }
+    paintHero(order);
   }
   function invalidateTrial() {
     trial = false; outcome = null;
@@ -256,6 +273,7 @@
     });
     document.getElementById('copy-status').textContent = '';
     document.getElementById('live-top').textContent = description(order[0]).title + (pinned && selected !== order[0] ? ' · 你正在看另一条' : ' · 根据你的条件');
+    paintHero(order);
     renderPlanner(); renderTicket();
   }
   function update(fromInput) {
