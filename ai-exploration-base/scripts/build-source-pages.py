@@ -443,11 +443,75 @@ PAGES = [
          deck="chapter04", deck_sources="sources-p456.md", stage=[]),
     dict(file="chapter-05.html", key="05", docs=["p5-anti-scam.md", "real-cases-p5.md",
                                                  "sources-p456.md"],
-         deck="chapter05", deck_sources="sources-p456.md",
-          deck_js=["prototype-scam-sim.js?v=sim-01"], stage=[]),
+         legacy=True, legacy_sources="sources-p456.md", legacy_key="第⑤关",
+         legacy_noscript="p5-anti-scam.md", stage=[]),
     dict(file="chapter-06.html", key="06", docs=["p6-academy.md"],
          deck="chapter06", deck_js=["prototype-academy-quiz.js?v=quiz-01"], stage=[]),
 ]
+
+
+# ---------------------------------------------------- ⑤ 关：正文（逐字）附录
+
+def scam_verbatim(doc: dict) -> str:
+    """把⑤关真源里还没进交互的几节（心理机制 / 话术词典 / 数字 / 工具 / 收尾）
+    逐字排成一张纸，接在撕纸账页后面。文字一字不改，只做分段和粗体。"""
+
+    def rich(text: str) -> str:
+        return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html.escape(text))
+
+    def block(head: str, body: str) -> str:
+        return (f'<section class="src-section"><h3 class="src-h2">{html.escape(head)}</h3>'
+                f'<div class="src-body">{body}</div></section>')
+
+    out = ['<section class="src-article src-verbatim" id="verbatim" aria-labelledby="verbatim-title">',
+           '<p class="src-kicker">SOURCE TEXT / 正文 · 逐字</p>',
+           '<h2 class="src-h2" id="verbatim-title">这一关的正文，一字不改</h2>']
+
+    if doc.get("mech"):
+        items = []
+        for it in doc["mech"]:
+            subs = it.get("subs") or {}
+            say = subs.get("骗子会说") or subs.get("说法")
+            body = subs.get("解释") or it.get("rest") or ""
+            bits = [f'<p><strong>{html.escape(it["name"])}</strong></p>']
+            if say:
+                bits.append(f"<p>{rich(say)}</p>")
+            if body:
+                bits.append(f"<p>{rich(body)}</p>")
+            items.append("<li>" + "".join(bits) + "</li>")
+        out.append(block("它靠的几样东西", "<ol>" + "".join(items) + "</ol>"))
+
+    if doc.get("phrases"):
+        items = "".join(
+            f'<li><strong>{html.escape(p["name"])}</strong>{rich(p.get("rest") or "")}</li>'
+            for p in doc["phrases"])
+        out.append(block("这些话，听到就该停", "<ul>" + items + "</ul>"))
+
+    if doc.get("numbers"):
+        items = []
+        for n in doc["numbers"]:
+            bits = [f'<p><strong>{html.escape(n["big"])}</strong>　{rich(n["body"])}</p>']
+            if n.get("source"):
+                bits.append(f"<p><small>{rich(n['source'])}</small></p>")
+            items.append("<li>" + "".join(bits) + "</li>")
+        out.append(block("两条真数字", "<ul>" + "".join(items) + "</ul>"))
+
+    if doc.get("tools"):
+        items = []
+        for t in doc["tools"]:
+            bits = [f'<p><strong>{html.escape(t["name"])}</strong>　{rich(t.get("rest") or "")}</p>']
+            src = (t.get("subs") or {}).get("官方来源")
+            if src:
+                bits.append(f"<p>{rich(src)}</p>")
+            items.append("<li>" + "".join(bits) + "</li>")
+        out.append(block("拿不准时，用这几样", "<ul>" + "".join(items) + "</ul>"))
+
+    if doc.get("summary"):
+        paras = "".join(f"<p>{rich(x)}</p>" for x in doc["summary"].get("paras", []))
+        out.append(block(doc["summary"].get("title") or "记住这两句话", paras))
+
+    out.append("</section>")
+    return "\n".join(out)
 
 
 def strip_dossier(text: str) -> str:
@@ -457,6 +521,36 @@ def strip_dossier(text: str) -> str:
         if i < 0:
             return text
         text = text[:i] + text[i + len(balanced(text, i, "section")):]
+
+
+ORDER = [("01", "chapter-01.html", "① AI 能做什么"),
+         ("02", "chapter-02.html", "② AI 趋势与行业"),
+         ("03", "chapter-03.html", "③ 儿子的 AI 实验室"),
+         ("04", "chapter-04.html", "④ 副业地图"),
+         ("05", "chapter-05.html", "⑤ 骗局解剖室"),
+         ("06", "chapter-06.html", "⑥ 提示词学院")]
+
+
+def deck_nav(key: str) -> str:
+    """台面页统一的页尾导航：下一关最大，上一关与回到拨盘在右。"""
+    idx = next((i for i, row in enumerate(ORDER) if row[0] == key), -1)
+    prev_link = ""
+    if idx > 0:
+        _, f, t = ORDER[idx - 1]
+        prev_link = f'<a class="deck-onward-prev" href="{f}?v=deck-01">← {t}</a>'
+    if 0 <= idx < len(ORDER) - 1:
+        _, f, t = ORDER[idx + 1]
+        next_bit = ('<span class="deck-onward-main">'
+                    f'<span class="deck-onward-k">下一关 / {int(key) + 1:02d} OF 06</span>'
+                    f'<a class="deck-onward-next" href="{f}?v=deck-01">{t} <b aria-hidden="true">↗</b></a></span>')
+    else:
+        next_bit = ('<span class="deck-onward-main">'
+                    '<span class="deck-onward-k">六关走完 / 06 OF 06</span>'
+                    '<a class="deck-onward-next" href="index.html?v=switch-14">'
+                    '回到探索地图 <b aria-hidden="true">↗</b></a></span>')
+    return ('<nav class="deck-onward" aria-label="原型导航">' + next_bit + prev_link
+            + '<a class="deck-onward-home" href="index.html?v=switch-14">回到原型拨盘 ↗</a>'
+            + '</nav>')
 
 
 def build(spec: dict) -> str:
@@ -523,6 +617,54 @@ def build(spec: dict) -> str:
             )
             stage = ""
             stage_bits = []
+    if spec.get("legacy"):
+        # 塞原文前那套整页交互原样留下（七/八幕决策室、撕纸账页、证据袋、话术滚筒），
+        # 正文由数据层喂进去，页面骨架不再重建。
+        body = re.search(r'<main[^>]*>([\s\S]*)</main>', src)
+        scene = body.group(1).strip() if body else ""
+        # 重复跑构建时，把上一次补上去的导航与来源表摘掉，免得越堆越多
+        scene = re.sub(r'<nav class="deck-onward"[\s\S]*?</nav>', "", scene)
+        scene = re.sub(r'<section class="ktable-sec"[\s\S]*?</section>', "", scene)
+        stage = ""
+        stage_bits = []
+        # 断 JS 的静态兜底 + 撕纸之后的正文附录，都吃同一份解析结果
+        doc5 = None
+        if spec.get("legacy_noscript"):
+            import chapter05 as _C5
+            import html as _h
+            doc5 = _C5.parse((DOCS / spec["legacy_noscript"]).read_text(encoding="utf-8"))
+            items = []
+            for act in doc5["acts"]:
+                bits = [f'<strong>第{act["no"]}幕 {_h.escape(act["name"])}</strong>'
+                        f'（{_h.escape(act["speaker"])}）：{_h.escape(act["line"])}']
+                phs = _C5.CLUE_PHRASES.get(str(act["no"]), [])
+                if phs:
+                    bits.append('<em>可封存话术：'
+                                + "、".join(f'“{_h.escape(x)}”' for x in phs) + "</em>")
+                items.append("<li>" + "<br>".join(bits) + "</li>")
+            fallback = (
+                '<div class="nojs-fallback"><h2>八幕剧本 · 逐字全文</h2><ol>'
+                + "".join(items)
+                + "</ol><p>互动需要 JavaScript；上方是这个剧本的逐字原文，"
+                "下方仍保留<a href=\"#case-sources\">核验渠道与出处</a>。"
+                "本剧本是教学模拟，非特定案件。</p></div>"
+            )
+            scene = re.sub(r'<div class="nojs-fallback">[\s\S]*?</div>',
+                           lambda _m: fallback, scene, count=1)
+        if doc5:
+            # 上一版构建塞进来的正文附录先摘掉（src 就是本页自己）
+            j = find_element(scene, "section", lambda t: 'src-verbatim' in t)
+            if j >= 0:
+                scene = scene[:j] + scene[j + len(balanced(scene, j, "section")):]
+            scene = scene.rstrip() + "\n" + scam_verbatim(doc5) + "\n"
+
+        if spec.get("legacy_sources"):
+            import deckkit as _K
+            src_md = (DOCS / spec["legacy_sources"]).read_text(encoding="utf-8")
+            rows = _K.source_rows_urls(src_md, spec.get("legacy_key", "第⑤关"))
+            links = _K.linktable(rows, "本页来源",
+                                 "每一幕底下都挂着一条真实案件报道；剧本本身是综合示意，不是某个具体案件。")
+
     if spec.get("cards"):
         # ① 关：正文＝卡片本身，后面不再跟一遍文章，只补一张链接表
         c1 = _load_chapter01()
@@ -536,51 +678,8 @@ def build(spec: dict) -> str:
                                              with_cards=False)
 
     nav = ""
-    if spec.get("deck"):
-        # 台面页统一一条页尾导航：下一关最大，回到拨盘在右；来源索引表沉在它下面
-        order = [("01", "chapter-01.html", "① AI 能做什么"),
-                 ("02", "chapter-02.html", "② AI 趋势与行业"),
-                 ("03", "chapter-03.html", "③ 儿子的 AI 实验室"),
-                 ("04", "chapter-04.html", "④ 副业地图"),
-                 ("05", "chapter-05.html", "⑤ 骗局解剖室"),
-                 ("06", "chapter-06.html", "⑥ 提示词学院")]
-        key = spec["key"]
-        idx = next((i for i, row in enumerate(order) if row[0] == key), -1)
-        prev_link = ""
-        if idx > 0:
-            _, f, t = order[idx - 1]
-            prev_link = f'<a class="deck-onward-prev" href="{f}?v=deck-01">← {t}</a>'
-        next_bit = ""
-        if 0 <= idx < len(order) - 1:
-            _, f, t = order[idx + 1]
-            next_bit = ('<span class="deck-onward-main">'
-                        '<span class="deck-onward-k">下一关 / '
-                        f'{int(key) + 1:02d} OF 06</span>'
-                        f'<a class="deck-onward-next" href="{f}?v=deck-01">'
-                        f'{t} <b aria-hidden="true">↗</b></a></span>')
-        else:
-            next_bit = ('<span class="deck-onward-main">'
-                        '<span class="deck-onward-k">六关走完 / 06 OF 06</span>'
-                        '<a class="deck-onward-next" href="index.html?v=switch-14">'
-                        '回到探索地图 <b aria-hidden="true">↗</b></a></span>')
-        nav = ('<nav class="deck-onward" aria-label="原型导航">'
-               + next_bit + prev_link
-               + '<a class="deck-onward-home" href="index.html?v=switch-14">回到原型拨盘 ↗</a>'
-               + "</nav>")
-    elif onward:
-        nav = onward
-
-    if spec.get("cards"):
-        # ① 关：正文＝卡片本身，后面不再跟一遍文章，只补一张链接表
-        c1 = _load_chapter01()
-        p1_md = (DOCS / spec["docs"][0]).read_text(encoding="utf-8")
-        cases_md = (DOCS / "real-cases-p1.md").read_text(encoding="utf-8")
-        scene = c1.render_scene(c1.parse_doc(p1_md))
-        links = c1.render_linktable(c1.parse_cases(cases_md), c1.parse_verify(p1_md))
-
-    title, lead, meta, article = article_for(spec["docs"], stage,
-                                             spec.get("stage_anchor", ""),
-                                             with_cards=False)
+    if spec.get("deck") or spec.get("legacy"):
+        nav = deck_nav(spec["key"])
 
     # 真源样式表只留一份（历次构建在同一张页面上追加过很多份）
     head = re.sub(r'<link rel="stylesheet" href="prototype-source\.css[^"]*">', "", head)
@@ -590,7 +689,7 @@ def build(spec: dict) -> str:
 
     body_class = body_open.group(0) if body_open else "<body>"
 
-    hero = "" if spec.get("world") else (
+    hero = "" if (spec.get("world") or spec.get("legacy")) else (
         '<section class="src-hero">'
         f'<p class="src-kicker">{spec.get("kicker") or ("SOURCE TEXT / 内容真源 · 第 " + spec["key"] + " 关")}</p>'
         f"<h1>{inline(title)}</h1>"
@@ -601,9 +700,10 @@ def build(spec: dict) -> str:
         + "</section>"
     )
 
-    if spec.get("cards") or spec.get("deck") or spec.get("no_article"):
+    if (spec.get("cards") or spec.get("deck") or spec.get("no_article")
+            or spec.get("legacy")):
         article = ""          # 台面已经把正文吃进去了，别再来一份
-    if spec.get("deck") or spec.get("cards"):
+    if spec.get("deck") or spec.get("cards") or spec.get("legacy"):
         # 先给跳转按钮，再沉一张来源索引表当附录
         body_parts = hero + scene + nav + links + article
     else:
@@ -677,6 +777,23 @@ def build(spec: dict) -> str:
                           '<script src="../assets/vendor/TextPlugin.min.js" defer></script>'
                           '<script src="prototype-cards.js?v=cards-03" defer></script>'
                           + extra + '</body>')
+
+    if spec.get("legacy"):
+        # ⑤ 关的逐字正文躺在撕纸账页里：断 JS 时 details 打不开，正文会被浏览器藏起来。
+        # 这里补一份 noscript 样式，直接把账页里的正文摊平显示（先清掉上次补的那份）。
+        out = re.sub(r"<noscript><style>\.page-scam \.tear-interlude[\s\S]*?</style></noscript>",
+                     "", out)
+        out = out.replace(
+            "</head>",
+            "<noscript><style>"
+            ".page-scam .tear-interlude>summary{display:none!important}"
+            ".page-scam .tear-interlude>section{display:block!important}"
+            ".page-scam .tear-interlude .theater{position:static!important;"
+            "block-size:auto!important;inset:auto!important}"
+            ".page-scam .tear-interlude canvas{display:none!important}"
+            "</style></noscript></head>",
+            1,
+        )
 
     return out
 

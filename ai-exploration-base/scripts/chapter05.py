@@ -286,3 +286,65 @@ def render(md: str, sources_md: str = "") -> tuple[str, str]:
                             "每一幕底下都挂着一条真实案件报道；剧本本身是综合示意，不是某个具体案件。",
                             by="对应")
     return floor, table
+
+
+# ------------------------------------------------------------------ 老引擎数据
+# 塞原文前那套七幕决策室（prototype.js initScam）读 window.SCAM_SCRIPT。
+# 现在把真源的八幕逐字喂给它：剧本、解剖、正确动作、每幕真实案件、可封存的话术。
+
+CLUE_PHRASES = {
+    "1": ["15年私募", "免费分享"],
+    "2": ["先投500", "张姐都赚了小两千"],
+    "3": ["国家扶持的量化基金项目", "保本保息", "今晚12点截止"],
+    "4": ["发你安装包链接"],
+    "5": ["养老金也转进来"],
+    "6": ["需先缴纳20%保证金"],
+    "7": ["就差这最后一笔"],
+}
+
+
+def _first_sentence(text: str) -> str:
+    text = K.strip_md(text)
+    m = re.match(r"^(.+?[。！？])", text)
+    return m.group(1) if m else text
+
+
+def legacy_js(md: str) -> str:
+    doc = parse(md)
+    acts, clues, reports = [], [], []
+    for act in doc["acts"]:
+        stage = int(act["no"])
+        report = act.get("report") or {}
+        if isinstance(report, str):
+            try:
+                report = json.loads(report)
+            except Exception:
+                report = {}
+        acts.append({
+            "stage": stage,
+            "persona": act["speaker"],
+            "me": "你" in act["speaker"],
+            "message": act["line"],
+            "hookTitle": act["aTitle"],
+            "anatomy": K.strip_md(act["aBody"]),
+            "correctMove": K.strip_md(act["right"]),
+        })
+        reports.append({"t": (report.get("src") or "").split("——")[0].strip(),
+                        "u": report.get("url") or ""})
+        phrases = CLUE_PHRASES.get(str(act["no"]), [])
+        missing = [p for p in phrases if p not in act["line"]]
+        assert not missing, (act["no"], missing)
+        if stage == len(doc["acts"]):
+            phrases = []          # 最后一幕是收网复盘，没有可封存的话术
+        clues.append([{"phrase": p, "why": _first_sentence(act["aBody"])} for p in phrases])
+
+    def dump(obj):
+        return json.dumps(obj, ensure_ascii=False, indent=1)
+
+    return (
+        "/* 由 scripts/chapter05.py 从 docs/content/p5-anti-scam.md 生成，勿手改。\n"
+        "   八幕剧本逐字来自真源；这里是老决策室引擎（prototype.js initScam）的数据层。 */\n"
+        "window.SCAM_SCRIPT = " + dump(acts) + ";\n\n"
+        "window.SCAM_CLUES = " + dump(clues[:-1]) + ";\n\n"
+        "window.SCAM_REPORTS = " + dump(reports) + ";\n"
+    )

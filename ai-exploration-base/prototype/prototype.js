@@ -334,11 +334,14 @@
   }
 
   function initScam() {
-    if (!Array.isArray(window.SCAM_SCRIPT) || window.SCAM_SCRIPT.length !== 7) return;
+    if (!Array.isArray(window.SCAM_SCRIPT) || window.SCAM_SCRIPT.length < 3) return;
     var script = window.SCAM_SCRIPT;
     var index = 0, visited = 0, branch = null, finalDecision = null;
+    // 幕数由数据决定：真源是八幕，岔路在第 5 幕，第二次判断在第 6 幕
+    var last = script.length - 1, BRANCH = 4, DECISION = 5;
     var clues = new Set(), revealed = new Set();
-    var actClues = [
+    var actClues = (Array.isArray(window.SCAM_CLUES) && window.SCAM_CLUES.length)
+      ? window.SCAM_CLUES : [
       [
         { phrase: '15年私募', why: '自称资历不等于持牌资质，应到独立渠道查证。' },
         { phrase: '免费分享', why: '免费荐股建立信任，随后可能诱导你转向私下交易。' }
@@ -375,7 +378,12 @@
       return button;
     }
     function paragraph(parent, text, cls) { parent.appendChild(create('p', cls || '', text)); }
-    var actReports = [
+    var actReports = (Array.isArray(window.SCAM_REPORTS) && window.SCAM_REPORTS.length)
+      ? window.SCAM_REPORTS.map(function (r, i) {
+          return (r && r.u) ? r : { t: '中国长安网：单亲妈妈 10 天被骗 150 万全过程',
+                                   u: 'https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml' };
+        })
+      : [
       { t: '深圳市公安局：短视频里的“股神”主动找你？这是 80 万骗局的开始', u: 'https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html' },
       { t: '新浪财经：“2724 人的炒股群，除了自己全是托”', u: 'https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml' },
       { t: '人民网：公安部公布十大高发电信网络诈骗类型', u: 'http://society.people.com.cn/n1/2024/0625/c1008-40263971.html' },
@@ -388,7 +396,7 @@
       var item = actReports[index];
       if (!item) return;
       var row = create('p', 'story-source');
-      row.appendChild(create('b', '', index === 6 ? '📰 整条链条' : '📰 这一幕在真实案件里'));
+      row.appendChild(create('b', '', index === last ? '📰 整条链条' : '📰 这一幕在真实案件里'));
       var a = create('a', '', item.t + ' ↗');
       a.href = item.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
       row.appendChild(a);
@@ -400,7 +408,7 @@
       analysis.replaceChildren();
       analysis.appendChild(create('h3', '', st.hookTitle));
       paragraph(analysis, st.anatomy);
-      if (index < 6) {
+      if (index < last) {
         paragraph(analysis, '本幕已封存 ' + stageCount(index) + ' / ' + actClues[index].length + ' 处话术。' + (stageCount(index) ? '你标记的句子已写入证据袋。' : '还没标记？可以回到原话点选或拖入。'), 'analysis-count');
         actClues[index].filter(function (c) { return clues.has(c.phrase); }).forEach(function (c) {
           paragraph(analysis, '“' + c.phrase + '”：' + c.why, 'analysis-note');
@@ -414,7 +422,7 @@
     function renderMessage() {
       message.replaceChildren();
       var text = script[index].message;
-      if (index === 6 || !stageCount(index)) { message.textContent = text; return; }
+      if (index === last || !stageCount(index)) { message.textContent = text; return; }
       var found = actClues[index].filter(function (c) { return clues.has(c.phrase); }).map(function (c) { return { word: c.phrase, at: text.indexOf(c.phrase) }; }).filter(function (c) { return c.at >= 0; }).sort(function (a, b) { return a.at - b.at; });
       var cursor = 0;
       found.forEach(function (c) {
@@ -427,24 +435,24 @@
     function paintEvidence() {
       var side = document.querySelector('.story-side');
       side.dataset.act = String(index + 1);
-      side.dataset.clues = String(index < 6 ? stageCount(index) : clues.size);
+      side.dataset.clues = String(index < last ? stageCount(index) : clues.size);
       side.style.setProperty('--filed', String(clues.size / totalClues));
-      var caption = index < 6 ? '本幕已封存 ' + stageCount(index) + ' / ' + actClues[index].length + ' 条 · 总计 ' + clues.size + ' / ' + totalClues :
-        '七幕取证结束 · 共封存 ' + clues.size + ' / ' + totalClues + ' 条话术';
+      var caption = index < last ? '本幕已封存 ' + stageCount(index) + ' / ' + actClues[index].length + ' 条 · 总计 ' + clues.size + ' / ' + totalClues :
+        '全剧本取证结束 · 共封存 ' + clues.size + ' / ' + totalClues + ' 条话术';
       document.getElementById('evidence-caption').textContent = caption;
       document.getElementById('route-caption').textContent =
         finalDecision === 'check' ? '第 6 幕 · 拒绝交钱，改走核验' :
         finalDecision === 'pay' ? '第 6 幕 · 模拟交钱；现实中请立即停止' :
-        branch === 'stop' ? '第 4 幕 · 已停下，后续只旁观' :
-        branch === 'continue' ? '第 4 幕 · 仅模拟继续，注意收费要求' :
-        index < 6 ? '取证 ' + stageCount(index) + ' / ' + actClues[index].length + ' · 第 4 幕再决定' :
-        '取证完成 · 查看七幕复盘';
+        branch === 'stop' ? '第 5 幕 · 已停下，后续只旁观' :
+        branch === 'continue' ? '第 5 幕 · 仅模拟继续，注意收费要求' :
+        index < last ? '取证 ' + stageCount(index) + ' / ' + actClues[index].length + ' · 第 5 幕再决定' :
+        '取证完成 · 查看复盘';
     }
     function renderClues() {
-      clueArea.hidden = index === 6;
+      clueArea.hidden = index === last;
       document.getElementById('reveal-clues').hidden = index !== 1;
       paintEvidence();
-      if (index === 6) return;
+      if (index === last) return;
       clueButtons.replaceChildren();
       var tray = document.getElementById('evidence-tray');
       function paintTray() {
@@ -541,10 +549,10 @@
     function finishReport() {
       exposeNotes(true);
       analysis.replaceChildren();
-      analysis.appendChild(create('h3', '', '你的七幕复盘'));
+      analysis.appendChild(create('h3', '', '你走完的复盘'));
       paragraph(analysis, '沿途封存 ' + clues.size + ' / ' + totalClues + ' 处话术。' + (clues.size ? '每条都可以返回原幕重新核对；没存下的也值得再看。' : '这次没有存下证据，仍可返回任意幕重新标记。'), 'analysis-count');
       paragraph(analysis, '第 2 幕识别到 ' + stageCount(1) + ' / 2 条可疑话术。' + (stageCount(1) < 2 ? '回去再找找没有圈出的那句。' : '你注意到了小额试水和群友晒单。'));
-      paragraph(analysis, '第 4 幕：' + (branch === 'stop' ? '停下查证，没有继续投入。' : '选择继续，进入后续的提现收费话术。'));
+      paragraph(analysis, '第 5 幕：' + (branch === 'stop' ? '停下查证，没有继续投入。' : '选择继续，进入后续的提现收费话术。'));
       if (branch === 'continue') paragraph(analysis, '第 6 幕：' + (finalDecision === 'check' ? '拒绝再交钱，转向核验。' : finalDecision === 'pay' ? '模拟中选择交保证金；现实中切勿照做，请立即停止并联系警方。' : '尚未选择第二次核验动作。'));
       paragraph(analysis, '带走的动作：遇到“取钱先交钱”，停止转账，保留证据，通过独立渠道联系反诈专线 96110 或家人。', 'analysis-note safe');
       motion(Array.prototype.slice.call(analysis.children));
@@ -625,21 +633,21 @@
     tearInterlude.addEventListener('toggle', function () { if (tearInterlude.open) ensureTear(); });
     document.getElementById('tear-back').addEventListener('click', function () {
       tearInterlude.open = false;
-      show(branch ? 4 : 3);
+      show(branch ? BRANCH + 1 : BRANCH);
     });
     var storyInitialized = false;
     function show(i) {
       var changedAct = storyInitialized && i !== index;
       index = i; visited = Math.max(visited, i);
       var st = script[index];
-      document.getElementById('stage-counter').textContent = 'ACT ' + String(st.stage).padStart(2, '0') + ' / 07';
+      document.getElementById('stage-counter').textContent = 'ACT ' + String(st.stage).padStart(2, '0') + ' / ' + String(last + 1).padStart(2, '0');
       document.getElementById('case-live-act').textContent = String(st.stage).padStart(2, '0');
       document.getElementById('story-watermark').textContent = String(st.stage).padStart(2, '0');
       document.getElementById('story-persona').textContent = st.persona;
       exposeNotes(false);
       document.getElementById('analysis-cover-hint').textContent = i === 1 ? '先存证据，再揭开本幕话术 ↗' :
-        i === 3 ? '先存证据，再选一条路 ↗' :
-        i === 5 && branch === 'continue' ? '先存证据，再作一次判断 ↗' :
+        i === BRANCH ? '先存证据，再选一条路 ↗' :
+        i === DECISION && branch === 'continue' ? '先存证据，再作一次判断 ↗' :
         '把话术存入证据袋，再揭开记录 ↗';
       storySide.dataset.branch = finalDecision || branch || 'neutral';
       storySide.classList.remove('is-changing');
@@ -647,32 +655,32 @@
       renderMessage(); renderClues(); updateProgress();
       previous.disabled = i === 0;
       actions.replaceChildren();
-      if (i === 6) {
+      if (i === last) {
         finishReport();
-        action('回到第 4 幕，试另一条路', function () { show(3); }, 'safe-action');
+        action('回到第 5 幕，试另一条路', function () { show(BRANCH); }, 'safe-action');
         action('查看核验渠道与出处 ↗', function () {
           var sources = document.getElementById('case-sources');
           sources.open = true;
           sources.scrollIntoView({ behavior: reduced ? 'instant' : 'smooth', block: 'start' });
         });
-      } else if (i === 3) {
+      } else if (i === BRANCH) {
         if (branch) detail(branch === 'stop' ? '你选择了停止：后面三幕仍可旁观骗子如何继续说，但不会再“投入”。' : '你选择继续（仅模拟）。观察后面他们会如何拦住提现。', branch === 'stop');
         else paragraphAndQuestion('账户数字看起来上涨了。你现在会怎么做？下面是模拟决定，不涉及真钱。');
-        paragraph(actions, '第 4 幕 · 请选择一个方向', 'action-label');
-        action('继续看看（模拟）', function () { branch = 'continue'; finalDecision = null; visited = 3; show(4); }, 'warning-action');
-        action('停下，先核验', function () { branch = 'stop'; finalDecision = null; visited = 3; show(4); }, 'safe-action');
-      } else if (i === 5 && branch === 'continue') {
+        paragraph(actions, '第 5 幕 · 请选择一个方向', 'action-label');
+        action('继续看看（模拟）', function () { branch = 'continue'; finalDecision = null; visited = BRANCH; show(BRANCH + 1); }, 'warning-action');
+        action('停下，先核验', function () { branch = 'stop'; finalDecision = null; visited = BRANCH; show(BRANCH + 1); }, 'safe-action');
+      } else if (i === DECISION && branch === 'continue') {
         if (finalDecision) detail(finalDecision === 'check' ? '你拒绝再次付款，并决定从独立渠道核验。' : '交保证金是模拟中的危险决定，现实中请立即停止转账并寻求帮助。', finalDecision === 'check');
-        else paragraphAndQuestion('对方说“就差最后一笔”。你已经在第 4 幕选择继续；现在还有一次停下来的机会。');
+        else paragraphAndQuestion('对方说“就差最后一笔”。你已经在第 5 幕选择继续；现在还有一次停下来的机会。');
         paragraph(actions, '第 6 幕 · 再作一次判断', 'action-label');
-        action('拒绝交钱，先核验', function () { finalDecision = 'check'; detail('你改变了决定。立即停止转账，用独立渠道核实并保留聊天证据。', true); show(6); }, 'safe-action');
-        action('交保证金（仅模拟）', function () { finalDecision = 'pay'; detail('这是骗局的最终目的。模拟结束；现实中不要汇款，尽快求助。', false); show(6); }, 'warning-action');
+        action('拒绝交钱，先核验', function () { finalDecision = 'check'; detail('你改变了决定。立即停止转账，用独立渠道核实并保留聊天证据。', true); show(last); }, 'safe-action');
+        action('交保证金（仅模拟）', function () { finalDecision = 'pay'; detail('这是骗局的最终目的。模拟结束；现实中不要汇款，尽快求助。', false); show(last); }, 'warning-action');
       } else {
         if (revealed.has(i)) {
           if (i === 1) showClueAnalysis();
-          else detail(i >= 4 && branch === 'stop' ? '你已停下；这一幕是旁观骗子接下来的话术，不涉及新的投入。' : '', i >= 4 && branch === 'stop');
-        } else paragraphAndQuestion(i === 1 ? '先把两句可疑话术存入证据袋，再揭开本幕；也可直接进入下一幕。' : (i >= 4 && branch === 'stop' ? '你已在第 4 幕停下。以下只旁观骗子会怎样继续说；读完可点“解剖这一幕”。' : i >= 4 && branch === 'continue' ? '你在第 4 幕选择了继续（仅模拟）。观察对方如何拦住提现，再点“解剖这一幕”。' : '先读对话，猜一猜对方想让你做什么，再点“解剖这一幕”。'));
-        if (i !== 1) action('解剖这一幕', function () { revealed.add(i); detail(i >= 4 && branch === 'stop' ? '你已停下；这里是旁观后续话术。' : '', i >= 4 && branch === 'stop'); });
+          else detail(i > BRANCH && branch === 'stop' ? '你已停下；这一幕是旁观骗子接下来的话术，不涉及新的投入。' : '', i > BRANCH && branch === 'stop');
+        } else paragraphAndQuestion(i === 1 ? '先把两句可疑话术存入证据袋，再揭开本幕；也可直接进入下一幕。' : (i > BRANCH && branch === 'stop' ? '你已在第 5 幕停下。以下只旁观骗子会怎样继续说；读完可点“解剖这一幕”。' : i > BRANCH && branch === 'continue' ? '你在第 5 幕选择了继续（仅模拟）。观察对方如何拦住提现，再点“解剖这一幕”。' : '先读对话，猜一猜对方想让你做什么，再点“解剖这一幕”。'));
+        if (i !== 1) action('解剖这一幕', function () { revealed.add(i); detail(i > BRANCH && branch === 'stop' ? '你已停下；这里是旁观后续话术。' : '', i > BRANCH && branch === 'stop'); });
         if (i === 4) action('撕开账面，核对提现条件 ↘', openTear, 'safe-action');
         action('下一幕 →', function () { show(index + 1); });
       }
