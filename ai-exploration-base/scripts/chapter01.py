@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""① 关的「卡片铸造台」：把 docs/content/p1 的五张翻面卡做成真物件。
+"""① 关的「卡片铸造台」：整页正文就是这几件东西，不再另附一篇文章。
 
-这一关不再是「一篇文章 + 一堆条目」。每张卡按它本来的样子长出来：
+真源 p1 的两个区块（✋ 会动手的 / 💬 会动嘴的）变成台面上的两组卡；
+导览卡变成台面说明，诚实声明与卡 5 并排，小结卡收在台面末尾；
+real-cases-p1 的素材清单收成页尾一张链接表。除此之外不再有第二份正文。
 
   01 海报（印刷品，带票根）        02 朋友圈（手机里的那条草稿）
-  03 账本对话（收银小票上的问答）  04 修老照片（通栏，修复前后示意图）
+  03 账本对话（收银小票上的问答）  04 修老照片（修复前后示意图）
   05 微信问答（聊天气泡）
 
 正面一律是真源原文的实物排版，背面是时间对比、能照抄的提示词、一句老实话
@@ -17,18 +19,31 @@ import html
 import re
 
 DOC = "p1-what-ai-can-do.md"
+CASES = "real-cases-p1.md"
+
+_STEP_NO = re.compile(r"^\d+[.、]\s*")
+_CARD_NO = re.compile(r"卡\s*(\d+)")
 
 
 # ------------------------------------------------------------------ 解析
 
-def _split_cards(md: str) -> list[tuple[str, str]]:
-    chunks = re.split(r"^###\s+", md, flags=re.M)
+def _sections(md: str) -> list[tuple[str, str]]:
+    """按 `## ` 切段，返回 [(小节标题, 正文)]。"""
+    chunks = re.split(r"^##\s+", md, flags=re.M)
     out = []
     for chunk in chunks[1:]:
         head, _, body = chunk.partition("\n")
-        if "翻面卡" not in head:
-            continue
         out.append((head.strip(), body))
+    return out
+
+
+def _blocks(body: str) -> list[tuple[str, str]]:
+    """按 `### ` 切块（翻面卡 / 导览卡 / 诚实声明卡）。"""
+    chunks = re.split(r"^###\s+", body, flags=re.M)
+    out = []
+    for chunk in chunks[1:]:
+        head, _, rest = chunk.partition("\n")
+        out.append((head.strip(), rest))
     return out
 
 
@@ -38,6 +53,8 @@ def _bullets(body: str) -> list[tuple[str, dict]]:
     cur: dict | None = None
     for raw in body.splitlines():
         line = raw.rstrip()
+        if line.startswith("#"):      # 进入下一块，别把标题吞进上一条的值
+            break
         if not line.strip() or line.strip() in {"**正面**", "**背面**"}:
             continue
         m = re.match(r"^-\s+(.*)$", line)
@@ -78,20 +95,33 @@ def _strip_md(text: str) -> str:
     return re.sub(r"[`*]", "", text or "").strip()
 
 
+def _quote_text(quote: list[str]) -> list[str]:
+    """引用行 → 段落列表（空行为界，段内按句接起来）。"""
+    paras, cur = [], []
+    for line in quote:
+        if not line.strip():
+            if cur:
+                paras.append("".join(cur).strip())
+                cur = []
+            continue
+        cur.append(line)
+    if cur:
+        paras.append("".join(cur).strip())
+    return [p for p in paras if p]
+
+
 def _links(rows) -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     for key, row in rows:
         blob = " ".join([row["val"]] + row["items"])
         for m in re.finditer(r"`([^`]+)`\s*（指向\s*<?([^>）\s]+)>?）", blob):
-            label, url = m.group(1), m.group(2)
-            out.append((_plain(label), url.strip().strip("`")))
+            out.append((_plain(m.group(1)), m.group(2).strip().strip("`")))
         for m in re.finditer(r"`([^`]+)`[^`]*<?(https?://[^\s>）]+)>?", blob):
             if m.group(2) not in {u for _, u in out}:
                 out.append((_plain(m.group(1)), m.group(2)))
         for m in re.finditer(r"<(https?://[^\s>]+)>", blob):
-            url = m.group(1)
-            if url not in {u for _, u in out}:
-                out.append((url, url))
+            if m.group(1) not in {u for _, u in out}:
+                out.append((m.group(1), m.group(1)))
     return out
 
 
@@ -102,79 +132,188 @@ def _report(row_val: str) -> tuple[str, list[tuple[str, str]]]:
     names = [(m.group(1), m.group(2))
              for m in re.finditer(r'"([^"]+)"\s*指向\s*<?(https?://[^\s>）]+)>?', row_val)]
     ticked = re.findall(r"`([^`]+)`", row_val)
-    text = ticked[0] if ticked else row_val
-    return _strip_md(text), names
+    return _strip_md(ticked[0] if ticked else row_val), names
 
 
-def parse_cards(md: str) -> list[dict]:
-    cards = []
-    for idx, (head, body) in enumerate(_split_cards(md), start=1):
-        clean = re.sub(r"（[^）]*）", "", head).strip()
-        clean = re.sub(r"^卡\s*\d+\s*[：:]\s*", "", clean).strip()
-        front_md, _, back_md = body.partition("**背面**")
-        fr, bk = _bullets(front_md), _bullets(back_md)
+def _parse_card(head: str, body: str, no: int, group: str) -> dict:
+    clean = re.sub(r"（[^）]*）", "", head).strip()
+    clean = re.sub(r"^卡\s*\d+\s*[：:]\s*", "", clean).strip()
+    front_md, _, back_md = body.partition("**背面**")
+    fr, bk = _bullets(front_md), _bullets(back_md)
 
-        def pick(rows, *keys, field="val"):
-            for key, row in rows:
-                if any(k in key for k in keys):
-                    return row[field]
-            return "" if field == "val" else []
+    def pick(rows, *keys, field="val"):
+        for key, row in rows:
+            if any(k in key for k in keys):
+                return row[field]
+        return "" if field == "val" else []
 
-        chat: list[dict] = []
-        for item in pick(fr, "对话气泡", field="items"):
-            who, sep, text = item.partition("：")
-            if not sep:
-                who, sep, text = item.partition(":")
-            chat.append({"who": _plain(who), "text": _plain(text), "paras": []})
-        chat_quote = pick(fr, "对话气泡", field="quote")
-        for row in chat:
-            if not row["text"] and chat_quote:
-                row["paras"] = [_strip_md(x) for x in chat_quote if x.strip()]
-                row["text"] = " ".join(row["paras"])
-                break
+    chat: list[dict] = []
+    for item in pick(fr, "对话气泡", field="items"):
+        who, sep, text = item.partition("：")
+        if not sep:
+            who, sep, text = item.partition(":")
+        chat.append({"who": _plain(who), "text": _plain(text), "paras": []})
+    chat_quote = pick(fr, "对话气泡", field="quote")
+    for row in chat:
+        if not row["text"] and chat_quote:
+            row["paras"] = [_strip_md(x) for x in chat_quote if x.strip()]
+            row["text"] = " ".join(row["paras"])
+            break
 
-        report_raw = next((row["val"] for key, row in fr if "报道" in key), "")
-        report_text, report_links = _report(report_raw)
+    report_raw = next((row["val"] for key, row in fr if "报道" in key), "")
+    report_text, report_links = _report(report_raw)
 
-        demo = ""
-        for key, row in bk:
-            if row.get("note_extra"):
-                demo = row["note_extra"]
+    demo = ""
+    for key, row in bk:
+        if row.get("note_extra"):
+            demo = row["note_extra"]
 
-        cards.append(dict(
-            no=idx, title=clean,
-            tag=_plain(pick(fr, "标签")),
-            hint=_plain(pick(fr, "提示行")),
-            badge=_plain(pick(fr, "演示徽标")),
-            poster=[_strip_md(x) for x in pick(fr, "文字内容", field="items")],
-            chat=chat,
-            quote=[_strip_md(x) for x in pick(fr, "正文", field="quote")],
-            caption=_plain(pick(fr, "图注")),
-            aria=_plain(pick(fr, "无障碍描述")),
-            report=report_text, report_links=report_links,
-            photo_labels=[_strip_md(x).split("（")[0]
-                          for x in pick(fr, "图内文字", field="items")],
-            compare=_plain(pick(bk, "时间对比")),
-            prompt=" ".join(_strip_md(x) for x in pick(bk, "提示词", field="quote")),
-            note=_plain(pick(bk, "说明")),
-            steps=[_strip_md(x) for x in pick(bk, "步骤", field="items")],
-            steps_quote=[_strip_md(x) for x in pick(bk, "步骤", field="quote")],
-            remind=_plain(pick(bk, "提醒")),
-            demo=demo,
-            links=_links(bk),
-        ))
-    return cards
+    return dict(
+        no=no, title=clean, group=group,
+        tag=_plain(pick(fr, "标签")),
+        hint=_plain(pick(fr, "提示行")),
+        badge=_plain(pick(fr, "演示徽标")),
+        poster=[_strip_md(x) for x in pick(fr, "文字内容", field="items")],
+        chat=chat,
+        quote=[_strip_md(x) for x in pick(fr, "正文", field="quote")],
+        caption=_plain(pick(fr, "图注")),
+        aria=_plain(pick(fr, "无障碍描述")),
+        report=report_text, report_links=report_links,
+        photo_labels=[_strip_md(x).split("（")[0]
+                      for x in pick(fr, "图内文字", field="items")],
+        compare=_plain(pick(bk, "时间对比")),
+        prompt=" ".join(_strip_md(x) for x in pick(bk, "提示词", field="quote")),
+        note=_plain(pick(bk, "说明")),
+        steps=[_strip_md(x) for x in pick(bk, "步骤", field="items")],
+        steps_quote=[_strip_md(x) for x in pick(bk, "步骤", field="quote")],
+        remind=_plain(pick(bk, "提醒")),
+        demo=demo,
+        links=_links(bk),
+    )
+
+
+def parse_doc(md: str) -> dict:
+    """p1 真源 → 台面结构：两组卡 + 导览 + 诚实声明 + 小结。"""
+    doc = {"groups": [], "guide": None, "honest": None, "summary": None}
+    no = 0
+    for head, body in _sections(md):
+        if head.startswith("结尾"):
+            rows = _bullets(body)
+            doc["summary"] = {
+                "title": _plain(next((r["val"] for k, r in rows if "标题" in k), "")),
+                "paras": _quote_text(next((r["quote"] for k, r in rows if "正文" in k), [])),
+            }
+            continue
+        if not head.startswith("区块"):
+            continue
+        rows = _bullets(body)
+        gtitle = _plain(next((r["val"] for k, r in rows if "区块标题" in k), head))
+        gsub = _plain(next((r["val"] for k, r in rows if "区块副题" in k), ""))
+        group = {"title": gtitle, "sub": gsub, "cards": [],
+                 "honest": None, "guide": None}
+        for chead, cbody in _blocks(body):
+            if "翻面卡" in chead:
+                no += 1
+                group["cards"].append(_parse_card(chead, cbody, no, gtitle))
+            elif "导览卡" in chead:
+                drows = _bullets(cbody)
+                gq = next((r["quote"] for k, r in drows if "正文" in k), [])
+                title, chips, note = "", [], ""
+                for line in gq:
+                    if line.startswith("- "):
+                        chips.append(_strip_md(line[2:]))
+                    elif line.strip():
+                        if not title and not chips:
+                            title = _strip_md(line)
+                        else:
+                            note = _strip_md(line)
+                group["guide"] = {"title": title, "chips": chips, "note": note}
+            elif "诚实声明" in chead:
+                hrows = _bullets(cbody)
+                group["honest"] = {
+                    "tag": _plain(next((r["val"] for k, r in hrows if k == "标签"), "诚实声明")),
+                    "paras": _quote_text(next((r["quote"] for k, r in hrows if "正文" in k), [])),
+                }
+        if group["guide"] and not doc["guide"]:
+            doc["guide"] = group["guide"]
+        if group["honest"] and not doc["honest"]:
+            doc["honest"] = group["honest"]
+        doc["groups"].append(group)
+    return doc
+
+
+def parse_cases(md: str) -> list[dict]:
+    """real-cases-p1 的素材表 → 链接表行。"""
+    rows: list[dict] = []
+    for head, body in _sections(md):
+        if not head.startswith("场景"):
+            continue
+        scene = re.sub(r"^场景\s*\d+\s*[：:]\s*", "", head).strip()
+        for line in body.splitlines():
+            line = line.strip()
+            if not line.startswith("|") or set(line) <= set("|-: "):
+                continue
+            cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip("|"))]
+            if len(cells) < 5 or cells[0].startswith("真实素材"):
+                continue
+            url_m = re.search(r"<(https?://[^\s>]+)>", cells[1])
+            if not url_m:
+                continue
+            title = re.sub(r"（[^）]*）$", "", cells[0]).strip()
+            status = re.sub(r"\*", "", cells[2]).strip()
+            code = re.match(r"(\d{3})", status)
+            note = ""
+            paren = re.search(r"（([^）]*)）", status)
+            if paren:
+                note = paren.group(1)
+            card = _CARD_NO.search(" ".join(cells[5:]))
+            rows.append({
+                "card": f"卡 {card.group(1)}" if card else scene,
+                "title": title,
+                "abstract": cells[4],
+                "code": code.group(1) if code else "",
+                "note": note,
+                "url": url_m.group(1),
+            })
+    return rows
+
+
+def parse_verify(md: str) -> list[dict]:
+    """p1 里的「演示验证渠道」→ 链接表首行。"""
+    out = []
+    for head, body in _sections(md):
+        if "本页来源" not in head:
+            continue
+        rows = _bullets(body)
+        for key, row in rows:
+            if "演示验证渠道" not in key:
+                continue
+            for item in row["items"]:
+                url = re.search(r"<(https?://[^\s>]+)>", item)
+                if not url:
+                    continue
+                label = _strip_md(re.split(r"：", item)[0])
+                code = re.search(r"`?(\d{3}(?:→\d{3})?)`?", item)
+                out.append({
+                    "card": "五张卡",
+                    "title": label,
+                    "abstract": "卡上每一段演示对话，都可以用它照原句复现。",
+                    "code": code.group(1) if code else "",
+                    "note": "",
+                    "url": url.group(1),
+                })
+    return out
 
 
 # ------------------------------------------------------------------ 渲染
 
-_STEP_NO = re.compile(r"^\d+[.、]\s*")
-
-KIND_ORDER = {"poster": 1, "moments": 2, "ledger": 3, "photo": 4, "chat": 5}
-
-
 def _esc(t: str) -> str:
     return html.escape(t or "", quote=True)
+
+
+def _rich(t: str) -> str:
+    """转义后把真源里的 **强调** 变成 <strong>。"""
+    return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", _esc(t))
 
 
 def _kind(title: str) -> str:
@@ -249,7 +388,7 @@ def _photo_pane(label: str, cls: str) -> str:
 
 def _photo(card: dict) -> str:
     labels = card["photo_labels"] or ["修复前", "修复后"]
-    before = labels[0] if len(labels) > 0 else "修复前"
+    before = labels[0] if labels else "修复前"
     after = labels[1] if len(labels) > 1 else "修复后"
     lead = " ".join(card["quote"]) or card["title"]
     report = ""
@@ -326,17 +465,15 @@ def _chat_front(card: dict, kind: str) -> str:
     badge = (f'<span class="art-badge">{_esc(card["badge"])}</span>'
              if card["badge"] else "")
     if kind == "ledger":
-        shell = ('<div class="artifact art-ledger">'
-                 '<div class="ledger-top" aria-hidden="true"><span>账单截图 · 已上传</span></div>'
-                 f'<div class="ledger-roll">{badge}{rows}</div>'
-                 '<i class="ledger-tear" aria-hidden="true"></i></div>')
-        return shell
-    shell = ('<div class="artifact art-wechat">'
-             '<div class="wx-bar"><span class="wx-back" aria-hidden="true">‹</span>'
-             '<span class="wx-name">AI</span>'
-             '<span class="wx-more" aria-hidden="true">•••</span></div>'
-             f'<div class="wx-body">{badge}{rows}</div></div>')
-    return shell
+        return ('<div class="artifact art-ledger">'
+                '<div class="ledger-top" aria-hidden="true"><span>账单截图 · 已上传</span></div>'
+                f'<div class="ledger-roll">{badge}{rows}</div>'
+                '<i class="ledger-tear" aria-hidden="true"></i></div>')
+    return ('<div class="artifact art-wechat">'
+            '<div class="wx-bar"><span class="wx-back" aria-hidden="true">‹</span>'
+            '<span class="wx-name">AI</span>'
+            '<span class="wx-more" aria-hidden="true">•••</span></div>'
+            f'<div class="wx-body">{badge}{rows}</div></div>')
 
 
 def _front(card: dict, kind: str) -> str:
@@ -351,7 +488,7 @@ def _front(card: dict, kind: str) -> str:
 
 # ---- 背面：时间对比 / 提示词 / 老实话 / 出处 --------------------------
 
-def _back(card: dict, kind: str) -> str:
+def _back(card: dict) -> str:
     bits = []
     if card["compare"]:
         bits.append(
@@ -406,56 +543,119 @@ def _back(card: dict, kind: str) -> str:
             "</div>")
 
 
-def render_scene(cards: list[dict]) -> str:
-    ordered = sorted(cards, key=lambda c: KIND_ORDER.get(_kind(c["title"]), 9))
-    tiles = []
-    for card in ordered:
-        kind = _kind(card["title"])
-        wide = " fcard--wide" if kind in {"photo", "chat"} else ""
-        tiles.append(
-            f'<article class="fcard fcard--{kind}{wide}" data-flipcard="{KIND_ORDER.get(kind, 9)}">'
-            '<div class="fcard-inner">'
-            '<div class="fcard-front">'
-            f'<span class="fcard-tag">{_esc(card["tag"])}</span>'
-            f'{_front(card, kind)}</div>'
-            f'{_back(card, kind)}'
+def _card_tile(card: dict) -> str:
+    kind = _kind(card["title"])
+    return (
+        f'<article class="fcard fcard--{kind}" data-flipcard="{card["no"]}">'
+        '<div class="fcard-inner">'
+        '<div class="fcard-front">'
+        f'<span class="fcard-tag">{_esc(card["tag"])}</span>'
+        f'{_front(card, kind)}</div>'
+        f'{_back(card)}'
+        "</div>"
+        '<button class="fcard-flip" type="button" aria-expanded="false">'
+        f'<span class="fcard-flip-label">{_esc(card["hint"] or "点一下，看提示词与出处")}</span>'
+        '<span class="fcard-flip-mark" aria-hidden="true">翻 →</span></button>'
+        "</article>"
+    )
+
+
+def _honest_tile(honest: dict) -> str:
+    paras = "".join(f"<p>{_rich(p)}</p>" for p in honest["paras"])
+    return ('<aside class="honest-tile">'
+            f'<span class="honest-tag">{_esc(honest["tag"])}</span>'
+            f'<div class="honest-body">{paras}</div></aside>')
+
+
+def _guide(guide: dict | None) -> str:
+    if not guide:
+        return ""
+    chips = "".join(f"<li>{_rich(c)}</li>" for c in guide["chips"])
+    note = (f'<p class="castfloor-note">{_rich(guide["note"])}</p>'
+            if guide["note"] else "")
+    return (
+        '<div class="castfloor-guide">'
+        f'<p class="castfloor-ask">{_rich(guide["title"])}</p>'
+        f'<ul class="castfloor-chips">{chips}</ul>'
+        + note
+        + "</div>"
+    )
+
+
+def render_scene(doc: dict) -> str:
+    total = sum(len(g["cards"]) for g in doc["groups"])
+    groups = []
+    for group in doc["groups"]:
+        tiles = "".join(_card_tile(c) for c in group["cards"])
+        if group.get("honest"):
+            tiles += _honest_tile(group["honest"])
+        groups.append(
+            '<div class="floor-group">'
+            '<div class="floor-group-head">'
+            f'<h3 class="floor-group-title">{_esc(group["title"])}</h3>'
+            f'<p class="floor-group-sub">{_esc(group["sub"])}</p>'
             "</div>"
-            '<button class="fcard-flip" type="button" aria-expanded="false">'
-            f'<span class="fcard-flip-label">{_esc(card["hint"] or "点一下，看提示词与出处")}</span>'
-            '<span class="fcard-flip-mark" aria-hidden="true">翻 →</span></button>'
-            "</article>"
+            f'<div class="cardrail">{tiles}</div>'
+            "</div>"
         )
-    total = len(ordered)
+
+    summary = ""
+    if doc.get("summary"):
+        paras = "".join(f"<p>{_rich(p)}</p>" for p in doc["summary"]["paras"])
+        summary = ('<div class="floor-summary">'
+                   f'<p class="floor-summary-k">{_esc(doc["summary"]["title"])}</p>'
+                   f'<div class="floor-summary-body">{paras}</div></div>')
+
     return (
         '<section class="castfloor" id="castfloor" aria-labelledby="castfloor-title">'
         '<header class="castfloor-head">'
         '<span class="castfloor-kicker">THE CARD FLOOR / 卡片铸造台</span>'
-        '<h2 id="castfloor-title">五张卡，<em>每张都是一件真东西</em>。</h2>'
-        '<p class="castfloor-lead">正面是这一关原文里它本来的样子 —— 一张海报、一条朋友圈、'
-        '一张账单上的问答、一张修好的老照片、一段微信对话。翻过来，是能照抄的提示词、'
-        '可点开的出处，和一句老实话。</p>'
-        '<div class="castfloor-meter">'
+        + _guide(doc.get("guide"))
+        + '<div class="castfloor-meter">'
         f'<span class="meter-num"><b data-flip-count>0</b> / {total}</span>'
         '<span class="meter-word">张已压印</span>'
         '<i class="meter-track" aria-hidden="true"><i data-meter-fill></i></i>'
         "</div></header>"
-        f'<div class="cardrail">{"".join(tiles)}</div>'
-        '<p class="castfloor-done" data-flip-done hidden>'
-        '五张都压过了 —— 下面小结卡里的三件事，今天就能挑一件做。</p>'
-        "</section>"
+        + "".join(groups)
+        + '<p class="castfloor-done" data-flip-done hidden>'
+        '五张都翻过了 —— 下面这句，是这一关想让你记住的。</p>'
+        + summary
+        + "</section>"
     )
 
 
-def strip_card_blocks(md: str) -> str:
-    """正文里不再重复卡片内容（卡片已经是页面主体）。"""
-    out, skip = [], False
-    for line in md.splitlines():
-        if re.match(r"^###\s+", line):
-            skip = "翻面卡" in line
-            if skip:
-                continue
-        elif re.match(r"^##\s+", line):
-            skip = False
-        if not skip:
-            out.append(line)
-    return "\n".join(out)
+def render_linktable(rows: list[dict], verify: list[dict] | None = None) -> str:
+    if not rows and not verify:
+        return ""
+    body = []
+    for row in (verify or []) + rows:
+        badge = (f'<span class="kt-status" title="{_esc(row["note"])}">{_esc(row["code"])}</span>'
+                 if row["code"] else "")
+        host = re.sub(r"^https?://", "", row["url"]).split("/")[0]
+        body.append(
+            "<tr>"
+            f'<th scope="row" class="kt-card">{_esc(row["card"])}</th>'
+            '<td class="kt-material">'
+            f'<span class="kt-title">{_esc(row["title"])}</span>'
+            f'<span class="kt-abstract">{_esc(row["abstract"])}</span>'
+            "</td>"
+            f'<td class="kt-status-cell">{badge}</td>'
+            '<td class="kt-link">'
+            f'<a href="{_esc(row["url"])}" target="_blank" rel="noopener noreferrer">'
+            f'{_esc(host)}<span aria-hidden="true"> ↗</span></a>'
+            "</td>"
+            "</tr>"
+        )
+    return (
+        '<section class="ktable-sec" id="links" aria-labelledby="ktable-title">'
+        '<h2 class="ktable-title" id="ktable-title">本页来源与演示验证渠道</h2>'
+        '<p class="ktable-note">卡上的对话都是演示样例；下面这些是真人教程、官方工具和报道，'
+        '点开就能看到别人怎么做的。访问日期 2026-11-06，状态码为当时跟随跳转的结果，'
+        '标“反爬”的链接浏览器可以直接打开。</p>'
+        '<div class="ktable-wrap">'
+        '<table class="ktable"><thead><tr>'
+        '<th scope="col">哪张卡</th><th scope="col">素材</th>'
+        '<th scope="col">状态</th><th scope="col">链接</th>'
+        "</tr></thead><tbody>" + "".join(body) + "</tbody></table></div>"
+        "</section>"
+    )

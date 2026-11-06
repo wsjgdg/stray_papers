@@ -25,6 +25,16 @@
       } : {}),
     });
 
+    const groupHeads = floor.querySelectorAll('.floor-group-head, .honest-tile, .floor-summary');
+    if (groupHeads.length) {
+      gsap.from(groupHeads, {
+        autoAlpha: 0, y: 14, duration: .6, ease: 'power2.out', stagger: .08,
+        ...(window.ScrollTrigger ? {
+          scrollTrigger: { trigger: floor, start: 'top 70%', once: true }
+        } : {}),
+      });
+    }
+
     cards.forEach((card, i) => {
       gsap.from(card, {
         autoAlpha: 0, y: 46, rotate: i % 2 ? 1.2 : -1.2, duration: .85,
@@ -175,6 +185,15 @@
       }, 1800);
     });
   });
+
+  /* ---------------- 页尾链接表：一行行落下来 ---------------- */
+  const rows = document.querySelectorAll('.ktable tbody tr');
+  if (motion && rows.length && window.ScrollTrigger) {
+    gsap.from(rows, {
+      autoAlpha: 0, y: 10, duration: .4, ease: 'power2.out', stagger: .03,
+      scrollTrigger: { trigger: '.ktable-sec', start: 'top 88%', once: true },
+    });
+  }
 
   /* ---------------- 初始状态 ---------------- */
   fill && (fill.style.width = '0%');

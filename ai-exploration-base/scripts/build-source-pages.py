@@ -510,16 +510,18 @@ def build(spec: dict) -> str:
     )
 
     scene = ""
-    md_over: dict[str, str] = {}
+    links = ""
     if spec.get("cards"):
+        # ① 关：正文＝卡片本身，后面不再跟一遍文章，只补一张链接表
         c1 = _load_chapter01()
         p1_md = (DOCS / spec["docs"][0]).read_text(encoding="utf-8")
-        scene = c1.render_scene(c1.parse_cards(p1_md))
-        md_over[spec["docs"][0]] = c1.strip_card_blocks(p1_md)
+        cases_md = (DOCS / "real-cases-p1.md").read_text(encoding="utf-8")
+        scene = c1.render_scene(c1.parse_doc(p1_md))
+        links = c1.render_linktable(c1.parse_cases(cases_md), c1.parse_verify(p1_md))
 
     title, lead, meta, article = article_for(spec["docs"], stage,
                                              spec.get("stage_anchor", ""),
-                                             with_cards=False, md_overrides=md_over)
+                                             with_cards=False)
 
     nav = ""
     if onward:
@@ -542,7 +544,9 @@ def build(spec: dict) -> str:
         + "</section>"
     )
 
-    body_parts = hero + scene + article + nav
+    if spec.get("cards"):
+        article = ""          # 卡片已经把正文吃进去了，别再来一份
+    body_parts = hero + scene + links + article + nav
     main = f'<main class="src-main" id="source-{spec["key"]}">{body_parts}</main>'
 
     out = strip_dossier(
