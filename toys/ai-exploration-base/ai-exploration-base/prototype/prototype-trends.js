@@ -2,13 +2,14 @@
 (function () {
   'use strict';
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var bins = { fact: '已查证', test: '可小试', warn: '先警惕' };
+  var DESK = window.TREND_DESK || null;   // 由真源生成的数据层（trend-desk.js）
+  var bins = (DESK && DESK.bins) || { fact: '已查证', test: '可小试', warn: '先警惕' };
   var sharedFact = {
     id: 'users', short: '用户规模', title: '2024 年底约 2.49 亿人，2025 年 6 月约 5.15 亿人使用生成式 AI。',
     source: 'CNNIC · 2025 年报告', correct: 'fact',
     why: '这是 CNNIC 报告中的用户规模，可核查。它只说明使用人数增加，不能推出任何个人收入或成交率。'
   };
-  var tracks = {
+  var FALLBACK_TRACKS = {
     finance: { name: '财务与保险', caution: '使用虚构或充分脱敏的资料；核对专业术语，不把 AI 草稿当作产品承诺或理财建议。', cards: [sharedFact,
       { id: 'answer', short: '客户答疑', title: '用虚构客户问题，先写三版通俗的保险产品答疑草稿。', source: '行动提案 · 不是既成事实', correct: 'test', why: '这是可限定范围的小试验：用虚构问题起稿，再由懂产品的人核对。', plan: ['写下一个不含姓名与保单号的常见问题。', '自己或借助信任的工具起草三种说法。', '核对条款，再请一位熟悉业务的人指出误解。'] },
       { id: 'ledger', short: '账表摘要', title: '拿一份自己编的月度账表，试着列出三处值得复核的数字。', source: '行动提案 · 不是既成事实', correct: 'test', why: '用虚构样表试做初筛可行，最后的数字和判断仍需本人核对。', plan: ['用虚构数字做一张小型月度账表。', '请工具或自己列出三处异常与依据。', '手动重算每个数字，记录哪处判断有误。'] },
@@ -25,8 +26,10 @@
       { id: 'expert', short: '专家人设', title: '“让 AI 生成专家人设，健康和理财建议都不用再核实。”', source: '未经证实的推销话术', correct: 'warn', why: '捏造资历并跳过医疗或金融核实会误导别人，不是可采取的行业机会。' }
     ] }
   };
-  var state = { finance: { choices: {}, plan: null }, retail: { choices: {}, plan: null }, content: { choices: {}, plan: null } };
-  var current = 'finance', selected = null, justFiled = null, lastDecision = null;
+  var tracks = (DESK && DESK.tracks) || FALLBACK_TRACKS;
+  var state = {};
+  Object.keys(tracks).forEach(function (key) { state[key] = { choices: {}, plan: null }; });
+  var current = Object.keys(tracks)[0], selected = null, justFiled = null, lastDecision = null;
 
   var fieldSources = {
     finance: [
@@ -44,7 +47,7 @@
   };
   function paintFieldSource() {
     var row = document.getElementById('track-source');
-    if (!row) return;
+    if (!row || (DESK && !DESK.sources)) return;
     var list = fieldSources[current] || [];
     row.replaceChildren();
     var label = el('b', '', '本领域的真实功能出处');
@@ -67,6 +70,7 @@
     return node;
   }
   function format(number) { return String(number).padStart(2, '0'); }
+  function total() { return getCards().length; }
   function getCards() { return tracks[current].cards; }
   function grades() {
     var choices = state[current].choices;
@@ -98,7 +102,7 @@
       bottom.appendChild(grip);
       article.append(pick, bottom);
       if (lastDecision && lastDecision.track === current && lastDecision.id === card.id) {
-        var reason = el('p', 'card-reason', (lastDecision.right ? '已归档 / ' : '改判提示 / 应归入“' + bins[card.correct] + '”。') + card.why);
+        var reason = el('p', 'card-reason', (lastDecision.right ? '已归档 / ' : '改判提示 / 应归入“' + bins[card.correct] + '”。') + (card.why || ''));
         reason.dataset.result = lastDecision.right ? 'right' : 'wrong';
         article.appendChild(reason);
       }
@@ -134,11 +138,13 @@
       tick.className = choice ? (choice === card.correct ? 'is-on' : 'is-wrong') : '';
     });
     if (note) {
-      note.textContent = counts.sorted < 4
-        ? '还差 ' + (4 - counts.sorted) + ' 张没归档'
-        : (counts.right === 4 ? '四张都已核对 · 可以选一个试验' : '四张已归档 · 有 ' + (4 - counts.right) + ' 张要改判');
+      var n = total(), unit = (DESK && DESK.count) || '四张';
+      note.textContent = counts.sorted < n
+        ? '还差 ' + (n - counts.sorted) + ' 张没归档'
+        : (counts.right === n ? (DESK && DESK.done) || '四张都已核对 · 可以选一个试验'
+           : unit + '已归档 · 有 ' + (n - counts.right) + ' 张要改判');
     }
-    if (next) next.hidden = counts.sorted < 4;
+    if (next) next.hidden = counts.sorted < total();
   }
   function renderTicket() {
     var selectedPlan = state[current].plan;
@@ -150,41 +156,42 @@
     var card = getCards().find(function (item) { return item.id === selectedPlan; });
     document.getElementById('ticket-title').textContent = tracks[current].name + ' / ' + card.short;
     var steps = document.getElementById('ticket-steps'); steps.replaceChildren();
-    card.plan.forEach(function (step) { steps.appendChild(el('li', '', step)); });
+    (card.plan || []).forEach(function (step) { steps.appendChild(el('li', '', step)); });
     document.getElementById('ticket-caution').textContent = '边界提醒 / ' + tracks[current].caution;
     ticket.classList.remove('is-printing');
     if (!reduced) { void ticket.offsetWidth; ticket.classList.add('is-printing'); }
   }
   function renderReport() {
     var counts = grades(), choices = state[current].choices;
-    document.getElementById('progress-fill').style.width = counts.sorted / 4 * 100 + '%';
-    document.getElementById('progress-label').textContent = '已分拣 ' + counts.sorted + ' / 4 · 已核对 ' + counts.right + ' / 4';
+    var n = total();
+    document.getElementById('progress-fill').style.width = counts.sorted / n * 100 + '%';
+    document.getElementById('progress-label').textContent = '已分拣 ' + counts.sorted + ' / ' + n + ' · 已核对 ' + counts.right + ' / ' + n;
     var report = document.getElementById('report-content'), planStage = document.getElementById('plan-stage');
     report.replaceChildren();
-    if (counts.sorted < 4) {
-      report.appendChild(el('p', '', '还有 ' + (4 - counts.sorted) + ' 张情报没有去处。选一张卡再归档；改判不会丢掉前面的结果。'));
+    if (counts.sorted < n) {
+      report.appendChild(el('p', '', '还有 ' + (n - counts.sorted) + ' 张情报没有去处。选一张卡再归档；改判不会丢掉前面的结果。'));
       planStage.hidden = true; return;
     }
-    if (counts.right < 4) {
-      var intro = el('p'); intro.append(el('strong', '', '先别开工。'), document.createTextNode(' 你已归档四张情报，但有 ' + (4 - counts.right) + ' 张需要重看。点对应卡片改判，确认后再选试验。'));
+    if (counts.right < n) {
+      var intro = el('p'); intro.append(el('strong', '', '先别开工。'), document.createTextNode(' 你已归档全部情报，但有 ' + (n - counts.right) + ' 张需要重看。点对应卡片改判，确认后再选试验。'));
       report.appendChild(intro);
       var list = el('ul', 'report-errors');
       getCards().filter(function (card) { return choices[card.id] !== card.correct; }).forEach(function (card) {
-        list.appendChild(el('li', '', card.short + '：应归入“' + bins[card.correct] + '”。' + card.why));
+        list.appendChild(el('li', '', card.short + '：应归入“' + bins[card.correct] + '”。' + (card.why || '')));
       });
       report.appendChild(list); planStage.hidden = true; return;
     }
     var tally = el('p', 'report-tally');
-    [['fact', '已查证'], ['test', '可小试'], ['warn', '先警惕']].forEach(function (group, i) {
+    Object.keys(bins).forEach(function (key, i) {
       if (i) tally.appendChild(el('span', 'report-tally-sep', '·'));
       var cell = el('span', 'report-tally-cell');
-      var filed = getCards().filter(function (card) { return choices[card.id] === group[0]; }).length;
+      var filed = getCards().filter(function (card) { return choices[card.id] === key; }).length;
       cell.appendChild(el('b', '', String(filed)));
-      cell.appendChild(document.createTextNode(' 条' + group[1]));
+      cell.appendChild(document.createTextNode(' 条' + bins[key]));
       tally.appendChild(cell);
     });
     report.appendChild(tally);
-    var good = el('p'); good.append(el('strong', '', '信号与噪音已分开。'), document.createTextNode(' 一条有来源的规模数据、两件可以小范围试做的事，以及一条不能照单全收的承诺。人数增长不是个人收益预测；现在只选一个小试验。'));
+    var good = el('p'); good.append(el('strong', '', '信号与噪音已分开。'), document.createTextNode(' 报告里的事实归一处，能自己动手的那件小事归一处。人数增长不是个人收益预测；现在只选一个小试验。'));
     report.appendChild(good); planStage.hidden = false;
     var choiceBox = document.getElementById('plan-choices'); choiceBox.replaceChildren();
     getCards().filter(function (card) { return card.correct === 'test'; }).forEach(function (card, n) {
@@ -321,5 +328,7 @@
   });
   document.documentElement.classList.add('trend-ready');
   if (window.matchMedia('(max-width:760px)').matches) feedback.textContent = '先点一张情报卡，再选分类章。分错可以改判。';
+  var feedTitle = document.getElementById('feed-title');
+  if (feedTitle) feedTitle.textContent = tracks[current].name + ' · 情报卡';
   renderAll();
 }());

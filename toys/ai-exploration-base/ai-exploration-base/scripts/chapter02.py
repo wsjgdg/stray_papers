@@ -286,3 +286,68 @@ def render(md: str, sources_md: str = "") -> tuple[str, str]:
         table = K.linktable(rows, "本页来源",
                             "数字与事件都能点开核对；标“反爬”的链接浏览器可以直接打开。")
     return world, table
+
+
+# ------------------------------------------------- 老趋势台的数据层（分拣情报）
+
+def desk_js(md: str) -> str:
+    """把 p2 真源里「各行各业」五张卡 + 用户规模数字，导成老趋势台能吃的数据。
+
+    每张行业卡给两条情报：报告里的观察（已查证）、能自己验证的一件小事（可小试）；
+    再加一条全场共用的用户规模情报。文案全部逐字来自真源。
+    """
+    import json
+
+    doc = parse(md)
+    groups = {g["title"]: g for g in doc["groups"]}
+    industries = [i for g in doc["groups"] for i in g["items"] if i["type"] == "industry"]
+    note = ""
+    for g in doc["groups"]:
+        for it in g["items"]:
+            if it["type"] == "note":
+                note = " ".join(it["paras"])
+    scale = ""
+    for g in doc["groups"]:
+        for it in g["items"]:
+            if it["type"] == "stats":
+                for st in it["stats"]:
+                    pass
+    # 用户规模那条：真源「怎么读这个数」里的原句
+    m = re.search(r"(\d{4} 年底全国才 [^。]*。)", note)
+    scale = m.group(1) if m else note.split("。")[0] + "。"
+
+    shared = {
+        "id": "users", "short": "用户规模",
+        "title": scale,
+        "source": "CNNIC · 2025 年报告",
+        "correct": "fact",
+    }
+    slugs = ["ecom", "selfmedia", "finance", "office", "edu"]
+    tracks = {}
+    for slug, ind in zip(slugs, industries):
+        body = ind["body"]
+        obs, _, hint = body.partition("**对你的启示：**")
+        obs = obs.strip().rstrip("。") + "。" if obs else body
+        hint = hint.strip()
+        cards = [
+            shared,
+            {"id": "obs", "short": "报告里的观察", "title": obs,
+             "source": "CNNIC 报告 · 行业应用", "correct": "fact"},
+            {"id": "try", "short": "能自己试一件", "title": ind["fact"],
+             "source": "低风险 · 能自己验证", "correct": "test",
+             "why": hint,
+             "plan": [ind["fact"], hint] if hint else [ind["fact"]]},
+        ]
+        tracks[slug] = {
+            "name": ind["name"],
+            "caution": hint or "先用虚构素材试做一件小事；拿不准的，回真源核对。",
+            "cards": cards,
+        }
+    payload = {
+        "bins": {"fact": "已查证", "test": "可小试"},
+        "tracks": tracks,
+        "done": "两条都已核对 · 可以选一个试验",
+        "count": "两条",
+    }
+    return ("/* 02 / 趋势台数据层：由 docs/content/p2-trends.md 生成，勿手改。 */\n"
+            "window.TREND_DESK = " + json.dumps(payload, ensure_ascii=False, indent=1) + ";\n")

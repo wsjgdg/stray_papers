@@ -437,7 +437,8 @@ PAGES = [
     dict(file="chapter-02.html", key="02", docs=["p2-trends.md"], legacy=True,
          legacy_src="legacy/chapter-02.html",
          legacy_sources="sources-p123.md",
-         legacy_keys=["CNNIC", "时间线事件来源", "P2 五卡", "演示验证渠道"], stage=[]),
+         legacy_keys=["CNNIC", "时间线事件来源", "P2 五卡", "演示验证渠道"],
+         legacy_pre_js=["trend-desk.js?v=desk-01"], stage=[]),
     dict(file="chapter-03.html", key="03", docs=["p3-lab.md"], legacy=True,
          legacy_src="legacy/chapter-03.html",
          legacy_sources="sources-p123.md", legacy_key="第 ③ 关", stage=[]),
@@ -896,6 +897,11 @@ def build(spec: dict) -> str:
                           '<script src="../assets/vendor/TextPlugin.min.js" defer></script>'
                           '<script src="prototype-cards.js?v=cards-03" defer></script>'
                           + extra + '</body>')
+
+    if spec.get("legacy_pre_js"):
+        # 真源数据层要落在老页脚本之前（都是 defer，按文档顺序执行）
+        tags = "".join(f'<script src="{js}" defer></script>' for js in spec["legacy_pre_js"])
+        out = out.replace("</main>", "</main>" + tags, 1)
 
     if spec.get("legacy"):
         # ⑤ 关的逐字正文躺在撕纸账页里：断 JS 时 details 打不开，正文会被浏览器藏起来。

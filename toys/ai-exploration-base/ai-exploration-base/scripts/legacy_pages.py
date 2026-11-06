@@ -109,9 +109,18 @@ def fill_03(scene: str, md: str) -> str:
     modes_html = "".join(
         f"<p><strong>{html.escape(p['emoji'])} {html.escape(p['name'])}</strong>"
         f"<span>{rich(' '.join(p['paras']))}</span></p>" for p in plays)
+    frame = (
+        '<figure class="lab-embed">'
+        f'<iframe src="../{html.escape(embed["src"])}" title="{html.escape(embed["title"])}"'
+        ' loading="lazy" referrerpolicy="no-referrer"></iframe>'
+        f'<figcaption>{rich(embed["hint"])}'
+        f' 打不开就<a href="../{html.escape(embed["src"])}" target="_blank" rel="noopener">新窗口打开</a>，'
+        f'源码在 <a href="{html.escape(embed["repo"])}" target="_blank" rel="noopener noreferrer">'
+        'GitHub · stray_papers</a>。'
+        '</figcaption></figure>')
     scene = (scene[: m.start()]
              + '<div class="lab-fill">' + paras([embed["lead"]])
-             + f'<div class="lab-modes">{modes_html}</div></div>'
+             + f'<div class="lab-modes">{modes_html}</div>{frame}</div>'
              + scene[m.end():])
 
     # 3) 作品索引：三张卡的说明换成真源正文
@@ -146,7 +155,7 @@ def fill_03(scene: str, md: str) -> str:
 # ------------------------------------------------------------------ ② 关
 
 def fill_02(scene: str, md: str) -> str:
-    """② 关：老趋势台（分拣情报 + 试验票）留着，真源正文填进页首、时间线、行业与小结。"""
+    """② 关：老趋势台就是这一页的主体；分拣用的情报全部来自真源。"""
     import chapter02 as _C2
 
     doc = _C2.parse(md)
@@ -155,21 +164,47 @@ def fill_02(scene: str, md: str) -> str:
     note = [i for i in doc["groups"][1]["items"] if i["type"] == "note"][0]["paras"]
     industries = [i for i in doc["groups"][2]["items"] if i["type"] == "industry"]
     summary = doc["summary"]
+    slugs = ["ecom", "selfmedia", "finance", "office", "edu"]
 
-    # 1) 页首导语
+    # 1) 页首导语（老页那句换成真源）
     m = re.search(r'(<h1 id="trends-title">[\s\S]*?</h1>)<p>[\s\S]*?</p>', scene)
     if not m:
         raise SystemExit("② 页首结构变了")
     scene = scene[: m.end(1)] + paras([lead], "opening-lead") + scene[m.end():]
 
-    # 2) 数据展台那句话换成真源「怎么读这个数」
-    m = re.search(r"<p><strong>人数增长 ≠ 你的行业一定赚钱。", scene)
+    # 2) 领域按钮：真源五张行业卡，替换老页那三个写死的领域
+    buttons = "".join(
+        f'<button type="button" data-track="{slugs[n]}" aria-pressed="{"true" if n == 0 else "false"}">'
+        f'<span>{n + 1:02d} / FIELD</span><strong>{html.escape(i["name"])}</strong>'
+        f'<small>能自己试一件</small></button>'
+        for n, i in enumerate(industries))
+    m = re.search(r'<div class="track-chooser"[\s\S]*?</div>', scene)
+    if not m:
+        raise SystemExit("② 领域选择器变了")
+    scene = scene[: m.start()] + f'<div class="track-chooser" role="group" aria-label="选择要判断的领域">{buttons}</div>' + scene[m.end():]
+
+    # 3) 档案格：两条去处（已查证 / 可小试）
+    bins_html = (
+        '<button class="bin" type="button" data-bin="fact"><span class="bin-symbol">✓</span>'
+        '<span class="bin-name">已查证</span><small>报告里有来源的观察，不乱推断</small>'
+        '<span class="bin-count" id="count-fact">00</span>'
+        '<span class="bin-contents" id="contents-fact">还没有情报</span></button>'
+        '<button class="bin" type="button" data-bin="test"><span class="bin-symbol">↗</span>'
+        '<span class="bin-name">可小试</span><small>低风险、能自己验证的一件小事</small>'
+        '<span class="bin-count" id="count-test">00</span>'
+        '<span class="bin-contents" id="contents-test">还没有情报</span></button>')
+    m = re.search(r'<div class="bins">[\s\S]*?</div>', scene)
+    if not m:
+        raise SystemExit("② 档案格变了")
+    scene = scene[: m.start()] + f'<div class="bins">{bins_html}</div>' + scene[m.end():]
+
+    # 4) 数据展台那句话换成真源「怎么读这个数」
+    m = re.search(r"<p><strong>人数增长 ≠ 你的行业一定赚钱。[\s\S]*?</p>", scene)
     if not m:
         raise SystemExit("② 数据展台那段变了")
-    m2 = re.search(r"<p><strong>人数增长 ≠ 你的行业一定赚钱。[\s\S]*?</p>", scene)
-    scene = scene[: m2.start()] + "".join(f"<p>{rich(x)}</p>" for x in note) + scene[m2.end():]
+    scene = scene[: m.start()] + "".join(f"<p>{rich(x)}</p>" for x in note) + scene[m.end():]
 
-    # 3) 时间线：老页原本没有这一节，用趋势台的细线版式补在一屏之后
+    # 5) 时间线：真源五条，排在台面之前
     rows = "".join(
         f'<li><span class="tl-when">{html.escape(e["when"])}</span>'
         f'<p>{rich(" ".join(e["paras"]))}</p></li>' for e in timeline)
@@ -182,27 +217,20 @@ def fill_02(scene: str, md: str) -> str:
         raise SystemExit("② 页首 section 找不到")
     scene = scene[: m.end()] + tl + scene[m.end():]
 
-    # 4) 各行各业的五张卡：真源正文 + 微事例，排在分拣台之后
-    cards = "".join(
-        f'<article class="ind-card{" is-wide" if i.get("wide") else ""}">'
-        f'<span class="ind-no">0{i["no"]}</span>'
-        f'<h3>{html.escape(i["emoji"])} {html.escape(i["name"])}</h3>'
-        f'<p>{rich(i["body"])}</p>'
-        f'<p class="ind-fact">{rich(i["fact"])}</p></article>' for i in industries)
-    ind = ('<section class="trend-fill trend-industry" aria-label="各行各业，正在被改写">'
-           '<div class="fill-head"><span>FIVE FIELDS / 各行各业，正在被改写</span>'
-           '<h2>被改写的，是你熟悉的那些活。</h2></div>'
-           f'<div class="ind-grid">{cards}</div></section>')
-    m = re.search(r'<details class="source-drawer"', scene)
-    if not m:
-        raise SystemExit("② 来源抽屉找不到")
-    scene = scene[: m.start()] + ind + scene[m.start():]
-
-    # 5) 收尾
+    # 6) 收尾一句，放在来源抽屉之前
     coda = ('<div class="trend-fill trend-coda"><span class="fill-kicker">'
             f'{html.escape(summary["title"])}</span>' + paras(summary["paras"]) + "</div>")
     m = re.search(r'<details class="source-drawer"', scene)
+    if not m:
+        raise SystemExit("② 来源抽屉找不到")
     scene = scene[: m.start()] + coda + scene[m.start():]
+
+    # 7) 老页的叙述文案跟上新数量
+    scene = scene.replace("这四句话，<i>哪句能信？</i>", "这几句话，<i>哪句能信？</i>")
+    scene = scene.replace("把四张情报投进正确的格子", "把情报分进正确的档案格")
+    scene = scene.replace("ARCHIVE / 三个档案格", "ARCHIVE / 两个档案格")
+    scene = scene.replace("四张情报都有去处后", "情报都有去处后")
+    scene = scene.replace("四张情报", "情报")
     return scene
 
 
