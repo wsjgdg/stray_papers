@@ -35,6 +35,14 @@ DEAD_NOTE = "原链接已标注不采用 / 404，不接入"
 SEEN_LINKS: list[str] = []
 
 
+def _load_chapter01():
+    path = pathlib.Path(__file__).with_name("chapter01.py")
+    spec = importlib.util.spec_from_file_location("_c1", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _anchor(text: str, url: str) -> str:
     url = url.strip().rstrip("，。；,;")
     if not url.startswith("http") or url.endswith(".md"):
@@ -353,8 +361,11 @@ def md_html_with_cards(body_md: str, counter: list[int]) -> str:
 
 
 def article_for(docs: list[str], stage_html: str = "", anchor: str = "",
-                with_cards: bool = False) -> tuple[str, str, str, str]:
-    md = "\n\n".join((DOCS / d).read_text(encoding="utf-8") for d in docs)
+                with_cards: bool = False,
+                md_overrides: dict | None = None) -> tuple[str, str, str, str]:
+    md_overrides = md_overrides or {}
+    md = "\n\n".join(md_overrides.get(d) or (DOCS / d).read_text(encoding="utf-8")
+                       for d in docs)
     title, lead = hero_from_doc(md)
     chunks = re.split(r"^##\s+", md, flags=re.M)
     parts: list[tuple[str, str]] = []
@@ -498,21 +509,27 @@ def build(spec: dict) -> str:
         f'<div class="src-play-body">{"".join(stage_bits)}</div></section>'
     )
 
+    scene = ""
+    md_over: dict[str, str] = {}
+    if spec.get("cards"):
+        c1 = _load_chapter01()
+        p1_md = (DOCS / spec["docs"][0]).read_text(encoding="utf-8")
+        scene = c1.render_scene(c1.parse_cards(p1_md))
+        md_over[spec["docs"][0]] = c1.strip_card_blocks(p1_md)
+
     title, lead, meta, article = article_for(spec["docs"], stage,
                                              spec.get("stage_anchor", ""),
-                                             with_cards=spec.get("cards", False))
+                                             with_cards=False, md_overrides=md_over)
 
     nav = ""
     if onward:
         nav = onward
 
+    # 真源样式表只留一份（历次构建在同一张页面上追加过很多份）
+    head = re.sub(r'<link rel="stylesheet" href="prototype-source\.css[^"]*">', "", head)
     head = head.replace(
-        '<link rel="stylesheet" href="prototype-dossier.css?v=dossier-08">',
-        '<link rel="stylesheet" href="prototype-dossier.css?v=dossier-08">'
-        '<link rel="stylesheet" href="prototype-source.css?v=source-01">',
+        "</head>", '<link rel="stylesheet" href="prototype-source.css?v=source-02"></head>'
     )
-    if "prototype-source.css" not in head:
-        head = head.replace("</head>", '<link rel="stylesheet" href="prototype-source.css?v=source-01"></head>')
 
     body_class = body_open.group(0) if body_open else "<body>"
 
@@ -525,17 +542,7 @@ def build(spec: dict) -> str:
         + "</section>"
     )
 
-    if spec.get("cards"):
-        bar = ('<div class="carddeck-bar" data-flipdeck="01">'
-               '<span class="carddeck-count"><b data-flip-count>0</b> / 5 张已翻面</span>'
-               '<span class="carddeck-hint">每张卡的正面就是这一关的原文，翻过来是能照抄的提示词、'
-               '可点的出处和一句老实话。</span>'
-               '<span class="carddeck-done" data-flip-done hidden>五张都翻完了 —— 下面小结卡里的三件事，'
-               '你今天就能挑一件做。</span></div>')
-        article = article.replace('<article class="src-article">',
-                                  '<article class="src-article">' + bar, 1)
-
-    body_parts = hero + article + nav
+    body_parts = hero + scene + article + nav
     main = f'<main class="src-main" id="source-{spec["key"]}">{body_parts}</main>'
 
     out = strip_dossier(
@@ -562,14 +569,38 @@ def build(spec: dict) -> str:
         out = re.sub(r"AI 探索基地 / 可玩原型", "AI 探索基地 / 正文", out)
         out = out.replace("只展示原型 · 不更改正式打卡进度", "只有正文 · 不更改正式打卡进度")
         out = out.replace("返回原型拨盘 ↗", "返回目录 ↗")
+    # 跳转锚点若指向已被摘掉的旧舞台，就改指正文主体，别留死链
+    skip_m = re.search(r'<a class="skip-link" href="#([^"]+)">[^<]*</a>', out)
+    main_m = re.search(r'<main[^>]*\bid="([^"]+)"', out)
+    if skip_m and main_m and f'id="{skip_m.group(1)}"' not in out:
+        out = out.replace(
+            skip_m.group(0),
+            f'<a class="skip-link" href="#{main_m.group(1)}">跳到正文</a>',
+            1,
+        )
+        out = re.sub(r'(跳到正文</a>)[^<]*</a>', r'\1', out)
+
     if spec.get("cards"):
         # 旧铸造台的脚本没有可挂的 DOM，全部摘掉，只留翻卡脚本
         out = re.sub(r"<script\b[^>]*>[\s\S]*?</script>", "", out)
+        # 历次构建塞进来的 noscript 兜底样式先清干净，避免越堆越多
+        out = re.sub(r"<noscript><style>[\s\S]*?</style></noscript>", "", out)
+        # 旧铸造台（#forge）已退场，跳转锚点要指向卡片铸造台
+        out = out.replace('href="#forge">跳到提示词铸造台', 'href="#castfloor">跳到卡片铸造台')
         out = out.replace("</head>",
-                          "<noscript><style>.flipcard-back[hidden]{display:block}"
-                          ".flipcard-toggle{display:none}</style></noscript></head>")
+                          "<noscript><style>"
+                          ".fcard{block-size:auto!important}"
+                          ".fcard-inner{transform:none!important;position:static}"
+                          ".fcard-front,.fcard-back{position:static!important;"
+                          "transform:none!important;backface-visibility:visible}"
+                          ".back-scroll{overflow:visible!important}"
+                          ".fcard-flip,.stamp{display:none}"
+                          "</style></noscript></head>")
         out = out.replace("</body>",
-                          '<script src="prototype-cards.js?v=cards-01" defer></script></body>')
+                          '<script src="../assets/vendor/gsap.min.js"></script>'
+                          '<script src="../assets/vendor/ScrollTrigger.min.js" defer></script>'
+                          '<script src="../assets/vendor/TextPlugin.min.js" defer></script>'
+                          '<script src="prototype-cards.js?v=cards-02" defer></script></body>')
 
     return out
 
