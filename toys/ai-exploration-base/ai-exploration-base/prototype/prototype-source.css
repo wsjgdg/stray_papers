@@ -928,6 +928,28 @@
 .st-unit { font-size: .5em; margin-left: 4px; }
 .st-src { font-size: 10.5px; line-height: 1.7; color: #7b8580; }
 
+/* 台面页的页尾导航（没继承到各关自己的 nav 样式时） */
+.deck-onward {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 26px;
+  align-items: center;
+  margin-top: clamp(26px, 3.4vw, 46px);
+  padding-top: clamp(16px, 2vw, 24px);
+  border-top: 1px solid rgba(169, 248, 229, .18);
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  font-size: 11.5px;
+  letter-spacing: .04em;
+  color: #c4d8cf;
+}
+.deck-onward a {
+  color: #e6efe9;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(169, 248, 229, .35);
+  padding-bottom: 3px;
+}
+.deck-onward a:hover { color: #a9f8e5; border-bottom-color: #a9f8e5; }
+
 /* ⑤ 模拟器：一台摆在台面正中的机器 */
 .sim {
   background: #0b1518;

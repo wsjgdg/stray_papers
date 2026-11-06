@@ -532,6 +532,25 @@ def build(spec: dict) -> str:
     nav = ""
     if onward:
         nav = onward
+    elif spec.get("deck"):
+        # 台面页若原本没有导航，补一条同款，别让读者走到页尾没路可走
+        order = [("01", "chapter-01.html", "① AI 能做什么"),
+                 ("02", "chapter-02.html", "② AI 趋势与行业"),
+                 ("03", "chapter-03.html", "③ 儿子的 AI 实验室"),
+                 ("04", "chapter-04.html", "④ 副业地图"),
+                 ("05", "chapter-05.html", "⑤ 骗局解剖室"),
+                 ("06", "chapter-06.html", "⑥ 提示词学院")]
+        key = spec["key"]
+        idx = next((i for i, row in enumerate(order) if row[0] == key), -1)
+        bits = ['<a href="index.html?v=switch-13">← 回到原型拨盘</a>']
+        if idx > 0:
+            k, f, t = order[idx - 1]
+            bits.append(f'<a href="{f}?v=deck-01">← {t}</a>')
+        if 0 <= idx < len(order) - 1:
+            k, f, t = order[idx + 1]
+            bits.append(f'<a href="{f}?v=deck-01">{t} ↗</a>')
+        nav = ('<nav class="forge-onward deck-onward" aria-label="原型导航">'
+               + "".join(bits) + "</nav>")
 
     # 真源样式表只留一份（历次构建在同一张页面上追加过很多份）
     head = re.sub(r'<link rel="stylesheet" href="prototype-source\.css[^"]*">', "", head)

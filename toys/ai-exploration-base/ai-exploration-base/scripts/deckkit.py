@@ -202,8 +202,8 @@ def source_rows(sources_md: str, wanted: tuple[str, ...]) -> list[dict]:
                 url_m = re.search(r"<(https?://[^\s>]+)>", " ".join(cells))
                 if not url_m:
                     continue
-                use = cells[-1]
-                if wanted and not any(w in use for w in wanted):
+                use = re.sub(r"^P\d+\s*", "", cells[-1])
+                if wanted and not any(w in cells[-1] for w in wanted):
                     continue
                 rows.append({
                     "no": cells[0].strip(),
