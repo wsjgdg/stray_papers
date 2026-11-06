@@ -299,12 +299,66 @@ def meta_from_doc(md: str) -> str:
     return "".join(out)
 
 
-def article_for(docs: list[str], stage_html: str = "",
-                anchor: str = "") -> tuple[str, str, str, str]:
+
+def decorate_card(html_s: str) -> str:
+    """把卡里的「海报文字」「对话」这两种内容按它本来的样子排出来。"""
+    html_s = re.sub(r"<li>([^<]{0,24}文字内容[^<]{0,40})<ul>(.*?)</ul></li>",
+                    lambda m: ('<div class="cardposter"><span class="cardposter-cap">'
+                               + m.group(1).strip("：: ")
+                               + "</span><ul>" + m.group(2) + "</ul></div>"),
+                    html_s, flags=re.S)
+    html_s = re.sub(r"<li>(我|AI)([^：<]{0,12})：",
+                    lambda m: ('<li class="chat-row"><span class="chat-who">'
+                               + m.group(1) + m.group(2) + "</span>"),
+                    html_s)
+    return html_s
+
+
+def flip_card_html(no: int, title: str, body_md: str) -> str:
+    """「翻面卡」：正面是正文原话，翻过来是提示词与出处 —— 卡本身就是内容。"""
+    front, _, back = body_md.partition("**背面**")
+    front = re.sub(r"^\s*\*\*正面\*\*\s*$", "", front, flags=re.M)
+    back = re.sub(r"^-\s*标签[：:]\s*`背面[^`]*`\s*$", "", back, flags=re.M)
+    front_html = decorate_card(md_html(front.strip())) if front.strip() else ""
+    back_html = decorate_card(md_html(back.strip())) if back.strip() else ""
+    return (
+        f'<article class="flipcard" data-flipcard="{no}">'
+        f'<header class="flipcard-head"><span class="flipcard-no">卡 {no}</span>'
+        f"<h3>{inline(title)}</h3></header>"
+        f'<div class="flipcard-face flipcard-front">{front_html}</div>'
+        f'<div class="flipcard-face flipcard-back" hidden>{back_html}</div>'
+        f'<button class="flipcard-toggle" type="button" aria-expanded="false">'
+        f'<span class="flipcard-toggle-label">翻过来 · 看提示词与出处</span>'
+        f'<span class="flipcard-toggle-mark" aria-hidden="true">↗</span></button>'
+        "</article>"
+    )
+
+
+def md_html_with_cards(body_md: str, counter: list[int]) -> str:
+    """按 ### 切块；标了「翻面卡」的块渲染成可翻的卡，其余照常。"""
+    chunks = re.split(r"^###\s+", body_md, flags=re.M)
+    out = [md_html(chunks[0])] if chunks[0].strip() else []
+    for chunk in chunks[1:]:
+        head, _, rest = chunk.partition("\n")
+        title = head.strip()
+        if "翻面卡" in title:
+            counter[0] += 1
+            clean = re.sub(r"（[^）]*）", "", title).strip()
+            clean = re.sub(r"^卡\s*\d+\s*[：:]\s*", "", clean).strip()
+            out.append(flip_card_html(counter[0], clean, rest))
+        else:
+            out.append(f'<section class="src-sub"><h3>{inline(title)}</h3>'
+                       f"{md_html(rest.strip())}</section>")
+    return "".join(out)
+
+
+def article_for(docs: list[str], stage_html: str = "", anchor: str = "",
+                with_cards: bool = False) -> tuple[str, str, str, str]:
     md = "\n\n".join((DOCS / d).read_text(encoding="utf-8") for d in docs)
     title, lead = hero_from_doc(md)
     chunks = re.split(r"^##\s+", md, flags=re.M)
     parts: list[tuple[str, str]] = []
+    card_no = [0]
     for n, chunk in enumerate(chunks):
         if not chunk.strip():
             continue
@@ -317,7 +371,8 @@ def article_for(docs: list[str], stage_html: str = "",
             title_txt, body_md = head.strip(), rest
         body_md = body_md.strip()
         if body_md:
-            body_html = md_html(body_md)
+            body_html = (md_html_with_cards(body_md, card_no) if with_cards
+                         else md_html(body_md))
             body_html = re.sub(r"<table>(.*?)</table>",
                                r'<div class="src-tablewrap"><table>\1</table></div>',
                                body_html, flags=re.S)
@@ -359,8 +414,8 @@ WITH_STAGE = True
 PAGES = [
     dict(file="index.html", stage_anchor=r"英雄区|两张引导卡|探索地图", key="00", docs=["p0-index-graduation.md"],
          stage=[("section", 'id="mission"')]),
-    dict(file="chapter-01.html", stage_anchor=r"会动手的|页首标题", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
-         stage=[("section", 'id="forge"')]),
+    dict(file="chapter-01.html", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
+         cards=True, stage=[]),
     dict(file="chapter-02.html", stage_anchor=r"各行各业", key="02", docs=["p2-trends.md", "sources-p123.md"],
          stage=[("section", 'class="feed"'),
                 ("section", 'id="verdict"'),
@@ -417,10 +472,14 @@ def build(spec: dict) -> str:
     onward, _ = grab(src, "nav", "onward")
 
     # 已经是新结构就用里面现成的交互台（脚本可重复跑），否则从旧页面里取。
-    existing, rest = take(src, "div", lambda t: 'class="src-play-body"' in t)
+    existing, rest = (("", src) if spec.get("cards")
+                      else take(src, "div", lambda t: 'class="src-play-body"' in t))
     if existing:
         stage_bits = [re.sub(r'^<div[^>]*>|</div>$', "", existing.strip())]
         src = rest
+    elif spec.get("cards"):
+        src = re.sub(r"<!-- DOSSIER:START -->[\s\S]*?<!-- DOSSIER:END -->", "", src)
+        stage_bits = []
     else:
         src = re.sub(r"<!-- DOSSIER:START -->[\s\S]*?<!-- DOSSIER:END -->", "", src)
         found = []
@@ -431,7 +490,7 @@ def build(spec: dict) -> str:
                 found.append((pos, chunk))
         stage_bits = [c for _, c in sorted(found, key=lambda x: x[0])]
 
-    stage = (
+    stage = "" if not stage_bits else (
         '<section class="src-embed" id="play" aria-label="这一关的交互台">'
         '<header class="src-embed-head"><span class="src-embed-kicker">PLAY IT / 亲手试一下</span>'
         "<p>上面这一节讲的做法，这里可以直接动手试；规则、动效、按钮与正文说的是同一件事。</p>"
@@ -439,7 +498,9 @@ def build(spec: dict) -> str:
         f'<div class="src-play-body">{"".join(stage_bits)}</div></section>'
     )
 
-    title, lead, meta, article = article_for(spec["docs"], stage, spec.get("stage_anchor", ""))
+    title, lead, meta, article = article_for(spec["docs"], stage,
+                                             spec.get("stage_anchor", ""),
+                                             with_cards=spec.get("cards", False))
 
     nav = ""
     if onward:
@@ -463,6 +524,16 @@ def build(spec: dict) -> str:
         + (f'<p class="src-meta">{meta}</p>' if meta else "")
         + "</section>"
     )
+
+    if spec.get("cards"):
+        bar = ('<div class="carddeck-bar" data-flipdeck="01">'
+               '<span class="carddeck-count"><b data-flip-count>0</b> / 5 张已翻面</span>'
+               '<span class="carddeck-hint">每张卡的正面就是这一关的原文，翻过来是能照抄的提示词、'
+               '可点的出处和一句老实话。</span>'
+               '<span class="carddeck-done" data-flip-done hidden>五张都翻完了 —— 下面小结卡里的三件事，'
+               '你今天就能挑一件做。</span></div>')
+        article = article.replace('<article class="src-article">',
+                                  '<article class="src-article">' + bar, 1)
 
     body_parts = hero + article + nav
     main = f'<main class="src-main" id="source-{spec["key"]}">{body_parts}</main>'
@@ -491,6 +562,15 @@ def build(spec: dict) -> str:
         out = re.sub(r"AI 探索基地 / 可玩原型", "AI 探索基地 / 正文", out)
         out = out.replace("只展示原型 · 不更改正式打卡进度", "只有正文 · 不更改正式打卡进度")
         out = out.replace("返回原型拨盘 ↗", "返回目录 ↗")
+    if spec.get("cards"):
+        # 旧铸造台的脚本没有可挂的 DOM，全部摘掉，只留翻卡脚本
+        out = re.sub(r"<script\b[^>]*>[\s\S]*?</script>", "", out)
+        out = out.replace("</head>",
+                          "<noscript><style>.flipcard-back[hidden]{display:block}"
+                          ".flipcard-toggle{display:none}</style></noscript></head>")
+        out = out.replace("</body>",
+                          '<script src="prototype-cards.js?v=cards-01" defer></script></body>')
+
     return out
 
 

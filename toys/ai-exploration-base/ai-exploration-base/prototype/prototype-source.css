@@ -233,3 +233,99 @@
   .src-article,
   .src-embed { scroll-behavior: auto; }
 }
+
+/* ---------------- ① 翻面卡：卡片就是正文 ---------------- */
+
+.carddeck-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  align-items: baseline;
+  margin: 0 0 clamp(18px, 2.6vw, 26px);
+  padding: 14px 16px;
+  border: 1px solid rgba(27, 38, 37, .2);
+  border-left: 3px solid #b95435;
+  border-radius: 3px;
+  background: #efeade;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.carddeck-count b { font-size: 19px; font-weight: 700; color: #b95435; }
+.carddeck-count { font-variant-numeric: tabular-nums; }
+.carddeck-hint { flex: 1 1 320px; color: #4a5a56; }
+.carddeck-done {
+  flex: 1 1 100%;
+  padding-top: 8px;
+  border-top: 1px solid rgba(27, 38, 37, .14);
+  font-weight: 600;
+  color: #245b4d;
+}
+.carddeck-bar.is-complete { border-left-color: #245b4d; }
+
+.flipcard {
+  margin: 0 0 clamp(16px, 2.4vw, 24px);
+  border: 1px solid rgba(27, 38, 37, .2);
+  border-radius: 3px;
+  background: #fffdf7;
+  overflow: hidden;
+}
+.flipcard-head {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 16px 18px 10px;
+  cursor: pointer;
+}
+.flipcard-head h3 { margin: 0; font-size: 18.5px; font-weight: 600; line-height: 1.45; }
+.flipcard-no {
+  flex: none;
+  font: 600 11px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .14em;
+  color: #b95435;
+}
+.flipcard-face { padding: 0 18px 14px; }
+.flipcard-face p:last-child,
+.flipcard-face ul:last-child,
+.flipcard-face ol:last-child { margin-bottom: 0; }
+
+.flipcard-back {
+  margin: 0 18px 16px;
+  padding: 16px 18px;
+  border-radius: 3px;
+  background: #10302a;
+  color: #f1ece1;
+}
+.flipcard-back blockquote {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, .08);
+  border-left: 3px solid #ffb829;
+  color: #fdf6e7;
+}
+.flipcard-back a { color: #ffcf8a; }
+.flipcard-back code { background: rgba(255, 255, 255, .14); color: #fdf6e7; }
+.flipcard-back strong { color: #fff; }
+
+.flipcard-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 18px;
+  border: 0;
+  border-top: 1px solid rgba(27, 38, 37, .16);
+  background: #f3efe3;
+  color: #14312c;
+  font: 600 13.5px/1.6 inherit;
+  letter-spacing: .02em;
+  text-align: left;
+  cursor: pointer;
+}
+.flipcard-toggle:hover { background: #eae4d4; }
+.flipcard-toggle:focus-visible { outline: 2px solid #b95435; outline-offset: -2px; }
+.flipcard-toggle-mark { font-size: 15px; transition: transform .2s ease; }
+.flipcard.is-flipped .flipcard-toggle-mark { transform: rotate(90deg); }
+
+/* 无脚本时两面都在：背面不再单独染色，避免整页变暗 */
+.no-js .flipcard-back { margin-top: 8px; }
