@@ -1900,3 +1900,13 @@ body:not(#void) .bench-actions .action-play:hover { background: #6f42f5 !importa
   body:not(#void) .bench-actions .action-play { padding: 9px 14px !important; }
 }
 body:not(#void) :where(.field-hint, .task-field > small, .bench-hint) { color: rgba(255, 255, 255, .46) !important; }
+
+body:not(#void) .trial-header > button {
+  width: auto !important; height: auto !important; min-width: 0 !important; min-height: 0 !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  gap: 10px !important; padding: 13px 20px !important;
+}
+body:not(#void) .trial-header > button span { margin: 0 !important; }
+
+body:not(#void) .trial-header > button { justify-self: end !important; margin-left: auto !important; }
+body:not(#void) .trial-console { min-height: 0 !important; }
