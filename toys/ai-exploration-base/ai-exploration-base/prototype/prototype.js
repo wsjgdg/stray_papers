@@ -621,7 +621,8 @@
       if (tearRequested) return;
       tearRequested = true;
       var script = document.createElement('script');
-      script.src = 'motion-lab-v2.js?v=tear-in-04';
+      script.src = 'motion-lab-v2.js?v=tear-in-05';
+      script.addEventListener('load', function () { initDrum(); });
       document.body.appendChild(script);
     }
     function openTear() {
@@ -699,5 +700,66 @@
     });
     show(0);
     if (window.location.hash === '#tear-interlude') openTear();
+    initDrum();
+  }
+
+  // 话术滚筒：鼓面与解释全部来自真源的话术词典（scam-acts.js 的 SCAM_DICT）
+  var readDrumStep = null;
+  function initDrum() {
+    var dict = window.SCAM_DICT || [];
+    var drum = document.getElementById('word-drum');
+    var cylinder = document.getElementById('drum-cylinder');
+    if (!dict.length || !drum || !cylinder) return;
+    var explanation = document.getElementById('drum-explanation');
+    var position = document.getElementById('drum-position');
+    var prev = document.getElementById('drum-prev');
+    var next = document.getElementById('drum-next');
+    var rule = document.querySelector('.phrase-rule');
+    var index = 0;
+
+    cylinder.replaceChildren();
+    drum.dataset.drumTotal = String(dict.length);
+    dict.forEach(function (item, n) {
+      var face = document.createElement('span');
+      face.className = 'drum-face';
+      face.style.setProperty('--face', n);
+      face.textContent = item.name.replace(/^["“]|["”]$/g, '');
+      cylinder.appendChild(face);
+    });
+    var total = dict.length;
+    drum.setAttribute('aria-valuemax', String(total));
+    if (rule) rule.textContent = total + ' 种说法，同一个转账门槛。';
+
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    function paint() {
+      cylinder.style.setProperty('--turn', index);
+      var face = cylinder.querySelectorAll('.drum-face');
+      Array.prototype.forEach.call(face, function (node, n) { node.classList.toggle('is-front', n === index); });
+      var item = dict[index];
+      explanation.textContent = item.name.replace(/^["“]|["”]$/g, '') + (item.rest || '');
+      position.textContent = pad(index + 1) + ' / ' + pad(total);
+      drum.setAttribute('aria-valuenow', String(index + 1));
+      drum.setAttribute('aria-valuetext', item.name);
+    }
+    function step(delta) { index = (index + delta + total) % total; paint(); }
+    readDrumStep = step;
+    if (!drum.dataset.drumBound) {
+      drum.dataset.drumBound = '1';
+      if (prev) prev.addEventListener('click', function () { readDrumStep(-1); });
+      if (next) next.addEventListener('click', function () { readDrumStep(1); });
+      drum.addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowRight') { readDrumStep(1); event.preventDefault(); }
+        if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') { readDrumStep(-1); event.preventDefault(); }
+      });
+      var dragFrom = null;
+      drum.addEventListener('pointerdown', function (event) { dragFrom = event.clientY; });
+      drum.addEventListener('pointerup', function (event) {
+        if (dragFrom === null) return;
+        var delta = dragFrom - event.clientY;
+        dragFrom = null;
+        if (Math.abs(delta) > 18) readDrumStep(delta > 0 ? 1 : -1);
+      });
+    }
+    paint();
   }
 })();

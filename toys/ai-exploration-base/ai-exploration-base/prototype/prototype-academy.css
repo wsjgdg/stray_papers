@@ -75,3 +75,20 @@
 .page-academy .academy-links a:hover,.page-academy .academy-links a:focus-visible{color:#f8ffd9}
 .page-academy .academy-sources>small{grid-column:1/-1;font-size:10.5px;line-height:1.8;color:#9aa593}
 @media(max-width:860px){.page-academy .academy-sources{grid-template-columns:1fr}}
+
+/* 三课与毕业任务排在页内，风格跟上校准台 */
+.page-academy .page-fill{padding:clamp(26px,4vw,52px) clamp(20px,5vw,72px);border-top:1px solid #ffffff1a;background:#0f1317}
+.page-academy .page-fill-head{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.page-academy .page-fill-head>span{color:#b9d98a;font:750 10px/1 "Noto Sans CJK SC",sans-serif;letter-spacing:.14em}
+.page-academy .page-fill-head h2{margin:0;font-size:clamp(22px,2.4vw,30px);line-height:1.28;letter-spacing:-.02em;color:#f4f0e4}
+.page-academy .page-fill .src-section{border-top:1px solid #ffffff14;padding:20px 0}
+.page-academy .page-fill .src-h2{color:#f4f0e4;font-size:19px}
+.page-academy .page-fill .src-no{color:#b9d98a}
+.page-academy .page-fill .src-body p,.page-academy .page-fill .src-body li{color:#d9dcd2;font-size:13px;line-height:1.9}
+.page-academy .page-fill .src-body strong{color:#f7f1de}
+.page-academy .page-fill .src-body h3,.page-academy .page-fill .src-body h4{color:#eae2cf;font-size:15px}
+.page-academy .page-fill .src-body blockquote{border-left-color:#b9d98a55;background:#ffffff0a;color:#d9dcd2}
+.page-academy .page-fill .src-body a{color:#b9d98a}
+.page-routes .page-fill .src-body blockquote,.page-academy .page-fill .src-body blockquote{background:none;padding:0 0 0 12px;margin:0 0 12px}
+
+.page-academy .page-fill .src-body blockquote{border-left-color:#b9d98a66}
