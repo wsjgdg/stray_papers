@@ -3120,3 +3120,68 @@ body:not(#void) .scam-progress button:disabled span { color: rgba(255, 255, 255,
 /* ⑤ 幕条：拖动跟手，不吸附回原位 */
 body:not(#void) .scam-progress { scroll-snap-type: none !important; scroll-behavior: auto !important; }
 body:not(#void) .scam-progress button { scroll-snap-align: none !important; }
+
+/* ---------------------------------------------------------- ② 右栏刻度：四张卡 = 四格 */
+body:not(#void) .sort-gauge {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px; margin: 14px 0 0;
+}
+body:not(#void) .sort-gauge i {
+  display: block; height: 2px; background: rgba(255, 255, 255, .14);
+  transition: background .35s var(--ease);
+}
+body:not(#void) .sort-gauge i.is-on { background: var(--spark); }
+body:not(#void) .sort-gauge i.is-wrong { background: var(--iris); }
+body:not(#void) .sort-gauge-note {
+  margin: 9px 0 0 !important; font-size: 11.5px !important; line-height: 1.6 !important;
+  letter-spacing: .02em; color: rgba(255, 255, 255, .5) !important;
+}
+body:not(#void) .desk-next {
+  margin-top: 12px !important; display: inline-flex; align-items: center; gap: 6px;
+  background: transparent !important; border: 0 !important; border-bottom: 1px solid var(--spark) !important;
+  border-radius: 0 !important; padding: 0 0 4px !important;
+  color: var(--spark) !important; font-size: 12px !important; font-weight: 200 !important;
+  letter-spacing: .04em; cursor: pointer;
+}
+body:not(#void) .desk-next[hidden] { display: none !important; }
+body:not(#void) .desk-next:hover { color: var(--bone) !important; border-bottom-color: var(--bone) !important; }
+
+/* ② 现场报告：三格计数 */
+body:not(#void) .report-tally {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px;
+  margin: 4px 0 16px !important; font-size: 12px !important;
+  letter-spacing: .04em; color: rgba(255, 255, 255, .5) !important;
+}
+body:not(#void) .report-tally b {
+  font-size: 16px !important; font-weight: 400 !important; color: var(--bone) !important;
+  letter-spacing: -.02em; margin-right: 3px;
+}
+body:not(#void) .report-tally-sep { color: rgba(255, 255, 255, .24) !important; }
+
+/* ② 刻度要压过 main 里统一的背景清零 */
+body:not(#void) .sort-gauge i { background: rgba(255, 255, 255, .14) !important; }
+body:not(#void) .sort-gauge i.is-on { background: var(--spark) !important; }
+body:not(#void) .sort-gauge i.is-wrong { background: var(--iris) !important; }
+
+/* ② 归档后卡片不该「消失半秒」：入场动画只留给换领域（is-replating），
+   否则每次盖章都会重播 0.18s 延迟 + 0.34s 淡入，刚判完的那张卡是空的 */
+body:not(#void) .card-stack .signal-card { animation: none !important; }
+
+/* ② 窄屏档案格：三格并排会把名字和计数挤在一起，改回竖排一行一格 */
+@media (max-width: 760px) {
+  body:not(#void) .bins { grid-template-columns: minmax(0, 1fr) !important; gap: 0 !important; }
+  body:not(#void) .bin {
+    min-height: 0 !important; padding: 16px 46px 16px 34px !important; gap: 5px !important;
+  }
+  body:not(#void) .bin .bin-symbol { top: 14px !important; width: 22px !important; height: 22px !important; }
+  body:not(#void) .bin .bin-name { font-size: 15px !important; }
+  body:not(#void) .bin small { font-size: 11.5px !important; }
+  body:not(#void) .bin .bin-count { top: 10px !important; font-size: 26px !important; }
+  body:not(#void) .bin .bin-contents { font-size: 11px !important; }
+  body:not(#void) .sort-gauge { margin-top: 12px; }
+}
+
+/* ② 报告计数：数字先被看见，说明随后 */
+body:not(#void) .report-tally { gap: 6px 16px !important; margin: 6px 0 18px !important; }
+body:not(#void) .report-tally b { font-size: 21px !important; color: var(--spark) !important; }
+body:not(#void) .report-tally-cell { display: inline-flex; align-items: baseline; gap: 5px; }

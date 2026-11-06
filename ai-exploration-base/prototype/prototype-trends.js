@@ -123,6 +123,23 @@
       document.getElementById('contents-' + key).textContent = filed.length ? filed.map(function (card) { return card.short; }).join(' / ') : '还没有情报';
     });
   }
+  /* 右栏刻度：四张卡就是四格，归档一张亮一格（对的琥珀，错的紫） */
+  function renderGauge() {
+    var counts = grades(), choices = state[current].choices;
+    var ticks = document.querySelectorAll('#sort-gauge i');
+    var note = document.getElementById('sort-gauge-note');
+    var next = document.getElementById('desk-next');
+    Array.prototype.forEach.call(ticks, function (tick, i) {
+      var card = getCards()[i], choice = card ? choices[card.id] : null;
+      tick.className = choice ? (choice === card.correct ? 'is-on' : 'is-wrong') : '';
+    });
+    if (note) {
+      note.textContent = counts.sorted < 4
+        ? '还差 ' + (4 - counts.sorted) + ' 张没归档'
+        : (counts.right === 4 ? '四张都已核对 · 可以选一个试验' : '四张已归档 · 有 ' + (4 - counts.right) + ' 张要改判');
+    }
+    if (next) next.hidden = counts.sorted < 4;
+  }
   function renderTicket() {
     var selectedPlan = state[current].plan;
     var ticket = document.getElementById('plan-ticket');
@@ -157,6 +174,16 @@
       });
       report.appendChild(list); planStage.hidden = true; return;
     }
+    var tally = el('p', 'report-tally');
+    [['fact', '已查证'], ['test', '可小试'], ['warn', '先警惕']].forEach(function (group, i) {
+      if (i) tally.appendChild(el('span', 'report-tally-sep', '·'));
+      var cell = el('span', 'report-tally-cell');
+      var filed = getCards().filter(function (card) { return choices[card.id] === group[0]; }).length;
+      cell.appendChild(el('b', '', String(filed)));
+      cell.appendChild(document.createTextNode(' 条' + group[1]));
+      tally.appendChild(cell);
+    });
+    report.appendChild(tally);
     var good = el('p'); good.append(el('strong', '', '信号与噪音已分开。'), document.createTextNode(' 一条有来源的规模数据、两件可以小范围试做的事，以及一条不能照单全收的承诺。人数增长不是个人收益预测；现在只选一个小试验。'));
     report.appendChild(good); planStage.hidden = false;
     var choiceBox = document.getElementById('plan-choices'); choiceBox.replaceChildren();
@@ -169,7 +196,7 @@
     });
     renderTicket();
   }
-  function renderAll() { renderCards(); renderBins(); renderReport(); paintFieldSource(); justFiled = null; }
+  function renderAll() { renderCards(); renderBins(); renderGauge(); renderReport(); paintFieldSource(); justFiled = null; }
   function flyCard(id, category, short) {
     if (reduced) return;
     var source = stack.querySelector('[data-pick="' + id + '"]');
@@ -276,6 +303,16 @@
       replate();
     });
   });
+  var deskNext = document.getElementById('desk-next');
+  if (deskNext) {
+    deskNext.addEventListener('click', function () {
+      var verdict = document.getElementById('verdict'), title = document.getElementById('verdict-title');
+      if (!verdict) return;
+      verdict.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+      title.setAttribute('tabindex', '-1');
+      window.setTimeout(function () { title.focus({ preventScroll: true }); }, reduced ? 0 : 420);
+    });
+  }
   document.getElementById('reset-track').addEventListener('click', function () {
     state[current] = { choices: {}, plan: null }; selected = null; lastDecision = null;
     feedback.dataset.result = ''; feedback.textContent = '已清空' + tracks[current].name + '的本页判断。重新从第一张情报开始。';
