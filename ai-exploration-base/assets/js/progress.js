@@ -1,8 +1,8 @@
 /* ============================================================
    AI Exploration Base - task progress system
    Single source of truth for completion state (localStorage).
-   Works on file:// in Edge/Chrome; degrades silently when
-   storage is unavailable (state just doesn't persist).
+   file:// storage behavior varies by browser and may be scoped
+   per page. When unavailable, state works only in memory.
    ============================================================ */
 (function (root) {
   'use strict';
@@ -28,7 +28,11 @@
     try {
       var raw = root.localStorage.getItem(STORAGE_KEY);
       var arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
+      /* Ignore stale/unknown ids and duplicates: otherwise a damaged
+         storage value could show 7/6 and unlock the certificate early. */
+      return Array.isArray(arr) ? PAGES.filter(function (p) {
+        return arr.indexOf(p.id) !== -1;
+      }).map(function (p) { return p.id; }) : [];
     } catch (e) {
       return [];
     }
@@ -58,10 +62,11 @@
 
     /* Idempotent. Fires confetti + onChange only on first mark. */
     mark: function (id) {
-      if (doneIds.indexOf(id) !== -1) return;
+      if (!PAGES.some(function (p) { return p.id === id; }) || doneIds.indexOf(id) !== -1) return;
       doneIds.push(id);
       save();
-      if (typeof root.confetti === 'function') {
+      if (typeof root.confetti === 'function' &&
+          !(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
         root.confetti({ particleCount: 80, spread: 70, origin: { y: 0.7 } });
       }
       emit();

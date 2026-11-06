@@ -76,15 +76,23 @@
     }
     .task-card-l h3 { margin: 0 0 0.3em; font-size: 1.1rem; }
   </style>
+  <link rel="stylesheet" href="../assets/css/chapter.css">
 </head>
-<body>
+<body class="chapter chapter--academy">
   <main class="section">
 
-    <h1>⑥ 提示词学院</h1>
-    <p class="lead">
+    <header class="chapter-intro">
+      <div class="chapter-intro__copy">
+        <span class="chapter-overline">探索手册 / 06 · 学会向 AI 提问</span>
+        <h1>提示词学院</h1>
+        <p class="lead">
       同一个 AI，有人问出来的是废话，有人问出来的货真价实——差别只在<strong>会不会提问</strong>。
       这一关教你一句话用对 AI。学完这关，前面几关的工具在你手里都会好使十倍。
     </p>
+      </div>
+      <div class="chapter-intro__art" aria-hidden="true"><span class="chapter-art__number">06</span><span class="chapter-art__stamp">ASK BETTER</span></div>
+      <span class="chapter-image-note">概念视觉 · 非产品截图</span>
+    </header>
 
     <h2 class="reveal">第一课：好提示词只有三个要素</h2>
     <div class="formula reveal">
@@ -105,11 +113,12 @@
     </div>
 
     <h2 class="reveal">第二课：亲手改一条烂提示词</h2>
-    <div class="card reveal">
+    <div class="card reveal quiz-workbench">
       <p>
         有人对 AI 只说了这句话——<strong>"帮我写点东西。"</strong>
         你觉得怎么问，AI 才能帮上忙？点一个试试（三个都可以点，看看差别）：
       </p>
+      <div class="quiz-layout">
       <div id="quiz">
         <button class="quiz-option" type="button" data-grade="bad">
           <span class="opt-tag">A：</span>写得好看一点，要感人
@@ -121,7 +130,8 @@
           <span class="opt-tag">C：</span>你是社区读书会主持人。下周活动的听众是 50-60 岁的邻居，主题是"读书让退休生活更有味"。请写 200 字口语化开场白，结尾要带动大家鼓掌互动。
         </button>
       </div>
-      <div class="chat" id="quiz-answer" style="margin-top:1.2rem;"></div>
+      <div class="chat" id="quiz-answer" aria-live="polite" style="margin-top:1.2rem;"></div>
+      </div>
     </div>
 
     <h2 class="reveal">第三课：AI 的下一步——它会自己干活（Agent）</h2>
@@ -178,12 +188,8 @@
       </p>
     </div>
 
-    <p style="text-align:center; margin-top:2rem;">
-      <a class="btn" href="graduation.html">去结业页：看看证书还差几关 →</a>
-    </p>
-    <p style="text-align:center;">
-      <a href="../index.html" style="font-size:0.9rem; color:var(--ink-soft);">← 回到探索地图</a>
-    </p>
+    <nav class="chapter-end" aria-label="章节导航"><a href="../index.html">← 回到探索地图</a><a class="btn" href="graduation.html">去结业页：看看证书还差几关 →</a></nav>
+
 
   </main>
 
@@ -217,11 +223,15 @@
         }
       };
 
+      var answerVersion = 0;
       function showAnswer(grade, btn) {
+        var version = ++answerVersion;
         document.querySelectorAll('.quiz-option').forEach(function (b) {
           b.classList.remove('is-picked');
+          b.setAttribute('aria-pressed', 'false');
         });
         btn.classList.add('is-picked');
+        btn.setAttribute('aria-pressed', 'true');
 
         var a = ANSWERS[grade];
         var box = document.getElementById('quiz-answer');
@@ -230,8 +240,11 @@
           '<span class="typewriter" id="quiz-tw"></span></div>' +
           '<p id="quiz-note" style="color:' + a.tone + '; font-weight:700;"></p>';
 
-        S.typeText(document.getElementById('quiz-tw'), a.reply, { speed: 24 })
+        S.typeText(document.getElementById('quiz-tw'), a.reply, { speed: 0 })
           .then(function () {
+            /* A previous answer can finish typing after another option was
+               chosen; never write its feedback into the new answer. */
+            if (version !== answerVersion) return;
             var note = document.getElementById('quiz-note');
             note.textContent = a.note;
             if (window.gsap && window.AISite.motionOk()) {
@@ -241,6 +254,7 @@
       }
 
       document.querySelectorAll('.quiz-option').forEach(function (b) {
+        b.setAttribute('aria-pressed', 'false');
         b.addEventListener('click', function () { showAnswer(b.dataset.grade, b); });
       });
 

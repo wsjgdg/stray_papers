@@ -20,23 +20,32 @@
       color: var(--ink-soft);
     }
   </style>
+  <link rel="stylesheet" href="../assets/css/chapter.css">
 </head>
-<body>
+<body class="chapter chapter--lab">
   <main class="section">
 
-    <h1>③ 儿子的 AI 实验室</h1>
-    <p class="lead">
+    <header class="chapter-intro">
+      <div class="chapter-intro__copy">
+        <span class="chapter-overline">探索手册 / 03 · 把作品玩起来</span>
+        <h1>儿子的 AI 实验室</h1>
+        <p class="lead">
       现在把镜头转向另一个方向：<strong>你儿子做的这些项目，全部是 AI 陪着写出来的。</strong>
       不是"AI 给了一点点帮助"，而是 AI 写代码、儿子定方向，一个功能一个功能磨出来的。
       你现在看的这个网站，也是同样做出来的。
     </p>
+      </div>
+      <div class="chapter-intro__art" aria-hidden="true"><span class="chapter-art__number">03</span><span class="chapter-art__stamp">OPEN THE LAB</span></div>
+      <span class="chapter-image-note">概念视觉 · 非产品截图</span>
+    </header>
 
     <h2 class="reveal">先玩一个：算法实验室</h2>
-    <div class="card reveal">
+    <div class="lab-exhibit reveal">
       <p>
         下面这个就是其中之一，<strong>整个程序塞在这一个网页文件里，已经装进这个网站了</strong>。
         它是儿子和 AI 一起做的"算法游乐场"——你现在就可以玩：
       </p>
+      <div class="lab-instructions">
       <p>
         🎨 <strong>生命画布</strong>：用四色画笔涂几笔，点 <strong>Play</strong>，图案会自己"生长"——
         这是数学里的细胞自动机，画面会像生命一样繁衍或消亡；
@@ -47,10 +56,14 @@
       <p>
         📐 <strong>算法工作室</strong>：写一小段指令，看它一步步排好一列数字——AI 会把每一步画给你看。
       </p>
+      </div>
       <p style="color:var(--ink-soft); font-size:0.95rem;">（如果下面区域是空的，往下滑一点等它加载；手机上也可以玩。）</p>
+      <div class="lab-stage">
+        <div class="lab-stage__bar"><span>● &nbsp; 算法实验室 / 现场体验</span><a href="../assets/embed/algorithm-lab-standalone.html" target="_blank" rel="noopener">单独打开 ↗</a></div>
       <iframe class="lab-embed" loading="lazy"
         src="../assets/embed/algorithm-lab-standalone.html"
         title="Algorithm Lab - 交互式算法游乐场（内嵌可玩）"></iframe>
+      </div>
       <p style="margin-top:0.8rem;">
         <span class="repo-link">源码在 GitHub：
         <a href="https://github.com/wsjgdg/stray_papers" target="_blank">github.com/wsjgdg/stray_papers</a>
@@ -60,7 +73,7 @@
 
     <h2 class="reveal">再看三个"正经"的</h2>
 
-    <div class="grid-12">
+    <div class="grid-12 repo-grid">
     <div class="card col-4 reveal">
       <h3 style="margin-top:0;">🎼 乐谱识别器</h3>
       <p>
@@ -103,12 +116,8 @@
       </p>
     </div>
 
-    <p style="text-align:center; margin-top:2rem;">
-      <a class="btn" href="side-jobs.html">下一关：副业地图 →</a>
-    </p>
-    <p style="text-align:center;">
-      <a href="../index.html" style="font-size:0.9rem; color:var(--ink-soft);">← 回到探索地图</a>
-    </p>
+    <nav class="chapter-end" aria-label="章节导航"><a href="../index.html">← 回到探索地图</a><a class="btn" href="side-jobs.html">下一关：副业地图 →</a></nav>
+
 
   </main>
 

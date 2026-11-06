@@ -338,8 +338,7 @@ html.js .reveal.is-visible {
   display: grid;
 }
 
-.flip-card.is-flipped .flip-inner,
-.flip-card:focus-visible .flip-inner { transform: rotateY(180deg); }
+.flip-card.is-flipped .flip-inner { transform: rotateY(180deg); }
 
 .flip-face {
   grid-area: 1 / 1;

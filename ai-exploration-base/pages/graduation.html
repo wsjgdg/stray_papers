@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>结业证书 — AI 探索基地</title>
   <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/chapter.css">
 </head>
-<body>
+<body class="graduation">
   <main class="section">
 
     <h1>🎓 结业这一页</h1>
@@ -90,6 +91,8 @@
 
   </main>
 
+  <script src="../assets/vendor/gsap.min.js"></script>
+  <script src="../assets/vendor/ScrollTrigger.min.js"></script>
   <script src="../assets/vendor/confetti.min.js"></script>
   <script src="../assets/js/progress.js"></script>
   <script src="../assets/js/site.js"></script>
@@ -114,7 +117,7 @@
         var remaining = P.PAGES.filter(function (p) { return !P.done(p.id); });
         document.getElementById('remaining-list').innerHTML = remaining.length
           ? '还差这几关：' + remaining.map(function (p) {
-              return '<a href="' + p.url + '">' + p.title + '</a>';
+              return '<a href="../' + p.url + '">' + p.title + '</a>';
             }).join('、')
           : '';
       }
@@ -138,7 +141,7 @@
          On later visits the certificate simply shows without re-firing. */
       var celebrated = false;
       try { celebrated = root_localStorage_flag(); } catch (e) {}
-      if (P.isAllDone() && !celebrated && window.confetti) {
+      if (P.isAllDone() && !celebrated && window.confetti && window.AISite.motionOk()) {
         burst();
         try {
           localStorage.setItem('ai-base-celebrated', '1');

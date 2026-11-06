@@ -5,307 +5,128 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>① AI 能做什么 — AI 探索基地</title>
   <link rel="stylesheet" href="../assets/css/main.css">
-  <style>
-    /* Page-local: poster demo + record blocks (kept here, tokens come from main.css) */
-    .poster-demo {
-      border-radius: 12px;
-      background: linear-gradient(150deg, #7a3b1e 0%, #c2542d 55%, #e8a268 100%);
-      color: #fff8f2;
-      padding: 1.4rem 1.2rem;
-      text-align: center;
-      box-shadow: var(--shadow);
-    }
-    .poster-demo .poster-kicker {
-      font-size: 0.8rem;
-      letter-spacing: 0.35em;
-      opacity: 0.85;
-      margin: 0 0 0.6em;
-    }
-    .poster-demo .poster-title {
-      font-family: var(--font-serif);
-      font-size: 1.9rem;
-      letter-spacing: 0.12em;
-      margin: 0.2em 0;
-      line-height: 1.25;
-    }
-    .poster-demo .poster-line {
-      width: 3em;
-      height: 2px;
-      background: rgba(255, 248, 242, 0.7);
-      margin: 0.9em auto;
-    }
-    .poster-demo .poster-meta {
-      font-size: 0.9rem;
-      opacity: 0.92;
-      margin: 0;
-      line-height: 1.8;
-    }
-    .poster-demo .poster-stamp {
-      display: inline-block;
-      margin-top: 0.9em;
-      padding: 0.25em 1em;
-      border: 1px solid rgba(255, 248, 242, 0.75);
-      border-radius: 999px;
-      font-size: 0.8rem;
-      letter-spacing: 0.2em;
-    }
-    .prompt-box {
-      background: #fff;
-      border: 1px dashed rgba(45,42,38,0.3);
-      border-radius: 10px;
-      padding: 0.8rem 1rem;
-      font-size: 0.95rem;
-      color: var(--ink-soft);
-      margin: 0.8rem 0;
-    }
-    .prompt-box b { color: var(--accent-dark); }
-    .flip-note { font-size: 0.95rem; }
-  </style>
+  <link rel="stylesheet" href="../assets/css/chapter.css">
 </head>
-<body>
+<body class="chapter chapter--what-ai-can-do">
   <main class="section">
+    <header class="chapter-intro">
+      <div class="chapter-intro__copy">
+        <span class="chapter-overline">探索手册 / 01 · 看见成果</span>
+        <h1>AI 能做什么</h1>
+        <p class="lead">先说一个事实：<strong>你现在看的这个网站——每一页代码、每一句文案、每一处动画——都是 AI 写的。</strong>下面五件小事，让你看看它今天就能帮上什么忙。</p>
+      </div>
+      <div class="chapter-intro__art" aria-hidden="true"><span class="chapter-art__number">01</span><span class="chapter-art__stamp">IDEA → RESULT</span></div>
+      <span class="chapter-image-note">概念视觉 · 非产品截图</span>
+    </header>
 
-    <h1>① AI 能做什么</h1>
-    <p class="lead">
-      先说一个事实：<strong>你现在看的这个网站——每一页代码、每一句文案、每一处动画——都是 AI 写的。</strong>
-      下面这几张卡片，每张都是一个真实的本事。点一下卡片，翻过来看它怎么做的。
-    </p>
+    <div class="case-index"><span>五件事，五种本事</span><span>往下看成果 · 展开看方法 ↓</span></div>
 
-    <div class="flip-grid grid-12">
-
-      <!-- 卡 1：AI 会做海报 -->
-      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会做海报">
-        <div class="flip-inner">
-          <div class="flip-face">
-            <span class="tag">AI 会做图</span>
-            <div class="poster-demo" style="margin-top:1rem;">
-              <p class="poster-kicker">READ &middot; SHARE</p>
-              <p class="poster-title">秋日读书会</p>
-              <div class="poster-line"></div>
-              <p class="poster-meta">本周六 下午 3 点 · 社区活动室<br>带一本你爱读的书，换一段别人的故事</p>
-              <span class="poster-stamp">免 费 参 加</span>
-            </div>
-            <p class="flip-hint">👆 点一下，看它怎么做的</p>
-          </div>
-          <div class="flip-face flip-back">
-            <span class="tag">背面</span>
-            <div class="time-compare">
-              <span class="old">找设计师排版：约 3 小时</span>
-              <span class="arrow">→</span>
-              <span class="new">AI：3 分钟</span>
-            </div>
-            <div class="prompt-box">
-              <b>给 AI 的话（你可以照抄）：</b>
-              “帮我做一张社区读书会海报的文字排版方案：主题‘秋日读书会’，暖色调，要有时间地点和一句话标语。”
-            </div>
-            <p class="flip-note">
-              这张海报的配色、字体、版式，全部由 AI 生成，没有设计师参与。
-              你看到它时它已经在屏幕上了——这就是 AI 的排版功夫。
-            </p>
-          </div>
+    <section class="case-study" aria-labelledby="case-poster">
+      <div class="case-stage case-stage--poster">
+        <div class="poster-demo">
+          <p class="poster-kicker">READ &middot; SHARE</p>
+          <p class="poster-title">秋日读书会</p>
+          <div class="poster-line"></div>
+          <p class="poster-meta">本周六 下午 3 点 · 社区活动室<br>带一本你爱读的书，换一段别人的故事</p>
+          <span class="poster-stamp">免 费 参 加</span>
         </div>
       </div>
+      <div class="case-story">
+        <span class="case-story__eyebrow">01 / DESIGN · 海报排版</span>
+        <h2 id="case-poster">一句话，做出一张海报</h2>
+        <p>社区活动需要一张海报？先让 AI 帮你确定配色、字体、版式，再把文字排出来。左边这张是网页里的 CSS 排版示例，不是假装从图像模型生成的图片。</p>
+        <div class="time-compare"><span class="old">找设计师排版：约 3 小时</span><span class="arrow">→</span><span class="new">AI 辅助：约 3 分钟</span></div>
+        <details class="method"><summary>展开提示词与制作方法</summary><div class="method__body">
+          <p><strong>给 AI 的话（你可以照抄）：</strong></p>
+          <p class="method__prompt">“帮我做一张社区读书会海报的文字排版方案：主题‘秋日读书会’，暖色调，要有时间地点和一句话标语。”</p>
+          <p>这张海报的配色、字体、版式由 AI 辅助完成，没有设计师参与；最后的网页排版由代码呈现。</p>
+        </div></details>
+      </div>
+    </section>
 
-      <!-- 卡 2：AI 会写作 -->
-      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会写作">
-        <div class="flip-inner">
-          <div class="flip-face">
-            <span class="tag">AI 会写作</span>
-            <div class="chat" style="margin-top:1rem;">
-              <div class="bubble them">
-                <div class="bubble-speaker">AI 写的小红书笔记</div>
-                <span class="typewriter" data-tw="55岁才想明白：钱不是攒出来的，是管出来的💰\n年轻时只敢把钱放银行，后来才懂，让钱闲着也是一种亏。\n现在我把家里的账分成三份：要用的、应急的、 long-term 的。\n不追高、不贪快，睡得着觉的理财才是好理财。\n姐妹们，什么时候开始都不晚🌱\n#中年理财 #普通人的钱 #生活感悟"></span>
-              </div>
-            </div>
-            <p class="flip-hint">👆 点一下，看提示词</p>
-          </div>
-          <div class="flip-face flip-back">
-            <span class="tag">背面</span>
-            <div class="time-compare">
-              <span class="old">自己憋文案：1 小时</span>
-              <span class="arrow">→</span>
-              <span class="new">AI：30 秒</span>
-            </div>
-            <div class="prompt-box">
-              <b>给 AI 的话（你可以照抄）：</b>
-              “我想给 50-60 岁的姐妹分享稳健理财心得，不推销任何产品，只分享生活感悟。请写一篇小红书笔记，口语化，带表情，300 字以内，最后加话题标签。”
-            </div>
-            <p class="flip-note">
-              左边这篇就是 AI 按这句话写出来的。你可以一字不差地把这句话发给豆包，看看它给你写什么。
-            </p>
-          </div>
+    <section class="case-study" aria-labelledby="case-writing">
+      <div class="case-stage case-stage--social">
+        <div class="case-preview">
+          <div class="case-preview__top"><span>小红书 · 文案示意</span><span>AI / 文字</span></div>
+          <div class="case-preview__body">55岁才想明白：钱不是攒出来的，是管出来的💰<br>年轻时只敢把钱放银行，后来才懂，让钱闲着也是一种亏。<br>现在我把家里的账分成三份：要用的、应急的、长期打算的。<br>不追高、不贪快，睡得着觉的理财才是好理财。<br>姐妹们，什么时候开始都不晚🌱<br>#中年理财 #普通人的钱 #生活感悟</div>
         </div>
       </div>
+      <div class="case-story">
+        <span class="case-story__eyebrow">02 / WRITE · 表达想法</span>
+        <h2 id="case-writing">你有想法，AI 帮你写出来</h2>
+        <p>这是一篇预置的文案示意。内容主意还是你出，AI 帮你把它整理成能发出去的话。</p>
+        <div class="time-compare"><span class="old">自己憋文案：1 小时</span><span class="arrow">→</span><span class="new">AI 辅助：30 秒</span></div>
+        <details class="method"><summary>展开这篇文案的提示词</summary><div class="method__body">
+          <p class="method__prompt">“我想给 50-60 岁的姐妹分享稳健理财心得，不推销任何产品，只分享生活感悟。请写一篇小红书笔记，口语化，带表情，300 字以内，最后加话题标签。”</p>
+          <p>你可以把这句话发给豆包，看看它给你写什么；每次的回答不一定相同。</p>
+        </div></details>
+      </div>
+    </section>
 
-      <!-- 卡 3：AI 会看账 -->
-      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会看账">
-        <div class="flip-inner">
-          <div class="flip-face">
-            <span class="tag">AI 会看账</span>
-            <div class="chat" style="margin-top:1rem;">
-              <div class="bubble me">把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。</div>
-              <div class="bubble them typewriter" data-tw="看了你发的表，说三点：\n1. 通讯费 168 元偏高，同档套餐有 79 元的，一年能省 1 千多；\n2. 打车 22 次里 14 次是 3 公里内的短途，骑车或公交每月能省 300 左右；\n3. 会员续费有 4 个，两个上个月根本没用过。\n想让我把调整后的账帮你排一遍吗？"></div>
-            </div>
-            <p class="flip-hint">👆 点一下，看提示词</p>
-          </div>
-          <div class="flip-face flip-back">
-            <span class="tag">背面</span>
-            <div class="time-compare">
-              <span class="old">自己对着表格看半天</span>
-              <span class="arrow">→</span>
-              <span class="new">AI：1 分钟，还带建议</span>
-            </div>
-            <div class="prompt-box">
-              <b>给 AI 的话：</b>
-              “把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。”
-            </div>
-            <p class="flip-note">
-              你做了三十年财务，看账的本事比 AI 深。但 AI 三分钟就能替你做初筛——
-              这就是“老手 + AI”的用法：它跑腿，你判断。
-            </p>
-          </div>
+    <section class="case-study" aria-labelledby="case-finance">
+      <div class="case-stage case-stage--ledger">
+        <div class="case-preview">
+          <div class="case-preview__top"><span>家庭账本 · 对话示意</span><span>AI / 初筛</span></div>
+          <div class="case-preview__bubble is-question">把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。</div>
+          <div class="case-preview__bubble">看了你发的表，说三点：<br>1. 通讯费 168 元偏高，同档套餐有 79 元的，一年能省 1 千多；<br>2. 打车 22 次里 14 次是 3 公里内的短途，骑车或公交每月能省 300 左右；<br>3. 会员续费有 4 个，两个上个月根本没用过。<br>想让我把调整后的账帮你排一遍吗？</div>
         </div>
       </div>
+      <div class="case-story">
+        <span class="case-story__eyebrow">03 / ANALYZE · 看账初筛</span>
+        <h2 id="case-finance">老手判断，AI 先跑腿</h2>
+        <p>你做了三十年财务，看账的本事比 AI 深。但 AI 可以先把可疑支出列出来，再由你决定怎么调整。上面的金额与建议是演示对话，不是对真实家庭账本的分析。</p>
+        <div class="time-compare"><span class="old">自己对着表格看半天</span><span class="arrow">→</span><span class="new">AI：1 分钟，还带建议</span></div>
+        <details class="method"><summary>展开看账提示词</summary><div class="method__body"><p class="method__prompt">“把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。”</p><p>它做初筛，你做判断。给 AI 看账时记得遮住姓名、账号等个人信息。</p></div></details>
+      </div>
+    </section>
 
-      <!-- 卡 4：AI 会修照片（行动卡，不放假图） -->
-      <div class="flip-card col-6 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 会修照片">
-        <div class="flip-inner">
-          <div class="flip-face">
-            <span class="tag">AI 会修照片</span>
-            <div class="card" style="box-shadow:none; margin:1rem 0 0;">
-              <p style="font-size:2.6rem; text-align:center; margin:0.3em 0;">🖼️✨</p>
-              <p style="text-align:center;">
-                泛黄的老照片、模糊的合影、缺了一角的旧照——
-                <strong>AI 能把它们修得清清楚楚，还能上色</strong>。
-              </p>
-              <p style="text-align:center; color:var(--ink-soft); font-size:0.95rem;">
-                这张卡不放假图给你看——它教你 <strong>30 秒亲手做一次</strong>。
-              </p>
-            </div>
-            <p class="flip-hint">👆 点一下，看怎么做</p>
-          </div>
-          <div class="flip-face flip-back">
-            <span class="tag">背面 · 亲手试试</span>
-            <ol style="padding-left:1.2em; margin:0.8em 0;">
-              <li>手机相册里找一张老照片（或让 AI 帮你翻拍）</li>
-              <li>打开<strong>豆包</strong>，点相机，把照片拍给它</li>
-              <li>发这句话：
-                <div class="prompt-box" style="margin:0.6em 0 0;">
-                  <b>“帮我把这张老照片修复清楚，把划痕去掉，再上个自然的颜色。”</b>
-                </div>
-              </li>
-              <li>等几秒——你会看到它焕然一新。发给亲戚群，他们大概会问你是找谁修的 🙂</li>
-            </ol>
-            <p class="flip-note">修好后记得把原图留档。AI 修的是“看起来”，原片才是底。</p>
-          </div>
+    <section class="case-study" aria-labelledby="case-photo">
+      <div class="case-stage case-stage--photo">
+        <div class="case-preview">
+          <div class="case-preview__top"><span>老照片 · 亲手试试</span><span>AI / 修复</span></div>
+          <p class="case-preview__mark" aria-hidden="true">◌ ✳ ◌</p>
+          <p>泛黄的老照片、模糊的合影、缺了一角的旧照——<strong>AI 能帮你修清楚，还能上色。</strong></p>
+          <p>这里不摆一张假“修复前后图”；找一张自己的旧照，试一次才最有说服力。</p>
         </div>
       </div>
+      <div class="case-story">
+        <span class="case-story__eyebrow">04 / RESTORE · 保存回忆</span>
+        <h2 id="case-photo">给旧照片一个新样子</h2>
+        <p>这件事最适合亲手做：拿起手机，30 秒给自己的照片试一次。</p>
+        <details class="method"><summary>展开四步操作</summary><div class="method__body"><ol>
+          <li>手机相册里找一张老照片（或先翻拍）。</li>
+          <li>打开<strong>豆包</strong>，点相机，把照片拍给它。</li>
+          <li>发这句话：<p class="method__prompt">“帮我把这张老照片修复清楚，把划痕去掉，再上个自然的颜色。”</p></li>
+          <li>等几秒，看看结果；发给亲戚群，他们大概会问你是找谁修的 🙂</li>
+        </ol><p>修好后记得把原图留档。AI 修的是“看起来”，原片才是底。</p></div></details>
+      </div>
+    </section>
 
-      <!-- 卡 5：AI 随时问 -->
-      <div class="flip-card col-12 reveal" tabindex="0" role="button" aria-label="翻转卡片：AI 随时问">
-        <div class="flip-inner">
-          <div class="flip-face">
-            <span class="tag">AI 随时问</span>
-            <div class="chat" style="margin-top:1rem;">
-              <div class="bubble me">手机总提示内存不够，微信里的照片怎么清理才不会误删？</div>
-              <div class="bubble them typewriter" data-tw="三步，不误删：\n1. 微信里点 我→设置→通用→存储空间，先清理缓存（缓存删了不影响聊天记录）；\n2. 选「聊天记录管理」，只清理那些大视频群；\n3. 重要照片先存进手机相册再清微信。\n照这个做，一般能腾出好几个 G。"></div>
-            </div>
-            <p class="flip-hint">👆 点一下，看提示词</p>
-          </div>
-          <div class="flip-face flip-back">
-            <span class="tag">背面</span>
-            <div class="time-compare">
-              <span class="old">网上搜半天，广告一大堆</span>
-              <span class="arrow">→</span>
-              <span class="new">AI：直接给你步骤</span>
-            </div>
-            <div class="prompt-box">
-              <b>给 AI 的话：</b>
-              “手机总提示内存不够，微信里的照片怎么清理才不会误删？”
-            </div>
-            <p class="flip-note">
-              这就是 AI 最日常的用法：它不烦、不嫌问题小、24 小时在线。
-              手机上任何不明白的事，都可以先问它。
-            </p>
-          </div>
+    <section class="case-study" aria-labelledby="case-phone">
+      <div class="case-stage case-stage--phone">
+        <div class="case-preview">
+          <div class="case-preview__top"><span>生活问答 · 对话示意</span><span>AI / 随时问</span></div>
+          <div class="case-preview__bubble is-question">手机总提示内存不够，微信里的照片怎么清理才不会误删？</div>
+          <div class="case-preview__bubble">三步，不误删：<br>1. 微信里点 我→设置→通用→存储空间，先清理缓存（缓存删了不影响聊天记录）；<br>2. 选「聊天记录管理」，只清理那些大视频群；<br>3. 重要照片先存进手机相册再清微信。<br>照这个做，一般能腾出好几个 G。</div>
         </div>
       </div>
+      <div class="case-story">
+        <span class="case-story__eyebrow">05 / ASK · 日常问答</span>
+        <h2 id="case-phone">问题再小，也值得问</h2>
+        <p>AI 不烦、不嫌问题小，24 小时可以问。手机上有什么不明白的事，就让它先给你一个操作思路，再核对实际界面。</p>
+        <div class="time-compare"><span class="old">网上搜半天，广告一大堆</span><span class="arrow">→</span><span class="new">AI：直接给你步骤</span></div>
+        <details class="method"><summary>展开日常问答提示词</summary><div class="method__body"><p class="method__prompt">“手机总提示内存不够，微信里的照片怎么清理才不会误删？”</p><p>操作前确认你的手机版本和微信页面名称；重要照片先备份。</p></div></details>
+      </div>
+    </section>
 
-    </div><!-- /flip-grid -->
-
-    <div class="card correct-move reveal">
-      <h4>这一关想让你记住的一句话</h4>
-      <p style="margin:0.4em 0 0;">
-        AI 不是“以后会有用的东西”——<strong>今天、现在、这部手机上，它就能帮你干活</strong>。
-        下一页我们看看它这两年跑得有多快。
-      </p>
-    </div>
-
-    <p style="text-align:center; margin-top:2rem;">
-      <a class="btn" href="trends.html">下一关：AI 趋势与行业 →</a>
-    </p>
-    <p style="text-align:center;">
-      <a href="../index.html" style="font-size:0.9rem; color:var(--ink-soft);">← 回到探索地图</a>
-    </p>
-
+    <div class="correct-move portfolio-note"><h4>这一关想让你记住的一句话</h4><p>AI 不是“以后会有用的东西”——<strong>今天、现在、这部手机上，它就能帮你干活</strong>。下一页我们看看它这两年跑得有多快。</p></div>
+    <nav class="chapter-end" aria-label="章节导航"><a href="../index.html">← 回到探索地图</a><a class="btn" href="trends.html">下一关：AI 趋势与行业 →</a></nav>
   </main>
-
   <script src="../assets/vendor/gsap.min.js"></script>
   <script src="../assets/vendor/ScrollTrigger.min.js"></script>
-  <script src="../assets/vendor/TextPlugin.min.js"></script>
   <script src="../assets/vendor/confetti.min.js"></script>
   <script src="../assets/js/progress.js"></script>
   <script src="../assets/js/site.js"></script>
-  <script>
-    (function () {
-      'use strict';
-      window.AISite.pageReady('what-ai-can-do');
-
-      /* Cards cascade in as the grid scrolls into view */
-      var grid = document.querySelector('.flip-grid');
-      if (grid) window.AISite.staggerOnScroll(grid, '.flip-card', { y: 30, stagger: 0.12 });
-
-      /* Flip cards: click / Enter toggles. One flip reveals the back. */
-      document.querySelectorAll('.flip-card').forEach(function (card) {
-        function flip() {
-          card.classList.toggle('is-flipped');
-          /* Back content pops in after the 3D flip settles */
-          if (card.classList.contains('is-flipped') &&
-              window.gsap && window.AISite.motionOk()) {
-            window.gsap.fromTo(card.querySelectorAll('.flip-back > *'),
-              { opacity: 0, y: 12 },
-              { opacity: 1, y: 0, stagger: 0.06, duration: 0.45, delay: 0.25, clearProps: 'all' });
-          }
-        }
-        card.addEventListener('click', flip);
-        card.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
-        });
-      });
-
-      /* Typewriter records start when their card first becomes visible.
-         \n in data-tw renders as line breaks in the bubble. */
-      function playTw(el) {
-        if (el.dataset.played) return;
-        el.dataset.played = '1';
-        var text = (el.getAttribute('data-tw') || '').replace(/\\n/g, '\n');
-        window.AISite.typeText(el, text, { speed: 28 });
-      }
-      var targets = document.querySelectorAll('[data-tw]');
-      if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-              playTw(entry.target);
-              io.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.4 });
-        targets.forEach(function (el) { io.observe(el); });
-      } else {
-        targets.forEach(playTw);
-      }
-    })();
-  </script>
+  <script>window.AISite.pageReady('what-ai-can-do');</script>
 </body>
 </html>

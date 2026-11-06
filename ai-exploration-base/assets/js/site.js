@@ -24,16 +24,23 @@
       '<a class="site-home" href="' + base + '/index.html">' +
         '<span class="logo">AI</span>AI 探索基地' +
       '</a>' +
+      '<nav class="site-journey" aria-label="六关导航">' +
+        root.AIProgress.PAGES.map(function (p, i) {
+          return '<a href="' + base + '/' + p.url + '" data-page="' + p.id +
+            '" aria-label="第 ' + (i + 1) + ' 关：' + p.title + '">' +
+            '0' + (i + 1) + '</a>';
+        }).join('') +
+      '</nav>' +
       '<span class="site-header-right">' +
-        '<span class="site-badge" id="site-badge">' + root.AIProgress.badge() + '</span>' +
+        '<span class="site-badge" id="site-badge" aria-label="完成进度">' + root.AIProgress.badge() + '</span>' +
         '<button class="done-btn" id="site-done-btn" type="button"></button>' +
       '</span>';
 
     var footer = document.createElement('footer');
     footer.className = 'site-footer';
     footer.innerHTML =
-      '<p>这个网站是儿子和 AI 一起做的 · 双击就能打开 · 断网也能看</p>' +
-      '<p id="site-footer-hint">看完这页，别忘了点上面的「完成打卡」</p>';
+      '<p>AI 探索基地 <span aria-hidden="true">·</span> 一份写给妈妈的探索手册</p>' +
+      '<p id="site-footer-hint" class="site-footer-hint">看完这页，别忘了点上面的「完成打卡」</p>';
 
     document.body.insertBefore(header, document.body.firstChild);
     document.body.appendChild(footer);
@@ -48,6 +55,11 @@
   function revealOnScroll(selector) {
     var els = Array.prototype.slice.call(document.querySelectorAll(selector || '.reveal'));
     if (!els.length) return;
+
+    if (!motionOk()) {
+      els.forEach(function (el) { el.classList.add('is-visible'); });
+      return;
+    }
 
     if (root.gsap && root.ScrollTrigger) {
       root.gsap.registerPlugin(root.ScrollTrigger);
@@ -81,7 +93,7 @@
      when done; respects prefers-reduced-motion by finishing instantly. */
   function typeText(el, text, opts) {
     opts = opts || {};
-    var speed = opts.speed || 40;
+    var speed = opts.speed === undefined ? 40 : opts.speed;
     return new Promise(function (resolve) {
       var reduced = root.matchMedia &&
         root.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -109,7 +121,31 @@
      the done button hides. */
   function pageReady(pageId) {
     mountChrome();
-    revealOnScroll('.reveal');
+    /* The chapters are laid out as readable editorial pages by default.
+       Animate the entrance once, not every paragraph and card on scroll. */
+    if (document.body && document.body.classList.contains('chapter')) {
+      if (root.gsap && motionOk()) {
+        root.gsap.from('.chapter-intro__copy > *', {
+          opacity: 0, y: 16, duration: 0.55, stagger: 0.08,
+          ease: 'power2.out', clearProps: 'all'
+        });
+      }
+    } else {
+      revealOnScroll('.reveal');
+    }
+
+    var journey = document.querySelector('.site-journey');
+    if (journey && journey.querySelectorAll) {
+      function paintJourney() {
+        Array.prototype.forEach.call(journey.querySelectorAll('[data-page]'), function (link) {
+          var id = link.getAttribute('data-page');
+          link.classList.toggle('is-complete', root.AIProgress.done(id));
+          if (id === pageId) link.setAttribute('aria-current', 'page');
+        });
+      }
+      paintJourney();
+      root.AIProgress.onChange(paintJourney);
+    }
 
     var btn = document.getElementById('site-done-btn');
     if (!btn) return;
@@ -132,10 +168,12 @@
       }
     }
     paint();
+    /* Some tasks finish from within the page (e.g. the scam simulator).
+       Keep the button in sync with that automatic completion too. */
+    root.AIProgress.onChange(paint);
 
     btn.addEventListener('click', function () {
       root.AIProgress.mark(pageId);
-      paint();
     });
   }
 
