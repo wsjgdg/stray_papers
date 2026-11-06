@@ -309,10 +309,14 @@ def fill_05(scene: str, md: str) -> str:
     scene = scene.replace('<details class="tear-interlude" id="tear-interlude">',
                           '<details class="tear-interlude" id="tear-interlude" open>', 1)
     scene = scene.replace("展开并撕开账页 ↘", "已展开 · 点标题可收起", 1)
+    scene = scene.replace(
+        "向上拖动滚筒、点击箭头，或用方向键换一种说法。第三种后回到第一种。",
+        "向上拖动滚筒、滚一下滚轮、点箭头或按方向键换一种说法；换到第六种会绕回第一种。", 1)
+    scene = scene.replace("<span>DRAG / ↑ ↓</span>", "<span>DRAG / WHEEL / ↑ ↓</span>", 1)
 
     # 4) 页尾那张正文纸撤掉，正文已经在决策室里
     scene = drop_section(scene, 'class="src-article src-verbatim"')
-    scene = scene.replace("prototype-scam-tear.css?v=tear-in-05", "prototype-scam-tear.css?v=tear-in-06")
+    scene = scene.replace("prototype-scam-tear.css?v=tear-in-05", "prototype-scam-tear.css?v=tear-in-07")
     return scene
 
 
