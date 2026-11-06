@@ -185,12 +185,23 @@
       if (lines.length) lines.push('请先给出一个可供修改的初稿，并标明需要我核对的信息；不确定的地方不要编造。');
       if (examples[current].caution && lines.length) lines.push(examples[current].caution);
       output.value = lines.join('\n');
+      fitOutput();
       document.getElementById('copy-prompt').disabled = !lines.length;
       document.getElementById('imprint-prompt').disabled = !lines.length;
       document.getElementById('forge-lever').disabled = !lines.length;
       editedFields();
       status.textContent = '';
     }
+    /* 提示词是这一关的产物，必须整段看得见：按内容高度撑开，不靠滚动 */
+    function fitOutput() {
+      if (window.CSS && CSS.supports('field-sizing', 'content')) return;
+      output.style.height = 'auto';
+      var needed = output.scrollHeight;
+      var max = Math.round(window.innerHeight * 0.62);
+      output.style.height = Math.min(Math.max(needed, 132), Math.max(max, 132)) + 'px';
+      output.style.overflowY = needed > max ? 'auto' : 'hidden';
+    }
+    window.addEventListener('resize', function () { clearTimeout(fitOutput._t); fitOutput._t = setTimeout(fitOutput, 150); });
     function paintSource(ex) {
       var row = document.getElementById('sample-case');
       if (!row) return;
