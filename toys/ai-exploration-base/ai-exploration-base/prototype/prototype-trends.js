@@ -256,6 +256,8 @@
     desk.classList.remove('is-replating');
     void desk.offsetWidth;
     desk.classList.add('is-replating');
+    clearTimeout(desk.replateTimer);
+    desk.replateTimer = setTimeout(function () { desk.classList.remove('is-replating'); }, 1100);
   }
   document.querySelectorAll('[data-bin]').forEach(function (button) {
     button.addEventListener('click', function () {
