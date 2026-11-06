@@ -282,6 +282,7 @@
 **④ 首屏「THREE ROUTES / ONE FIRST MOVE」**
 - 这块原来是旧主题的斜置卡片：深灰底、投影、三层渐变粗条。现在拆成一支挂在 1px 竖线上的刻度仪——三条 1px 横线，长度分别是 100% / 74% / 49%，对应当前排序的第 1/2/3 名，每条右端一个 6px 圆点。
 - `prototype-routes.js` 新增 `paintHero(order)`，在 `renderLanes` 和 `renderSelection` 里都调用：换条件重排时三条线的长度会以 0.6s 缓动交换，点选某条路线时那条线连同圆点转成 `#ffb829`；选中的路线永远不会和「当前优先」的高亮脱节。
+- 刻度线最后定在 2px、26px 间距、白色 50%：1px 会被星群的 1px 描边吃掉；选中那条用一条独立规则兜住，避免被通用的线宽规则覆盖。
 - 减少动效时只保留最终状态，不做补间。
 
 **全站可读性（这次的重点）**
@@ -294,4 +295,4 @@
 - ② 首屏：Dala 层把 `.trend-opening` 强行写成 `minmax(0,1.05fr) minmax(320px,.95fr)`，在手机上压成 `0px + 320px`，`.opening-steps` 被挤成 14px 宽的一列，出现「情 / 报 / 03 / 领 / 试 / 票」竖排单字。现在 ≤760px 改回单栏，三步条允许换行、不换字。
 - 复查 375 的换桌过渡：切换前后 `body.scrollHeight` 4875、`.workbench` 文档坐标 2472、宽度 311 完全一致，`is-replating` 1.1s 后自动移除，4 张卡换完，0 报错。
 
-**验证：**`smoke`、`test` 全 PASS；`content-wiring2`（14 项）、`route-index-13`、`desk-seq`、`holistic-audit`（6 页 × 1280，全 0 报错、无横向溢出）全 OK；另跑了一个 375 的横向溢出扫描，7 页 `scrollWidth` 都等于视口宽。CSS 升到 `?v=dala-08`。
+**验证：**`smoke`、`test` 全 PASS；`content-wiring2`（14 项）、`route-index-13`、`desk-seq`、`holistic-audit`（6 页 × 1280，全 0 报错、无横向溢出）全 OK；另跑了一个 375 的横向溢出扫描，7 页 `scrollWidth` 都等于视口宽。CSS 升到 `?v=dala-09`。
