@@ -189,16 +189,17 @@
 
 /* ---------------- 交互台：正文之后的一块独立区域 ---------------- */
 
-.src-play {
-  margin: clamp(18px, 2.6vw, 30px) 0 clamp(32px, 5vw, 64px);
-  padding: clamp(22px, 3vw, 40px);
-  border: 1px solid rgba(255, 255, 255, .14);
+/* 交互台嵌在正文里：讲它的那一节下面，直接就能动手 */
+.src-embed {
+  margin: clamp(16px, 2.4vw, 26px) 0 clamp(20px, 3vw, 32px);
+  padding: clamp(14px, 2vw, 24px);
   border-radius: 3px;
   background: #0f1a19;
   color: #f3eee2;
+  overflow-x: auto;
 }
-.src-play-head { margin-bottom: clamp(20px, 3vw, 32px); }
-.src-play-kicker {
+.src-embed-head { margin-bottom: clamp(14px, 2vw, 22px); }
+.src-embed-kicker {
   display: block;
   margin-bottom: 10px;
   font: 600 10.5px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
@@ -206,34 +207,29 @@
   text-transform: uppercase;
   opacity: .7;
 }
-.src-play-head h2 {
-  margin: 0 0 10px;
-  font-size: clamp(22px, 2.6vw, 32px);
-  line-height: 1.25;
-  font-weight: 500;
-}
-.src-play-head p {
+.src-embed-head p {
   margin: 0;
   max-width: 64ch;
   font-size: 14.5px;
   line-height: 1.85;
   opacity: .78;
 }
-.src-play-body > * + * { margin-top: clamp(24px, 3vw, 40px); }
+.src-play-body > * + * { margin-top: clamp(18px, 2.4vw, 30px); }
 
 /* 交互台内部原本依赖的版心不再受 main 影响，这里给它自己的宽度 */
 .src-play-body section,
 .src-play-body details { max-width: none; }
+.src-play-body .nojs-fallback { display: none; }
 
 @media (max-width: 640px) {
   .src-article { font-size: 16px; line-height: 1.85; padding: 22px 18px; }
   .src-h2 { gap: 10px; }
-  /* 交互台在窄屏上回到满宽，否则内部横向条（如七幕胶片）会被挤爆 */
-  .src-play { padding: 18px 0; }
-  .src-play-head { padding: 0 14px; }
+  /* 交互台在窄屏上向两侧顶出去一点，把纸面的内边距还给内部横条 */
+  .src-embed { margin-left: -12px; margin-right: -12px; padding: 14px 8px; }
+  .src-embed-head { padding: 0 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .src-article,
-  .src-play { scroll-behavior: auto; }
+  .src-embed { scroll-behavior: auto; }
 }
