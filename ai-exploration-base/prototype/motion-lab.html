@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080d16">
+  <title>撕开账面 · 第五幕动效试验 | AI 探索基地</title>
+  <link rel="stylesheet" href="motion-lab.css">
+</head>
+<body>
+<a class="skip-link" href="#experiment">跳到动效试验</a>
+<header class="bar"><a class="mark" href="index.html"><span class="mark-glyph">A✳I</span><span>AI 探索基地 <small>/ MOTION STUDY</small></span></a><span class="bar-mid">EXPERIMENT 01 / 05</span><a href="chapter-05.html">返回七幕原型 ↗</a></header>
+<main>
+  <section class="intro" aria-labelledby="intro-title">
+    <p class="kicker"><span class="kicker-line"></span> 一幕动效技术 × 美术试验 / ACT IV → V</p>
+    <h1 id="intro-title">数字在涨。<br><em>真相在下面。</em></h1>
+    <div class="intro-bottom"><p>第四幕：账户显示盈利 <strong>6,000 元</strong>。第五幕：要提现，平台却说先交 <strong>20% 保证金</strong>。亲手拉开这层“账面”，看看它背后的要求。</p><a href="#experiment">开始揭开 <span aria-hidden="true">↘</span></a></div>
+  </section>
+  <section class="experiment" id="experiment" aria-labelledby="scene-title">
+    <div class="scene-heading"><div><p class="overline">SCENE 04→05 / ONLY A SIMULATION</p><h2 id="scene-title">拉开表象，<i>检查要求。</i></h2></div><p>抓住右侧裂口向左拉；松手会回弹或揭开。你也可以使用下方滑杆、方向键，或直接看真相。</p></div>
+    <div class="lab-stage" id="lab-stage" style="--p:0" aria-label="账户表象与诈骗提示的对照场景">
+      <canvas id="shader-canvas" aria-hidden="true"></canvas>
+      <div class="stage-grain" aria-hidden="true"></div>
+      <div class="back-text" id="back-text"><span class="stage-eyebrow">ACT 05 / 真正的要求</span><div class="back-headline">提现？<br><strong>先交钱。</strong></div><div class="back-detail"><span>所谓保证金</span><b>20%</b><p>要先交钱才能取钱，是骗局的关键信号。停止转账，保留证据，从独立渠道核验。</p></div></div>
+      <div class="front-text" id="front-text"><span class="stage-eyebrow">ACT 04 / 你看到的账面</span><div class="front-amount"><small>账户显示盈利</small><strong>+ 6,000</strong><span>CNY / 屏幕上的数字</span></div><div class="front-warning">钱还没有真正取出来。<br>这个数字，能兑现吗？</div></div>
+      <div class="seam" id="seam" aria-hidden="true"><span></span></div>
+      <button class="grip" id="grip" type="button" aria-label="抓住账面裂口，从右向左拖动揭开真相" aria-describedby="drag-help"><span class="grip-marks" aria-hidden="true">≡</span><span class="grip-label">抓住<br>向左拉</span></button>
+      <div class="stage-footer" aria-hidden="true"><span>FAKE PROFIT</span><span>← PEEL TO VERIFY →</span><span>REAL RISK</span></div>
+    </div>
+    <p class="sr-only" id="drag-help">按住裂口向左拖动。拖动不足一半会回弹；超过一半会揭开。也可使用下方滑杆，或按「直接看真相」。</p>
+    <div class="controls"><label for="reveal-range"><span>揭开程度</span><input id="reveal-range" type="range" min="0" max="100" step="1" value="0"><output id="range-value" for="reveal-range">0%</output></label><div class="control-buttons"><button id="reveal-all" type="button">直接看真相 ↗</button><button id="reset-scene" type="button">合上，再试一次</button></div></div>
+    <noscript><p class="nojs-truth"><strong>不启动动效也能直接看真相：</strong>客服要求先交 20% 保证金才能提现。这是骗局的关键信号：停止转账、保留证据，通过独立渠道核验。本场景的拖动、滑杆需要 JavaScript；<a href="../pages/anti-scam.html">阅读完整七幕与来源 ↗</a></p></noscript>
+    <div class="result" id="result" role="status" aria-live="polite"><span class="result-index" id="result-index">01 / 表象</span><p id="result-text">显示盈利，不等于钱已到账。向左揭开，看看提现时对方提出了什么要求。</p></div>
+    <div class="footnote"><p>这是一幕模拟，不会连接账户、收集个人信息或触发转账。话术来自正式版第五关的第 4、5 幕综合示意，非特定案件；本试验不改变正式打卡进度。</p><a href="../pages/anti-scam.html">阅读七幕原文、心理机制、核验工具与来源 ↗</a></div>
+  </section>
+  <section class="after"><span class="overline">THE POINT IS NOT THE SHADER</span><h2>让你的动作，<br><em>亲手揭出事实。</em></h2><p>这是单幕视觉与手感试验，尚未确定是否用于整站。重点是运动的连续性、揭开后的信息、手机触控和可回退性，而不是让骗局看起来刺激。</p><a href="chapter-05.html">回到七幕决策室 ↗</a></section>
+</main>
+<footer class="end"><span>AI 探索基地 · 独立动效试验</span><a href="../index.html">完整网站 ↗</a></footer>
+<script src="motion-lab.js" defer></script>
+</body></html>

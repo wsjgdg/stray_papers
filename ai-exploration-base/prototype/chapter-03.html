@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>规则调试台 · 可玩原型③ | AI 探索基地</title>
+  <link rel="stylesheet" href="prototype.css">
+  <link rel="stylesheet" href="prototype-lab.css?v=lab-05">
+<link rel="stylesheet" href="prototype-dossier.css?v=dossier-08"><link rel="stylesheet" href="prototype-dala.css?v=dala-15"></head>
+<body class="page-lab">
+  <a class="skip-link" href="#lab">跳到规则调试台</a><div class="grain" aria-hidden="true"></div>
+  <header class="topbar"><a class="brand" href="index.html?v=switch-13"><span class="brand-symbol">A<span>✳</span>I</span><span>探索基地 <small>/ PLAYABLE LAB</small></span></a><span class="prototype-tag">交互原型 · 03 / 06</span><a class="top-link" href="index.html?v=switch-13">返回原型拨盘 ↗</a></header>
+  <main class="lab-world" id="lab">
+    <div class="nojs-fallback"><h2>不开脚本也能读懂这个实验</h2><p>生命游戏的每个格子只有亮或暗两种状态；下一步取决于周围八格。标准规则：空格恰有三位邻居时出生，亮格有两或三位邻居时存活。横向并排的三格走一步会变竖向，再走一步会变横向。</p><p>这页的调试台是新做的本地教学切片，不调用 AI。<a href="../assets/embed/algorithm-lab-standalone.html">打开站内已有的完整 Algorithm Lab ↗</a>，可玩更多原作实验；不需要联网。</p></div>
+    <section class="lab-opening" aria-labelledby="lab-title"><div class="opening-text"><span class="eyebrow"><span class="live-dot"></span> BUILD 03 / A TINY RULE ENGINE</span><h1 id="lab-title">先让它犯错。<br><em>再让它生长。</em></h1><p>一次改一条规则，亲手运行、对照、修复。你不是看 AI 替你完成作品，而是在做程序真正需要的事：<strong>设目标，试运行，指出哪里不对。</strong></p></div><div class="opening-schematic" aria-hidden="true"><span class="schematic-tag">EXPECTED / 第 1 代</span><div class="schematic-cells"><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div><span class="schematic-foot">三格灯 · 横向 → 竖向 → 横向</span></div></section>
+    <section class="lab-deck" aria-label="细胞规则调试台"><div class="lab-deck-bar"><span><b aria-hidden="true">●</b> LOCAL ENGINE / 生命规则调试台</span><span>15 × 15 · 不联网 · 无 AI 生成</span></div>
+      <div class="lab-deck-body"><div class="bench"><div class="bench-head"><div><span class="panel-kicker">01 / TEST SAMPLE</span><h2>用一小片画布，<br>看见规则的后果。</h2></div><span class="generation-badge" id="generation-badge">GEN 00</span></div><div class="sample-switch" role="group" aria-label="选择实验样本"><button type="button" data-preset="blinker" aria-pressed="true"><span>01</span> 三格灯</button><button type="button" data-preset="glider" aria-pressed="false"><span>02</span> 滑翔机</button><button type="button" data-preset="free" aria-pressed="false"><span>03</span> 自由画布</button></div>
+        <div class="grid-frame"><div class="grid-ruler" aria-hidden="true">A · · · · · · · · · · · · · O</div><div class="cell-grid" id="cell-grid" role="group" aria-label="15列15行可编辑的细胞画布。方向键移到相邻格，空格或回车切换亮暗。"></div><div class="grid-corner" aria-hidden="true">15 / 15</div></div>
+        <div class="bench-readout"><span id="cell-count">活细胞 03</span><span id="delta-count">变化 00</span><span id="target-count">待运行</span></div>
+        <div class="bench-actions"><button type="button" class="action-step" id="step-once">运行一步 <span aria-hidden="true">→</span></button><button type="button" class="action-play" id="toggle-play">连续运行 ▷</button><button type="button" class="action-reset" id="rewind-seed">回到起点</button></div><p class="bench-hint">点格子或按住划过可画／擦；聚焦画布后用方向键移动，空格切换。换规则会从同一个起点重跑。</p></div>
+      <aside class="rule-desk"><div class="rule-head"><span class="panel-kicker">02 / INSPECT THE RULE</span><h2>这份规则，<br><em>真的写对了吗？</em></h2><p id="challenge-text">目标：让横排三格在第 1 代变成竖排三格。初始规则是一次“看似合理”的错误交付；先运行一步，再改规则重试。</p></div><div class="rule-choices" role="group" aria-label="选择细胞出生与存活规则"><button type="button" data-rule="birth23" aria-pressed="true"><span>交付 A / 生长过快</span><strong>出生：2 或 3 位邻居</strong><small>存活：2 或 3 位邻居</small></button><button type="button" data-rule="survive3" aria-pressed="false"><span>交付 B / 容易熄灭</span><strong>出生：恰好 3 位邻居</strong><small>存活：恰好 3 位邻居</small></button><button type="button" data-rule="standard" aria-pressed="false"><span>修订 C / 经典规则</span><strong>出生：恰好 3 位邻居</strong><small>存活：2 或 3 位邻居</small></button></div><div class="audit" id="audit" role="status"><span>AUDIT / 等待运行</span><strong id="audit-title">先运行一代，别急着看答案。</strong><p id="audit-detail">画布中亮起的是实际细胞；运行后，目标位置将用轮廓标出，差异会显现。</p></div><p class="rule-footnote">这是经典“生命游戏”的本地确定性规则模拟，不是 AI 实时写代码；规则卡是为了演示“交付 → 测试 → 修订”而设计的样例。</p></aside></div>
+      <div class="lab-bottom"><section class="lab-history" aria-labelledby="history-title"><div class="bottom-heading"><span class="panel-kicker">03 / CHANGE LOG</span><h2 id="history-title">每一步，都留下痕迹。</h2></div><ol id="history-list" aria-label="本次运行的代数记录"><li>第 0 代 · 准备运行</li></ol></section><section class="lab-proof" id="lab-proof" aria-labelledby="proof-title" hidden><div class="bottom-heading"><span class="panel-kicker">04 / YOUR TEST NOTE</span><h2 id="proof-title">你的实验记录</h2></div><p id="proof-summary"></p><textarea id="proof-text" readonly rows="5" aria-label="可复制的实验记录"></textarea><div class="proof-actions"><button type="button" id="copy-proof">复制实验记录 ↗</button><span id="copy-status" role="status"></span></div></section></div>
+    </section>
+    <section class="lab-onward"><div><span class="panel-kicker">THE REAL PROJECT / 已有作品</span><h2>这只是切片。<br><em>完整实验室，已经在这里。</em></h2><p>上面的规则调试台是这次新做的教学原型；下面的入口通向站内已有的完整 Algorithm Lab 原作，包含生命画布、节拍制作器和算法工作室。两边不会同步进度，也不会把原作冒充成本页生成的结果。</p><a class="original-link" href="../assets/embed/algorithm-lab-standalone.html" target="_blank" rel="noopener">单独打开已有 Algorithm Lab 原作 <span aria-hidden="true">↗</span></a></div><div class="lab-projects"><span class="panel-kicker">SON'S PROJECTS / 作品索引</span>
+        <p><strong>乐谱识别器</strong><span>照片里的音符 → 可编辑数字乐谱</span><a href="https://github.com/wsjgdg/score-transcriber" target="_blank" rel="noopener noreferrer">github.com/wsjgdg/score-transcriber ↗</a></p>
+        <p><strong>科研文献挖掘助手</strong><span>材料科学论文 → 辅助筛选</span><a href="https://github.com/wsjgdg/matlit-miner" target="_blank" rel="noopener noreferrer">github.com/wsjgdg/matlit-miner ↗</a></p>
+        <p><strong>视觉分析网站</strong><span>图片 → 视觉分析</span><a href="https://github.com/wsjgdg/spot-visual" target="_blank" rel="noopener noreferrer">github.com/wsjgdg/spot-visual ↗</a></p>
+        <a class="lab-repo" href="https://github.com/wsjgdg/stray_papers" target="_blank" rel="noopener noreferrer">算法实验室源码仓库：stray_papers ↗</a>
+        <small>这些是原关卡提到的项目；绝大部分代码由 AI 编写，儿子出想法、定方向、验收效果。本原型没有伪造它们的在线演示，也没有冒充实拍截图。</small></div></section>
+    <!-- DOSSIER:START -->
+<section class="dossier" id="content-dossier" aria-labelledby="dossier-p3">
+  <details>
+    <summary>
+      <span class="dossier-kicker">SOURCE DOSSIER / 内容真源 · ③ 儿子的 AI 实验室</span>
+      <strong id="dossier-p3">原始文案，与<em>全部出处</em>。</strong>
+      <small>第 ③ 关 · 1 个可玩程序 · 4 个开源仓库 · 全文 8 节 · 4 条外链</small>
+    </summary>
+    <div class="dossier-body">
+      <p class="dossier-lead">这一关没有统计数字：所有能力描述都是对自家项目的第一手描述，点开 GitHub 就能逐项核对。原型里的规则调试台是新做的教学切片，不冒充原作。 往后是按文件分节、逐字接入的<strong>全文</strong>——正式站这一关写下的每一句都在里面，可直接对照或照抄。</p>
+      <div class="dossier-grid">
+        <article class="dossier-block is-wide"><span class="dossier-no">01</span><h3>先玩一个：<em>算法实验室</em></h3><p>下面这个就是其中之一，<strong>整个程序塞在这一个网页文件里，已经装进这个网站了</strong>。它是儿子和 AI 一起做的“算法游乐场”——你现在就可以玩。</p>
+    <div class="dossier-quote"><p>🎨 <strong>生命画布</strong>：用画笔在画布上随手涂几笔，点 <strong>Play</strong>——涂过的地方会像细胞一样自己“生长”，GENERATION / ALIVE 数字实时跳动。</p>
+    <p>🥁 <strong>节拍制作器</strong>：逐格点亮几个，编一小段节奏，点 <strong>Play loop</strong> 循环听效果，满意了还能导出音频文件。</p>
+    <p>📐 <strong>算法工作室</strong>：写一小段指令点运行，它会一步一步把“一列数字怎么排好队”画给你看。</p></div>
+    <p>真实界面截图：黑色画布上长出彩色的细胞图案，顶部显示 0 GENERATION、46 ALIVE——这些会“生长”的图案，是随手涂几笔点 Play 长出来的。</p>
+    <p>内嵌打不开？直接双击文件夹里的 <code>assets/embed/algorithm-lab-standalone.html</code>，或在新窗口打开。</p><p class="dossier-tag">源码在 GitHub（联网时点开）</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://github.com/wsjgdg/stray_papers" target="_blank" rel="noopener noreferrer">stray_papers：算法实验室所在仓库（README 有每个子项目入口）</a><small>200 · 2026-11-05</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">02</span><h3>分工声明</h3><p>这些项目里，<strong>绝大部分代码是 AI 写的</strong>，儿子负责出想法、定方向、验收效果、把不对的地方说清楚——就这么循环。</p>
+    <p>不是 AI 给了一点点帮助，而是 AI 写代码、儿子定方向，一个功能一个功能磨出来的。你现在看的这个网站，也是同样做出来的。</p>
+    <span class="dossier-tag">第一手陈述 · 非外部数据</span></article><article class="dossier-block"><span class="dossier-no">03</span><h3>再看三个“正经”的</h3><p>🎼 <strong>乐谱识别器</strong>　拍一张乐谱照片，程序把上面的音符全部“读”出来，变成可编辑的数字乐谱。图像识别 + 音乐知识，两层 AI 技术叠在一起。</p>
+    <p>📚 <strong>科研文献挖掘助手</strong>　帮材料科学家读论文的工具：一个人一年读不完的文献量，AI 辅助筛出有用的那些。科学家的活，AI 已经能打下手了。</p>
+    <p>👀 <strong>视觉分析网站</strong>　一个能“看”东西的网站——把图片交给它分析。AI 的眼睛，就是这么一步步教出来的。</p><p class="dossier-tag">三个仓库，三条可核对的记录</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://github.com/wsjgdg/score-transcriber" target="_blank" rel="noopener noreferrer">score-transcriber：乐谱识别器</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://github.com/wsjgdg/matlit-miner" target="_blank" rel="noopener noreferrer">matlit-miner：科研文献挖掘助手</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://github.com/wsjgdg/spot-visual" target="_blank" rel="noopener noreferrer">spot-visual：视觉分析网站</a><small>200 · 2026-11-05</small></span></li></ul></article><article class="dossier-block is-wide"><span class="dossier-no">04</span><h3>这一关想让你记住的一句话</h3><p>这些项目没有一个是“天才写出来的”。就是<strong>每天和 AI 聊：让它写，我来试，哪里不对说清楚，再让它改</strong>。这个方法，你已经会了——聊天谁不会呢？差的就是开始。下一关我们看看，这个方法能怎么帮你赚钱。</p>
+    <p>本页没有伪造的在线演示：原型里的规则调试台是这次新做的教学切片，原作是上面那个完整 Algorithm Lab；两边不会同步进度。</p></article>
+      </div>
+      
+      <div class="dossier-full">
+        <h3>全文 · 逐字接入 <span>FULL TEXT / 8 节 · 66 段</span></h3>
+        <p class="dossier-tag">下面是内容真源里的原文，按小节折叠，没有缩写、没有改写；小节顺序与文件一致，文件名即出处。</p>
+        <section class="dossier-doc"><h4>p3-lab.md</h4><details class="dossier-part"><summary><span class="dossier-part-no">01</span><strong>页首：标题与导语</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>对应页面：<code>pages/lab.html</code> ｜ 引用编号见 <span class="dossier-ref">sources-p123.md</span> ｜ 写作规范见 <span class="dossier-ref">README.md</span> 访问日期（本页引用链接验证日）：2026-11-05 本页四条 GitHub 外链全部验证 200；两张页面截图为<strong>真实界面截图</strong>（非示意图），如实描述如下。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">02</span><strong>页面元信息</strong></summary><div class="dossier-part-body"><ul>
+<li>浏览器标题：<code>③ 儿子的 AI 实验室 — AI 探索基地</code></li>
+<li>页面描述（meta description）：看儿子和 AI 一起做出的真实项目：可直接玩的算法实验室、乐谱识别器、科研文献挖掘助手、视觉分析网站——绝大部分代码由 AI 编写，儿子出想法、定方向、验收效果。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">03</span><strong>页首标题与导语</strong></summary><div class="dossier-part-body"><ul>
+<li>主标题（H1）：<code>③ 儿子的 AI 实验室</code></li>
+<li>导语（lead）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>现在把镜头转向另一个方向：<strong>你儿子做的这些项目，全部是 AI 陪着写出来的。</strong> 不是"AI 给了一点点帮助"，而是 AI 写代码、儿子定方向，一个功能一个功能磨出来的。 你现在看的这个网站，也是同样做出来的。</p></blockquote>
+<ul>
+<li>分工声明条（accent 高亮框）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>这些项目里，<strong>绝大部分代码是 AI 写的</strong>，儿子负责出想法、定方向、验收效果、把不对的地方说清楚——就这么循环。</p></blockquote>
+<p>（"绝大部分代码是 AI 写的"为本站作者对自有项目的<strong>第一手陈述</strong>，不引用外部数据；与全站"这个网站本身就是 AI 做的"口径一致。）</p></div></details><details class="dossier-part"><summary><span class="dossier-part-no">04</span><strong>区块：先玩一个：算法实验室</strong></summary><div class="dossier-part-body"><ul>
+<li>区块标题（H2）：<code>先玩一个：算法实验室</code></li>
+</ul>
+<h4>引导正文（卡内）</h4>
+<blockquote class="dossier-quote-block"><p>下面这个就是其中之一，<strong>整个程序塞在这一个网页文件里，已经装进这个网站了</strong>。 它是儿子和 AI 一起做的"算法游乐场"——你现在就可以玩。 怎么上手？照着下面三步点就行：</p></blockquote>
+<h4>三个玩法（三段式，照页面原样）</h4>
+<p><strong>🎨 生命画布</strong></p>
+<blockquote class="dossier-quote-block"><p>打开就是它。用画笔在画布上随手涂几笔，点 <strong>Play</strong>—— 涂过的地方会像细胞一样自己"生长"，画面上的 GENERATION / ALIVE 数字实时跳动，看得见它繁衍或消亡；</p></blockquote>
+<p><strong>🥁 节拍制作器</strong></p>
+<blockquote class="dossier-quote-block"><p>找到节拍的格子，逐格点亮几个，编一小段节奏，点 <strong>Play loop</strong> 循环听效果； 满意了还能导出成音频文件保存下来；</p></blockquote>
+<p><strong>📐 算法工作室</strong></p>
+<blockquote class="dossier-quote-block"><p>写一小段指令点运行，它会一步一步把"一列数字怎么排好队"画给你看——每一步都看得见。</p></blockquote>
+<h4>真实截图 1：<code>assets/media/lab-canvas.png</code>（页面在用）</h4>
+<ul>
+<li>文件事实：PNG，1100×750，RGB，约 215 KB，位于 <code>assets/media/lab-canvas.png</code>。</li>
+<li>页面 alt 文本（如实描述画面）：算法实验室「生命画布」真实界面截图：黑色画布上长出彩色的细胞图案，顶部显示 0 GENERATION、46 ALIVE。</li>
+<li>页面图注（figcaption）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>↑ 真实界面截图：画布上这些会"生长"的图案，是随手涂几笔点 Play 长出来的</p></blockquote>
+<ul>
+<li>性质标注：<strong>真实界面截图</strong>（程序实际运行画面，非手绘示意图）。</li>
+</ul>
+<h4>真实截图 2：<code>assets/media/lab-overview.png</code>（备用素材，当前页面未引用）</h4>
+<ul>
+<li>文件事实：PNG，1100×750，RGB，约 251 KB，位于 <code>assets/media/lab-overview.png</code>。</li>
+<li>如实描述：与 lab-canvas.png 同一批截取的<strong>实验室真实界面截图</strong>（文件名 lab-overview，即"实验室整体概览"画面）。当前 <code>lab.html</code> 未引用此文件，作为备用素材保留；若页面改版需要"实验室全貌"图，可启用此图并按实际画面重写 alt 与图注。</li>
+<li>维护规则：启用前按截图实际内容核对描述，禁止凭文件名想象画面细节（遵守 README"演示内容必须标注"原则的同款诚实标准）。</li>
+</ul>
+<h4>内嵌可玩程序（iframe）</h4>
+<ul>
+<li>加载提示（图注下方小字）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>（如果下面区域是空的，往下滑一点等它加载；手机上也可以玩。）</p></blockquote>
+<ul>
+<li>内嵌文件：<code>assets/embed/algorithm-lab-standalone.html</code>（随仓库本地分发，断网可玩；iframe 标题文字：<code>Algorithm Lab - 交互式算法游乐场（内嵌可玩）</code>）。</li>
+</ul>
+<h4>内嵌失败回退文案</h4>
+<blockquote class="dossier-quote-block"><p>内嵌打不开？直接双击文件夹里的 <code>assets/embed/algorithm-lab-standalone.html</code>，或 点这里在新窗口打开。</p></blockquote>
+<p>（"点这里在新窗口打开"为链接文字，指向 <code>../assets/embed/algorithm-lab-standalone.html</code>。）</p>
+<h4>源码链接行</h4>
+<blockquote class="dossier-quote-block"><p>源码在 GitHub（联网时点开）： <a href="https://github.com/wsjgdg/stray_papers" target="_blank" rel="noopener noreferrer">github.com/wsjgdg/stray_papers</a> ——github.com/wsjgdg/stray_papers 的 README 里有每个子项目的入口</p></blockquote>
+<ul>
+<li>验证：<a href="https://github.com/wsjgdg/stray_papers" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/stray_papers</a> curl <code>200</code>（访问日期 2026-11-05）[来源23]。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">05</span><strong>区块：再看三个"正经"的</strong></summary><div class="dossier-part-body"><ul>
+<li>区块标题（H2）：<code>再看三个"正经"的</code></li>
+</ul>
+<h4>卡 1：🎼 乐谱识别器</h4>
+<ul>
+<li>标题：<code>乐谱识别器</code></li>
+<li>技能标签行（<code>它用了 AI 的本领：</code>）：<code>🎼 图像识别</code>　<code>🎵 音乐知识</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>拍一张乐谱照片，程序把上面的音符全部"读"出来，变成可编辑的数字乐谱。 图像识别 + 音乐知识，两层 AI 技术叠在一起。</p></blockquote>
+<ul>
+<li>仓库链接（卡片内链接文字）：<code>github.com/wsjgdg/score-transcriber</code></li>
+<ul>
+<li>验证：<a href="https://github.com/wsjgdg/score-transcriber" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/score-transcriber</a> curl <code>200</code>（2026-11-05）[来源24]。</li>
+</ul>
+</ul>
+<h4>卡 2：📚 科研文献挖掘助手</h4>
+<ul>
+<li>标题：<code>科研文献挖掘助手</code></li>
+<li>技能标签行（<code>它用了 AI 的本领：</code>）：<code>📚 文档理解</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>帮材料科学家读论文的工具：一个人一年读不完的文献量，AI 辅助筛出有用的那些。 <strong>科学家的活，AI 已经能打下手了。</strong></p></blockquote>
+<ul>
+<li>仓库链接（卡片内链接文字）：<code>github.com/wsjgdg/matlit-miner</code></li>
+<ul>
+<li>验证：<a href="https://github.com/wsjgdg/matlit-miner" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/matlit-miner</a> curl <code>200</code>（2026-11-05）[来源25]。</li>
+</ul>
+</ul>
+<h4>卡 3：👀 视觉分析网站</h4>
+<ul>
+<li>标题：<code>视觉分析网站</code></li>
+<li>技能标签行（<code>它用了 AI 的本领：</code>）：<code>👁️ 计算机视觉</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>一个能"看"东西的网站——把图片交给它分析。AI 的眼睛，就是这么一步步教出来的。</p></blockquote>
+<ul>
+<li>仓库链接（卡片内链接文字）：<code>github.com/wsjgdg/spot-visual</code></li>
+<ul>
+<li>验证：<a href="https://github.com/wsjgdg/spot-visual" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/spot-visual</a> curl <code>200</code>（2026-11-05）[来源26]。</li>
+</ul>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">06</span><strong>结尾：本关小结卡</strong></summary><div class="dossier-part-body"><ul>
+<li>卡片标题：<code>这一关想让你记住的一句话</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>这些项目没有一个是"天才写出来的"。就是<strong>每天和 AI 聊：让它写，我来试，哪里不对说清楚，再让它改</strong>。 这个方法，你已经会了——聊天谁不会呢？差的就是开始。 下一关我们看看，这个方法能怎么帮你赚钱。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">07</span><strong>页面导航</strong></summary><div class="dossier-part-body"><ul>
+<li>主按钮：<code>下一关：副业地图 →</code>（指向 <code>side-jobs.html</code>）</li>
+<li>次链接：<code>← 回到探索地图</code>（指向 <code>../index.html</code>）</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">08</span><strong>本页来源与素材清单</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>外链（全部已验证）</strong>：</li>
+<ul>
+<li>[来源23] stray_papers（算法实验室所在仓库）：<a href="https://github.com/wsjgdg/stray_papers" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/stray_papers</a> — <code>200</code>，2026-11-05</li>
+<li>[来源24] score-transcriber（乐谱识别器）：<a href="https://github.com/wsjgdg/score-transcriber" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/score-transcriber</a> — <code>200</code>，2026-11-05</li>
+<li>[来源25] matlit-miner（科研文献挖掘助手）：<a href="https://github.com/wsjgdg/matlit-miner" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/matlit-miner</a> — <code>200</code>，2026-11-05</li>
+<li>[来源26] spot-visual（视觉分析网站）：<a href="https://github.com/wsjgdg/spot-visual" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/spot-visual</a> — <code>200</code>，2026-11-05</li>
+</ul>
+<li><strong>本地素材（随仓库走）</strong>：</li>
+<ul>
+<li><code>assets/media/lab-canvas.png</code> — 真实界面截图（生命画布），1100×750，页面在用</li>
+<li><code>assets/media/lab-overview.png</code> — 真实界面截图（实验室概览），1100×750，备用未引用</li>
+<li><code>assets/embed/algorithm-lab-standalone.html</code> — 内嵌可玩程序（单文件，离线可用）</li>
+</ul>
+<li>本页<strong>无统计数据引用</strong>：所有能力描述均为对自有开源项目的第一手描述，读者可点开 GitHub 仓库逐项核对。</li>
+</ul></div></details></section>
+      </div>
+      <div class="dossier-sources">
+        <h3>本关全部外链 <span>4 LINKS / 访问日期 2026-11-05</span></h3>
+        <p>链接均取自 <code>docs/content</code> 的来源清单：状态码为清单记录值，403 / 521 为官方站点反爬，浏览器可正常打开；外部页面需要联网。</p>
+        <ul class="dossier-source-list"><li><a href="https://github.com/wsjgdg/stray_papers" target="_blank" rel="noopener noreferrer">stray_papers：算法实验室所在仓库（README 有每个子项目入口）</a><small>200 · 2026-11-05</small></li><li><a href="https://github.com/wsjgdg/score-transcriber" target="_blank" rel="noopener noreferrer">score-transcriber：乐谱识别器</a><small>200 · 2026-11-05</small></li><li><a href="https://github.com/wsjgdg/matlit-miner" target="_blank" rel="noopener noreferrer">matlit-miner：科研文献挖掘助手</a><small>200 · 2026-11-05</small></li><li><a href="https://github.com/wsjgdg/spot-visual" target="_blank" rel="noopener noreferrer">spot-visual：视觉分析网站</a><small>200 · 2026-11-05</small></li></ul>
+      </div>
+      <p class="dossier-foot">上面这段文字与正式站第 ③ 儿子的 AI 实验室 关同源（<code>docs/content</code>）；改文案先改内容真源，再同步到页面。原型玩法不替代正文，也不改写原文里“演示样例”和“（示意）”的标注。</p>
+    </div>
+  </details>
+</section>
+<!-- DOSSIER:END -->
+<nav class="lab-navigation" aria-label="原型导航"><a href="index.html?v=switch-13">← 原型拨盘</a><a href="chapter-02.html?v=desk-09">② 趋势编辑室 ↗</a><a href="chapter-04.html?v=weave-06">④ 路线编织台 ↗</a></nav>
+  </main><footer class="proto-footer"><span>AI 探索基地 / 可玩原型 03</span><span>教学模拟，不调用 AI · 不修改正式打卡进度</span><a href="index.html?v=switch-13">返回原型拨盘 ↗</a></footer>
+  <script src="prototype-lab.js?v=lab-05" defer></script>
+<script src="prototype-particles.js?v=dala-02" defer></script>
+</body>
+</html>

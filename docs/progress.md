@@ -396,3 +396,17 @@
 **怎么恢复：** `git checkout backup/pre-dala-50a2b7f -- ai-exploration-base/prototype` 即可取回整套原型；要整体回去就基于该分支重开。
 
 **下一步：** 待在预览里确认八页旧站可用；若用户仍想丢弃编辑式外观、只要 `4d54418` 的原始米色站，回退上一条存档提交即可。
+
+## 2026-11-06 · 改口：只要原型，不要正式版
+
+**用户要求：** 「我要原型版的，不要任何正式版的」。上一轮把 `prototype/` 删掉、只留八页正式站，方向反了。
+
+**做了什么：**
+- 从 `backup/pre-dala-50a2b7f` 取回整套原型 `ai-exploration-base/prototype/`（40 个文件，Dala 体系的第十三轮状态），以及只为原型服务的 `scripts/build-prototype-content.py`。
+- 删除正式站的页面与外壳：`index.html`、`pages/`、`先读我.txt`、`assets/css/*`、`assets/js/{site,progress}.js`、`assets/media/`、`assets/vendor` 其余库、`scripts/{smoke.js,test.js,build-zip.sh}`。
+- 但原型并非完全自包含，实测有三个硬依赖，单独留下：`assets/vendor/gsap.min.js`（①⑤ 入场与打字动画）、`assets/js/scam-script.js`（⑤ 七幕剧场剧本数据）、`assets/embed/algorithm-lab-standalone.html`（③ 内嵌可玩的 Algorithm Lab 原作）。
+- 预览根路径改为 `/` → `/prototype/index.html`。
+
+**验证：** 真 Chromium 1280 与 375 各跑 7 页（拨盘 + 六关）：0 控制台报错、0 请求失败、无横向溢出、`prototype-dala.css` 全部生效、`body` 背景为纯黑 `rgb(0,0,0)`；①⑤ 的 `window.gsap` 正常加载。
+
+**怎么找回正式站：** 提交 `4d54418`（原始米色八页）与 `e2c4fae`（最后一版编辑式八页）都在历史里。
