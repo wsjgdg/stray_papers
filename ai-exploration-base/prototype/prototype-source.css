@@ -1,0 +1,239 @@
+/* ============================================================
+   内容真源正文层（prototype-source.css）
+   把 docs/content 的文字真源直接排成页面正文，不再挂在页尾折叠。
+   叠在 prototype.css / prototype-<章节>.css 之后、只加不改。
+   ============================================================ */
+
+.src-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 44px) clamp(56px, 8vw, 104px);
+}
+
+/* ---------------- 页首：标题 + 导语（跟随页面本来的明暗） ---------------- */
+
+.src-hero {
+  margin: clamp(16px, 2.4vw, 28px) 0 0;
+  padding: clamp(28px, 4.4vw, 64px) clamp(20px, 3.2vw, 52px);
+  background: #0f1a19;
+  color: #f3eee2;
+  border-radius: 3px;
+}
+.src-kicker {
+  margin: 0 0 18px;
+  font: 600 11px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  opacity: .72;
+}
+.src-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(34px, 5.4vw, 68px);
+  line-height: 1.12;
+  letter-spacing: -.015em;
+  font-weight: 500;
+}
+.src-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  margin: 18px 0 0;
+  font-size: 12.5px;
+  line-height: 1.8;
+  opacity: .6;
+}
+.src-meta b { font-weight: 600; margin-right: 6px; opacity: .8; }
+.src-lead {
+  margin: 0;
+  max-width: 62ch;
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.85;
+  opacity: .86;
+}
+
+/* ---------------- 正文：一张纸，压在页面背景上 ---------------- */
+
+.src-article {
+  margin: clamp(28px, 4vw, 48px) 0 clamp(40px, 6vw, 72px);
+  padding: clamp(24px, 3.4vw, 56px) clamp(20px, 3.4vw, 60px);
+  background: #f7f4ea;
+  color: #1b2625;
+  border-radius: 3px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .28);
+  font-size: 16.5px;
+  line-height: 1.9;
+}
+.src-article a {
+  overflow-wrap: anywhere;
+  color: #8c4a1f;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.src-article a:hover { color: #b95435; }
+.src-article :focus-visible { outline: 2px solid #b95435; outline-offset: 3px; }
+.src-article p,
+.src-article li,
+.src-article td,
+.src-article th { margin: 0 0 14px; overflow-wrap: anywhere; word-break: break-word; }
+.src-article p { max-width: 74ch; }
+.src-article li { margin-bottom: 7px; }
+.src-article strong { font-weight: 700; }
+
+.src-section {
+  padding: clamp(20px, 2.6vw, 34px) 0;
+  border-top: 1px solid rgba(27, 38, 37, .14);
+}
+.src-section:first-child { border-top: 0; padding-top: 6px; }
+
+.src-h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0 0 18px;
+  font-size: clamp(20px, 2.2vw, 27px);
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -.005em;
+}
+.src-no {
+  flex: none;
+  font: 500 12px/1 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .12em;
+  color: #b95435;
+}
+.src-body > h3,
+.src-body > h4,
+.src-body > h5 {
+  margin: 22px 0 10px;
+  font-size: 17.5px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #14312c;
+}
+.src-body > h3:first-child,
+.src-body > h4:first-child { margin-top: 0; }
+
+.src-body ul,
+.src-body ol { margin: 0 0 14px; padding-left: 1.35em; }
+.src-body li { margin: 0 0 7px; }
+.src-body li > ul,
+.src-body li > ol { margin-top: 7px; }
+
+/* 引用：文档里的原文句子、提示词、演示文案 */
+.src-article blockquote {
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  background: #efeade;
+  border-left: 3px solid #b95435;
+  border-radius: 2px;
+  color: #22302e;
+  font-size: 16px;
+  line-height: 1.85;
+}
+.src-article blockquote p:last-child { margin-bottom: 0; }
+.src-article blockquote ul,
+.src-article blockquote ol { margin-bottom: 0; }
+
+.src-article code {
+  padding: .1em .38em;
+  background: rgba(27, 38, 37, .08);
+  border-radius: 2px;
+  font: 500 .9em/1.5 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  overflow-wrap: anywhere;
+}
+.src-article pre {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: #16211f;
+  color: #e8e4d6;
+  border-radius: 3px;
+  font: 400 13px/1.7 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+}
+.src-article pre code { background: none; padding: 0; color: inherit; }
+
+.src-article .src-tablewrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 0 0 16px;
+}
+.src-article .src-tablewrap table { margin: 0; min-width: 420px; }
+.src-article table {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 16px;
+  border-collapse: collapse;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.src-article th,
+.src-article td {
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(27, 38, 37, .16);
+  text-align: left;
+  vertical-align: top;
+}
+.src-article th { font-weight: 600; background: rgba(27, 38, 37, .05); }
+.src-article .dossier-table { margin: 0 0 16px; max-width: 100%; overflow-x: auto; }
+
+.src-colophon {
+  margin: clamp(16px, 2.4vw, 26px) 0 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(27, 38, 37, .14);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: #5c6a66;
+}
+
+/* ---------------- 交互台：正文之后的一块独立区域 ---------------- */
+
+.src-play {
+  margin: clamp(18px, 2.6vw, 30px) 0 clamp(32px, 5vw, 64px);
+  padding: clamp(22px, 3vw, 40px);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 3px;
+  background: #0f1a19;
+  color: #f3eee2;
+}
+.src-play-head { margin-bottom: clamp(20px, 3vw, 32px); }
+.src-play-kicker {
+  display: block;
+  margin-bottom: 10px;
+  font: 600 10.5px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+.src-play-head h2 {
+  margin: 0 0 10px;
+  font-size: clamp(22px, 2.6vw, 32px);
+  line-height: 1.25;
+  font-weight: 500;
+}
+.src-play-head p {
+  margin: 0;
+  max-width: 64ch;
+  font-size: 14.5px;
+  line-height: 1.85;
+  opacity: .78;
+}
+.src-play-body > * + * { margin-top: clamp(24px, 3vw, 40px); }
+
+/* 交互台内部原本依赖的版心不再受 main 影响，这里给它自己的宽度 */
+.src-play-body section,
+.src-play-body details { max-width: none; }
+
+@media (max-width: 640px) {
+  .src-article { font-size: 16px; line-height: 1.85; padding: 22px 18px; }
+  .src-h2 { gap: 10px; }
+  /* 交互台在窄屏上回到满宽，否则内部横向条（如七幕胶片）会被挤爆 */
+  .src-play { padding: 18px 0; }
+  .src-play-head { padding: 0 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .src-article,
+  .src-play { scroll-behavior: auto; }
+}
