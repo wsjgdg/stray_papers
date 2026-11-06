@@ -26,7 +26,7 @@
   function initHome() {
     var channels = [
       { name: '提示词铸造台', desc: '抽出或装回字模，压印一版自己的提问稿，再看修改前后的差别。', href: 'chapter-01.html?v=press-07', playable: true, mode: 'forge', a: '想法', b: '提问稿' },
-      { name: '趋势编辑室', desc: '选一个熟悉的领域，分清有来源的观察、可小试的动作与夸大的承诺，带走一张试验票。', href: 'chapter-02.html?v=desk-08', playable: true, mode: 'trends', a: '情报', b: '试验票' },
+      { name: '趋势编辑室', desc: '选一个熟悉的领域，分清有来源的观察、可小试的动作与夸大的承诺，带走一张试验票。', href: 'chapter-02.html?v=desk-09', playable: true, mode: 'trends', a: '情报', b: '试验票' },
       { name: '规则调试台', desc: '亲手运行细胞规则，找出偏差、修好三格灯或滑翔机，再留下一张真实计算的实验记录。', href: 'chapter-03.html?v=lab-05', playable: true, mode: 'lab', a: '规则', b: '实验记录' },
       { name: '路线编织台', desc: '让条件改变路线，把任务塞进有限的本周时间，试出超时、漏核对或可行的第一步，再带走路线票。', href: 'chapter-04.html?v=weave-06', playable: true, mode: 'routes', a: '条件', b: '试运行' },
       { name: '七幕反诈决策室', desc: '把可疑话术存进证据袋，在第 4 与第 6 幕作选择；第 5 幕可亲手撕开账面，带走自己的复盘。', href: 'chapter-05.html?v=case-10', playable: true, mode: 'scam', a: '话术', b: '证据' },

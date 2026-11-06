@@ -250,6 +250,13 @@
     grip.addEventListener('click', function (event) { event.preventDefault(); });
     grip.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectCard(card.id, true); } });
   }
+  function replate() {
+    var desk = document.querySelector('.workbench');
+    if (!desk || !desk.classList) return;
+    desk.classList.remove('is-replating');
+    void desk.offsetWidth;
+    desk.classList.add('is-replating');
+  }
   document.querySelectorAll('[data-bin]').forEach(function (button) {
     button.addEventListener('click', function () {
       if (selected) assign(selected, button.dataset.bin);
@@ -264,12 +271,14 @@
       feedback.dataset.result = '';
       feedback.textContent = '已换到' + tracks[current].name + '。点卡选择分类；切回其他领域时，之前的本页判断仍在。';
       renderAll();
+      replate();
     });
   });
   document.getElementById('reset-track').addEventListener('click', function () {
     state[current] = { choices: {}, plan: null }; selected = null; lastDecision = null;
     feedback.dataset.result = ''; feedback.textContent = '已清空' + tracks[current].name + '的本页判断。重新从第一张情报开始。';
     renderAll();
+    replate();
   });
   document.documentElement.classList.add('trend-ready');
   if (window.matchMedia('(max-width:760px)').matches) feedback.textContent = '先点一张情报卡，再选分类章。分错可以改判。';
