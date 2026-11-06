@@ -410,3 +410,34 @@
 **验证：** 真 Chromium 1280 与 375 各跑 7 页（拨盘 + 六关）：0 控制台报错、0 请求失败、无横向溢出、`prototype-dala.css` 全部生效、`body` 背景为纯黑 `rgb(0,0,0)`；①⑤ 的 `window.gsap` 正常加载。
 
 **怎么找回正式站：** 提交 `4d54418`（原始米色八页）与 `e2c4fae`（最后一版编辑式八页）都在历史里。
+
+## 2026-11-06 · 更正：DESIGN.MD 前的原型并没有丢，它躺在悬空对象里
+
+**用户质疑：**「你确定从来没被单独提交过？」——质疑成立，我上一轮说"原型只有 Dala 这一个版本、之前那版拿不回来"是错的。
+
+**核实结论（两种情况要分开说）：**
+- **提交里确实没有。** `git log --all`（含 `origin/main`、`backup/*`）一共 20 个提交；把 `prototype/` 带进仓库的只有 `c715e9a` 一个，而它一开始就是 Dala 版（自带 `prototype-dala.css`）；它的父提交 `4d54418` 里没有 `prototype/` 目录。`origin/main`（`c308c33`）也没有。
+- **但对象库里有。** `git fsck --lost-found` 找出 260 个悬空 blob，其中 7 个是 **2026-11-06 01:04**（Dala 提交前 52 分钟）写进去的整页 HTML，带附页、不带 Dala：
+
+| 页面 | 悬空 blob | 大小 |
+|---|---|---|
+| 拨盘 `index.html` | `1c68e8a7` | 39,694 |
+| ① `chapter-01.html` | `75adbf82` | 82,655 |
+| ② `chapter-02.html` | `d7c40923` | 41,088 |
+| ③ `chapter-03.html` | `d5921302` | 27,895 |
+| ④ `chapter-04.html` | `fe2a6ebc` | 39,683 |
+| ⑤ `chapter-05.html` | `27cbe3db` | 139,175 |
+| ⑥ `chapter-06.html` | `b029240d` | 36,079 |
+
+（同目录还有 01:39 / 01:41 两批带 Dala 的版本，正好把分界点标出来。）
+
+**怎么恢复：** `git cat-file -p <blob> > prototype/<页面>`；它们引用的 `prototype-*.css/js` 文件名至今没变，所以页面可以直接配现在的底座文件跑。
+
+**本次做了什么：**
+- 七个页面按上表取回，替换 `prototype/` 下的同名文件。
+- 删掉只为 Dala 层服务的 `prototype-dala.css`、`prototype-particles.js`、`prototype-inter.woff2`、`prototype-noto-light.woff2`（全站只有 dala.css 引用这两个字体）。
+- 保留 `prototype-noto.woff2`（含 emoji 的合并字体，是 DESIGN.MD 之前的字体方案）。
+
+**已知不精确的地方（必须记下）：** CSS/JS 底座文件没有 01:04 的存档（当时只把 HTML 写进了对象库），用的是当前版本。Dala 之后几轮里对底座 CSS 的追加（如 `.dala-wire-in`、部分细线行规则）会残留，但页面不引用 Dala 层，整体呈现是 DESIGN.MD 之前的编辑式外观：拨盘墨绿 `#101e1d`、① 纸白 `#e9e6db`、② 深蓝、③ 深海、④ 紫夜、⑤ 墨绿、⑥ 靛蓝。
+
+**验证：** 真 Chromium 1280 / 375 各 7 页：0 控制台报错、0 请求失败、无横向溢出、`prototype-dala.css` 不再加载。Dala 版原型完整保存在 `backup/pre-dala-50a2b7f`（`50a2b7f`）。
