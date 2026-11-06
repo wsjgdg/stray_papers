@@ -434,7 +434,8 @@ PAGES = [
     dict(file="chapter-01.html", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
          cards=True, stage=[]),
     dict(file="chapter-02.html", key="02", docs=["p2-trends.md", "sources-p123.md"],
-         deck="chapter02", deck_sources="sources-p123.md", stage=[]),
+         deck="chapter02", deck_sources="sources-p123.md",
+         world=True, deck_js=["prototype-reveal.js?v=reveal-01"], stage=[]),
     dict(file="chapter-03.html", key="03", docs=["p3-lab.md", "sources-p123.md"],
          deck="chapter03", deck_sources="sources-p123.md", stage=[]),
     dict(file="chapter-04.html", key="04", docs=["p4-side-jobs.md", "sources-p456.md"],
@@ -584,7 +585,7 @@ def build(spec: dict) -> str:
 
     body_class = body_open.group(0) if body_open else "<body>"
 
-    hero = (
+    hero = "" if spec.get("world") else (
         '<section class="src-hero">'
         f'<p class="src-kicker">SOURCE TEXT / 内容真源 · 第 {spec["key"]} 关</p>'
         f"<h1>{inline(title)}</h1>"
@@ -602,7 +603,8 @@ def build(spec: dict) -> str:
         body_parts = hero + scene + nav + links + article
     else:
         body_parts = hero + scene + links + article + nav
-    main = f'<main class="src-main" id="source-{spec["key"]}">{body_parts}</main>'
+    main_class = "src-main src-main--world" if spec.get("world") else "src-main"
+    main = f'<main class="{main_class}" id="source-{spec["key"]}">{body_parts}</main>'
 
     out = strip_dossier(
         head
