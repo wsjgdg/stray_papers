@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>micro props 2</title>
+<style>
+  body { margin: 0; background: #202020; color: #ddd; font: 13px monospace; }
+  #log { white-space: pre-wrap; padding: 8px; }
+  img.out { display: block; width: 256px; border: 1px solid #555; margin: 4px; }
+</style>
+</head>
+<body>
+<div id="log">booting…</div>
+<div id="out"></div>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const log = (s) => { document.getElementById('log').textContent += s + '\n'; };
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(640, 640);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+renderer.domElement.style.display = 'none';
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+function makeScene() {
+  const scene = new THREE.Scene();
+  scene.environment = envTex;
+  const key = new THREE.DirectionalLight(0xdfe8ff, 2.2);
+  key.position.set(3, 5, 4);
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0x8fb4ff, 1.0);
+  rim.position.set(-4, 2, -3);
+  scene.add(rim);
+  return scene;
+}
+
+function fitCamera(camera, box, dir) {
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const dist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360)) * 1.15;
+  camera.position.copy(center).add(dir.clone().normalize().multiplyScalar(dist));
+  camera.lookAt(center);
+}
+
+const M = {
+  pole: new THREE.MeshStandardMaterial({ color: 0x3c4450, metalness: 0.75, roughness: 0.4 }),
+  signPanel: new THREE.MeshStandardMaterial({ color: 0x1d4d3a, metalness: 0.2, roughness: 0.5 }),
+  paper: new THREE.MeshStandardMaterial({ color: 0xe8e2d2, roughness: 0.85 }),
+  lanyard: new THREE.MeshStandardMaterial({ color: 0x365a8c, roughness: 0.6 }),
+  badge: new THREE.MeshStandardMaterial({ color: 0xdfe4ec, metalness: 0.15, roughness: 0.35 }),
+  sticky: new THREE.MeshStandardMaterial({ color: 0xf5e27a, roughness: 0.9, emissive: 0x2a2408, emissiveIntensity: 0.35 }),
+  brass: new THREE.MeshStandardMaterial({ color: 0xc9a15a, metalness: 0.85, roughness: 0.35 }),
+};
+
+// 布面纹理小工具：返回带手写感的 canvas 纹理
+function textTex(w, h, draw) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  draw(g, w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/* ---------- prop 4: bus stop sign (雨夜·环山公路) ---------- */
+function buildBusStop() {
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 3.4, 12), M.pole);
+  pole.position.y = 1.7;
+  g.add(pole);
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.5, 0.05), M.signPanel);
+  panel.position.y = 2.9;
+  g.add(panel);
+  const signTex = textTex(256, 340, function (g2, w, h) {
+    g2.fillStyle = '#dff0e8'; g2.fillRect(0, 0, w, h);
+    g2.fillStyle = '#1d4d3a'; g2.font = 'bold 30px sans-serif';
+    g2.fillText('天文台', 24, 52);
+    g2.font = '22px sans-serif'; g2.fillStyle = '#28483c';
+    g2.fillText('末班 21:40', 24, 100);
+    g2.fillText('首班 06:10', 24, 136);
+    g2.strokeStyle = '#1d4d3a'; g2.lineWidth = 2;
+    g2.beginPath(); g2.moveTo(20, 160); g2.lineTo(w - 20, 160); g2.stroke();
+    g2.font = '26px sans-serif'; g2.fillStyle = '#173a2e';
+    g2.fillText('雾天请携带', 24, 210);
+    g2.fillText('照明工具', 24, 244);
+    // 潮气水渍
+    for (let i = 0; i < 14; i++) {
+      g2.fillStyle = 'rgba(90,120,110,' + (0.05 + Math.random() * 0.06) + ')';
+      g2.beginPath();
+      g2.arc(Math.random() * w, 160 + Math.random() * (h - 170), 6 + Math.random() * 16, 0, 6.29);
+      g2.fill();
+    }
+  });
+  const signFace = new THREE.Mesh(new THREE.PlaneGeometry(1.02, 1.36), new THREE.MeshStandardMaterial({ map: signTex, roughness: 0.6 }));
+  signFace.position.set(0, 2.9, 0.035);
+  g.add(signFace);
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.07, 0.12), M.pole);
+  cap.position.y = 3.68;
+  g.add(cap);
+  g.position.y = -1.9;
+  return g;
+}
+
+/* ---------- prop 5: ID badge on lanyard (机房) ---------- */
+function buildBadge() {
+  const g = new THREE.Group();
+  const clip = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.022, 8, 16), M.brass);
+  clip.position.y = 1.1;
+  g.add(clip);
+  const strapCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.05, 1.08, 0), new THREE.Vector3(-0.1, 0.85, 0.01),
+    new THREE.Vector3(-0.02, 0.66, 0), new THREE.Vector3(0.05, 0.56, 0),
+  ]);
+  const strap = new THREE.Mesh(new THREE.TubeGeometry(strapCurve, 12, 0.035, 6), M.lanyard);
+  g.add(strap);
+  const strap2 = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.05, 1.08, 0), new THREE.Vector3(0.11, 0.86, 0),
+    new THREE.Vector3(0.06, 0.66, 0), new THREE.Vector3(0.05, 0.56, 0),
+  ]), 12, 0.035, 6), M.lanyard);
+  g.add(strap2);
+  const badgeTex = textTex(256, 340, function (g2, w, h) {
+    g2.fillStyle = '#eef1f6'; g2.fillRect(0, 0, w, h);
+    g2.fillStyle = '#365a8c'; g2.fillRect(0, 0, w, 54);
+    g2.fillStyle = '#fff'; g2.font = 'bold 24px sans-serif';
+    g2.fillText('深空数据站', 18, 38);
+    g2.fillStyle = '#1a2230'; g2.font = '26px sans-serif';
+    g2.fillText('沈眠', 24, 110);
+    g2.font = '18px sans-serif'; g2.fillStyle = '#5a6478';
+    g2.fillText('档案与备份组', 24, 146);
+    g2.fillText('编号 S-0417', 24, 176);
+    // 照片位：剪影
+    g2.fillStyle = '#c2cad8'; g2.fillRect(w - 106, 74, 84, 104);
+    g2.fillStyle = '#8a94a8';
+    g2.beginPath(); g2.arc(w - 64, 106, 22, 0, 6.29); g2.fill();
+    g2.beginPath(); g2.moveTo(w - 100, 178); g2.lineTo(w - 64, 132); g2.lineTo(w - 28, 178); g2.closePath(); g2.fill();
+    g2.strokeStyle = '#b03030'; g2.lineWidth = 5;
+    g2.beginPath(); g2.moveTo(10, h - 10); g2.lineTo(w - 10, 20); g2.stroke();
+  });
+  const badge = new THREE.Mesh(new THREE.BoxGeometry(0.78, 1.05, 0.05), new THREE.MeshStandardMaterial({ map: badgeTex, roughness: 0.4 }));
+  badge.position.y = 0.05;
+  g.add(badge);
+  const punch = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.06, 12), M.brass);
+  punch.rotation.z = Math.PI / 2;
+  punch.position.set(0, 0.52, 0);
+  g.add(punch);
+  g.position.y = -1.2;
+  return g;
+}
+
+/* ---------- prop 6: sticky note on rack (机房) ---------- */
+function buildSticky() {
+  const g = new THREE.Group();
+  const noteTex = textTex(256, 256, function (g2, w, h) {
+    g2.fillStyle = '#f5e27a'; g2.fillRect(0, 0, w, h);
+    g2.fillStyle = 'rgba(180,150,40,0.25)'; g2.fillRect(0, 0, w, 10);
+    g2.fillStyle = '#3a3418'; g2.font = '30px sans-serif';
+    g2.fillText('栖：', 26, 58);
+    g2.fillText('凌晨三点', 26, 102);
+    g2.fillText('记得叫她', 26, 146);
+    g2.fillText('备份不是她', 26, 190);
+    g2.font = '22px sans-serif'; g2.fillStyle = '#6a6230';
+    g2.fillText('——眠', 150, 236);
+  });
+  const note = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.82, 0.015), new THREE.MeshStandardMaterial({ map: noteTex, roughness: 0.9, emissive: 0x2a2408, emissiveIntensity: 0.3 }));
+  note.rotation.z = -0.045;
+  g.add(note);
+  // 胶带贴角
+  const tape = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.1), new THREE.MeshStandardMaterial({ color: 0xd8e4ec, transparent: true, opacity: 0.55, roughness: 0.3 }));
+  tape.position.set(0.24, 0.36, 0.012);
+  tape.rotation.z = 0.6;
+  g.add(tape);
+  g.position.y = -0.4;
+  return g;
+}
+
+/* ---------- render ---------- */
+const PROPS = [
+  { id: 'busstop', build: buildBusStop, dir: new THREE.Vector3(2.4, 1.4, 4.6) },
+  { id: 'badge', build: buildBadge, dir: new THREE.Vector3(0.6, 0.4, 4.2) },
+  { id: 'sticky', build: buildSticky, dir: new THREE.Vector3(0.4, 0.6, 4.2) },
+];
+
+const results = {};
+let idx = 0;
+function renderNext() {
+  if (idx >= PROPS.length) {
+    log('ALL DONE');
+    window.__PROPS_READY = JSON.stringify(results);
+    return;
+  }
+  const p = PROPS[idx];
+  try {
+    const scene = makeScene();
+    const group = p.build();
+    scene.add(group);
+    const box = new THREE.Box3().setFromObject(group);
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+    fitCamera(camera, box, p.dir);
+    renderer.render(scene, camera);
+    const url = renderer.domElement.toDataURL('image/webp', 0.85);
+    results[p.id] = url;
+    const img = document.createElement('img');
+    img.className = 'out';
+    img.src = url;
+    out.appendChild(img);
+    log(p.id + ' rendered, ' + Math.round(url.length / 1024) + 'KB');
+  } catch (e) {
+    results[p.id] = 'ERR ' + e.message;
+    log(p.id + ' ERR ' + e.message);
+  }
+  idx += 1;
+  setTimeout(renderNext, 120);
+}
+log('renderer ready, rendering ' + PROPS.length + ' props…');
+renderNext();
+</script>
+</body>
+</html>
