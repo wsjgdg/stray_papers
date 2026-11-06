@@ -1,15 +1,39 @@
-# 内容写作规范 — AI 探索基地（第 ①②③ 关文字真源）
+# 内容写作规范 — AI 探索基地（六关文字真源）
 
 > 本目录是站点文字内容的**唯一真源**（source of truth）。页面上会出现的每一句文案——标题、段落、卡片文案、按钮/链接文字、来源脚注——都先在这里定稿，再落到 HTML。改文案先改这里，再同步页面；反过来改了页面，也要回写这里。
+>
+> 页面不再手写：`ai-exploration-base/scripts/build-source-pages.py` 会把这些 Markdown 直接渲染进六关页面。**只改页面不改这里，下次构建就丢了。**
 
 ## 覆盖文件
 
-| 文件 | 对应页面 | 对应 HTML |
+| 文件 | 对应页面 | 对应 HTML（构建产物） |
 |---|---|---|
-| [p1-what-ai-can-do.md](p1-what-ai-can-do.md) | 第 ① 关 AI 能做什么 | `pages/what-ai-can-do.html` |
-| [p2-trends.md](p2-trends.md) | 第 ② 关 AI 趋势与行业 | `pages/trends.html` |
-| [p3-lab.md](p3-lab.md) | 第 ③ 关 儿子的 AI 实验室 | `pages/lab.html` |
-| [sources-p123.md](sources-p123.md) | 三页共用的引用主清单 | 各页 `来源` 区块 |
+| [p0-index-graduation.md](p0-index-graduation.md) | 原型拨盘 · 六频道入口 | `prototype/index.html` |
+| [p1-what-ai-can-do.md](p1-what-ai-can-do.md) | 第 ① 关 AI 能做什么 | `prototype/chapter-01.html` |
+| [p2-trends.md](p2-trends.md) | 第 ② 关 AI 趋势与行业 | `prototype/chapter-02.html` |
+| [p3-lab.md](p3-lab.md) | 第 ③ 关 儿子的 AI 实验室 | `prototype/chapter-03.html` |
+| [p4-side-jobs.md](p4-side-jobs.md) | 第 ④ 关 副业地图 | `prototype/chapter-04.html` |
+| [p5-anti-scam.md](p5-anti-scam.md) | 第 ⑤ 关 骗局解剖室 | `prototype/chapter-05.html` |
+| [p6-academy.md](p6-academy.md) | 第 ⑥ 关 提示词学院 | `prototype/chapter-06.html` |
+| [real-cases-p1.md](real-cases-p1.md) | ① 关的真实案例 | `prototype/chapter-01.html` |
+| [real-cases-p5.md](real-cases-p5.md) | ⑤ 关每一幕背后的真实案件 | `prototype/chapter-05.html` |
+| [sources-p123.md](sources-p123.md) | ①②③ 共用的引用主清单 | 各页 `来源` 区块 |
+| [sources-p456.md](sources-p456.md) | ④⑤⑥ 共用的引用主清单 | 各页 `来源` 区块 |
+
+## 正文落在哪张台子上（六关的承载点）
+
+正文不进附录，也不在交互台后面另起一纸。真源里的每一节，都要对着一张具体的东西落下：
+
+| 关 | 台子 | 正文的落点 |
+|---|---|---|
+| ① | 五张会翻面的实物卡 | 卡片正反面就是正文；页尾只留一张链接表 |
+| ② | 趋势分拣台 | 情报卡、两个档案格、页首数据展台（共享数字只在这里出现一次） |
+| ③ | 实验室 | 引导正文与三件作品条目挂在同一节；`algorithm-lab` 内嵌程序保留 |
+| ④ | 副业路线台 | 选中哪条路线，详情面板里就摊开真源那一层的卡片（正文 / 步骤 / 工具 / 注意） |
+| ⑤ | 八幕决策室 + 撕纸账页 + 话术滚筒 | 心理机制 / 两条真数字 / 工具挂在「解剖这一幕」后的参照抽屉；撕纸账页默认展开，留核验结论；滚筒的六种说法来自话术词典 |
+| ⑥ | 提示词学院 | 三课分别长在校准台、试投、样例站与检查站里，不再另排一节 |
+
+写新文案时先想清楚这句话**落在哪个可点的东西上**；落不下去，说明它属于别处，别硬塞。
 
 ## 一、读者画像与语言原则
 
@@ -74,7 +98,19 @@
 - 文档只管"说什么"，不管排版（颜色、栅格、动画不在此记录）。
 - 演示样例的验证方式以"验证方式"小字条目附在对应演示之后。
 
-## 七、交付与验收清单（每次改动自查）
+## 七、构建与自检
+
+```bash
+# 在仓库根目录执行；产物是 ai-exploration-base/prototype/*.html
+python3 ai-exploration-base/scripts/build-source-pages.py
+```
+
+- **幂等**：连跑两次，`prototype/*.html` 的 md5 必须一致；不一致说明脚本里有随机或漏改的拼接。
+- **两个宽度**：1280 与 375 各看一遍——无横向溢出、无控制台报错、该点的还能点。
+- **版本戳**：改了 `prototype/*.js` / `*.css` 就递增页面里的 `?v=`，否则读者拿到的还是旧缓存（对照根目录 `README.md` 的版本表）。
+- **生成物别手改**：`prototype/chapter-0X.html`、`prototype/route-fill.js` 都由脚本产出。
+
+## 八、交付与验收清单（每次改动自查）
 
 - [ ] 所有对话/生成内容样例已标注"演示样例"并有验证方式
 - [ ] 所有数字有 `[来源N]` 且来源在清单里可点开
@@ -82,4 +118,5 @@
 - [ ] 无编造数字；拿不准的已删或改定性
 - [ ] 全部外链 `curl` 状态码已记录、访问日期为本次验证日
 - [ ] 无死链；403 官方链接已注明
-- [ ] 文档与 HTML 文案一致（无"文档一套、页面一套"）
+- [ ] 文档与 HTML 文案一致（无"文档一套、页面一套"）——改完跑一次构建
+- [ ] 正文长在交互本体里，页尾没有多出来的「原文 / 逐字」附录
