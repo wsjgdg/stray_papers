@@ -193,3 +193,32 @@ def render(md: str, sources_md: str = "") -> tuple[str, str]:
                             "工具都能免费开始用；两条合规依据是国家机关公开文件，点开可核对原文。",
                             by="工具 / 依据")
     return floor, table
+
+
+# ------------------------------------------------- 老路线台的数据层（三层卡片）
+
+def desk_js(md: str) -> str:
+    """p4 真源里的三层卡片，导成老路线台能在详情面板里展开的数据。"""
+    import json
+
+    doc = parse(md)
+    keys = ["starter", "craft", "systems"]
+    tiers = {}
+    for key, group in zip(keys, doc["groups"]):
+        cards = []
+        for it in group["items"]:
+            cards.append({
+                "name": (it.get("emoji") or "") + " " + it["name"],
+                "paras": it.get("paras") or [],
+                "steps": it.get("steps") or [],
+                "tools": it.get("tools") or "",
+                "risk": it.get("risk") or "",
+            })
+        tiers[key] = {"level": group["level"], "title": group["title"], "cards": cards}
+    payload = {
+        "tiers": tiers,
+        "income": doc.get("income") or {},
+        "warn": doc.get("warn") or "",
+    }
+    return ("/* 04 / 路线台数据层：由 docs/content/p4-side-jobs.md 生成，勿手改。 */\n"
+            "window.ROUTE_FILL = " + json.dumps(payload, ensure_ascii=False, indent=1) + ";\n")

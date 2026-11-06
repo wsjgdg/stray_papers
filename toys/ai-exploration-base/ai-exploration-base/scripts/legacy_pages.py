@@ -316,24 +316,14 @@ def _fill_block(title: str, article_html: str, kicker: str) -> str:
 
 
 def fill_04(scene: str, md: str, article: str) -> str:
-    """④ 副业地图：交互台不动，真源的三层卡片与收入实话接在它后面、页内。"""
-    block = _fill_block("三条路，摆在这儿", article, "THE ROUTES / 正文 · 逐字")
-    m = re.search(r'<section class="route-context"', scene)
-    if not m:
-        raise SystemExit("④ 找不到 route-context")
-    scene = scene[: m.start()] + block + scene[m.start():]
-    scene = re.sub(r'<section class="src-article src-verbatim"[\s\S]*?</section>\s*', "", scene)
+    """④ 副业地图：正文只走路线台——三层卡片在选中的那条路线的详情里展开。"""
+    scene = re.sub(r'<section class="page-fill"[\s\S]*?</section>\s*(?=<section)', "", scene)
     return scene
 
 
 def fill_06(scene: str, md: str, article: str) -> str:
-    """⑥ 提示词学院：校准台不动，三课与毕业任务排在页内，再回到检查台。"""
-    block = _fill_block("三课，一句一句来", article, "THREE LESSONS / 正文 · 逐字")
-    m = re.search(r'<section class="after-station"', scene)
-    if not m:
-        raise SystemExit("⑥ 找不到 after-station")
-    scene = scene[: m.start()] + block + scene[m.start():]
-    scene = re.sub(r'<section class="src-article src-verbatim"[\s\S]*?</section>\s*', "", scene)
+    """⑥ 提示词学院：三课本来就长在校准台、样例站和检查站里，不再另排一节。"""
+    scene = re.sub(r'<section class="page-fill"[\s\S]*?</section>\s*(?=<section)', "", scene)
     return scene
 
 
