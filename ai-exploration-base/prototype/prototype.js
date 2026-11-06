@@ -729,39 +729,109 @@
       cylinder.appendChild(face);
     });
     var total = dict.length;
+    var stepDeg = 360 / total;
+    var faces = cylinder.querySelectorAll('.drum-face');
+    var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var turn = 0, angle = 0, target = 0, frame = 0;
+    var animFrom = 0, animStart = 0, animDur = 420;
+    var dragging = false, dragFrom = 0, dragAngle = 0, dragLastY = 0, dragLastT = 0, dragSpeed = 0, wheelAcc = 0;
+
     drum.setAttribute('aria-valuemax', String(total));
     if (rule) rule.textContent = total + ' 种说法，同一个转账门槛。';
 
     function pad(n) { return (n < 10 ? '0' : '') + n; }
-    function paint() {
-      cylinder.style.setProperty('--turn', index);
-      var face = cylinder.querySelectorAll('.drum-face');
-      Array.prototype.forEach.call(face, function (node, n) { node.classList.toggle('is-front', n === index); });
+    function wrapIndex(n) { return ((n % total) + total) % total; }
+    function sync() {
+      var shown = wrapIndex(Math.round(-angle / stepDeg));
+      Array.prototype.forEach.call(faces, function (node, n) { node.classList.toggle('is-front', n === shown); });
+      if (shown === index && drum.dataset.drumPainted) return;
+      index = shown;
       var item = dict[index];
       explanation.textContent = item.name.replace(/^["“]|["”]$/g, '') + (item.rest || '');
       position.textContent = pad(index + 1) + ' / ' + pad(total);
       drum.setAttribute('aria-valuenow', String(index + 1));
       drum.setAttribute('aria-valuetext', item.name);
+      drum.dataset.drumPainted = '1';
     }
-    function step(delta) { index = (index + delta + total) % total; paint(); }
+    function render() { cylinder.style.transform = 'rotateX(' + angle + 'deg)'; sync(); }
+    function settle() {
+      // 整圈之后把角度折回 0，视觉连续、数字也不会越滚越大
+      var whole = Math.floor(turn / total);
+      if (!whole) return;
+      turn -= whole * total;
+      angle += whole * total * stepDeg;
+      target += whole * total * stepDeg;
+      render();
+    }
+    function tick(now) {
+      frame = 0;
+      if (dragging) return;
+      var progress = Math.min(1, (now - animStart) / animDur);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      angle = animFrom + (target - animFrom) * eased;
+      render();
+      if (progress < 1) { frame = requestAnimationFrame(tick); return; }
+      angle = target; render(); settle();
+    }
+    function spinTo(nextTurn) {
+      turn = nextTurn; target = -turn * stepDeg;
+      if (motionQuery.matches) { angle = target; render(); settle(); return; }
+      animFrom = angle; animStart = performance.now();
+      if (!frame) frame = requestAnimationFrame(tick);
+    }
+    function step(delta) { spinTo(turn + delta); }
     readDrumStep = step;
-    if (!drum.dataset.drumBound) {
-      drum.dataset.drumBound = '1';
-      if (prev) prev.addEventListener('click', function () { readDrumStep(-1); });
-      if (next) next.addEventListener('click', function () { readDrumStep(1); });
-      drum.addEventListener('keydown', function (event) {
-        if (event.key === 'ArrowDown' || event.key === 'ArrowRight') { readDrumStep(1); event.preventDefault(); }
-        if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') { readDrumStep(-1); event.preventDefault(); }
-      });
-      var dragFrom = null;
-      drum.addEventListener('pointerdown', function (event) { dragFrom = event.clientY; });
-      drum.addEventListener('pointerup', function (event) {
-        if (dragFrom === null) return;
-        var delta = dragFrom - event.clientY;
-        dragFrom = null;
-        if (Math.abs(delta) > 18) readDrumStep(delta > 0 ? 1 : -1);
-      });
+
+    // 拖：跟着指针滚，松手按惯性吸附到最近的一面
+    drum.onpointerdown = function (event) {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      dragging = true;
+      dragFrom = event.clientY; dragAngle = angle;
+      dragLastY = event.clientY; dragLastT = performance.now(); dragSpeed = 0;
+      if (frame) { cancelAnimationFrame(frame); frame = 0; }
+      if (drum.setPointerCapture) { try { drum.setPointerCapture(event.pointerId); } catch (err) {} }
+    };
+    drum.onpointermove = function (event) {
+      if (!dragging) return;
+      var now = performance.now(), dt = Math.max(1, now - dragLastT);
+      dragSpeed = (event.clientY - dragLastY) / dt;
+      dragLastY = event.clientY; dragLastT = now;
+      angle = dragAngle + (event.clientY - dragFrom) * 1.1;
+      render();
+    };
+    function releaseDrum() {
+      if (!dragging) return;
+      dragging = false;
+      if (performance.now() - dragLastT > 120) dragSpeed = 0;
+      spinTo(Math.round(-(angle + dragSpeed * 90) / stepDeg));
     }
-    paint();
+    drum.onpointerup = releaseDrum;
+    drum.onpointercancel = function () {
+      if (!dragging) return;
+      dragging = false;
+      spinTo(Math.round(-angle / stepDeg));
+    };
+
+    // 滚轮：一格一格地滚，不抢整页滚动
+    drum.onwheel = function (event) {
+      if (!event.deltaY) return;
+      event.preventDefault();
+      wheelAcc += event.deltaY;
+      if (Math.abs(wheelAcc) < 24) return;
+      step(wheelAcc > 0 ? 1 : -1);
+      wheelAcc = 0;
+    };
+
+    drum.onkeydown = function (event) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') { step(1); event.preventDefault(); }
+      else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') { step(-1); event.preventDefault(); }
+      else if (event.key === 'Home') { spinTo(0); event.preventDefault(); }
+    };
+    prev.onclick = function () { step(-1); };
+    next.onclick = function () { step(1); };
+
+    delete drum.dataset.drumPainted;
+    render();
   }
+
 })();

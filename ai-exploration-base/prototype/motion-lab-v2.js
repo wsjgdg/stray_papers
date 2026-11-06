@@ -203,72 +203,75 @@
   reset.addEventListener('click',function(){seek(0);});
   // Three physical faces repeat every full revolution: 1 → 2 → 3 → 1.
   // Only the displayed word changes; every interpretation identifies the same transfer demand.
-  var drum=document.getElementById('word-drum'),cylinder=document.getElementById('drum-cylinder');
-  var drumExplanation=document.getElementById('drum-explanation'),drumPosition=document.getElementById('drum-position');
-  var prevWord=document.getElementById('drum-prev'),nextWord=document.getElementById('drum-next');
-  var words=['保证金','解冻费','最后一笔'];
-  var explanations=[
-    '所谓“保证金”：把额外转账包装成提现门槛。先交钱才能取钱，应立即停下。',
-    '所谓“解冻费”：用账户冻结制造紧迫感。不要按对方给的号码核实，改走独立渠道。',
-    '所谓“最后一笔”：用过去的投入逼你继续。不要为了追回旧钱，再汇一笔新钱。'
-  ];
-  var drumAngle=0,drumTarget=0,drumVelocity=0,drumRaf=0,drumIndex=-1,targetTurn=0;
-  var drumDragging=false,drumPointer=null,drumStartY=0,drumStartAngle=0,drumLastY=0,drumLastT=0,drumSpeed=0;
-  function wrap(n){return (n%3+3)%3;}
-  function renderDrum(){
-    cylinder.style.setProperty('--angle',drumAngle+'deg');
-    var index=wrap(Math.round(-drumAngle/120));
-    if(index!==drumIndex){
-      drumIndex=index;drum.setAttribute('aria-valuenow',String(index+1));drum.setAttribute('aria-valuetext',words[index]);
-      drumExplanation.textContent=explanations[index];drumPosition.textContent='0'+(index+1)+' / 03';
+  // 真源话术词典（SCAM_DICT）在场时，滚筒由 prototype.js 按六种说法驱动，这里不再另起一套
+  if (!(window.SCAM_DICT && window.SCAM_DICT.length)) {
+    var drum=document.getElementById('word-drum'),cylinder=document.getElementById('drum-cylinder');
+    var drumExplanation=document.getElementById('drum-explanation'),drumPosition=document.getElementById('drum-position');
+    var prevWord=document.getElementById('drum-prev'),nextWord=document.getElementById('drum-next');
+    var words=['保证金','解冻费','最后一笔'];
+    var explanations=[
+      '所谓“保证金”：把额外转账包装成提现门槛。先交钱才能取钱，应立即停下。',
+      '所谓“解冻费”：用账户冻结制造紧迫感。不要按对方给的号码核实，改走独立渠道。',
+      '所谓“最后一笔”：用过去的投入逼你继续。不要为了追回旧钱，再汇一笔新钱。'
+    ];
+    var drumAngle=0,drumTarget=0,drumVelocity=0,drumRaf=0,drumIndex=-1,targetTurn=0;
+    var drumDragging=false,drumPointer=null,drumStartY=0,drumStartAngle=0,drumLastY=0,drumLastT=0,drumSpeed=0;
+    function wrap(n){return (n%3+3)%3;}
+    function renderDrum(){
+      cylinder.style.setProperty('--angle',drumAngle+'deg');
+      var index=wrap(Math.round(-drumAngle/120));
+      if(index!==drumIndex){
+        drumIndex=index;drum.setAttribute('aria-valuenow',String(index+1));drum.setAttribute('aria-valuetext',words[index]);
+        drumExplanation.textContent=explanations[index];drumPosition.textContent='0'+(index+1)+' / 03';
+      }
     }
+    function normalizeDrum(){
+      var whole=Math.floor(targetTurn/3);
+      if(whole){drumAngle+=whole*360;targetTurn-=whole*3;drumTarget=-targetTurn*120;renderDrum();}
+    }
+    function drumFrame(){drumRaf=0;if(drumDragging)return;
+      if(reduced.matches){drumAngle=drumTarget;drumVelocity=0;renderDrum();normalizeDrum();return;}
+      drumVelocity=(drumVelocity+(drumTarget-drumAngle)*.13)*.75;
+      drumAngle+=drumVelocity;
+      if(Math.abs(drumTarget-drumAngle)<.04&&Math.abs(drumVelocity)<.04){drumAngle=drumTarget;drumVelocity=0;renderDrum();normalizeDrum();return;}
+      renderDrum();drumRaf=requestAnimationFrame(drumFrame);
+    }
+    function spinTo(turn){
+      targetTurn=turn;drumTarget=-targetTurn*120;
+      if(reduced.matches){drumAngle=drumTarget;drumVelocity=0;renderDrum();normalizeDrum();return;}
+      if(!drumRaf)drumRaf=requestAnimationFrame(drumFrame);
+    }
+    drum.addEventListener('pointerdown',function(e){
+      if(e.button!==undefined&&e.button!==0)return;
+      drumDragging=true;drumPointer=e.pointerId;drumStartY=drumLastY=e.clientY;drumStartAngle=drumAngle;
+      drumLastT=performance.now();drumSpeed=0;drumVelocity=0;
+      if(drumRaf){cancelAnimationFrame(drumRaf);drumRaf=0;}
+      drum.setPointerCapture(e.pointerId);e.preventDefault();
+    });
+    drum.addEventListener('pointermove',function(e){
+      if(!drumDragging||e.pointerId!==drumPointer)return;
+      var now=performance.now(),dt=Math.max(1,now-drumLastT);
+      drumSpeed=(e.clientY-drumLastY)/dt;drumLastY=e.clientY;drumLastT=now;
+      drumAngle=drumStartAngle+(e.clientY-drumStartY)*1.05;renderDrum();
+    });
+    function releaseDrum(e){
+      if(!drumDragging||e.pointerId!==drumPointer)return;
+      drumDragging=false;
+      if(performance.now()-drumLastT>110)drumSpeed=0;
+      var travel=Math.abs(drumLastY-drumStartY);
+      spinTo(travel<6?targetTurn+1:Math.round(-(drumAngle+drumSpeed*34)/120));
+    }
+    drum.addEventListener('pointerup',releaseDrum);
+    drum.addEventListener('pointercancel',function(e){if(drumDragging&&e.pointerId===drumPointer){drumDragging=false;spinTo(Math.round(-drumAngle/120));}});
+    drum.addEventListener('keydown',function(e){
+      var next=e.key==='ArrowDown'||e.key==='ArrowRight'?targetTurn+1:e.key==='ArrowUp'||e.key==='ArrowLeft'?targetTurn-1:e.key==='Home'?0:e.key==='End'?2:null;
+      if(next===null)return;e.preventDefault();spinTo(next);
+    });
+    prevWord.addEventListener('click',function(){spinTo(targetTurn-1);});
+    nextWord.addEventListener('click',function(){spinTo(targetTurn+1);});
+    reduced.addEventListener('change',function(){if(reduced.matches){if(drumRaf)cancelAnimationFrame(drumRaf);drumRaf=0;drumAngle=drumTarget;drumVelocity=0;renderDrum();normalizeDrum();}});
+    renderDrum();
   }
-  function normalizeDrum(){
-    var whole=Math.floor(targetTurn/3);
-    if(whole){drumAngle+=whole*360;targetTurn-=whole*3;drumTarget=-targetTurn*120;renderDrum();}
-  }
-  function drumFrame(){drumRaf=0;if(drumDragging)return;
-    if(reduced.matches){drumAngle=drumTarget;drumVelocity=0;renderDrum();normalizeDrum();return;}
-    drumVelocity=(drumVelocity+(drumTarget-drumAngle)*.13)*.75;
-    drumAngle+=drumVelocity;
-    if(Math.abs(drumTarget-drumAngle)<.04&&Math.abs(drumVelocity)<.04){drumAngle=drumTarget;drumVelocity=0;renderDrum();normalizeDrum();return;}
-    renderDrum();drumRaf=requestAnimationFrame(drumFrame);
-  }
-  function spinTo(turn){
-    targetTurn=turn;drumTarget=-targetTurn*120;
-    if(reduced.matches){drumAngle=drumTarget;drumVelocity=0;renderDrum();normalizeDrum();return;}
-    if(!drumRaf)drumRaf=requestAnimationFrame(drumFrame);
-  }
-  drum.addEventListener('pointerdown',function(e){
-    if(e.button!==undefined&&e.button!==0)return;
-    drumDragging=true;drumPointer=e.pointerId;drumStartY=drumLastY=e.clientY;drumStartAngle=drumAngle;
-    drumLastT=performance.now();drumSpeed=0;drumVelocity=0;
-    if(drumRaf){cancelAnimationFrame(drumRaf);drumRaf=0;}
-    drum.setPointerCapture(e.pointerId);e.preventDefault();
-  });
-  drum.addEventListener('pointermove',function(e){
-    if(!drumDragging||e.pointerId!==drumPointer)return;
-    var now=performance.now(),dt=Math.max(1,now-drumLastT);
-    drumSpeed=(e.clientY-drumLastY)/dt;drumLastY=e.clientY;drumLastT=now;
-    drumAngle=drumStartAngle+(e.clientY-drumStartY)*1.05;renderDrum();
-  });
-  function releaseDrum(e){
-    if(!drumDragging||e.pointerId!==drumPointer)return;
-    drumDragging=false;
-    if(performance.now()-drumLastT>110)drumSpeed=0;
-    var travel=Math.abs(drumLastY-drumStartY);
-    spinTo(travel<6?targetTurn+1:Math.round(-(drumAngle+drumSpeed*34)/120));
-  }
-  drum.addEventListener('pointerup',releaseDrum);
-  drum.addEventListener('pointercancel',function(e){if(drumDragging&&e.pointerId===drumPointer){drumDragging=false;spinTo(Math.round(-drumAngle/120));}});
-  drum.addEventListener('keydown',function(e){
-    var next=e.key==='ArrowDown'||e.key==='ArrowRight'?targetTurn+1:e.key==='ArrowUp'||e.key==='ArrowLeft'?targetTurn-1:e.key==='Home'?0:e.key==='End'?2:null;
-    if(next===null)return;e.preventDefault();spinTo(next);
-  });
-  prevWord.addEventListener('click',function(){spinTo(targetTurn-1);});
-  nextWord.addEventListener('click',function(){spinTo(targetTurn+1);});
-  reduced.addEventListener('change',function(){if(reduced.matches){if(drumRaf)cancelAnimationFrame(drumRaf);drumRaf=0;drumAngle=drumTarget;drumVelocity=0;renderDrum();normalizeDrum();}});
-  renderDrum();
   if('IntersectionObserver' in window){var reading=document.querySelector('.reading');
     var inView=new IntersectionObserver(function(entries){if(entries[0].isIntersecting){reading.classList.add('is-in-view');inView.disconnect();}},{threshold:.1});inView.observe(reading);}
   reduced.addEventListener('change',function(){if(reduced.matches){p=target;v=0;speed=0;update();}request();});
