@@ -2698,3 +2698,130 @@ body:not(#void) :where(
 ) {
   background-color: rgba(0, 0, 0, .45) !important;
 }
+
+/* ============================================================
+   排版收口：标题用 balance 不落孤字，正文用 pretty 不留尾行孤字
+   ============================================================ */
+/* 注意：不要对 h1/h2 用 text-wrap: balance —— 它会改变 grid 项的内在宽度，
+   首页 hero 的左栏会被压到 345px、标题碎成四行。断行只在具体页面上手工收。 */
+body:not(#void) main :where(p, li, blockquote, dd, small) {
+  text-wrap: pretty;
+}
+@media (max-width: 760px) {
+  body:not(#void) main :where(h1, h2, h3, h4) { text-wrap: balance; }
+}
+
+/* ③ 两处标题断行收口：窄屏不要再按 <br> 硬断，宽屏把那句缩短一号 */
+@media (max-width: 900px) {
+  body:not(#void) :where(.bench-head, .lab-onward) h2 br { display: none !important; }
+}
+body:not(#void) .lab-onward { grid-template-columns: minmax(0, 1.16fr) minmax(0, .84fr) !important; }
+body:not(#void) .lab-onward h2 { font-size: clamp(27px, 3.15vw, 45px) !important; letter-spacing: -.045em !important; }
+body:not(#void) .bench-head h2 { font-size: clamp(26px, 2.6vw, 34px) !important; }
+
+/* ============================================================
+   ③ 生命画布：把「对 / 少 / 多」三种状态画成看得见的差异
+   （原来只有 .on 上色，alive / missing / extra 都被通用的细线规则盖掉了）
+   ============================================================ */
+body:not(#void) .cell-grid > .cell {
+  border-color: rgba(255, 255, 255, .14) !important;
+  background-color: rgba(0, 0, 0, .32) !important;
+  transition: background-color .2s ease, box-shadow .3s ease, border-color .2s ease !important;
+}
+body:not(#void) .cell-grid > .cell.alive,
+body:not(#void) .cell-grid > .cell.on {
+  background-color: var(--iris) !important;
+  border-color: var(--iris) !important;
+}
+/* 应该亮却没亮：琥珀虚线框 + 极淡的琥珀填充 */
+body:not(#void) .cell-grid > .cell.missing {
+  background-color: rgba(255, 184, 41, .14) !important;
+  border-color: transparent !important;
+  box-shadow: inset 0 0 0 1px var(--spark) !important;
+}
+/* 亮了但位置不对：紫底 + 琥珀内描边，一眼能看出「多出来的」 */
+body:not(#void) .cell-grid > .cell.extra {
+  background-color: var(--iris) !important;
+  border-color: var(--iris) !important;
+  box-shadow: inset 0 0 0 1.5px var(--spark) !important;
+}
+/* 目标位置（预期轮廓）：只画角标，不抢活细胞 */
+body:not(#void) .cell-grid > .cell.expected:not(.missing) {
+  outline: 1px dashed rgba(255, 255, 255, .34) !important;
+  outline-offset: -3px;
+}
+@keyframes dala-cell-tick {
+  0% { transform: scale(.72); box-shadow: 0 0 0 0 rgba(255, 184, 41, .55); }
+  60% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 184, 41, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 184, 41, 0); }
+}
+body:not(#void) .cell-grid > .cell.missing,
+body:not(#void) .cell-grid > .cell.extra {
+  animation: dala-cell-tick .5s cubic-bezier(.2, .8, .3, 1) both;
+  animation-delay: calc(var(--i, 0) * 6ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  body:not(#void) .cell-grid > .cell.missing,
+  body:not(#void) .cell-grid > .cell.extra { animation: none !important; }
+}
+
+/* ③ 小节标题：change log / 实验记录这类二级标题不该和 hero 一样大 */
+body:not(#void) :where(.bottom-heading) h2 {
+  font-size: clamp(23px, 2.3vw, 33px) !important;
+  line-height: 1.3 !important;
+}
+body:not(#void) :where(.lab-history, .lab-proof) {
+  background-color: rgba(0, 0, 0, .55) !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, .14) !important;
+  padding: 24px 0 0 !important;
+}
+body:not(#void) :where(.lab-history, .lab-proof) li {
+  border-top: 1px solid rgba(255, 255, 255, .1) !important;
+  font-size: 12.5px !important;
+  line-height: 1.7 !important;
+  color: var(--silver) !important;
+}
+
+/* ⓪ 首页右栏说明压在星群正中，给它和别处一样的 45% 底色 */
+body:not(#void) :where(.mission-info, .signal-console .mission-preview) {
+  background-color: rgba(0, 0, 0, .45) !important;
+}
+
+/* ③ 还没生成实验记录时，change log 铺满整行，不要留半个空栏 */
+body:not(#void) .lab-bottom:has(.lab-proof[hidden]) .lab-history {
+  grid-column: 1 / -1 !important;
+  max-width: 64em !important;
+}
+
+/* ============================================================
+   ⚠️ 关键修正：`body:not(#void) main :where(*){background-color:transparent!important}`
+   的特异性是 (0,1,2)，比 `body:not(#void) :where(...)` 的 (0,1,1) 高。
+   之前的 30% / 45% / 55% 衬底全部被它盖掉、从未生效——这才是「压不住」的真正原因。
+   下面这组选择器带上 main，并且多一层 :not(#x)，确保真的画上去。
+   ============================================================ */
+body:not(#void) main:not(#x) :where(
+  .route-context, .disclosure-copy, .context-warning, .disclosure-group,
+  .profile-panel, .paths-head, .reading, .reading-body, .phrases,
+  .dossier, .dossier-part, .dossier-block, .dossier-quote, .dossier-quote-block,
+  .trial-console, .lab-note, .bench-hint, .machine-help, .machine-foot,
+  .guide-row, .data-exhibit, .outcome-note, .report-content,
+  .week-simulation, .route-detail, .planning-columns, .debrief, .verdict,
+  .analysis-side, .editorial-note, .feed, .sort-desk, .lab-history, .lab-proof,
+  .mission-info, .mission-preview, .tear-return, .dossier-doc
+) {
+  background-color: rgba(0, 0, 0, .55) !important;
+}
+
+body:not(#void) main:not(#x) :where(
+  .choice-group button, .reset-conditions, .tool-links a, .step-choice,
+  .module-chip, #scheduled-tasks > *, .route-lane, #module-shelf > *,
+  .rule-choices button, .plan-choices button, .sample-switch button,
+  .signal-card, .bin, .card-stack > *, .track-chooser button,
+  .machine-controls button, .tear-return a, .tear-return button,
+  .bench-actions button, .trial-header > button, .opening-jump,
+  .sample-selector button, .task-field, .route-ticket #ticket-copy, .drum-window,
+  .channel-list button, .proof-actions button, .copy-button
+) {
+  background-color: rgba(0, 0, 0, .45) !important;
+}
