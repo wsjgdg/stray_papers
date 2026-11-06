@@ -2825,3 +2825,122 @@ body:not(#void) main:not(#x) :where(
 ) {
   background-color: rgba(0, 0, 0, .45) !important;
 }
+
+/* ① 对照稿：右栏太窄，产物被压成 7 行的窄条，正文还会被裁 */
+body:not(#void) .compare { grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr) !important; gap: 26px !important; }
+body:not(#void) .compare-column.refined { padding-right: 0 !important; }
+body:not(#void) #refined-output {
+  width: 100% !important;
+  font-size: 13.5px !important; line-height: 1.95 !important;
+  color: var(--bone) !important;
+  background-color: rgba(0, 0, 0, .45) !important;
+  border: 0 !important; border-left: 1px solid var(--spark) !important;
+  padding: 4px 0 4px 16px !important;
+  resize: none !important;
+}
+body:not(#void) .compare-column > span {
+  font-size: 10.5px !important; letter-spacing: .1em !important; text-transform: uppercase !important;
+  color: var(--ash) !important; display: block !important; margin-bottom: 10px !important;
+}
+body:not(#void) .compare-column.refined > span { color: var(--spark) !important; }
+body:not(#void) #rough-output {
+  font-size: 13.5px !important; line-height: 1.95 !important; color: var(--ash) !important;
+  padding-left: 16px !important; border-left: 1px solid rgba(255, 255, 255, .16) !important;
+}
+
+/* ① 对照稿的产物按内容自适应高度（Chromium 支持 field-sizing） */
+body:not(#void) #refined-output {
+  field-sizing: content !important;
+  height: auto !important;
+  min-height: 9em !important;
+  max-height: 58vh !important;
+  overflow: hidden !important;
+}
+
+/* ① 压印机在手机上会散架（所有零件都是绝对定位），改成一条竖排的流程 */
+@media (max-width: 760px) {
+  body:not(#void) .forge-stage {
+    height: auto !important;
+    display: flex !important; flex-wrap: wrap !important;
+    align-items: stretch !important; gap: 10px !important;
+    padding: 16px 14px !important;
+    overflow: visible !important;
+    border: 0 !important;
+    background-color: rgba(0, 0, 0, .55) !important;
+  }
+  body:not(#void) .forge-ring,
+  body:not(#void) .forge-orb { display: none !important; }
+  body:not(#void) .press-head {
+    position: static !important; order: 1 !important;
+    flex: 1 1 100% !important; margin: 0 0 2px !important;
+    font-size: 10px !important; letter-spacing: .1em !important; color: var(--ash) !important;
+  }
+  body:not(#void) .forge-fragment {
+    position: static !important; order: 2 !important;
+    flex: 1 1 28% !important;
+    width: auto !important; height: 44px !important; min-height: 44px !important;
+    transform: none !important; box-shadow: none !important;
+    border: 1px solid rgba(255, 255, 255, .2) !important; border-radius: 999px !important;
+    background-color: rgba(0, 0, 0, .45) !important; color: var(--bone) !important;
+    font-size: 12.5px !important; font-weight: 400 !important;
+    white-space: nowrap !important;
+  }
+  body:not(#void) .forge-fragment.is-locked { opacity: .55 !important; }
+  body:not(#void) .press-sheet {
+    position: static !important; order: 3 !important;
+    flex: 1 1 100% !important;
+    left: auto !important; right: auto !important; top: auto !important; bottom: auto !important;
+    padding: 16px !important; transform: none !important;
+    border: 0 !important; border-left: 2px solid var(--spark) !important; border-radius: 0 !important;
+    background-color: rgba(0, 0, 0, .45) !important;
+    box-shadow: none !important;
+  }
+  body:not(#void) .press-sheet .press-sheet-label,
+  body:not(#void) .press-sheet strong,
+  body:not(#void) .press-sheet .press-details,
+  body:not(#void) .press-sheet > span { color: var(--bone) !important; }
+  body:not(#void) .forge-lever {
+    position: static !important; order: 4 !important;
+    flex: 1 1 100% !important;
+    width: 100% !important; height: 46px !important; min-height: 46px !important;
+    border-radius: 999px !important;
+    background: var(--iris) !important; color: #fff !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body:not(#void) .press-sheet > * {
+    position: static !important;
+    display: block !important;
+    inset: auto !important;
+    margin: 0 0 8px !important;
+  }
+  body:not(#void) .press-sheet > *:last-child { margin-bottom: 0 !important; }
+  body:not(#void) .press-sheet .press-sheet-label {
+    font-size: 10px !important; letter-spacing: .1em !important; color: var(--ash) !important;
+  }
+  body:not(#void) .press-sheet strong {
+    font-size: 21px !important; font-weight: 400 !important; letter-spacing: -.02em !important;
+    line-height: 1.35 !important; color: var(--bone) !important;
+  }
+  body:not(#void) .press-sheet .press-details,
+  body:not(#void) .press-sheet > span:not(.press-sheet-label) {
+    font-size: 12.5px !important; line-height: 1.8 !important; color: var(--silver) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body:not(#void) .forge-stage > * { position: static !important; inset: auto !important; }
+  body:not(#void) .forge-stage > :not(.press-head):not(.forge-fragment):not(.press-sheet):not(.forge-lever):not(.forge-ring):not(.forge-orb) {
+    order: 5 !important; flex: 1 1 100% !important;
+    margin: 0 !important; padding: 0 !important;
+    font-size: 12px !important; line-height: 1.7 !important; color: var(--silver) !important;
+  }
+  body:not(#void) .press-sheet span { position: static !important; display: block !important; inset: auto !important; }
+}
+
+@media (max-width: 760px) {
+  body:not(#void) .press-sheet :where(span, strong) { white-space: normal !important; overflow: visible !important; }
+  body:not(#void) .press-sheet { overflow: visible !important; }
+}
