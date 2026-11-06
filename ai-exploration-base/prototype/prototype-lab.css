@@ -1,0 +1,126 @@
+/* Prototype 03: observable rules, not a decorative lab shell. Scoped to .page-lab. */
+.page-lab{--bg:#101d28;--mint:#b9f4d1;--ink:#eef4e8;--soft:#b8c9ca;background:#101d28;color:#eef4e8}
+.page-lab .topbar{background:#0f1b25;border-color:#89ada657}
+.page-lab .brand-symbol{border-color:#b9f4d1;border-radius:12px 2px 12px 2px;transform:rotate(-7deg)}
+.page-lab .brand-symbol span,.page-lab .prototype-tag{color:#b9f4d1}
+.page-lab .lab-world{overflow:clip;background:radial-gradient(ellipse at 78% 10%,#3658509b 0%,transparent 35%),radial-gradient(ellipse at 12% 43%,#203a4c7d 0%,transparent 45%),#101d28}
+.page-lab .nojs-fallback{max-width:1000px;margin:26px clamp(20px,5vw,90px) 0;padding:22px;border:1px solid #b9f4d1;background:#e7eddb;color:#223b39;box-shadow:9px 9px 0 #07141a;line-height:1.8}
+.page-lab .nojs-fallback a{color:#285846;font-weight:800}
+.lab-ready .page-lab .nojs-fallback{display:none}
+.page-lab .lab-opening{position:relative;display:grid;grid-template-columns:minmax(0,1.22fr) minmax(0,.78fr);gap:clamp(20px,6vw,90px);align-items:center;padding:clamp(34px,4vw,65px) clamp(23px,5vw,90px) 43px;min-height:355px}
+.page-lab .lab-opening::before{content:"03";position:absolute;right:5%;top:-16%;font:900 clamp(250px,27vw,460px)/1 "Noto Sans CJK SC",sans-serif;letter-spacing:-.13em;color:#deffe7;opacity:.026;pointer-events:none}
+.page-lab .opening-text{position:relative;z-index:1}
+.page-lab .eyebrow{color:#bef1d4;font-size:10px;letter-spacing:.13em}
+.page-lab .live-dot{background:#a7f2d3;box-shadow:0 0 13px #a7f2d3}
+.page-lab .opening-text h1{font-size:clamp(58px,6.1vw,94px);letter-spacing:-.085em;line-height:1.08;margin:21px 0 19px;font-weight:850;white-space:nowrap}
+.page-lab .opening-text h1 em{font-style:normal;color:#d7ec9d}
+.page-lab .opening-text>p{max-width:590px;font-size:13px;line-height:1.85;color:#c9d8d4;margin:0}
+.page-lab .opening-text>p strong{color:#eaf3c3}
+.page-lab .opening-schematic{position:relative;justify-self:center;width:min(100%,400px);padding:20px 24px;border:1px solid #a3d4c67d;background:#152d33;box-shadow:10px 11px 0 #06141e,0 0 40px #74eab31b;transform:rotate(2deg)}
+.page-lab .opening-schematic::after{content:"";position:absolute;inset:8px;border:1px solid #b9d9bd40;pointer-events:none}
+.page-lab .schematic-tag,.page-lab .schematic-foot{display:block;color:#d0eecc;font:750 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.07em}
+.page-lab .schematic-cells{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:165px;margin:14px auto}
+.page-lab .schematic-cells i{aspect-ratio:1;background:#29434c;border:1px solid #88b9af31}
+.page-lab .schematic-cells i.on{background:#d5ed99;box-shadow:0 0 20px #d5ed9966}
+.page-lab .schematic-foot{border-top:1px solid #92c4ad69;padding-top:12px;text-align:center}
+.page-lab .lab-deck{display:none;margin:0 clamp(17px,4vw,75px);border:1px solid #9dc5ba7d;background:#102630;box-shadow:12px 15px 0 #06141d;position:relative}
+.lab-ready .page-lab .lab-deck{display:block}
+.page-lab .lab-deck::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 58px,#b1d4be0a 58px 59px),repeating-linear-gradient(0deg,transparent 0 58px,#b1d4be0a 58px 59px)}
+.page-lab .lab-deck>*{position:relative}
+.page-lab .lab-deck-bar{min-height:42px;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 21px;border-bottom:1px solid #a8c6b67d;background:#1d3740;color:#d3f1d8;font:750 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.07em}
+.page-lab .lab-deck-bar b{color:#b2f0c9;margin-right:8px;text-shadow:0 0 12px #b2f0c9}
+.page-lab .lab-deck-body{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(300px,.82fr);gap:clamp(18px,2vw,35px);padding:clamp(19px,3vw,40px);align-items:start}
+.page-lab .bench,.page-lab .rule-desk{min-width:0}
+.page-lab .bench-head{display:flex;align-items:start;justify-content:space-between;gap:10px;margin-bottom:17px}
+.page-lab .panel-kicker{font:800 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.11em;color:#a9edd0}
+.page-lab .bench-head h2,.page-lab .rule-head h2{font-size:clamp(25px,2.5vw,36px);line-height:1.24;letter-spacing:-.06em;margin:8px 0 0}
+.page-lab .generation-badge{flex:none;min-width:89px;text-align:center;padding:9px 8px;color:#263e37;background:#d7eea0;font:850 14px "Noto Sans CJK SC",sans-serif;box-shadow:4px 4px 0 #06151b}
+.page-lab .sample-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-width:520px;margin-bottom:14px}
+.page-lab .sample-switch button{min-height:42px;padding:7px 8px;text-align:left;border:1px solid #9fc2b776;background:#1c3b43;color:#d7ebdc;font-size:12px;font-weight:800;white-space:nowrap}
+.page-lab .sample-switch button span{font-size:10px;color:#9fdcc1;margin-right:5px}
+.page-lab .sample-switch button[aria-pressed="true"]{background:#d2eca2;color:#213c36;border-color:#d2eca2;box-shadow:0 4px 0 #658876}
+.page-lab .sample-switch button[aria-pressed="true"] span{color:#486b50}
+.page-lab .sample-switch button:hover{border-color:#e6f4b9}
+.page-lab .grid-frame{position:relative;width:min(100%,510px);padding:24px 14px 13px;background:#0a1c29;border:1px solid #87bba991;box-shadow:inset 0 0 40px #010b18,7px 9px 0 #071620}
+.page-lab .grid-frame::after{content:"";position:absolute;inset:23px 13px 12px;pointer-events:none;box-shadow:inset 0 0 28px #142a3299}
+.page-lab .grid-ruler{position:absolute;top:6px;left:14px;right:14px;color:#94bfb1;font:650 9px "Noto Sans CJK SC",sans-serif;letter-spacing:.16em}
+.page-lab .grid-corner{position:absolute;right:15px;bottom:2px;font:700 9px "Noto Sans CJK SC",sans-serif;color:#9ccebc}
+.page-lab .cell-grid{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:2px;width:100%;aspect-ratio:1;touch-action:none;user-select:none}
+.page-lab .cell{position:relative;min-width:0;min-height:0;padding:0;border:1px solid #6f998c26;border-radius:0;background:#1c3742;transition:background .2s,box-shadow .2s,transform .2s}
+.page-lab .cell:nth-child(5n){background-color:#23414a}
+.page-lab .cell.alive{z-index:1;border-color:#f3ffc7;background:#d8f69d;box-shadow:0 0 11px #d8f69d8a,inset 0 0 6px #fffad4;animation:cell-ignite .25s ease-out var(--delay) both}
+@keyframes cell-ignite{from{transform:scale(.55);filter:brightness(2)}to{transform:scale(1);filter:brightness(1)}}
+.page-lab .cell.expected{outline:2px solid #6cebd5;outline-offset:-3px}
+.page-lab .cell.missing{background:repeating-linear-gradient(45deg,#934e4d,#934e4d 3px,#283b47 3px,#283b47 6px);border-color:#f5ad99;box-shadow:0 0 13px #f59582a3}
+.page-lab .cell.extra{background:#f3aa83;border-color:#ffe0c5;box-shadow:0 0 10px #ff927485}
+.page-lab .cell:focus-visible{outline:3px solid #fff;border-color:#f9e3a9;outline-offset:0;z-index:3}
+.page-lab .bench-readout{width:min(100%,510px);display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;margin-top:12px;color:#d9f1d3;font:800 11px "Noto Sans CJK SC",sans-serif}
+.page-lab .bench-readout span{border-bottom:1px solid #afd3a48a;padding:5px 0}
+.page-lab .bench-actions{display:grid;grid-template-columns:1.3fr 1fr .9fr;gap:6px;width:min(100%,510px);margin-top:15px}
+.page-lab .bench-actions button{min-height:48px;padding:10px 7px;border:1px solid #a4d1b7;color:#e8f6dc;background:#294d4b;font-size:12px;font-weight:800}
+.page-lab .bench-actions button:hover{filter:brightness(1.2);transform:translateY(-2px)}
+.page-lab .bench-actions .action-step{background:#d6eea1;color:#1e3839;border-color:#d6eea1;display:flex;justify-content:space-around;align-items:center}
+.page-lab .bench-actions .action-step span{font-size:23px;line-height:1}
+.page-lab .bench-actions .action-reset{background:#172f39}
+.page-lab .bench-actions .action-play[aria-pressed="true"]{background:#b4eccf;color:#1c3736}
+.page-lab .bench-hint{color:#b7cbca;font-size:11px;line-height:1.8;max-width:510px;margin:12px 0 0}
+.page-lab .rule-desk{padding:20px;border:1px solid #8bb2a392;background:linear-gradient(140deg,#19313c,#1a3439 75%);box-shadow:7px 9px 0 #071620}
+.page-lab .rule-head h2 em{font-style:normal;color:#d8ed9e}
+.page-lab .rule-head>p{font-size:12px;line-height:1.7;color:#c3d5cb;margin:12px 0 18px}
+.page-lab .rule-choices{display:grid;gap:7px}
+.page-lab .rule-choices button{display:flex;flex-direction:column;text-align:left;gap:5px;min-height:85px;padding:12px 14px;border:1px solid #8aafa0a1;background:#223e42;color:#e4efda;transition:transform .28s,box-shadow .28s,background .28s}
+.page-lab .rule-choices button:hover{transform:translateX(-4px);border-color:#e4e8aa}
+.page-lab .rule-choices button[aria-pressed="true"]{background:#d7e5c2;border-color:#d7e5c2;color:#203c3d;box-shadow:5px 5px 0 #596a54}
+.page-lab .rule-choices button>span{font:750 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.05em;color:#b4e5c2}
+.page-lab .rule-choices button[aria-pressed="true"]>span{color:#456b54}
+.page-lab .rule-choices strong{font-size:14px;letter-spacing:-.03em}
+.page-lab .rule-choices small{font-size:11px;color:#c6dac5}
+.page-lab .rule-choices button[aria-pressed="true"] small{color:#4a695a}
+.page-lab .audit{margin-top:20px;padding:16px;border-left:4px solid #a8d6c3;background:#0c2630;min-height:130px;transition:border-color .3s,background .3s}
+.page-lab .audit[data-state="fail"]{border-color:#efa287;background:#352f34}
+.page-lab .audit[data-state="pass"]{border-color:#d2f69f;background:#24463c}
+.page-lab .audit>span{color:#b2e7cd;font:800 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.08em}
+.page-lab .audit strong{display:block;font-size:18px;line-height:1.5;margin:9px 0;color:#f1f3dd}
+.page-lab .audit p{font-size:11px;line-height:1.8;color:#cbd9d0;margin:0}
+.page-lab .rule-footnote{font-size:10px;line-height:1.7;color:#aebeb5;border-top:1px solid #9db9a860;margin:20px 0 0;padding-top:12px}
+.page-lab .lab-bottom{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:20px;padding:0 clamp(19px,3vw,40px) clamp(22px,3vw,40px);align-items:start}
+.page-lab .lab-history,.page-lab .lab-proof{padding:22px;min-height:180px;border:1px solid #98b9ab79;background:#172f39}
+.page-lab .lab-proof[hidden]{display:none!important}
+.page-lab .bottom-heading h2{font-size:clamp(21px,2.1vw,29px);letter-spacing:-.04em;margin:7px 0 16px}
+.page-lab .lab-history ol{list-style:none;padding:0;margin:0;max-height:290px;overflow:auto}
+.page-lab .lab-history li{padding:9px 0;border-top:1px solid #97bca477;color:#d3e1cf;font-size:11px;line-height:1.55}
+.page-lab .lab-proof{background:#dde9cf;color:#213b38;border-color:#d7edb8;box-shadow:6px 7px 0 #071620;animation:note-arrive .55s cubic-bezier(.16,.82,.2,1)}
+@keyframes note-arrive{from{opacity:.25;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.page-lab .lab-proof .panel-kicker{color:#416753}
+.page-lab .lab-proof>p{font-size:12px;line-height:1.8}
+.page-lab .lab-proof textarea{display:block;width:100%;resize:vertical;padding:12px;border:1px solid #66806e;background:#f6f2df;color:#28413b;font-size:11px;line-height:1.7}
+.page-lab .proof-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.page-lab .proof-actions button{border:0;background:#255747;color:#f6f4df;font-size:12px;font-weight:800;padding:11px 15px}
+.page-lab .proof-actions button:hover{background:#387357}
+.page-lab .proof-actions span{font-size:11px;color:#285c46}
+.page-lab .lab-onward{display:grid;grid-template-columns:1fr minmax(250px,.68fr);gap:clamp(25px,6vw,90px);margin:55px clamp(23px,5vw,90px) 0;padding:34px 0 40px;border-top:1px solid #a9cbbb80}
+.page-lab .lab-onward h2{font-size:clamp(28px,4vw,51px);letter-spacing:-.06em;line-height:1.23;margin:11px 0 16px}
+.page-lab .lab-onward h2 em{font-style:normal;color:#d7ed9d}
+.page-lab .lab-onward p{color:#c5d5d1;font-size:12px;line-height:1.8;max-width:650px}
+.page-lab .original-link{display:inline-flex;justify-content:space-between;align-items:center;gap:20px;min-height:50px;padding:10px 17px;max-width:490px;width:100%;background:#d7ed9d;color:#203c37;text-decoration:none;font-size:12px;font-weight:800;box-shadow:6px 6px 0 #081820}
+.page-lab .original-link:hover{background:#eff8c2}
+.page-lab .original-link span{font-size:20px}
+.page-lab .lab-projects{border-left:1px solid #9bbdb28f;padding-left:20px}
+.page-lab .lab-projects p{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 10px;border-bottom:1px solid #a5c5b668;padding-bottom:9px;margin:14px 0;font-size:11px}
+.page-lab .lab-projects p strong{color:#e6efd0;font-size:13px}
+.page-lab .lab-projects small{color:#b6c9c1;font-size:10px;line-height:1.6}
+.page-lab .lab-navigation{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 clamp(23px,5vw,90px) 65px;font-size:12px}
+.page-lab .lab-navigation a{text-decoration:none;border-bottom:1px solid #b7e9bb;padding-bottom:7px;color:#d4e7cb}
+.page-lab .lab-navigation a:hover{color:#daf3a5}
+.page-lab .proto-footer{background:#0b1620}
+@media(max-width:1020px){.page-lab .lab-opening{min-height:0}.page-lab .opening-text h1{font-size:clamp(52px,6vw,77px)}.page-lab .lab-deck-body{grid-template-columns:minmax(0,1fr) minmax(270px,.85fr);gap:17px}.page-lab .rule-desk{padding:14px}}
+@media(max-width:760px){.page-lab .lab-opening{grid-template-columns:1fr;padding:30px 19px 27px;gap:19px}.page-lab .opening-text h1{font-size:clamp(46px,9.2vw,69px);margin:13px 0}.page-lab .opening-text>p{font-size:12px;line-height:1.7}.page-lab .opening-schematic{display:none}.page-lab .lab-deck{margin:0 10px;box-shadow:6px 8px 0 #06141d}.page-lab .lab-deck-body{grid-template-columns:1fr;padding:18px 15px;gap:21px}.page-lab .bench-head h2{font-size:28px}.page-lab .grid-frame{margin:auto}.page-lab .bench-readout,.page-lab .bench-actions{margin-left:auto;margin-right:auto}.page-lab .lab-bottom{grid-template-columns:1fr;padding:0 15px 22px}.page-lab .lab-onward{grid-template-columns:1fr;margin:42px 19px 0;gap:25px}.page-lab .lab-projects{border-left:0;border-top:1px solid #9bbdb28f;padding:17px 0 0}.page-lab .lab-navigation{padding:0 19px 60px}}
+@media(max-width:390px){.page-lab .opening-text h1{font-size:clamp(42px,11vw,49px)}.page-lab .lab-deck-bar{font-size:9px;padding:9px 12px}.page-lab .lab-deck-bar span:last-child{max-width:90px;text-align:right}.page-lab .lab-deck-body{padding:15px 10px}.page-lab .sample-switch button{font-size:10px;padding:7px 4px}.page-lab .sample-switch button span{font-size:8px;margin-right:0}.page-lab .bench-actions button{font-size:11px}.page-lab .grid-frame{padding:23px 9px 10px}.page-lab .cell-grid{gap:1px}.page-lab .lab-bottom{padding:0 10px 20px}}
+@media(prefers-reduced-motion:reduce){.page-lab .cell,.page-lab .rule-choices button,.page-lab .audit{transition:none!important}.page-lab .cell.alive,.page-lab .lab-proof{animation:none!important}}
+
+/* 作品索引里的真实仓库链接 */
+.page-lab .lab-projects p a{flex-basis:100%;margin-top:3px;color:#a9d3c2;font:600 10.5px/1.6 ui-monospace,"Noto Sans CJK SC",monospace;text-decoration:none;border-bottom:1px solid #7fae9b59;justify-self:start;width:fit-content}
+.page-lab .lab-projects p a:hover,.page-lab .lab-projects p a:focus-visible{color:#dcf3e4;border-color:#b9f4d1}
+.page-lab .lab-repo{display:block;margin:12px 0 4px;color:#b9f4d1;font-size:11px;font-weight:700;text-decoration:none;border-bottom:1px solid #b9f4d166}
+.page-lab .lab-repo:hover,.page-lab .lab-repo:focus-visible{border-color:#b9f4d1}
+@media(max-width:760px){.page-lab .lab-projects{border-left:0;border-top:1px solid #9bbdb28f;padding:18px 0 0}}
