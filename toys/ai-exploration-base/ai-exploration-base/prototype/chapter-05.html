@@ -1,0 +1,504 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><title>七幕反诈决策室 · 可玩原型</title><link rel="stylesheet" href="prototype.css"><link rel="stylesheet" href="prototype-v2.css"><link rel="stylesheet" href="prototype-scam.css?v=case-10"><link rel="stylesheet" href="prototype-scam-tear.css?v=tear-in-04"><link rel="stylesheet" href="prototype-dossier.css?v=dossier-08"><link rel="stylesheet" href="prototype-dala.css?v=dala-15"></head>
+<body class="page-scam" data-page="scam"><a class="skip-link" href="#decision-room">跳到七幕决策室</a><div class="grain" aria-hidden="true"></div>
+<header class="topbar"><a class="brand" href="index.html?v=switch-13"><span class="brand-symbol">A<span>✳</span>I</span><span>探索基地 <small>/ PLAYABLE LAB</small></span></a><span class="prototype-tag">交互原型 · 05 / 06</span><a class="top-link" href="index.html?v=switch-13">返回原型拨盘 ↗</a></header>
+<main>
+<section class="decision-section" id="decision-room" aria-labelledby="decision-title"><noscript><style>.page-scam .case-opening,.page-scam .scam-progress,.page-scam .decision-layout,.page-scam .session-controls{display:none!important}.page-scam .decision-section{padding:40px 20px 70px}</style><div class="nojs-fallback"><h2>七幕剧本 · 静态阅读</h2><ol><li>专家人设：陌生群里的“私募老师”免费荐股；先查证资质。</li><li>小额甜头：先投 500 元、“张姐赚了两千”；收益截图不能证明真能提现。</li><li>制造稀缺：“国家扶持”“年化 18%”“今晚截止”；越催越要停。</li><li>账面诱惑：账户显示盈利，不等于钱已到账；不要动养老金。</li><li>提现收费：“先交保证金才能解冻”；要求先交钱取钱是骗局信号。</li><li>情感施压：“就差最后一笔”；暂停转账，联系家人并核验。</li><li>结局复盘：专家人设 → 小额甜头 → 稀缺倒计时 → 账面诱惑 → 提现收费 → 情感施压。</li></ol><p>互动需要 JavaScript；下方仍保留<a href="#case-sources">核验渠道与出处</a>。本剧本是教学模拟，非特定案件。</p></div></noscript><div class="case-opening"><div class="case-heading"><span class="eyebrow"><span class="live-dot"></span> CASE FILE / 05 · 七幕模拟</span><h1 id="decision-title">先别信，<br><em>看它怎么说。</em></h1><p>七段话术，一条诱导路径。圈出破绽，再亲手选一次去向；不涉及真钱，也不需要个人资料。</p><span class="case-instruction">读话术 → 存证据 → 揭解剖 → 改走向</span></div><div class="case-counter" aria-hidden="true"><span>INTERCEPTED / 07</span><strong id="case-live-act">01</strong><span>第几幕看穿它？</span></div></div>
+<div class="scam-progress" aria-label="七幕进度" id="scam-progress"></div><p class="scam-eight-note">交互版 <b>7 幕</b>：原文第 4 幕「下载 App」并入第 4 幕的账面诱惑，第 8 幕「收网」作剧终幕呈现——原文八幕的逐字文案与出处，都在页尾「原始文案，与全部出处」里。</p><div class="decision-layout"><div class="story-side"><div class="story-top"><span id="stage-counter">ACT 01 / 07</span><span class="simulation-tag">模拟截获 / 不涉及真钱</span></div><div class="route-strip"><span id="route-caption">路径尚未选择 · 到第 4 幕再决定</span><span class="route-graphic" aria-hidden="true"><i></i><i></i></span></div><div class="story-backdrop" aria-hidden="true"><div class="story-signal" id="story-signal"></div><div class="evidence-meter"><span class="evidence-thread"></span><span class="evidence-thread"></span><strong id="evidence-caption">留意话术中的破绽</strong></div><span id="story-watermark">01</span></div><div class="story-main"><span class="story-persona" id="story-persona"></span><blockquote id="story-message" tabindex="-1"></blockquote><div class="clue-area" id="clue-area" hidden><p>把可疑话术存入证据袋。点选或拖入；再点可撤回。</p><div id="clue-buttons" class="clue-buttons"></div><div class="evidence-tray" id="evidence-tray" aria-label="本幕证据袋"><span>DRAG / TAP · 本幕已封存</span><strong id="evidence-total" role="status">00 / 02</strong><div class="evidence-tags" id="evidence-tags"></div></div><button type="button" id="reveal-clues" class="text-button">揭开本幕话术 ↗</button></div></div><div id="decision-actions" class="decision-actions"></div></div><div class="analysis-side"><div class="analysis-eyebrow">揭开话术 / CASE NOTES</div><div class="analysis-cover" aria-hidden="true"><span>SEALED / 先观察</span><strong>先听它说，<br>再看它要什么。</strong><span id="analysis-cover-hint">点「解剖这一幕」揭开记录 ↗</span></div><div id="analysis-content" class="analysis-content" aria-live="polite"><p>先读完这一幕的话术，再点「解剖这一幕」。</p></div></div></div>
+<div class="session-controls"><button id="previous-stage" class="ghost-button" type="button">← 返回上一幕</button><button id="restart-story" class="ghost-button" type="button">重新走一遍</button></div>
+<details class="source-note" id="case-sources"><summary>核验渠道与出处 · 点开查看</summary><div class="case-sources-body"><p class="case-sources-lead">本页七幕话术是综合教学模拟，不对应特定案件，也不涉及真钱——但每一幕都有真实案件报道（见各幕解剖卡底部）。遇到现实中的可疑转账，请暂停，保留证据，通过独立渠道联系家人、警方或反诈劝阻专线 <strong>96110</strong>；投资机构资质请到证监会官网核查。外部资料需联网，互动本身可离线使用。</p>
+<div class="case-sources-grid">
+  <article class="case-source-card"><span>01 / 全链条</span><h3>单亲妈妈 10 天被骗 150 万</h3><p>真实聊天记录曝光的完整过程：寻找目标 → 取得信任 → 怂恿投资 → 大量投入 → 无法提现。</p><a href="https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml" target="_blank" rel="noopener noreferrer">中国长安网（中央政法委官网）↗</a><small>2021 年 9 月 · 200</small></article>
+  <article class="case-source-card"><span>02 / 数字</span><h3>400 余人 · 3000 万+</h3><p>以免费按摩引流，摸清“子女不在身边、经济条件好”，再用假体检虚构病症，一个项目收 1-2 万元。</p><a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank" rel="noopener noreferrer">公安部新闻发布会通报 ↗</a><small>2026 年 6 月 · 521 反爬，浏览器可访问</small><a href="https://news.qq.com/rain/a/20260612A0460300" target="_blank" rel="noopener noreferrer">腾讯新闻同案报道 ↗</a><small>可直连 · 200</small></article>
+  <article class="case-source-card"><span>03 / 数字</span><h3>36 亿次拦截</h3><p>2025 年全国侦破电诈案件 25.8 万起，拦截诈骗电话 36 亿次、短信 33 亿条。</p><a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank" rel="noopener noreferrer">新华网报道公安部通报 ↗</a><small>2026 年 1 月 · 200</small></article>
+  <article class="case-source-card"><span>04 / 工具</span><h3>96110 与反诈 App</h3><p>96110 是公安反诈劝阻专线，打给你一定要接；国家反诈中心 App 请从官方渠道下载并开来电预警。</p><a href="https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html" target="_blank" rel="noopener noreferrer">深圳市公安局：96110 专线说明 ↗</a><small>200</small><a href="https://fzapph5.gjfzpt.cn/QRCode/" target="_blank" rel="noopener noreferrer">国家反诈中心 App 官方下载页 ↗</a><small>200</small><a href="https://www.csrc.gov.cn/csrc/c101900/c1029656/content.shtml" target="_blank" rel="noopener noreferrer">证监会：证券投资咨询机构名录 ↗</a><small>查牌照 · 200</small></article>
+  <article class="case-source-card"><span>05 / 话术</span><h3>六条话术，一个来源</h3><p>“稳赚不赔”“内部消息”“国家扶持”“今晚截止”“老师带你”“先交钱才能提现”——公安部公布的十大高发电诈类型里都有对应段落或案例。</p><a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">人民网全文转载 ↗</a><small>2024 年 6 月 · 200</small></article>
+  <article class="case-source-card"><span>06 / 判例</span><h3>“收网”不是修辞</h3><p>涉资 2 亿多元的跨境“杀猪盘”团伙落网；群里“10 个人 9 个托”也被记者卧底记录。</p><a href="http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm" target="_blank" rel="noopener noreferrer">中国经济周刊：2 亿元团伙落网 ↗</a><small>200</small><a href="https://www.cls.cn/detail/2012300" target="_blank" rel="noopener noreferrer">财联社：卧底股票“杀猪盘” ↗</a><small>200</small></article>
+</div>
+<p class="case-sources-foot">剧本为典型杀猪盘手法的综合示意（演示样例），非特定案件改编；改台词须同时同步 <code>assets/js/scam-script.js</code> 与 <code>docs/content/p5-anti-scam.md</code>。</p></div></details></section>
+<details class="tear-interlude" id="tear-interlude"><summary><span>ACT 04 → 05 / 第五幕的内层证物</span><strong>账面显示盈利，真的能提走吗？</strong><small>展开并撕开账页 ↘</small></summary>
+<section class="scene" id="scene" aria-labelledby="scene-title">
+  <div class="theater" id="theater">
+    <div class="surface" aria-hidden="true"><span class="surface-index">IV / V</span><span class="surface-cross">+</span></div>
+    <div class="underlay" id="underlay" aria-hidden="true"><div class="underlay-top"><span>ACT 05 / 提现条件</span><span>教学模拟</span></div><div class="underlay-core"><p>平台客服的要求</p><h2>提现前，<br><em>先交保证金。</em></h2><div class="underlay-number"><strong>20%</strong><span>“解冻账户”<br>“最后一笔”</span></div></div><div class="underlay-foot">先交钱才能取钱？停止转账，独立核验。</div></div>
+    <canvas id="paper-canvas" aria-hidden="true"></canvas>
+    <div class="paper-fallback" id="paper-fallback" aria-hidden="true"><span>模拟账面 / 非真实账户</span><p>账户显示盈利</p><strong>+ 6,000</strong><small>显示金额 ≠ 已经到账</small></div>
+    <button id="paper-grip" class="paper-grip" type="button" aria-label="抓住模拟账面右缘，向左撕开检查提现条件" aria-describedby="scene-help"><span aria-hidden="true">≡</span><b>抓住<br>向左</b></button>
+    <div class="stage-caption" aria-hidden="true"><span>NOT A REAL ACCOUNT</span><span>PEEL / INSPECT / STOP</span></div>
+  </div>
+  <div class="scene-copy"><span class="scene-kicker"><i></i> 从第四幕，到第五幕</span><h2 id="scene-title">账面有数字。<br><button id="title-reveal" class="title-reveal" type="button" aria-label="到账没有？点击揭开账面，再点重新合上" aria-controls="theater" aria-pressed="false"><span class="title-word" data-text="到账没有？">到账没有？</span></button></h2><p>账户写着盈利 <strong>+6,000</strong>。抓住右边，亲手检查它没告诉你的条件。</p><span class="scene-prompt"><b aria-hidden="true">↗</b> 从右向左撕开 / 点题目也可以</span></div>
+  <div class="scene-controls"><div class="scene-route">04 / 表象 <i>—</i> 05 / 条件 <span>抓住纸边，向左撕开</span></div><div class="controls-buttons"><button id="show-truth" type="button">直接看条件 ↗</button><button id="restore" type="button">重新合上</button></div></div>
+</section>
+<p class="sr-only" id="scene-help">抓住账面右缘向左拖动，拖动不足一半会合回。也可点击标题、“直接看条件”或“重新合上”按钮。所有数字都是教学模拟。</p>
+<section class="reading" aria-label="核验结论"><div class="reading-index">这一幕留下的证据 <span>05 / 07</span></div><div class="reading-body"><div class="insight" role="status" aria-live="polite"><span id="insight-step">01 / 表象</span><p id="insight-copy">账面上的盈利不是已经取出的现金。向左揭开，看看提现时对方又提出了什么要求。</p></div><h3>显示盈利，<br><em>不等于能提走。</em></h3><p>如果提现的前提是再交一笔钱，先停下。不要转账，保存聊天与付款记录，通过独立渠道核验。这是一幕综合教学模拟，不是你的账户，也不会改变六关打卡进度。</p><a href="#case-sources">查看本关核验渠道与出处 ↗</a></div>
+  <section class="phrases" aria-labelledby="phrases-title"><div class="phrase-copy"><span class="phrase-kicker">第二个动作 / 拆穿话术</span><h3 id="phrases-title">名字会变。<br><em>要求没变。</em></h3><p>客服换个名字，又想让你先转账。转动右边的说法，看看每次换词，实际改变了什么。</p><span class="phrase-rule">三种说法，同一个转账门槛。</span></div>
+    <div class="word-machine"><div class="machine-head"><span>客服的说法</span><span>DRAG / ↑ ↓</span></div><div id="word-drum" class="drum-window" role="slider" tabindex="0" aria-label="检查不同的提现收费话术" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1" aria-valuetext="保证金" aria-describedby="drum-help"><div class="drum-cylinder" id="drum-cylinder" aria-hidden="true"><span class="drum-face" style="--face:0">保证金</span><span class="drum-face" style="--face:1">解冻费</span><span class="drum-face" style="--face:2">最后一笔</span></div><span class="drum-mark drum-mark-top" aria-hidden="true">−</span><span class="drum-mark drum-mark-bottom" aria-hidden="true">＋</span></div><p id="drum-help" class="machine-help">向上拖动滚筒、点击箭头，或用方向键换一种说法。第三种后回到第一种。</p><div class="machine-foot"><p id="drum-explanation" role="status" aria-live="polite">所谓“保证金”：把额外转账包装成提现门槛。先交钱才能取钱，应立即停下。</p><div class="machine-controls"><button id="drum-prev" type="button" aria-label="上一种说法">↑</button><span id="drum-position">01 / 03</span><button id="drum-next" type="button" aria-label="下一种说法">↓</button></div></div></div>
+  </section>
+</section>
+<div class="tear-return"><button type="button" id="tear-back">带着线索返回剧情 ↗</button><a href="#case-sources">核验渠道与出处 ↗</a></div></details>
+<!-- DOSSIER:START -->
+<section class="dossier" id="content-dossier" aria-labelledby="dossier-p5">
+  <details>
+    <summary>
+      <span class="dossier-kicker">SOURCE DOSSIER / 内容真源 · ⑤ 骗局解剖室</span>
+      <strong id="dossier-p5">原始文案，与<em>全部出处</em>。</strong>
+      <small>第 ⑤ 关 · 8 幕剧本 · 每幕一条真实报道 · 全文 32 节 · 36 条外链</small>
+    </summary>
+    <div class="dossier-body">
+      <p class="dossier-lead">剧本是模拟的，但每一幕都有真实案件报道：下面逐幕给出原台词、解剖、正确动作和可点开的警方通报或报道。八幕剧本为典型杀猪盘手法的综合示意，非特定案件改编。 往后是按文件分节、逐字接入的<strong>全文</strong>——正式站这一关写下的每一句都在里面，可直接对照或照抄。</p>
+      <div class="dossier-grid">
+        <article class="dossier-block is-wide"><span class="dossier-no">01</span><h3>剧本与链条</h3><p>先说清楚：<strong>想赚钱，完全没有错</strong>——这一关不是劝你别想钱，是带你把骗子的<strong>完整剧本</strong>看一遍。你要演一次“差点上当的人”。放心，花的是假钱，学到的是真本事。</p>
+    <p>八幕链条：专家人设 → 甜头 → 稀缺 → 下载 App → 账面诱惑 → 提现收费 → 情感施压 → 收网。</p>
+    <p>🛡️ <strong>铁律：</strong>任何让你先交钱才能取钱的，100% 是骗局；拿不准的时候，先给儿子打个电话，5 分钟后再决定。这不是不独立——这是最聪明的风控。</p>
+    <span class="dossier-tag">综合示意 · 非特定案件改编</span><span class="dossier-tag">真实报道逐幕可查</span></article><article class="dossier-block"><span class="dossier-no">02</span><h3>第 1 幕 · 专家人设</h3><div class="dossier-quote"><p>李老师（投资交流群）：欢迎新朋友进群！我做了 15 年私募，每天晚上 8 点免费分享大盘解读。进群福利：今晚荐一只票，跟上操作的这周都吃到肉了！</p></div>
+        <p><strong>解剖：</strong>群里晒收益截图的“群友”，很多是托。真正的私募经理公开荐股给陌生人免费带操作？这本身就不合规矩。</p>
+        <p><strong>✓ 正确动作：</strong>查他的“牌照”：证监会官网查不到的“私募”，一律是假的。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html" target="_blank" rel="noopener noreferrer">深圳市公安局：短视频里的“股神”主动找你？当心！这是 80 万骗局的开始</a><small>警方拆解“股神”广告引流 → 拉群 → 群演造势 · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">03</span><h3>第 2 幕 · 甜头</h3><div class="dossier-quote"><p>李老师：新来的姐妹先别大资金，先投 500 试试水，就当交个朋友。三个月下来群里的张姐都赚了小两千了！</p></div>
+        <p><strong>解剖：</strong>让你先小赚是剧本里的固定情节。你看到的“盈利数字”是平台后台画的，不是真钱。钓鱼先下饵，才好收竿。</p>
+        <p><strong>✓ 正确动作：</strong>记住：稳赚不赔的“试水”，本身就是骗局的信号。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml" target="_blank" rel="noopener noreferrer">新浪财经：“2724 人的炒股群，除了自己全是托”</a><small>“托”晒虚假盈利截图，利用从众心理 · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">04</span><h3>第 2 幕 · 甜头（同题报道另见）</h3><div class="dossier-quote"><p>东方财富网转载同一案件：“2724 人的炒股群，除了自己全是托”。</p></div>
+        <p><strong>解剖：</strong>同一个骗局会被不同媒体反复报道——这本身就是可以交叉验证的地方：搜到两条独立报道，比只信一个截图可靠。</p>
+        <p><strong>✓ 正确动作：</strong>换一个来源再读一遍，看数字和细节是否对得上。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://wap.eastmoney.com/a/202608143841062771.html" target="_blank" rel="noopener noreferrer">东方财富网：同题报道（另见）</a><small>同题转载 · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">05</span><h3>第 3 幕 · 稀缺</h3><div class="dossier-quote"><p>李老师：机会来了！我们对接了一个“国家扶持的量化基金项目”，年化 18%，保本保息。名额只剩最后 7 个，今晚 12 点截止。</p></div>
+        <p><strong>解剖：</strong>“国家扶持”+“名额有限”+“今晚截止”——稀缺和权威同时压上来，让你来不及思考。真项目不会催你今晚交钱。</p>
+        <p><strong>✓ 正确动作：</strong>任何“保本保息”都是违规承诺，正规产品法律上不允许这么说。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">人民网：公安部公布十大高发电信网络诈骗类型</a><small>虚假投资理财类的官方定性 · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">06</span><h3>第 4 幕 · 下载 App</h3><div class="dossier-quote"><p>李老师：群里的都下载我们平台的 App 操作，比股票软件方便，我发你安装包链接，手机上也方便随时看收益。</p></div>
+        <p><strong>解剖：</strong>这个“平台 App”是骗子自己做的：假行情、假账户，里面每一分“盈利”都是后台随手画的数字。官方应用商店搜不到的 App，一律不装。</p>
+        <p><strong>✓ 正确动作：</strong>只从手机官方应用商店装 App；任何人发来的链接和安装包，一律不点、不装。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html" target="_blank" rel="noopener noreferrer">北京市公安局：警方揭秘投资理财诈骗新套路</a><small>克隆炒股 App，“一‘提现’就露馅” · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">07</span><h3>第 5 幕 · 账面诱惑（岔路口）</h3><div class="dossier-quote"><p>（你投入了 2 万元）好像真的在赚钱？要不要把养老金也转进来？——假面板：鑫汇量化基金 · 账户总览，余额 26,000 元，今日收益 +6,000 元。</p></div>
+        <p><strong>解剖：</strong>屏幕上的数字可以随便改，提现出来才是钱。此刻你开始想的“养老金”，正是他们等的那句话。</p>
+        <p><strong>✓ 正确动作：</strong>只看一条：钱能不能顺利取出来。取不出来，数字再好看都是零。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://m.bjnews.com.cn/detail/1761656258168910.html" target="_blank" rel="noopener noreferrer">新京报：北京虚假网络投资理财电诈主要受害者为中老年人，最大 88 岁</a><small>发案占电诈 7%、被骗金额占 38% · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">08</span><h3>第 6 幕 · 提现收费</h3><div class="dossier-quote"><p>平台客服：尊敬的用户，您申请提现需先缴纳 20% 保证金以完成账户解冻，解冻后本金收益将一并到账。</p></div>
+        <p><strong>解剖：</strong>“提现要交钱”，无论理由叫保证金、税费还是解冻金，100% 是骗局。这是整场骗局的目的地。</p>
+        <p><strong>✓ 正确动作：</strong>铁律：任何让你先交钱才能取钱的，直接认定是骗局，停止转账。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://gaj.sh.gov.cn/sjga/list/toGjDetail?lmName=%E8%AD%A6%E6%96%B9%E6%96%B0%E9%97%BB&lmUrl=list/toGjIndex?type=jwbd&pa=c756679f93e8708fd4be8289ef26c15542fe1f419a5529d4590b5b7bd83f5296" target="_blank" rel="noopener noreferrer">上海市公安局松江分局：真实案例里“需缴纳 2 万元保证金解冻提现”</a><small>与剧本台词同款话术 · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">09</span><h3>第 7 幕 · 情感施压</h3><div class="dossier-quote"><p>李老师：姐，我知道你一个人带孩子不容易，这钱对你很重要。就差这最后一笔了，做完这次咱们就真正落袋为安，我在群里等你。</p></div>
+        <p><strong>解剖：</strong>前几步是专家，这一步是“懂你的家人”。硬的不行来软的——这套感情牌是针对多少人排练过的话术，不是真的懂你。</p>
+        <p><strong>✓ 正确动作：</strong>越是这时候越要停。给儿子或家人打个电话，五分钟后再决定。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html" target="_blank" rel="noopener noreferrer">深圳市龙华区公安分局：骗子专挑“离异带娃”，日常嘘寒问暖后再引其下载假 App</a><small>套路分析第 2 条即“情感攻势” · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">10</span><h3>第 8 幕 · 收网</h3><div class="dossier-quote"><p>——模拟结束。这不是编剧的想象力，这是全国每天都在真实发生的剧本。</p></div>
+        <p><strong>解剖：</strong>整条链：专家人设 → 小额甜头 → 制造稀缺 → 下载 App → 账面诱惑 → 提现收费 → 情感施压 → 收网。每一步都有名字，你走的时候看得见，就赢了一半。</p>
+        <p><strong>✓ 正确动作：</strong>转发给群里的朋友，你还能救别人。</p><p class="dossier-tag">这一幕在真实案件里</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml" target="_blank" rel="noopener noreferrer">中国长安网：单亲妈妈 10 天被骗 150 万全过程（真实聊天记录）</a><small>整条链条都有真实判例与警方通报 · 200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block is-wide"><span class="dossier-no">10</span><h3>骗子心理学：<em>五个开关</em></h3><p>下面五张牌，是骗子反复使用的心理开关。<strong>不是让你不赚钱，是让你认得出这些开关被按下的瞬间。</strong></p>
+    <div class="dossier-quote">
+      <p><strong>1. 沉没成本</strong>　“都投这么多了，现在退出就全亏了。”——已经花掉的钱让人不甘心放手；想赚钱不是错，但已经亏的部分不该决定下一步。</p>
+      <p><strong>2. 稀缺紧迫</strong>　“名额只剩最后 7 个，今晚 12 点截止。”——倒计时让你来不及思考、来不及问家人。真机会不会怕你冷静一晚。</p>
+      <p><strong>3. 权威包装</strong>　“国家扶持项目”“15 年私募老师”“内部渠道”——帽子越大越唬人。真权威可以查证：证监会官网、企业查查，5 分钟见真伪。</p>
+      <p><strong>4. 社会认同</strong>　“群里的张姐都赚了小两千了！”——晒单截图可以批量伪造。大家都赚了的群，恰恰是托最多的群。</p>
+      <p><strong>5. 情感哄骗</strong>　“姐，我知道你不容易，就差这最后一笔。”——先做专家再做知心人，是排练好的剧本。真感情不会催你转账。</p>
+    </div></article><article class="dossier-block is-wide"><span class="dossier-no">11</span><h3>话术词典：<em>听到这些词，先停三秒</em></h3><div class="dossier-quote">
+      <p><strong>“稳赚不赔”</strong>——正规投资产品法律上禁止承诺保本。说这话的，不是无知就是骗子——多数是后者。</p>
+      <p><strong>“内部渠道 / 内部消息”</strong>——真有稳赚的内部渠道，他不会拉陌生人进群分享。</p>
+      <p><strong>“国家扶持项目”</strong>——真扶持项目走官方渠道公开申报，不会在微信群里募资。上证监会官网一查便知。</p>
+      <p><strong>“名额有限，今晚截止”</strong>——倒计时是让你跳过思考的开关。关掉它：任何好项目都经得起你睡一觉再决定。</p>
+      <p><strong>“老师带你操作”</strong>——持牌投顾不会私下带人炒股。所谓“带你”，是带你进剧本。</p>
+      <p><strong>“先交税 / 保证金 / 解冻金才能提现”</strong>——这是骗局的目的地。记住铁律：让你先交钱才能取钱的，100% 是骗局。</p>
+    </div><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">人民网：公安部公布十大高发电信网络诈骗类型（六条话术的统一来源）</a><small>200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block is-wide"><span class="dossier-no">12</span><h3>赚钱之前的 5 分钟：<em>三件工具</em></h3><p>想赚钱没问题。<strong>赚钱之前，先花 5 分钟查这三样——这不是不信任机会，是保护你的本金。</strong></p>
+    <div class="dossier-quote">
+      <p>🛡️ <strong>国家反诈中心 App</strong>：手机应用商店搜“国家反诈中心”官方下载，开启来电预警——它能提前识别诈骗电话和 App。</p>
+      <p>🛡️ <strong>反诈专线 96110</strong>：接到可疑电话、拿不准一件事，先拨 96110 问一句。这是公安的反诈劝阻专线，不收咨询费。如果 96110 打电话给你，一定要接——那是公安在劝阻你。</p>
+      <p>🛡️ <strong>证监会官网 + 企业查查</strong>：www.csrc.gov.cn 查基金 / 投顾牌照；企业查查看公司注册时间和经营异常。</p>
+    </div><p class="dossier-tag">三件工具，四个官方入口</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://fzapph5.gjfzpt.cn/QRCode/" target="_blank" rel="noopener noreferrer">国家反诈中心 App 官方下载页</a><small>公安部反诈平台官方域名 · 200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://sj.qq.com/appdetail/com.hicorenational.antifraud" target="_blank" rel="noopener noreferrer">应用宝：国家反诈中心 App（开发者“公安部刑侦局”）</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://www.mps.gov.cn/n2256342/n6594994/c9081538/content.html" target="_blank" rel="noopener noreferrer">公安部：反诈“国家队”推出七大反诈利器</a><small>官方域名 · 521 反爬，浏览器可访问</small></span></li><li><span class="mark">↗</span><span><a href="https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html" target="_blank" rel="noopener noreferrer">深圳市公安局：96110 反诈预警劝阻专线说明</a><small>200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://www.mps.gov.cn/n2255079/n4876594/n5104076/n5104077/c10117761/content.html" target="_blank" rel="noopener noreferrer">公安部：给反诈插上科技之翼（96110 三大功能）</a><small>官方域名 · 521 反爬，浏览器可访问</small></span></li><li><span class="mark">↗</span><span><a href="https://www.csrc.gov.cn" target="_blank" rel="noopener noreferrer">证监会官网（查牌照）</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://www.csrc.gov.cn/csrc/c101900/c1029657/content.shtml" target="_blank" rel="noopener noreferrer">证监会：公募基金管理机构名录</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://www.qcc.com" target="_blank" rel="noopener noreferrer">企业查查</a><small>200 · 2026-11-05</small></span></li></ul></article><article class="dossier-block is-wide"><span class="dossier-no">13</span><h3>数字不会说谎：<em>为什么这一关最重要</em></h3><p><strong>400 余人 · 3000 万+</strong>　北京警方打掉过一个专骗老年人的团伙：以<strong>免费按摩</strong>引流，聊天摸清哪些老人“子女不在身边、经济条件好”，再用假“专家体检”虚构病症，一个项目收 1-2 万元——400 多位老人，被骗 3000 万余元。<strong>套路不在网上才叫骗局，哄你上钩的，都是同一套剧本。</strong></p>
+    <p><strong>36 亿次</strong>　2025 年一年，全国公安会同有关部门<strong>拦截的诈骗电话有 36 亿次</strong>、诈骗短信 33 亿条，全年侦破电诈案件 25.8 万起。平均每 9 秒，就有 1000 多个诈骗电话被打出（按年度拦截量折算）。<strong>骗子的“客服团队”比你想的忙得多——他们不是碰运气，是工业化的。</strong></p><p class="dossier-tag">数字都能自己查</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank" rel="noopener noreferrer">公安部发布会：通报当前电信网络诈骗犯罪的最新形势（涉老健康养生诈骗案）</a><small>官方通报 · 521 反爬，浏览器可访问 · 2026-06</small></span></li><li><span class="mark">↗</span><span><a href="https://news.qq.com/rain/a/20260612A0460300" target="_blank" rel="noopener noreferrer">腾讯新闻：北京 400 多老人遭遇健康养生诈骗（同案可直连）</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://static.nfnews.com/content/202606/12/c12520500.html?enterColumnId=3766" target="_blank" rel="noopener noreferrer">南方新闻网：免费按摩诈骗案，涉案 3000 万余元</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://app.xinhuanet.com/news/article.html?articleId=202606301a9acf32f8174e47a35ac9923e7712c9" target="_blank" rel="noopener noreferrer">新华网客户端：打着“养生馆”的幌子招揽老年顾客敛财</a><small>200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank" rel="noopener noreferrer">新华网：公安部 2025 年侦破电诈案件 25.8 万起、拦截诈骗电话 36 亿次</a><small>200 · 2026-01-09</small></span></li><li><span class="mark">↗</span><span><a href="http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm" target="_blank" rel="noopener noreferrer">中国经济周刊：涉资 2 亿多元的跨境“杀猪盘”团伙落网</a><small>200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://www.cls.cn/detail/2012300" target="_blank" rel="noopener noreferrer">财联社：卧底股票“杀猪盘”，群里 10 个人 9 个托</a><small>200 · 2026-11-06</small></span></li></ul></article><article class="dossier-block is-wide"><span class="dossier-no">14</span><h3>支线与页尾声明</h3><p><strong>张姐晒单（第 3 幕触发）：</strong>“李老师带得准！我上周投的 8000，这周账户上已经 9400 了。妹妹你放心跟。”——晒单是“托”的日常工作：数字可以随便改，账户本来就是假面板，“大家都赚了”的群，恰恰是托最多的群。</p>
+    <p><strong>给儿子打电话（第 7 幕触发）：</strong>儿子也许不懂投资，但旁边多一双眼睛、多一句“妈，先别转”，骗子就没了办法。真感情经得起商量；越催你“别告诉家人”的，越有鬼。</p>
+    <p><strong>提前下车：</strong>现实里，走到岔路口还能停的人不多。不过把剧本剩下的部分也看完，下次你就不是“恰好躲过”，而是“一眼看穿”。</p>
+    <p>本页剧本为典型杀猪盘手法的综合示意（演示样例），非特定案件改编；剧本是模拟的，但每一幕都有真实案件报道——链接见各幕解剖卡底部。现实中遇到可疑转账，请暂停，保留证据，通过独立渠道联系家人、警方或 96110。</p></article><article class="dossier-block is-wide"><span class="dossier-no">15</span><h3>更多可核验的真实报道</h3><p>以下是内容真源 <code>real-cases-p5.md</code> 里逐条验证过的延伸素材：它们不直接挂在某一幕，但都对应同一套手法——杀猪盘、荐股群、虚假投资理财。看不完没关系，挑一条最像你身边情况的看。</p><p class="dossier-tag">内容真源里的延伸素材</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="http://news.cctv.com/2020/07/02/ARTIxT6PgMuyxQtrBEWDL6e8200702.shtml" target="_blank" rel="noopener noreferrer">央视网：网恋暗藏“杀猪盘”，女研究生被骗 77 万余元</a><small>200 · 2020-07-02</small></span></li><li><span class="mark">↗</span><span><a href="https://m.eeo.com.cn/2025/0817/745317.shtml" target="_blank" rel="noopener noreferrer">经济观察网：荐股“杀猪盘”调查，“股神”卷走 4500 万跑路</a><small>200 · 2025-08-17</small></span></li><li><span class="mark">↗</span><span><a href="https://www.chinanews.com/cj/2021/03-20/9436565.shtml" target="_blank" rel="noopener noreferrer">中国新闻网：27 亿“荐股”骗局，受害者超 11 万人</a><small>200 · 2021-03-20</small></span></li><li><span class="mark">↗</span><span><a href="https://www.thepaper.cn/newsDetail_forward_24741116" target="_blank" rel="noopener noreferrer">澎湃新闻：以爱行骗，“杀猪盘”如何趁虚而入</a><small>403 HEAD / 200 GET，浏览器可访问</small></span></li><li><span class="mark">↗</span><span><a href="https://www.thepaper.cn/newsDetail_forward_14378844" target="_blank" rel="noopener noreferrer">澎湃新闻：网上交友 20 天被骗近 300 万，聊天记录全是套路</a><small>403 HEAD / 200 GET，浏览器可访问</small></span></li><li><span class="mark">↗</span><span><a href="https://app.xinhuanet.com/news/article.html?articleId=b0503525-28bd-4149-9426-a10922d7bd00" target="_blank" rel="noopener noreferrer">新华网客户端：揭秘“杀猪盘”背后的心理控制术</a><small>200</small></span></li><li><span class="mark">↗</span><span><a href="https://gat.hunan.gov.cn/gat/ztzl2/qfqz/202604/t20260416_33956050.html" target="_blank" rel="noopener noreferrer">湖南省公安厅：警惕虚假投资理财诈骗</a><small>200 · 2026-04-16</small></span></li><li><span class="mark">↗</span><span><a href="https://gat.fujian.gov.cn/ztzl/fjjffpzxrx/zhxx/202502/t20250211_6713317.htm" target="_blank" rel="noopener noreferrer">福建省公安厅：警惕“虚假投资理财诈骗”，小心一夜暴“负”</a><small>403 HEAD / 200 GET，浏览器可访问</small></span></li><li><span class="mark">↗</span><span><a href="https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf" target="_blank" rel="noopener noreferrer">国家反诈中心：2025 版防范电信网络诈骗宣传手册（PDF）</a><small>官方编印 · 银行反诈专区托管</small></span></li><li><span class="mark">↗</span><span><a href="https://m.mps.gov.cn/n6935718/n7579327/c9077933/content.html" target="_blank" rel="noopener noreferrer">公安部：十大高发电信网络诈骗类型（原文，手机版）</a><small>官方域名 · 521 反爬，浏览器可访问</small></span></li><li><span class="mark">↗</span><span><a href="https://www.bypc.gov.cn/zfxxgk/bmdwxzjd/xzjd/xpljdbsc/fdzdgknr/jwgk/dzsq/cwgk/art/2024/art_dc86266dafdc4c6eaf1c16cf2d654fc7.html" target="_blank" rel="noopener noreferrer">白银市平川区政府：电诈典型案例·141，投资理财类诈骗</a><small>200 · 2024</small></span></li><li><span class="mark">↗</span><span><a href="https://www.zgwg.gov.cn/contents/14961/362296.html" target="_blank" rel="noopener noreferrer">中国网：快速识别虚假投资理财类诈骗，记住这三招</a><small>200 · 政府门户反诈专栏</small></span></li></ul></article>
+      </div>
+      
+      <div class="dossier-full">
+        <h3>全文 · 逐字接入 <span>FULL TEXT / 32 节 · 215 段</span></h3>
+        <p class="dossier-tag">下面是内容真源里的原文，按小节折叠，没有缩写、没有改写；小节顺序与文件一致，文件名即出处。</p>
+        <section class="dossier-doc"><h4>p5-anti-scam.md</h4><details class="dossier-part"><summary><span class="dossier-part-no">01</span><strong>页首：标题与导语</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>母页面: [[ai-exploration-base-content]]  对应前端文件：<code>ai-exploration-base/pages/anti-scam.html</code>（页面框架 + 静态文字）与 <code>ai-exploration-base/assets/js/scam-script.js</code>（模拟器 8 幕剧本、心理机制、话术词典、工具包的全部数据）。 本文收录该关<strong>会出现在前端的全部文字</strong>。所有外部链接均已验证，验证记录见 <code>docs/content/sources-p456.md</code>。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">02</span><strong>0. 页面元信息</strong></summary><div class="dossier-part-body"><ul>
+<li><strong><code>&lt;title&gt;</code></strong>：⑤ 骗局解剖室 — AI 探索基地</li>
+<li><strong>meta description</strong>：骗局解剖室：8 幕互动模拟，把杀猪盘的完整剧本走一遍——专家人设、小额甜头、稀缺紧迫、假 App、假收益面板、提现收费、情感施压，每一步都教你怎么识别、怎么应对，附反诈工具包。</li>
+<li><strong>导航侧属性</strong>：第 5 关（打卡 id <code>anti-scam</code>），任务卡标题「骗局解剖室」，任务卡描述「儿子最想让你看的一页」</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">03</span><strong>1. 页首</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>H1</strong>：⑤ 骗局解剖室</li>
+<li><strong>导语（lead）</strong>：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>先说清楚：<strong>想赚钱，完全没有错</strong>——这一关不是劝你别想钱，是带你把骗子的<strong>完整剧本</strong>看一遍。你要演一次"差点上当的人"。放心，这里是模拟的，不花一分钱。走的时候每一步都看得见，以后就没人能骗到你。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">04</span><strong>2. 第一场：骗局模拟器</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>H2 标题</strong>：第一场：骗局模拟器</li>
+<li><strong>模拟器顶栏</strong>：</li>
+<ul>
+<li>幕数标签（动态）：<code>第 {N} 幕 · 共 8 幕</code>，剧终时显示 <code>剧终</code> 或 <code>剧终 · 提前下车的聪明人</code></li>
+<li>常驻徽标：🎭 模拟演示 · 非真实群聊</li>
+<li>真实报道声明（徽标旁，2026-11-06 增补）：📰 剧本是模拟的，但<strong>每一幕都有真实案件报道</strong>——点每幕底部的链接看真事</li>
+</ul>
+<li><strong>进度链条（8 枚小圆片，随进度点亮，文案来自 <code>SCAM_STEPS</code>）</strong>：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>专家人设 → 甜头 → 稀缺 → 下载App → 账面诱惑 → 提现收费 → 情感施压 → 收网</p></blockquote>
+<ul>
+<li><strong>操作提示卡（模拟器下方）</strong>：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>👆 <strong>点「继续」往下走。</strong>走到岔路口时，你自己决定怎么走——选错也没关系，这里亏的不是真钱，学到的是真本事。聊天打字没完时，<strong>点一下就能直接跳过</strong>。</p></blockquote>
+<h4>2.1 八幕完整剧本（<code>SCAM_SCRIPT</code>，逐字收录）</h4>
+<blockquote class="dossier-quote-block"><p><strong>性质标注：以下剧本为典型杀猪盘手法的综合示意（演示样例），非特定案件改编</strong>（此标注同时出现在本页页尾来源区）。 <strong>真实报道背书（2026-11-06 增补）</strong>：每一幕的 <code>report</code> 字段挂一条真实新闻报道（链接均于 2026-11-06 实测 200 可直连，验证清单见 <code>real-cases-p5.md</code>）；前端在每幕解剖卡底部渲染「📰 这一幕在真实案件里 →」链接行。</p></blockquote>
+<h5>第 1 幕 · 专家人设</h5>
+<ul>
+<li>说话人：投资交流群 · 李老师（对方气泡）</li>
+<li>台词：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>欢迎新朋友进群！我做了15年私募，每天晚上8点免费分享大盘解读。进群福利：今晚荐一只票，跟上操作的这周都吃到肉了！</p></blockquote>
+<ul>
+<li>解剖卡标题：第一步：让你相信"他是专家"</li>
+<li>解剖：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>群里晒收益截图的"群友"，很多是托。真正的私募经理公开荐股给陌生人免费带操作？这本身就不合规矩。</p></blockquote>
+<ul>
+<li>✓ 正确动作：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>查他的"牌照"：证监会官网查不到的"私募"，一律是假的。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补）：短视频里的"股神"主动找你？当心！这是80万骗局的开始 · 深圳市公安局——警方拆解"股神"广告引流 → 拉群隔绝干扰 → "群演造势"，事主被骗 80 万：<a href="https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html" target="_blank" rel="noopener noreferrer">https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html</a> （验证 200）</li>
+</ul>
+<h5>第 2 幕 · 甜头</h5>
+<ul>
+<li>说话人：李老师</li>
+<li>台词：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>新来的姐妹先别大资金，先投500试试水，就当交个朋友。三个月下来群里的张姐都赚了小两千了！</p></blockquote>
+<ul>
+<li>解剖卡标题：第二步：让你尝到甜头</li>
+<li>解剖：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>让你先小赚是剧本里的固定情节。你看到的"盈利数字"是平台后台画的，不是真钱。钓鱼先下饵，才好收竿。</p></blockquote>
+<ul>
+<li>✓ 正确动作：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>记住：稳赚不赔的"试水"，本身就是骗局的信号。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补）："2724人的炒股群，除了自己全是托" · 新浪财经——警方介绍"分析师"喊单、"托"晒虚假盈利截图，利用从众心理消除戒备：<a href="https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml" target="_blank" rel="noopener noreferrer">https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml</a> （验证 200）</li>
+</ul>
+<h5>第 3 幕 · 稀缺</h5>
+<ul>
+<li>说话人：李老师</li>
+<li>台词：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>机会来了！我们对接了一个"国家扶持的量化基金项目"，年化18%，保本保息。名额只剩最后7个，今晚12点截止。</p></blockquote>
+<ul>
+<li>解剖卡标题：第三步：制造"再不上车就没了"</li>
+<li>解剖：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>"国家扶持"＋"名额有限"＋"今晚截止"——稀缺和权威同时压上来，让你来不及思考。真项目不会催你今晚交钱。</p></blockquote>
+<ul>
+<li>✓ 正确动作：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>任何"保本保息"都是违规承诺，正规产品法律上不允许这么说。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补）：公安部公布十大高发电信网络诈骗类型 · 人民网——虚假投资理财类"打着有内幕消息、掌握漏洞、回报丰厚的幌子，诱导受害人在特定虚假网站、APP 小额投资获利"：<a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">http://society.people.com.cn/n1/2024/0625/c1008-40263971.html</a> （验证 200）</li>
+<li><strong>本幕出现支线按钮（次要按钮样式）</strong>：「问群里张姐赚了多少」→ 触发张姐支线（见 2.2）</li>
+</ul>
+<h5>第 4 幕 · 下载App</h5>
+<ul>
+<li>说话人：李老师</li>
+<li>台词：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>群里的都下载我们平台的App操作，比股票软件方便，我发你安装包链接，手机上也方便随时看收益。</p></blockquote>
+<ul>
+<li>解剖卡标题：第四步：引你下载陌生App</li>
+<li>解剖：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>这个"平台App"是骗子自己做的：假行情、假账户，里面每一分"盈利"都是后台随手画的数字。官方应用商店搜不到的App，一律不装。</p></blockquote>
+<ul>
+<li>✓ 正确动作：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>只从手机官方应用商店装App；任何人发来的链接和安装包，一律不点、不装。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补）：警方揭秘投资理财诈骗新套路 · 北京市公安局（西城分局）——事主刷视频看"大师"分析行情后扫码下载炒股 APP，警方点破"克隆炒股 APP 软件，一'提现'就露馅"：<a href="https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html" target="_blank" rel="noopener noreferrer">https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html</a> （验证 200）</li>
+</ul>
+<h5>第 5 幕 · 账面诱惑（岔路口）</h5>
+<ul>
+<li>说话人：你（"我"方气泡，含假收益面板）</li>
+<li>假面板文字（<code>dashboardBubble</code> 渲染）：</li>
+<ul>
+<li>面板标题：鑫汇量化基金 · 账户总览（假面板）</li>
+<li>账户余额（元）：26000（数字滚动动画）</li>
+<li>今日收益（元）：+6000（数字滚动动画）</li>
+<li>上涨曲线：SVG 示意图，无障碍描述「假的上涨曲线示意图」</li>
+<li>面板脚注：假面板示意——真实骗局的数字比这好看得多。</li>
+</ul>
+<li>台词（气泡 caption）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>（你投入了 2 万元）好像真的在赚钱？要不要把养老金也转进来？</p></blockquote>
+<ul>
+<li>解剖卡标题：第五步：账面数字让你松懈</li>
+<li>解剖：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>屏幕上的数字可以随便改，提现出来才是钱。此刻你开始想的"养老金"，正是他们等的那句话。</p></blockquote>
+<ul>
+<li>✓ 正确动作：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>只看一条：钱能不能顺利取出来。取不出来，数字再好看都是零。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补）：今年北京虚假网络投资理财电诈主要受害者为中老年人，最大88岁 · 新京报——北京该类发案占电诈总数 7%、被骗金额占 38%，"把养老金也转进来"正是骗子在等的那句话：<a href="https://m.bjnews.com.cn/detail/1761656258168910.html" target="_blank" rel="noopener noreferrer">https://m.bjnews.com.cn/detail/1761656258168910.html</a> （验证 200）</li>
+<li><strong>本幕为岔路口，出现两个选择按钮</strong>：</li>
+<ul>
+<li>主按钮：「再投一点，看看能不能取出来」（选择后继续第 6 幕，结局文案会变化）</li>
+<li>次按钮：「停！先查一查」（选择后进入"提前下车"结局，见 2.4）</li>
+</ul>
+</ul>
+<h5>第 6 幕 · 提现收费</h5>
+<ul>
+<li>说话人：平台客服</li>
+<li>台词：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>尊敬的用户，您申请提现需先缴纳20%保证金以完成账户解冻，解冻后本金收益将一并到账。</p></blockquote>
+<ul>
+<li>解剖卡标题：第六步：收网——取钱先交钱</li>
+<li>解剖：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>"提现要交钱"，无论理由叫保证金、税费还是解冻金，100% 是骗局。这是整场骗局的目的地。</p></blockquote>
+<ul>
+<li>✓ 正确动作：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>铁律：任何让你先交钱才能取钱的，直接认定是骗局，停止转账。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补）：女子被骗 松江警方出招让骗子回国寻"真爱" · 上海市公安局松江分局——真实案例原句"如要提现，需缴纳 2 万元的保证金解冻提现"，与剧本台词同款话术：<a href="https://gaj.sh.gov.cn/sjga/list/toGjDetail?lmName=%E8%AD%A6%E6%96%B9%E6%96%B0%E9%97%BB" target="_blank" rel="noopener noreferrer">https://gaj.sh.gov.cn/sjga/list/toGjDetail?lmName=%E8%AD%A6%E6%96%B9%E6%96%B0%E9%97%BB</a>&amp;lmUrl=list/toGjIndex?type=jwbd&amp;pa=c756679f93e8708fd4be8289ef26c15542fe1f419a5529d4590b5b7bd83f5296 （验证 200）</li>
+</ul>
+<h5>第 7 幕 · 情感施压</h5>
+<ul>
+<li>说话人：李老师</li>
+<li>台词：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>姐，我知道你一个人带孩子不容易，这钱对你很重要。就差这最后一笔了，做完这次咱们就真正落袋为安，我在群里等你。</p></blockquote>
+<ul>
+<li>解剖卡标题：第七步：换上"知心人"的面孔</li>
+<li>解剖：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>前几步是专家，这一步是"懂你的家人"。硬的不行来软的——这套感情牌是针对多少人排练过的话术，不是真的懂你。</p></blockquote>
+<ul>
+<li>✓ 正确动作：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>越是这时候越要停。给儿子或家人打个电话，五分钟后再决定。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补）：虚假投资被骗后，又遇杀猪盘？本以为遇到真爱，没想到又见骗子！ · 深圳市龙华区公安分局——骗子专挑"离异带娃"的廖女士，"能懂她离异带娃的心酸"，日常嘘寒问暖后再引其下载假 APP（套路分析第 2 条即"情感攻势，骗取信任"）：<a href="https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html" target="_blank" rel="noopener noreferrer">https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html</a> （验证 200）</li>
+<li><strong>本幕出现支线按钮（次要按钮样式）</strong>：「给儿子打电话」→ 触发儿子支线（见 2.3）</li>
+</ul>
+<h5>第 8 幕 · 收网（剧终）</h5>
+<ul>
+<li>说话人：结局</li>
+<li>台词：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>——模拟结束。这不是编剧的想象力，这是全国每天都在真实发生的剧本。</p></blockquote>
+<ul>
+<li>解剖卡标题：解剖全貌</li>
+<li>解剖：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>整条链：专家人设 → 小额甜头 → 制造稀缺 → 下载App → 账面诱惑 → 提现收费 → 情感施压 → 收网。每一步都有名字，你走的时候看得见，就赢了一半。</p></blockquote>
+<ul>
+<li>✓ 正确动作：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>转发给群里的朋友，你还能救别人。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补，本幕解剖卡渲染两行链接）：</li>
+<ul>
+<li>本幕（收网）：涉资2亿多元的跨境"杀猪盘"团伙落网 · 中国经济周刊——"收网"不是文学修辞，是有大量被告人的刑事案件：<a href="http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm" target="_blank" rel="noopener noreferrer">http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm</a> （验证 200）</li>
+<li>整条链条（第 1→8 幕全链锚点，卡片额外渲染"整条链条都有真实判例和警方通报"行）：10天被骗150万！单亲妈妈遭遇"杀猪盘"全过程真实聊天记录曝光 · 中国长安网（中央政法委官网）——以真实聊天记录逐段还原"寻找目标→取得信任→怂恿投资→大量投入"全过程：<a href="https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml" target="_blank" rel="noopener noreferrer">https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml</a> （验证 200）</li>
+</ul>
+</ul>
+<h4>2.2 支线：张姐晒单（第 3 幕触发）</h4>
+<ul>
+<li>按钮文字：「问群里张姐赚了多少」（每轮只可点一次，点后按钮禁用）</li>
+<li>张姐发言（说话人：群友 · 张姐）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>李老师带得准！我上周投的8000，这周账户上已经9400了。妹妹你放心跟，我都跟了一年多啦，群里天天有人晒单呢。</p></blockquote>
+<ul>
+<li>解剖卡标题：解剖这条"晒单"</li>
+<li>解剖正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>晒单是"托"的日常工作：数字可以随便改，账户本来就是假面板，截图想多好看有多好看。"大家都赚了"的群，恰恰是托最多的群——因为真群没人天天晒收益。</p></blockquote>
+<ul>
+<li>真实报道（2026-11-06 增补，解剖卡底部渲染"📰 真实案件对照 →"链接）：卧底股票"杀猪盘"：伪装成正规券商诈骗 有股民被骗百万 · 财联社——记者卧底发现"群里 10 个人 9 个托"，"老师"每日分享"独家研报"并晒高额盈利截图：<a href="https://www.cls.cn/detail/2012300" target="_blank" rel="noopener noreferrer">https://www.cls.cn/detail/2012300</a> （验证 200）</li>
+</ul>
+<h4>2.3 支线：给儿子打电话（第 7 幕触发）</h4>
+<ul>
+<li>按钮文字：「给儿子打电话」（每轮只可点一次，点后按钮禁用）</li>
+<li>正向反馈卡（绿色卡片，插入解剖区顶部）：</li>
+<ul>
+<li>标题：📞 电话接通了——这通电话就是最好的风控</li>
+<li>正文：</li>
+</ul>
+</ul>
+<blockquote class="dossier-quote-block"><p>儿子也许不懂投资，但旁边多一双眼睛、多一句"妈，先别转"，骗子就没了办法。记住：真感情经得起商量；越催你"别告诉家人"的，越有鬼。</p></blockquote>
+<h4>2.4 岔路口"提前下车"结局（第 5 幕选「停！先查一查」）</h4>
+<ul>
+<li>正向反馈卡：</li>
+<ul>
+<li>标题：🎉 你停下来了——这就是最好的风控！</li>
+<li>正文：</li>
+</ul>
+</ul>
+<blockquote class="dossier-quote-block"><p>现实里，走到岔路口还能停的人不多。不过把剧本剩下的部分也看完，下次你就不是"恰好躲过"，而是"一眼看穿"。</p></blockquote>
+<ul>
+<li>随后自动播放第 8 幕（结局气泡 + 解剖全貌），幕数标签显示：剧终 · 提前下车的聪明人</li>
+</ul>
+<h4>2.5 模拟器结束区（finish）</h4>
+<ul>
+<li>打卡结果行（三选一，绿色加粗）：</li>
+<ul>
+<li>提前下车：✓ 已打卡！你比大多数人安全得多——继续逛下一关吧。</li>
+<li>走了"再投一点"：✓ 已打卡！这一趟你体验了"上头"的感觉——记住那种松懈的瞬间，它就是骗子等的时刻。</li>
+<li>其他：✓ 已打卡！剧本你已经全看过了。</li>
+</ul>
+<li>按钮：「重新走一遍」（重置模拟器）、「下一关：提示词学院 →」（链接 <code>pages/academy.html</code>）</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">05</span><strong>3. 第二场：骗子心理学</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>H2 标题</strong>：第二场：骗子心理学——他们赌的就是"你想赚钱"</li>
+<li><strong>小节引导</strong>：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>下面五张牌，是骗子反复使用的心理开关。<strong>不是让你不赚钱，是让你认得出这些开关被按下的瞬间。</strong></p></blockquote>
+<ul>
+<li>每张卡片结构：<code>{序号}. {名称}</code> + 「骗子会说：{话术}」+ {机制解释}。逐字收录（<code>SCAM_MECHANISMS</code>）：</li>
+</ul>
+<ol>
+<li><strong>沉没成本</strong></li>
+<ul>
+<li>骗子会说："都投这么多了，现在退出就全亏了。"</li>
+<li>解释：已经花掉的钱让人不甘心放手——骗子赌的就是这份"舍不得"。想赚钱不是错，但已经亏的部分不该决定下一步。</li>
+</ul>
+<li><strong>稀缺紧迫</strong></li>
+<ul>
+<li>骗子会说："名额只剩最后 7 个，今晚 12 点截止。"</li>
+<li>解释：倒计时让你来不及思考、来不及问家人。真机会不会怕你冷静一晚。</li>
+</ul>
+<li><strong>权威包装</strong></li>
+<ul>
+<li>骗子会说："国家扶持项目""15 年私募老师""内部渠道"</li>
+<li>解释：帽子越大越唬人。真权威可以查证：证监会官网、企业查查，5 分钟见真伪。</li>
+</ul>
+<li><strong>社会认同</strong></li>
+<ul>
+<li>骗子会说："群里的张姐都赚了小两千了！"</li>
+<li>解释：晒单截图可以批量伪造。大家都赚了的群，恰恰是托最多的群。</li>
+</ul>
+<li><strong>情感哄骗</strong></li>
+<ul>
+<li>骗子会说："姐，我知道你不容易，就差这最后一笔。"</li>
+<li>解释：先做专家再做知心人，是排练好的剧本。真感情不会催你转账。</li>
+</ul>
+</ol></div></details><details class="dossier-part"><summary><span class="dossier-part-no">06</span><strong>4. 第三场：话术词典</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>H2 标题</strong>：第三场：话术词典——听到这些词，先停三秒</li>
+<li>每张卡片结构：话术（红色加粗）+ 破解（灰字）+ <strong>来源行（2026-11-06 增补）</strong>。六条话术统一挂官方来源：公安部公布十大高发电信网络诈骗类型（人民网全文转载，六条话术在该文均有对应段落或案例，见 <code>real-cases-p5.md</code> 第 10 节）：<a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">http://society.people.com.cn/n1/2024/0625/c1008-40263971.html</a> （验证 200）。逐字收录（<code>SCAM_PHRASES</code>）：</li>
+</ul>
+<ol>
+<li><strong>"稳赚不赔"</strong> —— 正规投资产品法律上禁止承诺保本。说这话的，不是无知就是骗子——多数是后者。</li>
+<li><strong>"内部渠道 / 内部消息"</strong> —— 真有稳赚的内部渠道，他不会拉陌生人进群分享。</li>
+<li><strong>"国家扶持项目"</strong> —— 真扶持项目走官方渠道公开申报，不会在微信群里募资。上证监会官网一查便知。</li>
+<li><strong>"名额有限，今晚截止"</strong> —— 倒计时是让你跳过思考的开关。关掉它：任何好项目都经得起你睡一觉再决定。</li>
+<li><strong>"老师带你操作"</strong> —— 持牌投顾不会私下带人炒股。所谓"带你"，是带你进剧本。</li>
+<li><strong>"先交税/保证金/解冻金才能提现"</strong> —— 这是骗局的目的地。记住铁律：让你先交钱才能取钱的，100% 是骗局。</li>
+</ol></div></details><details class="dossier-part"><summary><span class="dossier-part-no">07</span><strong>5. 第四场：赚钱之前的 5 分钟（工具包）</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>H2 标题</strong>：第四场：赚钱之前的 5 分钟</li>
+<li><strong>小节引导</strong>：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>想赚钱没问题。<strong>赚钱之前，先花 5 分钟查这三样——这不是不信任机会，是保护你的本金。</strong></p></blockquote>
+<ul>
+<li>每张卡片结构：🛡️ + 名称 + 用法。逐字收录（<code>SCAM_TOOLKIT</code>）：</li>
+</ul>
+<ol>
+<li><strong>🛡️ 国家反诈中心 App</strong></li>
+</ol>
+<blockquote class="dossier-quote-block"><p>手机应用商店搜"国家反诈中心"官方下载，开启来电预警——它能提前识别诈骗电话和 App。</p></blockquote>
+<ul>
+<ul>
+<li>官方来源：公安部官网《以科技助力全民反诈 反诈"国家队"推出七大反诈利器》：<a href="https://www.mps.gov.cn/n2256342/n6594994/c9081538/content.html" target="_blank" rel="noopener noreferrer">https://www.mps.gov.cn/n2256342/n6594994/c9081538/content.html</a> （官方域名，验证：521 反爬，境内浏览器可访问）；公安部查控中心官方下载页：<a href="https://fzapph5.gjfzpt.cn/QRCode/" target="_blank" rel="noopener noreferrer">https://fzapph5.gjfzpt.cn/QRCode/</a> （验证：200）；应用商店页（应用宝"公安部刑侦局"开发者页）：<a href="https://sj.qq.com/appdetail/com.hicorenational.antifraud" target="_blank" rel="noopener noreferrer">https://sj.qq.com/appdetail/com.hicorenational.antifraud</a> （验证：200）</li>
+</ul>
+<li><strong>🛡️ 反诈专线 96110</strong></li>
+</ul>
+<blockquote class="dossier-quote-block"><p>接到可疑电话、拿不准一件事，先拨 96110 问一句。这是公安的反诈劝阻专线，不收咨询费。如果 96110 打电话给你，一定要接——那是公安在劝阻你。</p></blockquote>
+<ul>
+<ul>
+<li>官方来源：公安部官网《给反诈插上科技之翼》（96110 三大功能：预警劝阻、防骗咨询、涉诈举报）：<a href="https://www.mps.gov.cn/n2255079/n4876594/n5104076/n5104077/c10117761/content.html" target="_blank" rel="noopener noreferrer">https://www.mps.gov.cn/n2255079/n4876594/n5104076/n5104077/c10117761/content.html</a> （官方域名，验证：521 反爬）；地方公安可访问页（深圳市公安局）：<a href="https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html" target="_blank" rel="noopener noreferrer">https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html</a> （验证：200；2026-11-06 增补：该链接已同步渲染到前端 96110 卡片，字段 <code>SCAM_TOOLKIT[1].link</code>，卡片底部显示"官方说明：深圳市公安局：96110 反诈预警劝阻专线说明"）</li>
+</ul>
+<li><strong>🛡️ 证监会官网 + 企业查查</strong></li>
+</ul>
+<blockquote class="dossier-quote-block"><p>www.csrc.gov.cn 查基金/投顾牌照；企业查查看公司注册时间和经营异常。投资前花 5 分钟查这三样。</p></blockquote>
+<ul>
+<ul>
+<li>证监会官网：<a href="https://www.csrc.gov.cn" target="_blank" rel="noopener noreferrer">https://www.csrc.gov.cn</a> （验证：200）；公募基金管理机构名录：<a href="https://www.csrc.gov.cn/csrc/c101900/c1029657/content.shtml" target="_blank" rel="noopener noreferrer">https://www.csrc.gov.cn/csrc/c101900/c1029657/content.shtml</a> （验证：200）；证券投资咨询机构名录：<a href="https://www.csrc.gov.cn/csrc/c101900/c1029656/content.shtml" target="_blank" rel="noopener noreferrer">https://www.csrc.gov.cn/csrc/c101900/c1029656/content.shtml</a> （验证：200）；企业查查：<a href="https://www.qcc.com" target="_blank" rel="noopener noreferrer">https://www.qcc.com</a> （验证：200）</li>
+</ul>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">08</span><strong>6. 「数字不会说谎」数据卡</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>H2 标题</strong>：数字不会说谎：为什么这一关最重要</li>
+</ul>
+<h4>6.1 左卡：涉老健康养生诈骗案</h4>
+<ul>
+<li>大数字：400 余人 · 3000 万+（"3000"数字滚动动画）</li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>北京警方打掉过一个专骗老年人的团伙：以<strong>免费按摩</strong>引流，聊天摸清哪些老人"子女不在身边、经济条件好"，再用假"专家体检"虚构病症，一个项目收 1-2 万元——400 多位老人，被骗 3000 万余元。<strong>套路不在网上才叫骗局，哄你上钩的，都是同一套剧本。</strong></p></blockquote>
+<ul>
+<li>来源行（页面内小字）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>来源：公安部新闻发布会通报（2026 年 6 月），公安部官网可查</p></blockquote>
+<ul>
+<li>页尾来源区对应条目：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>涉老健康养生诈骗案（400 余名老人、涉案 3000 万余元）：公安部新闻发布会通报，2026 年 6 月，<a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank" rel="noopener noreferrer">公安部官网</a></p></blockquote>
+<ul>
+<ul>
+<li>验证：该 URL 经搜索引擎索引确认存在（标题《公安部发布会：通报当前电信网络诈骗犯罪的最新形势》，2026-06-12，正文含"400余名老年人被健康养生诈骗案……抓获31名犯罪嫌疑人"）；curl 访问返回 521（公安部官网对境外/自动化访问整站反爬），境内浏览器可正常打开。同案可访问的权威报道（均验证 200）：腾讯新闻 <a href="https://news.qq.com/rain/a/20260612A0460300" target="_blank" rel="noopener noreferrer">https://news.qq.com/rain/a/20260612A0460300</a> ；南方新闻网 <a href="https://static.nfnews.com/content/202606/12/c12520500.html?enterColumnId=3766" target="_blank" rel="noopener noreferrer">https://static.nfnews.com/content/202606/12/c12520500.html?enterColumnId=3766</a> ；新华网客户端 <a href="https://app.xinhuanet.com/news/article.html?articleId=202606301a9acf32f8174e47a35ac9923e7712c9" target="_blank" rel="noopener noreferrer">https://app.xinhuanet.com/news/article.html?articleId=202606301a9acf32f8174e47a35ac9923e7712c9</a></li>
+</ul>
+</ul>
+<h4>6.2 右卡：2025 年反诈数据</h4>
+<ul>
+<li>大数字：36 亿次（数字滚动动画）</li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>2025 年一年，全国公安会同有关部门<strong>拦截的诈骗电话有 36 亿次</strong>、诈骗短信 33 亿条，全年侦破电诈案件 25.8 万起。平均每 9 秒，就有 1000 多个诈骗电话被打出（按年度拦截量 36 亿次折算）。<strong>骗子的"客服团队"比你想的忙得多——他们不是碰运气，是工业化的。</strong></p></blockquote>
+<ul>
+<li>来源行（页面内小字）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>来源：新华网报道公安部通报（2026 年 1 月）</p></blockquote>
+<ul>
+<li>页尾来源区对应条目：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>2025 年侦破电诈案件 25.8 万起、拦截诈骗电话 36 亿次：公安部通报，<a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank" rel="noopener noreferrer">新华网报道</a>，2026 年 1 月</p></blockquote>
+<ul>
+<ul>
+<li>验证：200，全文标题《公安部：2025 年全国共侦破电信网络诈骗案件 25.8 万起》（2026-01-09，来源人民网），正文原句："2025年，全国公安机关共侦破有关案件25.8万起，会同相关部门拦截诈骗电话36亿次、短信33亿条"——与页面表述一致。"每 9 秒 1000 多个"为按 36 亿/年折算的推算，页面已注明折算口径。</li>
+</ul>
+</ul>
+<h4>6.3 页尾来源区（<code>.sources</code> 块原文）</h4>
+<blockquote class="dossier-quote-block"><p><strong>本页数据来源（可自行查证）：</strong></p><ul><li>涉老健康养生诈骗案（400 余名老人、涉案 3000 万余元）：公安部新闻发布会通报，2026 年 6 月，公安部官网（链接见上）</li><li>2025 年侦破电诈案件 25.8 万起、拦截诈骗电话 36 亿次：公安部通报，新华网报道，2026 年 1 月（链接见上）</li><li>模拟器剧本为典型杀猪盘手法的综合示意（演示样例），非特定案件改编；剧本是模拟的，但每一幕都有真实案件报道——链接见各幕解剖卡底部</li><li>模拟器全链条真实案例：单亲妈妈 10 天被骗 150 万全过程（真实聊天记录曝光），中国长安网（中央政法委官网），2021 年 9 月：<a href="https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml" target="_blank" rel="noopener noreferrer">https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml</a> （验证 200）</li><li>话术词典来源：公安部公布十大高发电信网络诈骗类型，人民网全文转载，2024 年 6 月：<a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">http://society.people.com.cn/n1/2024/0625/c1008-40263971.html</a> （验证 200）</li></ul></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">09</span><strong>7. 收尾卡</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>卡片标题（H4）</strong>：这一关想让你记住的两句话</li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>① <strong>任何让你先交钱才能取钱的，100% 是骗局。</strong> ② <strong>拿不准的时候，先给儿子打个电话，5 分钟后再决定。</strong>这不是不独立——这是最聪明的风控。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">10</span><strong>8. 页尾按钮 / 链接</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>按钮文字</th><th>类型</th><th>去向</th></tr></thead><tbody><tr><td>下一关：提示词学院 →</td><td>主按钮</td><td><code>pages/academy.html</code></td></tr><tr><td>← 回到探索地图</td><td>文字链接</td><td><code>index.html</code></td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">11</span><strong>9. 编辑备注</strong></summary><div class="dossier-part-body"><ul>
+<li>模拟器全部台词、支线、按钮文字是前端交互内容，改动必须同时同步 <code>scam-script.js</code> 与本文档。</li>
+<li><strong>每幕 <code>report</code> 字段（2026-11-06 增补）</strong>：<code>SCAM_SCRIPT</code> 每幕与 <code>SCAM_SIDE_ZHANG</code> 均带 <code>report: { src, url }</code>，第 8 幕另带 <code>chainReport</code>（全链条锚点）；渲染逻辑在 <code>anti-scam.html</code> 的 <code>reportLine()</code>（解剖卡底部 <code>anatomy-report</code> 行，target="_blank" rel="noopener"，字号 0.9rem）。所有 url 于 2026-11-06 实测 200 可直连，逐条验证记录与每幕→报道映射表见 <code>real-cases-p5.md</code>。</li>
+<li><strong>话术词典来源行（2026-11-06 增补）</strong>：<code>SCAM_PHRASES</code> 六条统一挂人民网转载的"公安部十大高发电诈类型"；工具包 96110 条目新增 <code>link</code> 字段（深圳市公安局页）。</li>
+<li>第 6.1 节的 mps.gov.cn 深链虽为官方源，但存在站点级反爬（521）；若后续改版，建议在页面可见处同步给出一条可直连的权威媒体链接作为兜底（腾讯新闻 / 南方新闻网 / 新华网客户端，均已验证 200）。</li>
+</ul></div></details></section><section class="dossier-doc"><h4>real-cases-p5.md</h4><details class="dossier-part"><summary><span class="dossier-part-no">12</span><strong>页首：标题与导语</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>母页面: [[ai-exploration-base-content]]  目的：第⑤关模拟器剧本目前标注为"综合示意、非特定案件改编"。本文档为<strong>每一幕补充真实新闻报道背书</strong>——剧本是模拟的，但每一步都有真实报道证明"这一步真的发生"。供后续改版在页尾来源区、解剖卡或教学备注中引用；本文档本身不改前端。 配套文档：<code>p5-anti-scam.md</code>（内容真源）、<code>sources-p456.md</code>（既有链接验证主清单）。</p></blockquote>
+<p><strong>验证方法</strong>：<code>curl -sIL -o /dev/null -w "%{http_code}" --max-time 15 "&lt;url&gt;"</code>（HEAD，无 UA）；对 HEAD 被拒（403/501）的站点补测 GET + 浏览器 UA，确认"平台反爬、浏览器可访问"。 <strong>访问日期：2026-11-06</strong>（当日会话内完成全部验证）。状态码均为此日实测。</p></div></details><details class="dossier-part"><summary><span class="dossier-part-no">13</span><strong>0. 全链条锚点报道（一/report 覆盖第 1→8 幕完整链）</strong></summary><div class="dossier-part-body"><p>用于证明"专家人设 → 甜头 → App → 账面盈利 → 提现收费 → 拉黑收网"整条链真实存在。</p>
+<div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>10天被骗150万！单亲妈妈遭遇"杀猪盘"全过程真实聊天记录曝光！</td><td>中国长安网（中央政法委官网）</td><td><a href="https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml" target="_blank" rel="noopener noreferrer">https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml</a></td><td>200</td><td>2026-11-06</td><td>以真实聊天记录逐段还原"寻找目标→取得信任→怂恿投资→大量投入"全过程，单亲妈妈 10 天被骗 150 万。</td></tr><tr><td>网恋暗藏"杀猪盘" 女研究生被骗77万余元</td><td>央视网新闻频道（转《西安晚报》，2020-07-02）</td><td><a href="http://news.cctv.com/2020/07/02/ARTIxT6PgMuyxQtrBEWDL6e8200702.shtml" target="_blank" rel="noopener noreferrer">http://news.cctv.com/2020/07/02/ARTIxT6PgMuyxQtrBEWDL6e8200702.shtml</a></td><td>200</td><td>2026-11-06</td><td>办案法官总结杀猪盘固定六步："寻找目标、取得信任、怂恿投资、大量投入、无法提现、销声匿迹"；受害人先小额盈利、提现轻松，投入 80 余万购房款后血本无归，骗子获刑 8 年。</td></tr><tr><td>荐股"杀猪盘"调查："股神"卷走4500万跑路了</td><td>经济观察网（2025-08-17）</td><td><a href="https://m.eeo.com.cn/2025/0817/745317.shtml" target="_blank" rel="noopener noreferrer">https://m.eeo.com.cn/2025/0817/745317.shtml</a></td><td>200</td><td>2026-11-06</td><td>记者调查：荐股群长期处于"养熟"阶段，"助理/老师"提供买卖点、群内成员晒收益烘托氛围，平台跑路卷走 4500 万。</td></tr><tr><td>涉资2亿多元的跨境"杀猪盘"团伙落网</td><td>中国经济周刊（人民网主管，2020-10-30）</td><td><a href="http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm" target="_blank" rel="noopener noreferrer">http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm</a></td><td>200</td><td>2026-11-06</td><td>跨境"杀猪盘"团伙涉案 2 亿多元落网——剧本结尾"这是全国每天都在真实发生的剧本"的产业级佐证。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">14</span><strong>1. 第 1 幕 · 专家人设（"15 年私募李老师"免费荐股）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>短视频里的"股神"主动找你？当心！这是80万骗局的开始</td><td>深圳市公安局</td><td><a href="https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html" target="_blank" rel="noopener noreferrer">https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html</a></td><td>200</td><td>2026-11-06</td><td>警方拆解："股神"荐股广告引流 → 诱导进第三方聊天群隔绝干扰 →"群演造势"：群内"托儿"扮演各种角色、发布虚假盈利信息，事主被骗 80 万。</td></tr><tr><td>卧底股票"杀猪盘"：伪装成正规券商诈骗 有股民被骗百万</td><td>财联社</td><td><a href="https://www.cls.cn/detail/2012300" target="_blank" rel="noopener noreferrer">https://www.cls.cn/detail/2012300</a></td><td>200</td><td>2026-11-06</td><td>记者卧底发现：团伙冒充券商从业者，"群里 10 个人 9 个托"，"老师"每日分享"独家研报"、定时推荐涨停股并晒高额盈利截图。</td></tr><tr><td>27亿"荐股"骗局：受害者超11万人 称"就是骗傻子客户的钱"</td><td>中国新闻网（2021-03-20）</td><td><a href="https://www.chinanews.com/cj/2021/03-20/9436565.shtml" target="_blank" rel="noopener noreferrer">https://www.chinanews.com/cj/2021/03-20/9436565.shtml</a></td><td>200</td><td>2026-11-06</td><td>受骗者被拉进 30 人交流群，事后警方告知：除了自己，其余 29 人全部是托儿。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">15</span><strong>2. 第 2 幕 · 甜头（"先投 500 试试水，张姐赚了小两千"）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>"2724人的炒股群，除了自己全是托"</td><td>新浪财经（2026-08-14，同题报道另见东方财富网）</td><td><a href="https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml" target="_blank" rel="noopener noreferrer">https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml</a></td><td>200</td><td>2026-11-06</td><td>警方介绍：2724 人的荐股群里除受害人外全是"托"，由"分析师"喊单、"托"晒<strong>虚假盈利截图</strong>，利用从众心理消除戒备。同题：<a href="https://wap.eastmoney.com/a/202608143841062771.html（200" target="_blank" rel="noopener noreferrer">https://wap.eastmoney.com/a/202608143841062771.html（200</a>）</td></tr><tr><td>2025版防范电信网络诈骗宣传手册（虚假网络投资理财类）</td><td>国家反诈中心编印（PDF 托管于汇丰中国官网反诈专区）</td><td><a href="https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf" target="_blank" rel="noopener noreferrer">https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf</a></td><td>200</td><td>2026-11-06</td><td>官方手册原句："对受害人前期小额投资试水予以返利，受害人一旦加大资金投入……"——"先让你小赚"是固定剧本情节，不是运气。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">16</span><strong>3. 第 3 幕 · 稀缺（"国家扶持量化基金、年化 18% 保本保息、名额只剩 7 个"）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>公安部公布十大高发电信网络诈骗类型</td><td>人民网（2024-06-25）</td><td><a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">http://society.people.com.cn/n1/2024/0625/c1008-40263971.html</a></td><td>200</td><td>2026-11-06</td><td>虚假网络投资理财类：诈骗分子"打着有内幕消息、掌握漏洞、回报丰厚的幌子，诱导受害人在特定虚假网站、APP 小额投资获利，随后诱导其不断加大投入"。</td></tr><tr><td>警惕虚假投资理财诈骗！</td><td>湖南省公安厅（2026-04-16）</td><td><a href="https://gat.hunan.gov.cn/gat/ztzl2/qfqz/202604/t20260416_33956050.html" target="_blank" rel="noopener noreferrer">https://gat.hunan.gov.cn/gat/ztzl2/qfqz/202604/t20260416_33956050.html</a></td><td>200</td><td>2026-11-06</td><td>警方归纳话术："机会难得""加大投入赚更多"，钱到位后立即以各种理由拒绝提现、关闭平台拉黑消失——稀缺紧迫+画大饼的组合拳。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">17</span><strong>4. 第 4 幕 · 下载 App（"发你安装包链接、比股票软件方便"）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>警方揭秘投资理财诈骗新套路</td><td>北京市公安局（西城分局，2024-12-11）</td><td><a href="https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html" target="_blank" rel="noopener noreferrer">https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html</a></td><td>200</td><td>2026-11-06</td><td>真实案例：事主刷视频看"大师"分析行情，扫码下载炒股 APP；警方点破"克隆炒股 APP 软件，一'提现'就露馅"，并明确提示"不要点击陌生链接或下载非官方应用市场的 APP"。</td></tr><tr><td>警惕"虚假投资理财诈骗"，小心一夜暴"负"！</td><td>福建省公安厅（2025-02-11）</td><td><a href="https://gat.fujian.gov.cn/ztzl/fjjffpzxrx/zhxx/202502/t20250211_6713317.htm" target="_blank" rel="noopener noreferrer">https://gat.fujian.gov.cn/ztzl/fjjffpzxrx/zhxx/202502/t20250211_6713317.htm</a></td><td>403(HEAD) / 200(GET·浏览器UA)——平台反爬，浏览器可访问</td><td>2026-11-06</td><td>谢某看股票分析直播被私信"带炒股"，按要求在网页搜索下载某 APP 入金——不在官方应用商店、靠链接/搜索安装的"平台"是共同特征。</td></tr><tr><td>2025版防范电信网络诈骗宣传手册（"牢记10个凡是"）</td><td>国家反诈中心编印（PDF 托管于汇丰中国官网反诈专区）</td><td><a href="https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf" target="_blank" rel="noopener noreferrer">https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf</a></td><td>200</td><td>2026-11-06</td><td>官方原句："凡是通过社交平台添加微信、QQ 拉你入群，让你点击链接下载 APP 进行投资、退费的，都是诈骗！"</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">18</span><strong>5. 第 5 幕 · 账面诱惑（假面板：余额 26000、今日 +6000）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>警方揭秘投资理财诈骗新套路</td><td>北京市公安局（西城分局，2024-12-11）</td><td><a href="https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html" target="_blank" rel="noopener noreferrer">https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html</a></td><td>200</td><td>2026-11-06</td><td>"眼见为实的收益让王先生对理财经理的承诺深信不疑，又投进去 5 万"——账面数字由后台操控，一申请提现即"操作失败"，面板里的钱取不出来。</td></tr><tr><td>今年北京虚假网络投资理财电诈主要受害者为中老年人，最大88岁</td><td>新京报（2025-10-28，北京市公安局新闻发布会）</td><td><a href="https://m.bjnews.com.cn/detail/1761656258168910.html" target="_blank" rel="noopener noreferrer">https://m.bjnews.com.cn/detail/1761656258168910.html</a></td><td>200</td><td>2026-11-06</td><td>北京虚假网络投资理财类发案占电诈总数 7%、被骗金额占 38%，受害者以中老年人为主、最大 88 岁——"把养老金也转进来"正是骗子在等的那句话。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">19</span><strong>6. 第 6 幕 · 提现收费（"先缴 20% 保证金完成账户解冻"）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>女子被骗 松江警方出招让骗子回国寻"真爱"</td><td>上海市公安局松江分局（上海市公安局官网）</td><td><a href="https://gaj.sh.gov.cn/sjga/list/toGjDetail?lmName=%E8%AD%A6%E6%96%B9%E6%96%B0%E9%97%BB" target="_blank" rel="noopener noreferrer">https://gaj.sh.gov.cn/sjga/list/toGjDetail?lmName=%E8%AD%A6%E6%96%B9%E6%96%B0%E9%97%BB</a>&amp;lmUrl=list/toGjIndex?type=jwbd&amp;pa=c756679f93e8708fd4be8289ef26c15542fe1f419a5529d4590b5b7bd83f5296</td><td>200</td><td>2026-11-06</td><td>真实案例原句：客服称"高女士账户涉嫌非法套取平台资金，如要提现，需缴纳 2 万元的保证金解冻提现"——与剧本台词同款话术。</td></tr><tr><td>2025版防范电信网络诈骗宣传手册（虚假网络投资理财类）</td><td>国家反诈中心编印（PDF 托管于汇丰中国官网反诈专区）</td><td><a href="https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf" target="_blank" rel="noopener noreferrer">https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf</a></td><td>200</td><td>2026-11-06</td><td>官方原句：以"服务器异常""操作失误导致账户冻结"等理由阻止提现，要求缴纳"保证金""解冻金"等费用；典型案例李先生追加投入后平台无法登录、客服拉黑，损失 82 万元。</td></tr><tr><td>公安部公布十大高发电信网络诈骗类型</td><td>人民网（2024-06-25）</td><td><a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">http://society.people.com.cn/n1/2024/0625/c1008-40263971.html</a></td><td>200</td><td>2026-11-06</td><td>同文典型案例：平台客服称张某"利用内部信息违规操作涉嫌套利，账户已被冻结，需缴纳罚金，否则将没收账户资金"——"编造各种理由拒绝提现"的官方定性。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">20</span><strong>7. 第 7 幕 · 情感施压（"姐，我知道你一个人带孩子不容易"）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>虚假投资被骗后，又遇杀猪盘？本以为遇到真爱，没想到又见骗子！</td><td>深圳市龙华区政府网（龙华公安分局，2024-12-31）</td><td><a href="https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html" target="_blank" rel="noopener noreferrer">https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html</a></td><td>200</td><td>2026-11-06</td><td>骗子专挑<strong>离异带娃</strong>的廖女士："能懂她离异带娃的心酸"，日常嘘寒问暖、转账 520/1314、送"现金花朵"，再借"内部渠道"引她下载 "SK Markets" APP——与"知心人面孔"逐字对应；套路分析第 2 条即"情感攻势，骗取信任"。</td></tr><tr><td>网恋暗藏"杀猪盘" 女研究生被骗77万余元</td><td>央视网新闻频道（转《西安晚报》，2020-07-02）</td><td><a href="http://news.cctv.com/2020/07/02/ARTIxT6PgMuyxQtrBEWDL6e8200702.shtml" target="_blank" rel="noopener noreferrer">http://news.cctv.com/2020/07/02/ARTIxT6PgMuyxQtrBEWDL6e8200702.shtml</a></td><td>200</td><td>2026-11-06</td><td>"甜言蜜语让小马感动并产生信任"之后才引向投资——法官提醒：看似甜蜜美好的背后，往往藏着"诱饵"。</td></tr><tr><td>以爱行骗："杀猪盘"如何趁虚而入</td><td>澎湃新闻·思想市场</td><td><a href="https://www.thepaper.cn/newsDetail_forward_24741116" target="_blank" rel="noopener noreferrer">https://www.thepaper.cn/newsDetail_forward_24741116</a></td><td>403(HEAD) / 200(GET·浏览器UA)——平台反爬，浏览器可访问</td><td>2026-11-06</td><td>梳理杀猪盘以爱行骗机制：伪造身份建立恋爱关系，"威逼利诱"受害人迅速做出"投资"决策——先做专家再做知心人是排练好的剧本。</td></tr><tr><td>【警惕"杀猪盘"诈骗！】网上交友20天被骗近300万，聊天记录全是套路</td><td>澎湃新闻·澎湃号政务</td><td><a href="https://www.thepaper.cn/newsDetail_forward_14378844" target="_blank" rel="noopener noreferrer">https://www.thepaper.cn/newsDetail_forward_14378844</a></td><td>403(HEAD) / 200(GET·浏览器UA)——平台反爬，浏览器可访问</td><td>2026-11-06</td><td>公开的真实聊天记录显示：人设包装+主动关怀制造恋爱幻觉，网上交友 20 天被骗近 300 万；警方提醒"杀猪盘一般都是始于网恋，终于投资"。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">21</span><strong>8. 第 8 幕 · 收网（拉黑、消失、"这是全国每天都在发生的剧本"）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>虚假投资被骗后，又遇杀猪盘？本以为遇到真爱，没想到又见骗子！</td><td>深圳市龙华区政府网（龙华公安分局，2024-12-31）</td><td><a href="https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html" target="_blank" rel="noopener noreferrer">https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html</a></td><td>200</td><td>2026-11-06</td><td>收网现场：平台突然打不开，"顾林"拉黑跑路，只留签名"愿你开开心心，任何经历都是成长"——廖女士及拉来的团队共损失约 500 万。</td></tr><tr><td>涉资2亿多元的跨境"杀猪盘"团伙落网</td><td>中国经济周刊（人民网主管，2020-10-30）</td><td><a href="http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm" target="_blank" rel="noopener noreferrer">http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm</a></td><td>200</td><td>2026-11-06</td><td>跨境"杀猪盘"团伙落网、涉案 2 亿多元——"收网"不是文学修辞，是有大量被告人的刑事案件。</td></tr><tr><td>揭秘"杀猪盘"背后的心理控制术：并非只有"恋爱脑"才会遭遇</td><td>新华网客户端</td><td><a href="https://app.xinhuanet.com/news/article.html?articleId=b0503525-28bd-4149-9426-a10922d7bd00" target="_blank" rel="noopener noreferrer">https://app.xinhuanet.com/news/article.html?articleId=b0503525-28bd-4149-9426-a10922d7bd00</a></td><td>200</td><td>2026-11-06</td><td>新华网解析杀猪盘心理控制机制——骗局针对的是"想赚钱的普通人"，与页面"想赚钱，完全没有错"的基调互补。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">22</span><strong>9. 支线 · 张姐晒单（第 3 幕按钮触发的支线）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>报道标题</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>"2724人的炒股群，除了自己全是托"</td><td>新浪财经（2026-08-14）</td><td><a href="https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml" target="_blank" rel="noopener noreferrer">https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml</a></td><td>200</td><td>2026-11-06</td><td>"托"晒<strong>虚假</strong>盈利截图是群托的日常工作，警方原话："利用从众心理消除戒备"。</td></tr><tr><td>卧底股票"杀猪盘"</td><td>财联社</td><td><a href="https://www.cls.cn/detail/2012300" target="_blank" rel="noopener noreferrer">https://www.cls.cn/detail/2012300</a></td><td>200</td><td>2026-11-06</td><td>群内"老师"晒高额盈利截图是标准配置，10 人 9 托——"大家都赚了的群，恰恰是托最多的群"的真实版本。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">23</span><strong>10. 第三场 · 话术词典背书（官方表述）</strong></summary><div class="dossier-part-body"><p><strong>"十大高发电诈类型"官方原文与权威转载：</strong></p>
+<div class="dossier-table"><table><thead><tr><th>条目</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>公安部公布十大高发电信网络诈骗类型（原文）</td><td>公安部官网</td><td><a href="https://m.mps.gov.cn/n6935718/n7579327/c9077933/content.html" target="_blank" rel="noopener noreferrer">https://m.mps.gov.cn/n6935718/n7579327/c9077933/content.html</a></td><td>521（公安部官网整站反爬，非死链；搜索引擎索引确认存在，境内浏览器可访问）</td><td>2026-11-06</td><td>公安部官方发布：刷单返利、虚假网络投资理财、虚假网络贷款等 10 种常见诈骗类型发案占比近 80%，虚假网络投资理财类<strong>损失金额最大</strong>。</td></tr><tr><td>公安部公布十大高发电信网络诈骗类型（权威转载·兜底）</td><td>人民网（2024-06-25）</td><td><a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">http://society.people.com.cn/n1/2024/0625/c1008-40263971.html</a></td><td>200</td><td>2026-11-06</td><td>同题全文可直连：十类含"虚假网络投资理财"，话术词典全部 6 条（稳赚不赔/内部消息/国家扶持/名额截止/老师带你/先交费提现）均有对应段落或案例。</td></tr></tbody></table></div>
+<p><strong>"稳赚不赔 = 诈骗"官方表述（话术词典第 1 条背书）：</strong></p>
+<div class="dossier-table"><table><thead><tr><th>条目</th><th>媒体</th><th>URL</th><th>状态码</th><th>访问日期</th><th>关键细节</th></tr></thead><tbody><tr><td>反诈集中宣传月丨快速识别虚假投资理财类诈骗请记住这三招！</td><td>地方政府门户网站（.gov.cn，反诈集中宣传月专栏转载警方提示）</td><td><a href="https://www.zgwg.gov.cn/contents/14961/362296.html" target="_blank" rel="noopener noreferrer">https://www.zgwg.gov.cn/contents/14961/362296.html</a></td><td>200</td><td>2026-11-06</td><td>警方提示原句："宣称掌握各种'投资技巧''内幕消息''稳赚不赔''低成本高回报'的都是诈骗话术！"</td></tr><tr><td>电诈案件典型案例·141：投资理财类诈骗</td><td>白银市平川区人民政府网</td><td><a href="https://www.bypc.gov.cn/zfxxgk/bmdwxzjd/xzjd/xpljdbsc/fdzdgknr/jwgk/dzsq/cwgk/art/2024/art_dc86266dafdc4c6eaf1c16cf2d654fc7.html" target="_blank" rel="noopener noreferrer">https://www.bypc.gov.cn/zfxxgk/bmdwxzjd/xzjd/xpljdbsc/fdzdgknr/jwgk/dzsq/cwgk/art/2024/art_dc86266dafdc4c6eaf1c16cf2d654fc7.html</a></td><td>200</td><td>2026-11-06</td><td>警方提示原句："凡是声称'高额回报、稳赚不赔'的投资理财项目，都是诈骗！"</td></tr><tr><td>2025版防范电信网络诈骗宣传手册（"牢记10个凡是"）</td><td>国家反诈中心编印（PDF 托管于汇丰中国官网反诈专区）</td><td><a href="https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf" target="_blank" rel="noopener noreferrer">https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf</a></td><td>200</td><td>2026-11-06</td><td>"凡是宣称'内幕消息、专家指导、稳赚不赔、高额回报'的投资理财，都是诈骗！"——国家反诈中心"10 个凡是"原文。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">24</span><strong>11. 数据卡两处既有来源复核（2026-11-06）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>条目</th><th>URL</th><th>状态码</th><th>结论</th></tr></thead><tbody><tr><td>2025 年拦截 36 亿次（新华网，2026-01-09）</td><td><a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank" rel="noopener noreferrer">https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html</a></td><td>200</td><td>复核通过，与 <code>sources-p456.md</code> 记录一致。</td></tr><tr><td>涉老健康养生诈骗案（公安部官网，2026-06）</td><td><a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank" rel="noopener noreferrer">https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html</a></td><td>521</td><td>与既有记录一致：站点级反爬、非死链，境内浏览器可访问；可直连兜底如下三条。</td></tr><tr><td>兜底①腾讯新闻</td><td><a href="https://news.qq.com/rain/a/20260612A0460300" target="_blank" rel="noopener noreferrer">https://news.qq.com/rain/a/20260612A0460300</a></td><td>200（带浏览器 UA；无 UA 的 HEAD 偶发 501）</td><td>复核通过。</td></tr><tr><td>兜底②南方新闻网</td><td><a href="https://static.nfnews.com/content/202606/12/c12520500.html?enterColumnId=3766" target="_blank" rel="noopener noreferrer">https://static.nfnews.com/content/202606/12/c12520500.html?enterColumnId=3766</a></td><td>200</td><td>复核通过。</td></tr><tr><td>兜底③新华网客户端</td><td><a href="https://app.xinhuanet.com/news/article.html?articleId=202606301a9acf32f8174e47a35ac9923e7712c9" target="_blank" rel="noopener noreferrer">https://app.xinhuanet.com/news/article.html?articleId=202606301a9acf32f8174e47a35ac9923e7712c9</a></td><td>200</td><td>复核通过。</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">25</span><strong>12. 每幕 → 报道映射表</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>剧本位置</th><th>主背书报道</th><th>媒体（类型）</th></tr></thead><tbody><tr><td>第 1 幕 · 专家人设</td><td>短视频里的"股神"主动找你？这是80万骗局的开始</td><td>深圳市公安局（警方官方）</td></tr><tr><td>第 2 幕 · 甜头</td><td>"2724人的炒股群，除了自己全是托"</td><td>新浪财经（媒体）+ 国家反诈中心手册（官方）</td></tr><tr><td>第 3 幕 · 稀缺</td><td>公安部公布十大高发电信网络诈骗类型</td><td>人民网（权威转载公安部发布）</td></tr><tr><td>第 4 幕 · 下载 App</td><td>警方揭秘投资理财诈骗新套路（"克隆炒股 APP 一提现就露馅"）</td><td>北京市公安局（警方官方）</td></tr><tr><td>第 5 幕 · 账面诱惑</td><td>同上（账面收益深信不疑）+ 新京报（中老年受害者、最大 88 岁）</td><td>北京市公安局 + 新京报（媒体）</td></tr><tr><td>第 6 幕 · 提现收费</td><td>松江警方案："提现需缴纳 2 万元保证金解冻"</td><td>上海市公安局松江分局（警方官方）</td></tr><tr><td>第 7 幕 · 情感施压</td><td>龙华警方案：专挑"离异带娃"嘘寒问暖（廖女士 500 万）</td><td>深圳龙华公安分局（警方官方）+ 澎湃/央视网（媒体）</td></tr><tr><td>第 8 幕 · 收网</td><td>涉资 2 亿多元跨境"杀猪盘"团伙落网</td><td>中国经济周刊（人民网主管）</td></tr><tr><td>支线 · 张姐晒单</td><td>"2724 人群"托晒虚假盈利截图</td><td>新浪财经 + 财联社卧底报道（媒体）</td></tr><tr><td>话术词典 · 十大类型</td><td>公安部公布十大高发电信网络诈骗类型</td><td>公安部官网原文（521 反爬）+ 人民网转载（200）</td></tr><tr><td>话术词典 · "稳赚不赔=诈骗"</td><td>"凡是声称高额回报、稳赚不赔的都是诈骗"</td><td>地方政府网转警方提示 + 国家反诈中心手册"10 个凡是"</td></tr><tr><td>全链条（第 1→8 幕）</td><td>单亲妈妈 10 天被骗 150 万全过程真实聊天记录</td><td>中国长安网（中央政法委官网）</td></tr><tr><td>数据卡 · 36 亿次</td><td>2025 年反诈数据（既有，复核 200）</td><td>新华网</td></tr><tr><td>数据卡 · 涉老案 400 余人/3000 万</td><td>公安部发布会通报（既有，复核 521+三兜底 200）</td><td>公安部官网 + 腾讯/南网/新华网</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">26</span><strong>13. 维护提示</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>403 站点</strong>（澎湃新闻 ×2、福建省公安厅）：HEAD 被拒，GET + 浏览器 UA 为 200，浏览器可直接打开；复验时勿只跑 HEAD 判死链。</li>
+<li><strong>news.qq.com</strong>：无 UA 的 HEAD 偶发 501，带浏览器 UA 后 HEAD/GET 均 200；属 CDN 对无 UA 请求的拦截。</li>
+<li><strong>mps.gov.cn / m.mps.gov.cn</strong>：整站 521 反爬（与 <code>sources-p456.md</code> 结论一致），深链经搜索索引确认真实存在；引用时一律配人民网等可直连权威转载兜底。</li>
+<li><strong>国家反诈中心《2025 版防范电信网络诈骗宣传手册》</strong>：官方手册的通行分发方式为银行/高校等机构官网托管 PDF（本文用汇丰中国版）；若失效，搜"国家反诈中心 2025版防范电信网络诈骗宣传手册 pdf"换镜像，"牢记 10 个凡是"与"保证金/解冻金"两段为本文引用点。</li>
+<li>各幕如需在页面展示，建议只挂"警方官方 + 央媒"各一条，本地公安案例（龙华/松江/西城/深圳）细节最贴合台词，适合做"真实案例对照"卡片。</li>
+</ul></div></details></section><section class="dossier-doc"><h4>sources-p456.md</h4><details class="dossier-part"><summary><span class="dossier-part-no">27</span><strong>页首：标题与导语</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>母页面: [[ai-exploration-base-content]]  覆盖文档：<code>p4-side-jobs.md</code>、<code>p5-anti-scam.md</code>、<code>p6-academy.md</code>、<code>p0-index-graduation.md</code> 中出现的全部外部链接与数据来源。 验证方法：<code>curl -sI -o /dev/null -w "%{http_code}" "&lt;url&gt;"</code>（浏览器 UA，跟随跳转，超时 20-25s）；对 HEAD 被拒的站点补测 <code>curl -s -o /dev/null -w "%{http_code}"</code>（GET）。 <strong>访问日期：2026-11-05</strong>（北京时间，当日会话内完成全部验证）。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">28</span><strong>一、链接验证表</strong></summary><div class="dossier-part-body"><h4>第④关 副业地图（工具官方页）</h4>
+<div class="dossier-table"><table><thead><tr><th>URL</th><th>状态码</th><th>用途</th><th>访问日期</th></tr></thead><tbody><tr><td><a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a></td><td>200</td><td>豆包官方页（写文案/整理文字，第一层+第二层+Agent 路线）</td><td>2026-11-05</td></tr><tr><td><a href="https://jimeng.jianying.com" target="_blank" rel="noopener noreferrer">https://jimeng.jianying.com</a></td><td>200</td><td>即梦官方页（AI 配图/出图）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.capcut.cn" target="_blank" rel="noopener noreferrer">https://www.capcut.cn</a></td><td>200</td><td>剪映官方页（图文成片/剪辑）</td><td>2026-11-05</td></tr><tr><td><a href="https://platform.deepseek.com" target="_blank" rel="noopener noreferrer">https://platform.deepseek.com</a></td><td>405(HEAD) / 200(GET)</td><td>DeepSeek 开放平台（脚本/API，HEAD 被服务器拒绝，GET 正常）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.coze.cn" target="_blank" rel="noopener noreferrer">https://www.coze.cn</a></td><td>200</td><td>扣子 Coze 官方页（AI 工作流，第三层）</td><td>2026-11-05</td></tr><tr><td><a href="https://klingai.kuaishou.com" target="_blank" rel="noopener noreferrer">https://klingai.kuaishou.com</a></td><td>200</td><td>可灵 AI 官方页（出图工具之一）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.gaoding.com" target="_blank" rel="noopener noreferrer">https://www.gaoding.com</a></td><td>200</td><td>稿定设计官方页（排版/成册）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.wps.cn" target="_blank" rel="noopener noreferrer">https://www.wps.cn</a></td><td>200</td><td>WPS 官网（排版成册）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.bilibili.com" target="_blank" rel="noopener noreferrer">https://www.bilibili.com</a></td><td>200</td><td>B 站（"扣子 工作流教程"、Python 视频课的平台入口）</td><td>2026-11-05</td></tr><tr><td><a href="https://docs.python.org/zh-cn/3/tutorial/" target="_blank" rel="noopener noreferrer">https://docs.python.org/zh-cn/3/tutorial/</a></td><td>200</td><td>Python 官方中文教程（Agent 学习路径）</td><td>2026-11-05</td></tr></tbody></table></div>
+<h4>第④关 合规依据（金融监管规定）</h4>
+<div class="dossier-table"><table><thead><tr><th>URL</th><th>状态码</th><th>用途</th><th>访问日期</th></tr></thead><tbody><tr><td><a href="https://www.nfra.gov.cn/cn/view/pages/rulesDetail.html?docId=949137" target="_blank" rel="noopener noreferrer">https://www.nfra.gov.cn/cn/view/pages/rulesDetail.html?docId=949137</a></td><td>200</td><td>《互联网保险业务监管办法》官方全文（国家金融监督管理总局网站刊载，银保监会令 2020 年第 13 号，2021-02-01 施行；第十五条＝"不承诺收益、不夸大保障"红线依据）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.csrc.gov.cn/beijing/c105537/c7643305/content.shtml" target="_blank" rel="noopener noreferrer">https://www.csrc.gov.cn/beijing/c105537/c7643305/content.shtml</a></td><td>200</td><td>北京证监局《关于防范互联网非法证券期货投资者咨询活动的风险警示》（2026-07-03；"不荐股、不代客理财"红线依据）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.csrc.gov.cn/csrc/c101900/c1029656/content.shtml" target="_blank" rel="noopener noreferrer">https://www.csrc.gov.cn/csrc/c101900/c1029656/content.shtml</a></td><td>200</td><td>证监会《证券投资咨询机构名录》（查投顾牌照入口，2026 年 9 月版在列）</td><td>2026-11-05</td></tr></tbody></table></div>
+<h4>第⑤关 防骗（官方数据与工具）</h4>
+<div class="dossier-table"><table><thead><tr><th>URL</th><th>状态码</th><th>用途</th><th>访问日期</th></tr></thead><tbody><tr><td><a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank" rel="noopener noreferrer">https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html</a></td><td>200</td><td>2025 年反诈数据（侦破电诈案件 25.8 万起、拦截诈骗电话 36 亿次、短信 33 亿条）——新华网转载人民网公安部发布会报道，2026-01-09，全文已核对原文一致</td><td>2026-11-05</td></tr><tr><td><a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank" rel="noopener noreferrer">https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html</a></td><td>521（官方域名，站点级反爬）</td><td>涉老健康养生诈骗案（400 余名老人、涉案 3000 万余元）官方通报：公安部《公安部发布会：通报当前电信网络诈骗犯罪的最新形势》，2026-06-12。<strong>该 URL 真实存在</strong>：经搜索引擎索引确认标题与正文（"第二个案例，400余名老年人被健康养生诈骗案……抓获31名犯罪嫌疑人"）；curl 无法访问系公安部官网对境外/自动化访问整站返回 521，境内浏览器可正常打开</td><td>2026-11-05</td></tr><tr><td><a href="https://news.qq.com/rain/a/20260612A0460300" target="_blank" rel="noopener noreferrer">https://news.qq.com/rain/a/20260612A0460300</a></td><td>200</td><td>同案可直连报道：腾讯新闻《北京400多老人遭遇健康养生诈骗，警方教授三大防骗策略》</td><td>2026-11-05</td></tr><tr><td><a href="https://static.nfnews.com/content/202606/12/c12520500.html?enterColumnId=3766" target="_blank" rel="noopener noreferrer">https://static.nfnews.com/content/202606/12/c12520500.html?enterColumnId=3766</a></td><td>200</td><td>同案可直连报道：南方新闻网《公安部披露一例针对老年人的"免费按摩"诈骗案，涉案金额3000万余元》</td><td>2026-11-05</td></tr><tr><td><a href="https://app.xinhuanet.com/news/article.html?articleId=202606301a9acf32f8174e47a35ac9923e7712c9" target="_blank" rel="noopener noreferrer">https://app.xinhuanet.com/news/article.html?articleId=202606301a9acf32f8174e47a35ac9923e7712c9</a></td><td>200</td><td>同案后续报道：新华网客户端《打着"养生馆"的幌子招揽老年顾客敛财》（2026-06-30）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.news.cn/politics/20260318/49171797051341c1a0bc3b9c869a75fb/c.html" target="_blank" rel="noopener noreferrer">https://www.news.cn/politics/20260318/49171797051341c1a0bc3b9c869a75fb/c.html</a></td><td>200</td><td>背景报道：新华网《起底"健康养生馆"骗局》（2026-03-15，3·15 系列，与数据卡同类套路佐证）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.mps.gov.cn/n2256342/n6594994/c9081538/content.html" target="_blank" rel="noopener noreferrer">https://www.mps.gov.cn/n2256342/n6594994/c9081538/content.html</a></td><td>521（官方域名，站点级反爬）</td><td>国家反诈中心 App 官方介绍：公安部《以科技助力全民反诈 反诈"国家队"推出七大反诈利器》（搜索引擎索引确认存在，含 App 功能原文；境内浏览器可访问）</td><td>2026-11-05</td></tr><tr><td><a href="https://fzapph5.gjfzpt.cn/QRCode/" target="_blank" rel="noopener noreferrer">https://fzapph5.gjfzpt.cn/QRCode/</a></td><td>200</td><td>国家反诈中心 App 官方下载页（公安部打击治理电信网络新型违法犯罪查控中心官方应用，gjfzpt.cn 为反诈平台官方域名）</td><td>2026-11-05</td></tr><tr><td><a href="https://sj.qq.com/appdetail/com.hicorenational.antifraud" target="_blank" rel="noopener noreferrer">https://sj.qq.com/appdetail/com.hicorenational.antifraud</a></td><td>200</td><td>国家反诈中心 App 应用商店页（应用宝，开发者显示"公安部刑侦局"，1.4 亿下载）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.mps.gov.cn/n2255079/n4876594/n5104076/n5104077/c10117761/content.html" target="_blank" rel="noopener noreferrer">https://www.mps.gov.cn/n2255079/n4876594/n5104076/n5104077/c10117761/content.html</a></td><td>521（官方域名，站点级反爬）</td><td>96110 官方说明：公安部《给反诈插上科技之翼》（96110 预警劝阻专线三大功能，2019-11-08 启用；搜索引擎索引确认存在，境内浏览器可访问）</td><td>2026-11-05</td></tr><tr><td><a href="https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html" target="_blank" rel="noopener noreferrer">https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html</a></td><td>200</td><td>96110 说明的可直连政府页：深圳市公安局（反诈预警劝阻专责页）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11111482.html" target="_blank" rel="noopener noreferrer">https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11111482.html</a></td><td>200</td><td>96110 说明的可直连政府页（备选）：深圳龙华政府在线《接到这个电话请一定认真听》</td><td>2026-11-05</td></tr><tr><td><a href="https://www.csrc.gov.cn" target="_blank" rel="noopener noreferrer">https://www.csrc.gov.cn</a></td><td>200</td><td>证监会官网（工具包"查牌照"入口）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.csrc.gov.cn/csrc/c101900/c1029657/content.shtml" target="_blank" rel="noopener noreferrer">https://www.csrc.gov.cn/csrc/c101900/c1029657/content.shtml</a></td><td>200</td><td>证监会《公募基金管理机构名录》（查"私募/基金"真伪，2026 年 9 月版在列）</td><td>2026-11-05</td></tr><tr><td><a href="https://www.qcc.com" target="_blank" rel="noopener noreferrer">https://www.qcc.com</a></td><td>200</td><td>企业查查（查公司注册时间与经营异常）</td><td>2026-11-05</td></tr></tbody></table></div>
+<h4>第⑤关 模拟器剧本与第⑥关测验的"演示样例"声明</h4>
+<div class="dossier-table"><table><thead><tr><th>位置</th><th>性质</th><th>备注</th></tr></thead><tbody><tr><td><code>scam-script.js</code> 八幕剧本 + 张姐支线 + 儿子支线</td><td><strong>演示样例</strong></td><td>典型杀猪盘手法综合示意，非特定案件改编（页面来源区已注明）</td></tr><tr><td>第⑥关三档提问的 AI 回答（ANSWERS）</td><td><strong>演示样例</strong></td><td>为教学撰写的模拟回答，非真实模型输出实录（p6 内容文档已标注）</td></tr></tbody></table></div>
+<h4>第⑥关 + 启动页/结业页</h4>
+<div class="dossier-table"><table><thead><tr><th>URL</th><th>状态码</th><th>用途</th><th>访问日期</th></tr></thead><tbody><tr><td><a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a></td><td>200</td><td>豆包官方页（第⑥关 L1 任务、结业页"今天"行动卡）</td><td>2026-11-05</td></tr></tbody></table></div>
+<p>第⑥关其余提及（Siri、小爱同学、豆包"帮我做"）为产品名指引，无外链；第⑥关与启动/结业页不引用统计数字，无数据来源脚注。</p></div></details><details class="dossier-part"><summary><span class="dossier-part-no">29</span><strong>二、被剔除 / 不可直连的链接</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>URL</th><th>结果</th><th>处理</th></tr></thead><tbody><tr><td><a href="http://www.gov.cn/xinwen/2019-12/29/content_5465434.htm" target="_blank" rel="noopener noreferrer">http://www.gov.cn/xinwen/2019-12/29/content_5465434.htm</a></td><td>404</td><td>原拟作《证券法》全文引用（"无牌照荐股违法"），已死链；<strong>剔除</strong>，改用北京证监局风险警示页（200）作合规依据</td></tr><tr><td><a href="https://www.mps.gov.cn/*（整站，含本页" target="_blank" rel="noopener noreferrer">https://www.mps.gov.cn/*（整站，含本页</a> 4 个深链）</td><td>521</td><td>公安部官网对境外/自动化访问整站反爬（同环境 firecrawl 亦 521），<strong>非死链</strong>：4 个深链均经搜索引擎索引确认真实存在且内容匹配。处理＝<strong>保留</strong>，在来源清单注明"官方域名，521 反爬，境内浏览器可访问"，并为同批数据补齐可直连的权威媒体/地方公安链接（均 200）</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">30</span><strong>三、数据来源合规性说明（硬性规则对照）</strong></summary><div class="dossier-part-body"><ol>
+<li><strong>所有案例和链接真实可访问</strong>：上表 20 个可直连链接全部 200（1 个仅 HEAD 405、GET 200）；4 个 mps.gov.cn 深链为官方域名 + 521 反爬，均已通过搜索引擎索引二次确认存在。</li>
+<li><strong>数据官方权威</strong>：第⑤关仅有的两处统计数字均出自公安部通报——36 亿次/25.8 万起经新华网全文核对一致；400 余人/3000 万余元经公安部官网深链（索引确认）+ 三家独立权威媒体交叉证实。页面其余表述均为定性或演示样例，无编造数字。</li>
+<li><strong>收入零数字</strong>：第④关明确"这里不编收入数字"（前端原文），未引用任何收入案例。</li>
+<li><strong>金融合规引用真实规定</strong>：《互联网保险业务监管办法》（金融监管总局官网全文 200）、北京证监局《关于防范互联网非法证券期货投资者咨询活动的风险警示》（200），见上表。</li>
+</ol></div></details><details class="dossier-part"><summary><span class="dossier-part-no">31</span><strong>四、维护提示</strong></summary><div class="dossier-part-body"><ul>
+<li>证监会名录页（c1029657 / c1029656）按月更新，URL 结构历史上稳定；若失效，从证监会首页「政务信息 → 政府信息公开 → 基金监管 → 相关名录」重新定位。</li>
+<li>mps.gov.cn 深链依赖栏目编号（n2253534 等），官网改版可能变化；失效时以"公安部 发布会 电信网络诈骗 最新形势"站内检索，媒体兜底链接见上表。</li>
+<li><code>platform.deepseek.com</code> 对 HEAD 请求返回 405 属正常服务器行为（不接受 HEAD），用 GET 复验即可，勿误判为死链。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">32</span><strong>五、2026-11-06 增补：第⑤关模拟器各幕真实报道链接</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>背景：第⑤关「骗局解剖室」改版——模拟器每幕解剖卡底部新增「📰 这一幕在真实案件里 →」链接行（数据字段 <code>scam-script.js</code> 各幕 <code>report</code>，第 8 幕另带全链条锚点 <code>chainReport</code>），话术词典六卡统一挂"公安部十大高发电诈类型（人民网全文转载）"来源行，工具包 96110 卡补深圳市公安局官方说明链接，页尾来源区同步更新。 逐条报道细节、每幕→报道映射表与 403/521 反爬站点的复验方法见 <code>real-cases-p5.md</code>（当日验证清单）；下表状态码为 2026-11-06 当日 GET + 浏览器 UA 实测复核。 <strong>访问日期：2026-11-06</strong>（北京时间，当日会话内完成全部验证）。</p></blockquote>
+<div class="dossier-table"><table><thead><tr><th>URL</th><th>状态码</th><th>用途</th><th>访问日期</th></tr></thead><tbody><tr><td><a href="https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html" target="_blank" rel="noopener noreferrer">https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html</a></td><td>200</td><td>第 1 幕（专家人设）：短视频里的"股神"主动找你？当心！这是80万骗局的开始 · 深圳市公安局（警方拆解"股神"引流→拉群→群演造势，事主被骗 80 万）</td><td>2026-11-06</td></tr><tr><td><a href="https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml" target="_blank" rel="noopener noreferrer">https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml</a></td><td>200</td><td>第 2 幕（甜头）："2724人的炒股群，除了自己全是托" · 新浪财经（"托"晒虚假盈利截图，利用从众心理消除戒备）</td><td>2026-11-06</td></tr><tr><td><a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">http://society.people.com.cn/n1/2024/0625/c1008-40263971.html</a></td><td>200</td><td>第 3 幕（稀缺）+ 话术词典六卡统一来源：公安部公布十大高发电信网络诈骗类型 · 人民网全文转载（六条话术均有对应段落或案例）</td><td>2026-11-06</td></tr><tr><td><a href="https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html" target="_blank" rel="noopener noreferrer">https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html</a></td><td>200</td><td>第 4 幕（下载App）：警方揭秘投资理财诈骗新套路 · 北京市公安局西城分局（"克隆炒股 APP 软件，一'提现'就露馅"）</td><td>2026-11-06</td></tr><tr><td><a href="https://m.bjnews.com.cn/detail/1761656258168910.html" target="_blank" rel="noopener noreferrer">https://m.bjnews.com.cn/detail/1761656258168910.html</a></td><td>200</td><td>第 5 幕（账面诱惑）：今年北京虚假网络投资理财电诈主要受害者为中老年人，最大88岁 · 新京报（北京市公安局新闻发布会，被骗金额占电诈 38%）</td><td>2026-11-06</td></tr><tr><td><a href="https://gaj.sh.gov.cn/sjga/list/toGjDetail?lmName=%E8%AD%A6%E6%96%B9%E6%96%B0%E9%97%BB" target="_blank" rel="noopener noreferrer">https://gaj.sh.gov.cn/sjga/list/toGjDetail?lmName=%E8%AD%A6%E6%96%B9%E6%96%B0%E9%97%BB</a>&amp;lmUrl=list/toGjIndex?type=jwbd&amp;pa=c756679f93e8708fd4be8289ef26c15542fe1f419a5529d4590b5b7bd83f5296</td><td>200</td><td>第 6 幕（提现收费）：女子被骗 松江警方出招让骗子回国寻"真爱" · 上海市公安局松江分局（"缴 2 万元保证金解冻提现"原案，与剧本台词同款话术）</td><td>2026-11-06</td></tr><tr><td><a href="https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html" target="_blank" rel="noopener noreferrer">https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html</a></td><td>200</td><td>第 7 幕（情感施压）：虚假投资被骗后，又遇杀猪盘？本以为遇到真爱，没想到又见骗子！ · 深圳市龙华区公安分局（专挑"离异带娃"嘘寒问暖原案，套路分析含"情感攻势，骗取信任"）</td><td>2026-11-06</td></tr><tr><td><a href="http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm" target="_blank" rel="noopener noreferrer">http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm</a></td><td>200</td><td>第 8 幕（收网）：涉资2亿多元的跨境"杀猪盘"团伙落网 · 中国经济周刊（人民网主管）</td><td>2026-11-06</td></tr><tr><td><a href="https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml" target="_blank" rel="noopener noreferrer">https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml</a></td><td>200</td><td>第 8 幕全链条锚点（<code>chainReport</code>，剧终全貌卡"整条链条都有真实判例和警方通报"行）+ 页尾来源区：10天被骗150万！单亲妈妈遭遇"杀猪盘"全过程真实聊天记录曝光 · 中国长安网（中央政法委官网）</td><td>2026-11-06</td></tr><tr><td><a href="https://www.cls.cn/detail/2012300" target="_blank" rel="noopener noreferrer">https://www.cls.cn/detail/2012300</a></td><td>200</td><td>张姐晒单支线解剖卡（"真实案件对照"行）：卧底股票"杀猪盘"：伪装成正规券商诈骗 有股民被骗百万 · 财联社（"群里 10 个人 9 个托"）</td><td>2026-11-06</td></tr><tr><td><a href="https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html" target="_blank" rel="noopener noreferrer">https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html</a></td><td>200</td><td>工具包 96110 卡新增 <code>link</code> 字段（"官方说明"行）：深圳市公安局 96110 反诈预警劝阻专线说明（与上表既有第⑤关条目同 URL，本次为前端渲染增补复核）</td><td>2026-11-06</td></tr></tbody></table></div>
+<p><strong>演示样例声明同步更新</strong>：原"第⑤关 模拟器剧本与第⑥关测验的'演示样例'声明"仍有效——剧本依旧是非特定案件改编的综合示意；页面来源区该条已追加"剧本是模拟的，但每一幕都有真实案件报道——链接见各幕解剖卡底部"。上述 11 条链接全部 200 可直连（无 403/521 条目入页）。</p></div></details></section>
+      </div>
+      <div class="dossier-sources">
+        <h3>本关全部外链 <span>36 LINKS / 访问日期 2026-11-05</span></h3>
+        <p>链接均取自 <code>docs/content</code> 的来源清单：状态码为清单记录值，403 / 521 为官方站点反爬，浏览器可正常打开；外部页面需要联网。</p>
+        <ul class="dossier-source-list"><li><a href="https://ga.sz.gov.cn/gkmlpt/content/12/12287/post_12287269.html" target="_blank" rel="noopener noreferrer">深圳市公安局：短视频里的“股神”主动找你？当心！这是 80 万骗局的开始</a><small>警方拆解“股神”广告引流 → 拉群 → 群演造势 · 200 · 2026-11-06</small></li><li><a href="https://finance.sina.com.cn/jjxw/2026-08-14/doc-ininfrtz9564749.shtml" target="_blank" rel="noopener noreferrer">新浪财经：“2724 人的炒股群，除了自己全是托”</a><small>“托”晒虚假盈利截图，利用从众心理 · 200 · 2026-11-06</small></li><li><a href="https://wap.eastmoney.com/a/202608143841062771.html" target="_blank" rel="noopener noreferrer">东方财富网：同题报道（另见）</a><small>同题转载 · 200 · 2026-11-06</small></li><li><a href="http://society.people.com.cn/n1/2024/0625/c1008-40263971.html" target="_blank" rel="noopener noreferrer">人民网：公安部公布十大高发电信网络诈骗类型</a><small>虚假投资理财类的官方定性 · 200 · 2026-11-06</small></li><li><a href="https://gaj.beijing.gov.cn/xxfb/fjjx/202412/t20241211_3963464.html" target="_blank" rel="noopener noreferrer">北京市公安局：警方揭秘投资理财诈骗新套路</a><small>克隆炒股 App，“一‘提现’就露馅” · 200 · 2026-11-06</small></li><li><a href="https://m.bjnews.com.cn/detail/1761656258168910.html" target="_blank" rel="noopener noreferrer">新京报：北京虚假网络投资理财电诈主要受害者为中老年人，最大 88 岁</a><small>发案占电诈 7%、被骗金额占 38% · 200 · 2026-11-06</small></li><li><a href="https://gaj.sh.gov.cn/sjga/list/toGjDetail?lmName=%E8%AD%A6%E6%96%B9%E6%96%B0%E9%97%BB&lmUrl=list/toGjIndex?type=jwbd&pa=c756679f93e8708fd4be8289ef26c15542fe1f419a5529d4590b5b7bd83f5296" target="_blank" rel="noopener noreferrer">上海市公安局松江分局：真实案例里“需缴纳 2 万元保证金解冻提现”</a><small>与剧本台词同款话术 · 200 · 2026-11-06</small></li><li><a href="https://www.szlhq.gov.cn/bmxxgk/gafj/dtxx_124565/gzdt_124566/content/post_11932588.html" target="_blank" rel="noopener noreferrer">深圳市龙华区公安分局：骗子专挑“离异带娃”，日常嘘寒问暖后再引其下载假 App</a><small>套路分析第 2 条即“情感攻势” · 200 · 2026-11-06</small></li><li><a href="https://www.chinapeace.gov.cn/chinapeace/c100059/2021-09/06/content_12533425.shtml" target="_blank" rel="noopener noreferrer">中国长安网：单亲妈妈 10 天被骗 150 万全过程（真实聊天记录）</a><small>整条链条都有真实判例与警方通报 · 200 · 2026-11-06</small></li><li><a href="https://fzapph5.gjfzpt.cn/QRCode/" target="_blank" rel="noopener noreferrer">国家反诈中心 App 官方下载页</a><small>公安部反诈平台官方域名 · 200 · 2026-11-05</small></li><li><a href="https://sj.qq.com/appdetail/com.hicorenational.antifraud" target="_blank" rel="noopener noreferrer">应用宝：国家反诈中心 App（开发者“公安部刑侦局”）</a><small>200 · 2026-11-05</small></li><li><a href="https://www.mps.gov.cn/n2256342/n6594994/c9081538/content.html" target="_blank" rel="noopener noreferrer">公安部：反诈“国家队”推出七大反诈利器</a><small>官方域名 · 521 反爬，浏览器可访问</small></li><li><a href="https://ga.sz.gov.cn/JMHD/YWZSK/XJGL_ZS/content/post_13026457.html" target="_blank" rel="noopener noreferrer">深圳市公安局：96110 反诈预警劝阻专线说明</a><small>200 · 2026-11-06</small></li><li><a href="https://www.mps.gov.cn/n2255079/n4876594/n5104076/n5104077/c10117761/content.html" target="_blank" rel="noopener noreferrer">公安部：给反诈插上科技之翼（96110 三大功能）</a><small>官方域名 · 521 反爬，浏览器可访问</small></li><li><a href="https://www.csrc.gov.cn" target="_blank" rel="noopener noreferrer">证监会官网（查牌照）</a><small>200 · 2026-11-05</small></li><li><a href="https://www.csrc.gov.cn/csrc/c101900/c1029657/content.shtml" target="_blank" rel="noopener noreferrer">证监会：公募基金管理机构名录</a><small>200 · 2026-11-05</small></li><li><a href="https://www.qcc.com" target="_blank" rel="noopener noreferrer">企业查查</a><small>200 · 2026-11-05</small></li><li><a href="https://www.mps.gov.cn/n2253534/n2253875/n2253877/c10493019/content.html" target="_blank" rel="noopener noreferrer">公安部发布会：通报当前电信网络诈骗犯罪的最新形势（涉老健康养生诈骗案）</a><small>官方通报 · 521 反爬，浏览器可访问 · 2026-06</small></li><li><a href="https://news.qq.com/rain/a/20260612A0460300" target="_blank" rel="noopener noreferrer">腾讯新闻：北京 400 多老人遭遇健康养生诈骗（同案可直连）</a><small>200 · 2026-11-05</small></li><li><a href="https://static.nfnews.com/content/202606/12/c12520500.html?enterColumnId=3766" target="_blank" rel="noopener noreferrer">南方新闻网：免费按摩诈骗案，涉案 3000 万余元</a><small>200 · 2026-11-05</small></li><li><a href="https://app.xinhuanet.com/news/article.html?articleId=202606301a9acf32f8174e47a35ac9923e7712c9" target="_blank" rel="noopener noreferrer">新华网客户端：打着“养生馆”的幌子招揽老年顾客敛财</a><small>200 · 2026-11-05</small></li><li><a href="https://www.xinhuanet.com/law/20260109/e5ac1ba872f244d9b01f53f9935c9f45/c.html" target="_blank" rel="noopener noreferrer">新华网：公安部 2025 年侦破电诈案件 25.8 万起、拦截诈骗电话 36 亿次</a><small>200 · 2026-01-09</small></li><li><a href="http://paper.people.com.cn/zgjjzk/html/2020-10/30/content_2017567.htm" target="_blank" rel="noopener noreferrer">中国经济周刊：涉资 2 亿多元的跨境“杀猪盘”团伙落网</a><small>200 · 2026-11-06</small></li><li><a href="https://www.cls.cn/detail/2012300" target="_blank" rel="noopener noreferrer">财联社：卧底股票“杀猪盘”，群里 10 个人 9 个托</a><small>200 · 2026-11-06</small></li><li><a href="http://news.cctv.com/2020/07/02/ARTIxT6PgMuyxQtrBEWDL6e8200702.shtml" target="_blank" rel="noopener noreferrer">央视网：网恋暗藏“杀猪盘”，女研究生被骗 77 万余元</a><small>200 · 2020-07-02</small></li><li><a href="https://m.eeo.com.cn/2025/0817/745317.shtml" target="_blank" rel="noopener noreferrer">经济观察网：荐股“杀猪盘”调查，“股神”卷走 4500 万跑路</a><small>200 · 2025-08-17</small></li><li><a href="https://www.chinanews.com/cj/2021/03-20/9436565.shtml" target="_blank" rel="noopener noreferrer">中国新闻网：27 亿“荐股”骗局，受害者超 11 万人</a><small>200 · 2021-03-20</small></li><li><a href="https://www.thepaper.cn/newsDetail_forward_24741116" target="_blank" rel="noopener noreferrer">澎湃新闻：以爱行骗，“杀猪盘”如何趁虚而入</a><small>403 HEAD / 200 GET，浏览器可访问</small></li><li><a href="https://www.thepaper.cn/newsDetail_forward_14378844" target="_blank" rel="noopener noreferrer">澎湃新闻：网上交友 20 天被骗近 300 万，聊天记录全是套路</a><small>403 HEAD / 200 GET，浏览器可访问</small></li><li><a href="https://app.xinhuanet.com/news/article.html?articleId=b0503525-28bd-4149-9426-a10922d7bd00" target="_blank" rel="noopener noreferrer">新华网客户端：揭秘“杀猪盘”背后的心理控制术</a><small>200</small></li><li><a href="https://gat.hunan.gov.cn/gat/ztzl2/qfqz/202604/t20260416_33956050.html" target="_blank" rel="noopener noreferrer">湖南省公安厅：警惕虚假投资理财诈骗</a><small>200 · 2026-04-16</small></li><li><a href="https://gat.fujian.gov.cn/ztzl/fjjffpzxrx/zhxx/202502/t20250211_6713317.htm" target="_blank" rel="noopener noreferrer">福建省公安厅：警惕“虚假投资理财诈骗”，小心一夜暴“负”</a><small>403 HEAD / 200 GET，浏览器可访问</small></li><li><a href="https://www.hsbc.com.cn/content/dam/hsbc/cn/docs/customer-education/anti-telecom-fraud-brochure-2025.pdf" target="_blank" rel="noopener noreferrer">国家反诈中心：2025 版防范电信网络诈骗宣传手册（PDF）</a><small>官方编印 · 银行反诈专区托管</small></li><li><a href="https://m.mps.gov.cn/n6935718/n7579327/c9077933/content.html" target="_blank" rel="noopener noreferrer">公安部：十大高发电信网络诈骗类型（原文，手机版）</a><small>官方域名 · 521 反爬，浏览器可访问</small></li><li><a href="https://www.bypc.gov.cn/zfxxgk/bmdwxzjd/xzjd/xpljdbsc/fdzdgknr/jwgk/dzsq/cwgk/art/2024/art_dc86266dafdc4c6eaf1c16cf2d654fc7.html" target="_blank" rel="noopener noreferrer">白银市平川区政府：电诈典型案例·141，投资理财类诈骗</a><small>200 · 2024</small></li><li><a href="https://www.zgwg.gov.cn/contents/14961/362296.html" target="_blank" rel="noopener noreferrer">中国网：快速识别虚假投资理财类诈骗，记住这三招</a><small>200 · 政府门户反诈专栏</small></li></ul>
+      </div>
+      <p class="dossier-foot">上面这段文字与正式站第 ⑤ 骗局解剖室 关同源（<code>docs/content</code>）；改文案先改内容真源，再同步到页面。原型玩法不替代正文，也不改写原文里“演示样例”和“（示意）”的标注。</p>
+    </div>
+  </details>
+</section>
+<!-- DOSSIER:END -->
+<nav class="case-onward" aria-label="其他可玩原型"><span>下一关 / 已将撕纸账面合入本关第五幕</span><a href="chapter-06.html?v=calibrate-07">⑥ 问题校准室 <b aria-hidden="true">↗</b></a><a href="chapter-04.html?v=weave-06">← ④ 路线编织台</a><a href="index.html?v=switch-13">回到原型拨盘 ↗</a></nav>
+</main><footer class="proto-footer"><span>交互原型 · 不标记正式打卡</span><a href="index.html?v=switch-13">原型拨盘 ↗</a></footer><script src="../assets/vendor/gsap.min.js"></script><script src="../assets/js/scam-script.js"></script><script src="prototype.js?v=case-12" defer></script><noscript><style>.page-scam .tear-interlude{display:none!important}</style></noscript><script src="prototype-particles.js?v=dala-02" defer></script>
+</body></html>

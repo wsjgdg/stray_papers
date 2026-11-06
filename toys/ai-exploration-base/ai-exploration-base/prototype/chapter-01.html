@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><title>提示词铸造台 · 可玩原型</title><link rel="stylesheet" href="prototype.css"><link rel="stylesheet" href="prototype-v2.css"><link rel="stylesheet" href="prototype-forge.css?v=press-07"><link rel="stylesheet" href="prototype-dossier.css?v=dossier-08"><link rel="stylesheet" href="prototype-dala.css?v=dala-15"></head>
+<body class="page-forge" data-page="forge"><a class="skip-link" href="#forge">跳到提示词铸造台</a><div class="grain" aria-hidden="true"></div>
+<header class="topbar"><a class="brand" href="index.html?v=switch-13"><span class="brand-symbol">A<span>✳</span>I</span><span>探索基地 <small>/ PLAYABLE LAB</small></span></a><span class="prototype-tag">交互原型 · 01 / 06</span><a class="top-link" href="index.html?v=switch-13">返回原型拨盘 ↗</a></header>
+<main>
+<section class="forge-section" id="forge" aria-labelledby="forge-title"><noscript><style>.forge-lever,.imprint-button,.forge-fragment,.scenario-tabs,.machine-receipt,.forge-connection,#reset-example,#clear-details,#copy-prompt{display:none!important}</style><div class="nojs-fallback"><h2>不用脚本也能学会这一招</h2><p>把“帮我做张海报”改成：“请帮我做一张社区读书会海报。给 50—60 岁的邻居看。暖色调，包含周六下午三点、社区活动室和一句话标语。请给出可以修改的初稿，并注明要我核对的信息。”</p><p>铸造台的取字模与压印需要 JavaScript；不开脚本时仍可照着上面三项自行写提问稿。本原型不调用 AI。</p></div></noscript><div class="forge-opening"><div class="work-heading"><span class="eyebrow"><span class="live-dot"></span> THE TYPE PRESS / PROTOTYPE 01</span><span class="forge-connection" id="forge-connection" role="status">正在接通字模…</span><h1 id="forge-title">让想法<br><em>留下痕迹。</em></h1><p>选一道题，抽出或装回字模，再拉下印杆。你带走的是能修改的提问稿，不是凭空出现的 AI 作品。</p><div class="opening-note"><span>选题</span><i></i><span>装字</span><i></i><span>压印</span></div></div>
+<div class="forge-stage-wrap"><div class="forge-stage" id="forge-stage" aria-label="活字压印台：抽出或装回字模，再按压印杆"><div class="forge-ring one"></div><div class="forge-ring two"></div><div class="forge-ring three"></div><span class="press-head" aria-hidden="true"></span><div class="press-sheet"><span class="press-sheet-label">YOUR WORDS / 活字压印</span><strong id="press-imprint">做一张秋日读书会海报</strong><span class="press-details"><span id="press-audience">给社区里 50—60 岁的邻居看</span><span id="press-constraints">暖色调，包含周六下午三点、社区活动室和一句话标语</span></span><span id="press-detail">三块字模已装入</span></div><div class="forge-orb"><span id="forge-orb-word">成形</span></div><button type="button" class="forge-fragment is-locked" data-fragment="task" aria-label="抽出目标字模" aria-pressed="true">目标</button><button type="button" class="forge-fragment is-locked" data-fragment="audience" aria-label="抽出对象字模" aria-pressed="true">对象</button><button type="button" class="forge-fragment is-locked" data-fragment="constraints" aria-label="抽出要求字模" aria-pressed="true">要求</button><span class="forge-stage-caption">点字模取出 / 放回 <b id="forge-score">03 / 03</b></span><a href="#printout" class="machine-receipt" id="machine-receipt" tabindex="-1"><span id="machine-receipt-state">尚未压印</span><strong id="machine-receipt-text">拉动印杆，留下这一版 ↘</strong></a></div><button type="button" id="forge-lever" class="forge-lever" aria-label="按压或向下拖动压印杆，留下当前版本凭证" aria-controls="printout">压印</button></div><p class="scene-hint">五道题 · 左右滑动换场景 →</p><div class="scenario-tabs" role="group" aria-label="选择任务示例"><button type="button" class="scenario active" data-scenario="poster" aria-pressed="true"><span>01</span>海报排版</button><button type="button" class="scenario" data-scenario="writing" aria-pressed="false"><span>02</span>写一段话</button><button type="button" class="scenario" data-scenario="finance" aria-pressed="false"><span>03</span>看账初筛</button><button type="button" class="scenario" data-scenario="photo" aria-pressed="false"><span>04</span>修复照片</button><button type="button" class="scenario" data-scenario="phone" aria-pressed="false"><span>05</span>手机求助</button></div></div>
+<div class="forge-layout"><div class="forge-form"><div class="step-title"><span>SET THE TYPE / 装字</span><h3>少一句，多一句。<br><i>结果不一样。</i></h3></div><p class="form-instruction">直接改字，或回到上方点字模抽出、放回。看纸面和提问稿怎样改变。</p>
+<label class="field"><span class="field-number">01</span><span class="field-body"><strong>我想做什么</strong><input id="task" type="text" maxlength="100" value="做一张秋日读书会海报" autocomplete="off"><small>写成你自己真正要做的事</small></span></label>
+<label class="field"><span class="field-number">02</span><span class="field-body"><strong>给谁看 / 在什么情境</strong><input id="audience" type="text" maxlength="100" value="给社区里 50—60 岁的邻居看" autocomplete="off"><small>目标对象越具体越好</small></span></label>
+<label class="field"><span class="field-number">03</span><span class="field-body"><strong>风格、边界或必须包含的细节</strong><textarea id="constraints" maxlength="180" rows="2">暖色调，包含周六下午三点、社区活动室和一句话标语</textarea><small>例如字数、语气、时间或需要避开的内容</small></span></label>
+<div class="forge-controls"><button class="ghost-button" id="reset-example" type="button">恢复此示例</button><button class="ghost-button" id="clear-details" type="button">试试只说一句话 →</button></div></div>
+<div class="forge-output"><div class="output-label"><span>THE PROOF / 对照稿</span><strong id="output-state" role="status">三项已明确 · 可试用</strong></div><div class="compare"><div class="compare-column"><span>模糊问法</span><p id="rough-output">帮我做点东西。</p></div><div class="compare-column refined"><span>这一版，可以带走 ↗</span><textarea id="refined-output" readonly rows="7" aria-label="生成的可复制提示词"></textarea></div></div><div class="output-actions"><button type="button" class="launch copy-button" id="copy-prompt">复制我的提示词 <span aria-hidden="true">↗</span></button><button type="button" class="imprint-button" id="imprint-prompt">压印一个版本 ↘</button><span class="copy-status" id="copy-status" role="status"></span></div><div class="printout" id="printout" hidden aria-label="压印版本记录"><div class="printout-head"><span>IMPRESSION / 当前页内的版本记录</span><span id="printout-number">01 / PRESS</span></div><div class="printout-body"><div class="printout-monogram" aria-hidden="true"><span>ARCHIVE</span><b id="printout-seal">01</b><span>LOCAL ONLY</span></div><div class="printout-fields"><p id="printout-caption" role="status">已封存 · 三块字模均已装入</p><div class="printout-field"><span>01 / 目标</span><strong id="printout-task">做一张秋日读书会海报</strong></div><div class="printout-field"><span>02 / 对象</span><span id="printout-audience">给社区里 50—60 岁的邻居看</span></div><div class="printout-field"><span>03 / 要求</span><span id="printout-constraints">暖色调，包含周六下午三点、社区活动室和一句话标语</span></div></div></div><div class="change-proof" id="change-proof" hidden><span>BEFORE / AFTER · 与现稿不同的字模</span><div id="change-proof-lines"></div></div><div class="printout-foot"><span id="printout-change" role="status">与当前编辑版本相同</span><button type="button" id="reprint-prompt">用当前版本重新压印</button></div></div><p class="output-disclaimer">这里是本地模板拼接，不调用 AI。复制后可以在你信任的 AI 工具里实际试问；分享账本或照片前请遮住私人信息。</p></div></div>
+<div class="sample-rail"><span class="eyebrow">BUILT-IN EXAMPLE / 预制示意</span><div><h3 id="sample-title">秋日读书会 · 海报排版</h3><p id="sample-description">网页里的海报排版示例，帮助你想象应用场景；不会随你的输入自动“生成海报”。</p></div><span class="sample-caveat">预置场景 · 不是实时作品</span><p class="sample-case" id="sample-case"></p></div>
+</section>
+<!-- DOSSIER:START -->
+<section class="dossier" id="content-dossier" aria-labelledby="dossier-p1">
+  <details>
+    <summary>
+      <span class="dossier-kicker">SOURCE DOSSIER / 内容真源 · ① AI 能做什么</span>
+      <strong id="dossier-p1">原始文案，与<em>全部出处</em>。</strong>
+      <small>第 ① 关 · 5 张卡 · 演示与真人教程分开标注 · 全文 28 节 · 18 条外链</small>
+    </summary>
+    <div class="dossier-body">
+      <p class="dossier-lead">上面是可玩版本；这里保留正式版第 ① 关的完整文案、可照抄的提示词和每条真实案例链接。句子里写明“演示”的地方，原文就写着“演示”——改了字也要改标注。 往后是按文件分节、逐字接入的<strong>全文</strong>——正式站这一关写下的每一句都在里面，可直接对照或照抄。</p>
+      <div class="dossier-grid">
+        <article class="dossier-block is-wide"><span class="dossier-no">01</span><h3>五件事，<em>五种本事</em></h3><p>先说一个事实：<strong>你现在看的这个网站——每一页代码、每一句文案、每一处动画——都是 AI 写的。</strong>
+    下面这几张卡片，每张都是一个真实的本事。点一下卡片，翻过来看它怎么做的。</p>
+    <div class="dossier-quote"><p><strong>怎么玩：</strong>每张卡都能点一下翻面，背面藏着三样东西——一句能照抄的提示词、一个“现在就试”的入口、一句老实话：哪些是演示，哪些是真的。</p>
+    <p>本页没有一张伪装成实拍的照片——画出来的图，都明明白白标着“示意”。</p></div></article><article class="dossier-block"><span class="dossier-no">02</span><h3>AI 会做海报</h3><p>社区活动需要一张海报？先让 AI 帮你确定配色、字体、版式，再把文字排出来。这里看到的海报是网页里的 CSS 排版示例，不是假装从图像模型生成的图片。</p>
+    <div class="dossier-quote"><p>READ · SHARE · AUTUMN<br>秋日读书会<br>带一本你爱读的书 · 换一段别人的故事<br>本周六 下午 3 点 · 社区活动室<br>免费参加 ◆ 欢迎带朋友</p></div>
+    <p><strong>给 AI 的话（你可以照抄）：</strong>“帮我做一张社区读书会海报的文字排版方案：主题‘秋日读书会’，暖色调，要有时间地点和一句话标语。”</p>
+    <p>找设计师排版：约 3 小时 → AI：3 分钟（示意）。这张海报的版式，是 AI 写代码直接渲染出来的——你看不到任何一个手工调过的像素。</p>
+    <span class="dossier-tag">演示作品 · 非实拍</span><span class="dossier-tag">3 小时 → 3 分钟（示意）</span><p class="dossier-tag">照抄之后，去这两个地方各试一次</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://www.wanxiang.art/" target="_blank" rel="noopener noreferrer">万相营造：阿里官方电商 AI 制图</a><small>官方工具 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="http://finance.people.com.cn/n1/2025/0920/c1004-40568186.html" target="_blank" rel="noopener noreferrer">人民网：万相营造入选 2025 服贸会示范案例</a><small>权威报道 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">豆包（照抄提示词的验证渠道）</a><small>官方站点 · 302→200 · 2026-11-05</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">03</span><h3>AI 会写作</h3><p>这是一篇预置的文案示意。内容主意还是你出，AI 帮你把它整理成能发出去的话。自己憋文案：1 小时 → AI 辅助：30 秒（示意）。</p>
+    <div class="dossier-quote"><p>55 岁才想明白：钱不是攒出来的，是管出来的 💰<br>年轻时只敢把钱放银行，后来才懂，让钱闲着也是一种亏。<br>现在我把家里的账分成三份：要用的、应急的、长期打算的。<br>不追高、不贪快，睡得着觉的理财才是好理财。<br>姐妹们，什么时候开始都不晚 🌱<br>#中年理财 #普通人的钱 #生活感悟</p></div>
+    <p><strong>给 AI 的话（你可以照抄）：</strong>“我想给 50-60 岁的姐妹分享稳健理财心得，不推销任何产品，只分享生活感悟。请写一篇小红书笔记，口语化，带表情，300 字以内，最后加话题标签。”</p>
+    <p>你可以把这句话发给豆包，看看它给你写什么；每次的回答不一定相同。</p>
+    <span class="dossier-tag">演示文案 · 非真实发布</span><p class="dossier-tag">别人真的这么用</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://developer.volcengine.com/articles/7545105759953289254" target="_blank" rel="noopener noreferrer">火山引擎开发者社区：我用豆包批量做小红书，1 天产出 30 篇</a><small>真人教程 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://www.bilibili.com/video/BV15w4m1v7Hv/" target="_blank" rel="noopener noreferrer">B 站：一套可直接照抄的 AI 写小红书文案提示词</a><small>视频教程 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://zhuanlan.zhihu.com/p/24440012751" target="_blank" rel="noopener noreferrer">知乎：小红书博主在用的 AI 工具（含同款提示词句式）</a><small>社区记录 · 403 反爬，浏览器可访问 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">04</span><h3>AI 会看账</h3><p>你做了三十年财务，看账的本事比 AI 深。但 AI 一分钟就能替你做完初筛——这就是“老手 + AI”的用法：它跑腿，你判断。</p>
+    <div class="dossier-quote"><p>我：把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。</p>
+    <p>AI：看了你发的表，说三点：<br>1. 通讯费偏高——同档位多半有更便宜的套餐，值得打个电话问问；<br>2. 打车费里短途占比不小，几步路的车换骑车或公交，能省下不少；<br>3. 好几个自动续费的会员，有的已经一两个月没打开过，先关掉不亏。<br>想让我陪你把每一项都过一遍吗？</p></div>
+    <p><strong>给 AI 的话：</strong>“把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。”</p>
+    <p>对着表格看半天 → AI：1 分钟，还带建议（示意）。给 AI 看账时记得遮住姓名、账号等个人信息。</p>
+    <span class="dossier-tag">演示对话 · 数字为示意</span><p class="dossier-tag">真实案例对照</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://blog.csdn.net/sinat_28750229/article/details/163530184" target="_blank" rel="noopener noreferrer">CSDN：普通家庭如何借助 AI 进行记账</a><small>真人分享 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://www.leavesongs.com/THINK/ai-bookkeeping-best-practices.html" target="_blank" rel="noopener noreferrer">离别歌：AI 记账的最佳实践</a><small>一手记录 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://www.163.com/dy/article/K41NUAC605567EZL.html" target="_blank" rel="noopener noreferrer">网易·AI 新榜：半年百万用户的 AI 记账应用</a><small>媒体报道 · 403 反爬，浏览器可访问 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">05</span><h3>AI 会修照片</h3><p><strong>泛黄的老照片、模糊的合影、缺了一角的旧照</strong>——AI 能把它们修得清清楚楚，还能上色。</p>
+    <p>这里不摆一张假“修复前后图”；找一张自己的旧照，试一次才最有说服力。四步：① 手机相册里找一张老照片（或先翻拍）；② 打开豆包，点相机，把照片拍给它；③ 发这句话——“帮我把这张老照片修复清楚，把划痕去掉，再上个自然的颜色。”；④ 等几秒，看看结果，发给亲戚群，他们大概会问你是找谁修的。</p>
+    <p>修好后记得把原图留档。AI 修的是“看起来”，原片才是底。</p>
+    <span class="dossier-tag">真实可操作 · 非演示</span><p class="dossier-tag">同一件事，别人已经做过</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml" target="_blank" rel="noopener noreferrer">央视网：他们用 AI 技术修复照片，为走失孩子照亮回家路</a><small>权威报道 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://feng.ifeng.com/c/8xh1XDSNfRP" target="_blank" rel="noopener noreferrer">凤凰网：AI 修复岁月影像，让泛黄记忆鲜活如初</a><small>权威报道 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://mydown.yesky.com/news/317462.html" target="_blank" rel="noopener noreferrer">天极下载：豆包 AI 老照片修复实操教学</a><small>图文教程 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://zhuanlan.zhihu.com/p/1982019771814920972" target="_blank" rel="noopener noreferrer">知乎：4 款免费“傻瓜式”AI 修复工具实测</a><small>工具清单 · 403 反爬，浏览器可访问 · 2026-11-06</small></span></li></ul></article><article class="dossier-block"><span class="dossier-no">06</span><h3>AI 随时问</h3><p>这就是 AI 最日常的用法：它不烦、不嫌问题小、24 小时在线。手机上任何不明白的事，都可以先问它。</p>
+    <div class="dossier-quote"><p>我：手机总提示内存不够，微信里的照片怎么清理才不会误删？</p>
+    <p>AI：三步，不误删：① 微信里点 我→设置→通用→存储空间，先清理缓存（缓存删了不影响聊天记录）；② 选“聊天记录管理”，只清理那些大视频群；③ 重要照片先存进手机相册再清微信。照这个做，一般能腾出好几个 G。</p></div>
+    <p><strong>给 AI 的话：</strong>“手机总提示内存不够，微信里的照片怎么清理才不会误删？”</p>
+    <p>网上搜半天，广告一大堆 → AI：直接给你步骤（示意）。操作路径以微信当前版本为准。</p><p class="dossier-tag">清理之前，先看一眼官方路径</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html" target="_blank" rel="noopener noreferrer">新华报业网：微信存储一下少了 10G，亲测有效</a><small>媒体亲测 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://kf.qq.com/product/weixin.html" target="_blank" rel="noopener noreferrer">腾讯客服：微信官方帮助专区</a><small>官方入口 · 200 · 2026-11-06</small></span></li><li><span class="mark">↗</span><span><a href="https://zhuanlan.zhihu.com/p/307904391" target="_blank" rel="noopener noreferrer">知乎：微信太占空间，怎样清理不丢聊天记录</a><small>社区教程 · 403 反爬，浏览器可访问 · 2026-11-06</small></span></li></ul></article><article class="dossier-block is-wide"><span class="dossier-no">07</span><h3>诚实声明 · 本关小结</h3><div class="dossier-quote"><p>对话和数字是<strong>演示样例</strong>，方法是真的——每张卡背面都附了<strong>真人教程或报道链接</strong>，点开就能看到别人怎么做的。</p>
+    <p>欢迎照着提示词发给<strong>豆包</strong>，亲自验证。真实的东西也有：这个网站本身、每句提示词、还有你亲手试出来的结果。</p></div>
+    <p><strong>这一关想让你记住的一句话：</strong>AI 不是“以后会有用的东西”——<strong>今天、现在、这部手机上，它就能帮你干活</strong>。下一页我们看看它这两年跑得有多快。</p>
+    <p>演示延伸渠道（本页未直接出现，供后续使用）：即梦、剪映——都免费，入门够用。</p><ul class="dossier-links"><li><span class="mark">↗</span><span><a href="https://jimeng.jianying.com" target="_blank" rel="noopener noreferrer">即梦：AI 图像 / 视频创作</a><small>官方站点 · 200 · 2026-11-05</small></span></li><li><span class="mark">↗</span><span><a href="https://www.capcut.cn" target="_blank" rel="noopener noreferrer">剪映：视频剪辑与“图文成片”</a><small>官方站点 · 200 · 2026-11-05</small></span></li></ul></article>
+      </div>
+      
+      <div class="dossier-full">
+        <h3>全文 · 逐字接入 <span>FULL TEXT / 28 节 · 166 段</span></h3>
+        <p class="dossier-tag">下面是内容真源里的原文，按小节折叠，没有缩写、没有改写；小节顺序与文件一致，文件名即出处。</p>
+        <section class="dossier-doc"><h4>p1-what-ai-can-do.md</h4><details class="dossier-part"><summary><span class="dossier-part-no">01</span><strong>页首：标题与导语</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>对应页面：<code>pages/what-ai-can-do.html</code> ｜ 引用编号见 <span class="dossier-ref">sources-p123.md</span> ｜ 写作规范见 <span class="dossier-ref">README.md</span> 访问日期（本页引用链接验证日）：2026-11-05 ｜ 真人教程/报道链接验证日：2026-11-06</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">02</span><strong>页面元信息</strong></summary><div class="dossier-part-body"><ul>
+<li>浏览器标题：<code>① AI 能做什么 — AI 探索基地</code></li>
+<li>页面描述（meta description）：第一关：亲眼看看 AI 已经能帮你做什么——排海报、写文案、看账目、修老照片、随问随答。每张卡都附可照抄的提示词，点开卡片翻面就懂。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">03</span><strong>页首标题与导语</strong></summary><div class="dossier-part-body"><ul>
+<li>主标题（H1）：<code>① AI 能做什么</code></li>
+<li>导语（lead）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>先说一个事实：<strong>你现在看的这个网站——每一页代码、每一句文案、每一处动画——都是 AI 写的。</strong> 下面这几张卡片，每张都是一个真实的本事。点一下卡片，翻过来看它怎么做的。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">04</span><strong>区块：✋ 会动手的</strong></summary><div class="dossier-part-body"><ul>
+<li>区块标题：<code>✋ 会动手的</code></li>
+<li>区块副题：<code>AI 已经做完的，和等你亲手做的</code></li>
+</ul>
+<h4>卡 1：AI 会做海报（翻面卡）</h4>
+<p><strong>正面</strong></p>
+<ul>
+<li>标签：<code>AI 会做图</code></li>
+<li>卡内海报（演示作品，纯代码渲染，非实拍图）文字内容：</li>
+<ul>
+<li><code>READ · SHARE · AUTUMN</code></li>
+<li><code>秋日读书会</code></li>
+<li><code>带一本你爱读的书 · 换一段别人的故事</code></li>
+<li><code>本周六 下午 3 点 · 社区活动室</code></li>
+<li>底部票根条：<code>免费参加 ◆ 欢迎带朋友</code></li>
+</ul>
+<li>海报无障碍描述（aria-label）：AI 排版的读书会海报示例：秋日读书会，本周六下午三点，社区活动室，免费参加，欢迎带朋友</li>
+<li>提示行：<code>👆 点一下，看它怎么做的</code></li>
+</ul>
+<p><strong>背面</strong></p>
+<ul>
+<li>标签：<code>背面</code></li>
+<li>时间对比：<code>找设计师排版：约 3 小时 → AI：3 分钟（示意）</code></li>
+<li>提示词（可照抄）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p><strong>给 AI 的话（你可以照抄）：</strong> "帮我做一张社区读书会海报的文字排版方案：主题'秋日读书会'，暖色调，要有时间地点和一句话标语。"</p></blockquote>
+<ul>
+<li>说明：这张海报的版式，是 AI 写代码直接渲染出来的——你看不到任何一个手工调过的像素。</li>
+<li>行动链接：<code>想自己排一张？现在就试 →</code>（指向 <code>academy.html</code>）</li>
+<li>真人案例链接（"现在就试"下方新增一行，新窗口打开）：<code>📰 官方工具：阿里「万相营造」，商品图一键变海报</code>（指向 <a href="https://www.wanxiang.art/" target="_blank" rel="noopener noreferrer">https://www.wanxiang.art/</a>）[来源17]</li>
+</ul>
+<p>（演示标注：海报为演示作品；时间对比数字已标"（示意）"。验证方式：把上面提示词原文发给豆包 <a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a> 即可复现同类排版文案。[来源1]）</p>
+<h4>导览卡：怎么玩</h4>
+<ul>
+<li>标签：<code>导览 · 怎么玩</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p><strong>每张卡都能点一下翻面</strong>，背面藏着三样东西：</p><ul><li>一句<strong>能照抄</strong>的提示词；</li><li>一个"现在就试"的入口；</li><li>一句老实话——哪些是演示，哪些是真的。</li></ul><p> 本页没有一张伪装成实拍的照片——画出来的图，都明明白白标着"示意"。</p></blockquote>
+<h4>卡 4：AI 会修照片（通栏主卡，翻面卡）</h4>
+<p><strong>正面</strong></p>
+<ul>
+<li>标签：<code>AI 会修照片</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p><strong>泛黄的老照片、模糊的合影、缺了一角的旧照</strong>—— AI 能把它们修得清清楚楚，还能上色。</p></blockquote>
+<ul>
+<li>配图为手绘 SVG <strong>示意图</strong>（非实拍、非真实修复效果）：</li>
+<ul>
+<li>图内文字：<code>修复前</code>（左，灰暗模糊带划痕、裂痕、缺角）/ <code>修复后</code>（右，明亮清晰）</li>
+<li>无障碍描述（aria-label）：老照片修复前后对比示意图：左半边是灰暗、模糊、带划痕和裂痕的旧照片，右半边是色彩明亮、清晰的同一张照片，中间一支箭头从左指向右</li>
+</ul>
+<li>图注：<code>效果示意图——背面教你 30 秒亲手做真的</code></li>
+<li>报道佐证行（图注下方新增小字）：<code>📺 央视网、凤凰网都报道过：志愿者用同款方法帮长辈修老照片。</code>——"央视网"指向 <a href="https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml" target="_blank" rel="noopener noreferrer">https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml</a> [来源31]，"凤凰网"指向 <a href="https://feng.ifeng.com/c/8xh1XDSNfRP" target="_blank" rel="noopener noreferrer">https://feng.ifeng.com/c/8xh1XDSNfRP</a> [来源32]，均新窗口打开</li>
+<li>提示行：<code>👆 点一下，30 秒亲手做一次</code></li>
+</ul>
+<p><strong>背面</strong></p>
+<ul>
+<li>标签：<code>背面 · 亲手试试</code></li>
+<li>步骤（本卡为<strong>真实可操作</strong>的教程，非演示）：</li>
+<ol>
+<li>手机相册里找一张老照片（或让 AI 帮你翻拍）</li>
+<li>打开<strong>豆包</strong>，点相机，把照片拍给它</li>
+<li>发这句话：</li>
+</ol>
+</ul>
+<blockquote class="dossier-quote-block"><p><strong>"帮我把这张老照片修复清楚，把划痕去掉，再上个自然的颜色。"</strong></p></blockquote>
+<ol>
+<ol start="4">
+<li>等几秒——你会看到它焕然一新。发给亲戚群，他们大概会问你是找谁修的 🙂</li>
+</ol>
+<li>提醒：修好后记得把原图留档。AI 修的是"看起来"，原片才是底。</li>
+<li>行动链接：<code>想让修复效果更自然？现在就试 →</code>（指向 <code>academy.html</code>）</li>
+<li>图文教程链接（"现在就试"下方新增一行，新窗口打开）：<code>📰 图文教程：豆包修老照片，一步一步教</code>（指向 <a href="https://mydown.yesky.com/news/317462.html" target="_blank" rel="noopener noreferrer">https://mydown.yesky.com/news/317462.html</a>）[来源29]</li>
+</ol>
+<p>（验证方式：豆包官网 <a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a>，手机 App 或网页版均可上传照片复现。[来源1]）</p></div></details><details class="dossier-part"><summary><span class="dossier-part-no">05</span><strong>区块：💬 会动嘴的</strong></summary><div class="dossier-part-body"><ul>
+<li>区块标题：<code>💬 会动嘴的</code></li>
+<li>区块副题：<code>会打字就行，一句话的事</code></li>
+</ul>
+<h4>卡 2：AI 会写作（翻面卡）</h4>
+<p><strong>正面</strong></p>
+<ul>
+<li>标签：<code>AI 会写作</code></li>
+<li>对话气泡（<strong>演示样例</strong>）：</li>
+<ul>
+<li>我：<code>帮我写一条发朋友圈的，说说这个月跳舞班的开心事</code></li>
+<li>AI 写的朋友圈文案：</li>
+</ul>
+</ul>
+<blockquote class="dossier-quote-block"><p>这个月的跳舞班，快乐翻倍💃 上个月还同手同脚，这周已经能跟完整首曲子了； 王姐把扇子拿反了，满屋子笑成一团，老师也没绷住。 出了一身汗，回家路上腿是酸的，心情是飞的。 姐妹们，爱动的人，运气都不会太差😊 #跳舞打卡 #开心每一天 #退休生活</p></blockquote>
+<ul>
+<li>提示行：<code>👆 点一下，看提示词</code></li>
+</ul>
+<p><strong>背面</strong></p>
+<ul>
+<li>标签：<code>背面</code></li>
+<li>时间对比：<code>自己憋文案：1 小时 → AI：30 秒（示意）</code></li>
+<li>提示词（可照抄）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p><strong>给 AI 的话（你可以照抄）：</strong> "帮我写一条发朋友圈的，说说这个月跳舞班的开心事。口语一点，别像广告，最后加两三个话题标签。"</p></blockquote>
+<ul>
+<li>说明：上面那条就是 AI 按这句话写出来的。你可以一字不差地发给豆包，看看它替你写出什么。</li>
+<li>行动链接：<code>想让 AI 写出你的味道？现在就试 →</code>（指向 <code>academy.html</code>）</li>
+<li>真人教程链接（"现在就试"下方新增一行，新窗口打开）：<code>📰 真人教程：我用豆包，一天写 30 篇小红书</code>（指向 <a href="https://developer.volcengine.com/articles/7545105759953289254" target="_blank" rel="noopener noreferrer">https://developer.volcengine.com/articles/7545105759953289254</a>）[来源27]</li>
+</ul>
+<p>（演示标注：朋友圈文案为演示样例。验证方式：把背面提示词原文发给豆包 <a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a> 复现。[来源1]）</p>
+<h4>卡 3：AI 会看账（翻面卡）</h4>
+<p><strong>正面</strong></p>
+<ul>
+<li>标签：<code>AI 会看账</code></li>
+<li>演示徽标（卡片右上角）：<code>🎭 演示对话 · 数字为示意</code></li>
+<li>对话气泡（<strong>演示样例</strong>）：</li>
+<ul>
+<li>我：<code>把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。</code></li>
+<li>AI：</li>
+</ul>
+</ul>
+<blockquote class="dossier-quote-block"><p>看了你发的表，说三点：</p><ol><li>通讯费偏高——同档位多半有更便宜的套餐，值得打个电话问问；</li><li>打车费里短途占比不小，几步路的车换骑车或公交，能省下不少；</li><li>好几个自动续费的会员，有的已经一两个月没打开过，先关掉不亏。</li></ol><p>想让我陪你把每一项都过一遍吗？</p></blockquote>
+<ul>
+<li>提示行：<code>👆 点一下，看提示词</code></li>
+</ul>
+<p><strong>背面</strong></p>
+<ul>
+<li>标签：<code>背面</code></li>
+<li>时间对比：<code>自己对着表格看半天 → AI：1 分钟，还带建议（示意）</code></li>
+<li>提示词（可照抄）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p><strong>给 AI 的话：</strong> "把我家的月度开支表拍给你了，帮我看看哪几项最不合理？说人话。"</p></blockquote>
+<ul>
+<li>说明：你做了三十年财务，看账的本事比 AI 深。但 AI 一分钟就能替你做完初筛——这就是"老手 + AI"的用法：它跑腿，你判断。</li>
+<li>行动链接：<code>想让 AI 替你干更多跑腿活？现在就试 →</code>（指向 <code>academy.html</code>）</li>
+<li>真人分享链接（"现在就试"下方新增一行，新窗口打开）：<code>📰 真人分享：普通家庭这样用 AI 记账</code>（指向 <a href="https://blog.csdn.net/sinat_28750229/article/details/163530184" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/sinat_28750229/article/details/163530184</a>）[来源28]</li>
+</ul>
+<p>（演示标注：开支表对话为演示样例，未引用任何真实家庭账目数据。验证方式：把背面提示词原文发给豆包 <a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a> 并随手拍一张账单或表格复现。[来源1]）</p>
+<h4>卡 5：AI 随时问（翻面卡）</h4>
+<p><strong>正面</strong></p>
+<ul>
+<li>标签：<code>AI 随时问</code></li>
+<li>对话气泡（<strong>演示样例</strong>）：</li>
+<ul>
+<li>我：<code>手机总提示内存不够，微信里的照片怎么清理才不会误删？</code></li>
+<li>AI：</li>
+</ul>
+</ul>
+<blockquote class="dossier-quote-block"><p>三步，不误删：</p><ol><li>微信里点 我→设置→通用→存储空间，先清理缓存（缓存删了不影响聊天记录）；</li><li>选「聊天记录管理」，只清理那些大视频群；</li><li>重要照片先存进手机相册再清微信。</li></ol><p>照这个做，一般能腾出好几个 G。</p></blockquote>
+<ul>
+<li>提示行：<code>👆 点一下，看提示词</code></li>
+</ul>
+<p><strong>背面</strong></p>
+<ul>
+<li>标签：<code>背面</code></li>
+<li>时间对比：<code>网上搜半天，广告一大堆 → AI：直接给你步骤（示意）</code></li>
+<li>提示词（可照抄）：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p><strong>给 AI 的话：</strong> "手机总提示内存不够，微信里的照片怎么清理才不会误删？"</p></blockquote>
+<ul>
+<li>说明：这就是 AI 最日常的用法：它不烦、不嫌问题小、24 小时在线。手机上任何不明白的事，都可以先问它。</li>
+<li>行动链接：<code>想问得好？现在就试 →</code>（指向 <code>academy.html</code>）</li>
+<li>媒体亲测链接（"现在就试"下方新增一行，新窗口打开）：<code>📰 媒体亲测：微信这样清，一下少了 10G</code>（指向 <a href="https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html" target="_blank" rel="noopener noreferrer">https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html</a>）[来源30]</li>
+</ul>
+<p>（演示标注：清理步骤为演示样例，操作路径以微信当前版本为准。验证方式：把背面提示词原文发给豆包 <a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a> 复现。[来源1]）</p>
+<h4>诚实声明卡（与卡 5 并排）</h4>
+<ul>
+<li>标签：<code>诚实声明</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>对话和数字是<strong>演示样例</strong>，方法是真的——每张卡背面都附了<strong>真人教程或报道链接</strong>，点开就能看到别人怎么做的。  欢迎照着提示词发给<strong>豆包</strong>，亲自验证。  真实的东西也有：这个网站本身、每句提示词、还有你亲手试出来的结果。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">06</span><strong>结尾：本关小结卡</strong></summary><div class="dossier-part-body"><ul>
+<li>卡片标题：<code>这一关想让你记住的一句话</code></li>
+<li>正文：</li>
+</ul>
+<blockquote class="dossier-quote-block"><p>AI 不是"以后会有用的东西"——<strong>今天、现在、这部手机上，它就能帮你干活</strong>。 下一页我们看看它这两年跑得有多快。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">07</span><strong>页面导航</strong></summary><div class="dossier-part-body"><ul>
+<li>主按钮：<code>下一关：AI 趋势与行业 →</code>（指向 <code>trends.html</code>）</li>
+<li>次链接：<code>← 回到探索地图</code>（指向 <code>../index.html</code>）</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">08</span><strong>本页来源与演示验证渠道</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>演示验证渠道</strong>（页面演示样例的复现工具，官方站点）：</li>
+<ul>
+<li>豆包（字节跳动 AI 助手，本页修照片/写作/看账/随问演示的验证渠道）：<a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a> — curl 状态码 <code>302→200</code>，访问日期 2026-11-05 [来源1]</li>
+</ul>
+<li><strong>演示延伸渠道</strong>（本页未直接出现，供后续演示与读者延伸使用）：</li>
+<ul>
+<li>即梦（字节跳动 AI 图像/视频创作工具）：<a href="https://jimeng.jianying.com" target="_blank" rel="noopener noreferrer">https://jimeng.jianying.com</a> — <code>200</code>，2026-11-05 [来源2]</li>
+<li>剪映（字节跳动视频剪辑工具，官网含"图文成片"等 AI 功能）：<a href="https://www.capcut.cn" target="_blank" rel="noopener noreferrer">https://www.capcut.cn</a> — <code>200</code>，2026-11-05 [来源3]</li>
+</ul>
+<li><strong>真人教程 / 报道链接</strong>（2026-11-06 新增，挂在各卡背面"现在就试"下方与卡 4 正面图注下，均 <code>target="_blank" rel="noopener"</code>；素材库见 <span class="dossier-ref">real-cases-p1.md</span>）：</li>
+<ul>
+<li>卡 1 背面 · 官方工具：万相营造（阿里官方电商 AI 制图）：<a href="https://www.wanxiang.art/" target="_blank" rel="noopener noreferrer">https://www.wanxiang.art/</a> — <code>200</code>，2026-11-06 [来源17]</li>
+<li>卡 2 背面 · 真人教程：火山引擎开发者社区《我用豆包批量做小红书，1 天产出30篇笔记，保姆级教程来了！》：<a href="https://developer.volcengine.com/articles/7545105759953289254" target="_blank" rel="noopener noreferrer">https://developer.volcengine.com/articles/7545105759953289254</a> — <code>200</code>，2026-11-06 [来源27]</li>
+<li>卡 3 背面 · 真人分享：CSDN 博客《普通家庭如何借助AI进行记账》：<a href="https://blog.csdn.net/sinat_28750229/article/details/163530184" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/sinat_28750229/article/details/163530184</a> — <code>200</code>，2026-11-06 [来源28]</li>
+<li>卡 4 背面 · 图文教程：天极下载《怎么用豆包修复老照片_豆包AI老照片修复实操教学》：<a href="https://mydown.yesky.com/news/317462.html" target="_blank" rel="noopener noreferrer">https://mydown.yesky.com/news/317462.html</a> — <code>200</code>，2026-11-06 [来源29]</li>
+<li>卡 4 正面 · 报道佐证：央视网《他们用AI技术修复照片为走失孩子照亮回家路》（2023-12-05）：<a href="https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml" target="_blank" rel="noopener noreferrer">https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml</a> — <code>200</code>，2026-11-06 [来源31]</li>
+<li>卡 4 正面 · 报道佐证：凤凰网《【记者走基层】AI修复岁月影像让泛黄记忆鲜活如初》（2026-11）：<a href="https://feng.ifeng.com/c/8xh1XDSNfRP" target="_blank" rel="noopener noreferrer">https://feng.ifeng.com/c/8xh1XDSNfRP</a> — <code>200</code>，2026-11-06 [来源32]</li>
+<li>卡 5 背面 · 媒体亲测：新华报业网《微信存储一下少了10G！亲测有效》：<a href="https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html" target="_blank" rel="noopener noreferrer">https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html</a> — <code>200</code>，2026-11-06 [来源30]</li>
+</ul>
+<li>本页<strong>无统计数据引用</strong>：所有时间对比数字均为"（示意）"标注的定性演示，不作为事实数据。</li>
+<li>站内链接（随仓库走，不进外链清单）：<code>academy.html</code>、<code>trends.html</code>、<code>../index.html</code>、<code>../assets/favicon.svg</code>、<code>../assets/css/main.css</code>、<code>../assets/vendor/*</code>、<code>../assets/js/*</code>。</li>
+</ul></div></details></section><section class="dossier-doc"><h4>real-cases-p1.md</h4><details class="dossier-part"><summary><span class="dossier-part-no">09</span><strong>页首：标题与导语</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>对应页面：<code>pages/what-ai-can-do.html</code> ｜ 目的：为第①关 5 张卡片旁补挂"网上真实存在的记录或教程"，替换/佐证"编写的演示样例" <strong>统一访问日期：2026-11-06。</strong>验证命令： ``<code>bash curl -sIL -o /dev/null -w "%{http_code}" --max-time 15 "&lt;url&gt;"   # 跟随跳转取状态码 </code>`` 403 处理约定：curl 被平台反爬拦截时，已用第二个独立渠道（Firecrawl 网页抓取返回 200，或搜索引擎收录快照）交叉印证页面真实存在，注明"<strong>官方/平台域名，浏览器可访问</strong>"。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">10</span><strong>场景 1：用 AI 写小红书文案</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>真实素材</th><th>URL</th><th>状态码</th><th>访问日期</th><th>内容一句话摘要</th><th>可替换/佐证哪个演示对话</th></tr></thead><tbody><tr><td>火山引擎开发者社区《我用豆包批量做小红书，1 天产出30篇笔记，保姆级教程来了！》（作者：阿黎逸阳，字节跳动官方开发者社区）</td><td><a href="https://developer.volcengine.com/articles/7545105759953289254" target="_blank" rel="noopener noreferrer">https://developer.volcengine.com/articles/7545105759953289254</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>用豆包做小红书的保姆级教程：让 AI 找选题→按指令生成笔记文案→AI 配图，并提醒注意原创性与版权。</td><td>卡 2"AI 会写作"演示样例（跳舞班朋友圈文案）——作"真人这么干"佐证</td></tr><tr><td>知乎专栏（零克Club）《1分钟就能写出100篇爆款笔记？盘点小红书大博主都在用的 AI 工具》（2025-02-18）</td><td><a href="https://zhuanlan.zhihu.com/p/24440012751" target="_blank" rel="noopener noreferrer">https://zhuanlan.zhihu.com/p/24440012751</a></td><td><strong>403</strong>（反爬；Firecrawl 抓取 200 交叉印证，浏览器可访问）</td><td>2026-11-06</td><td>盘点小红书博主真实在用的 AI 工具：DeepSeek 生成结构化笔记、豆包写小红书文案（含现成提示词模板"帮我生成一篇关于[主题]的小红书文案…"）与配图工具。</td><td>卡 2 背面提示词——证明该提示词句式是社区真实流传的写法</td></tr><tr><td>B站《AI怎么写小红书文案，今天教你一套AI提示词，分分钟写出爆款文案！》（视频教程）</td><td><a href="https://www.bilibili.com/video/BV15w4m1v7Hv/" target="_blank" rel="noopener noreferrer">https://www.bilibili.com/video/BV15w4m1v7Hv/</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>B站视频教程：一套可直接照抄的 AI 提示词写小红书文案，含豆包写文案实操演示。</td><td>卡 2——面向"看视频学"人群的入口</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">11</span><strong>场景 2：用 AI 分析账单/家庭开支</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>真实素材</th><th>URL</th><th>状态码</th><th>访问日期</th><th>内容一句话摘要</th><th>可替换/佐证哪个演示对话</th></tr></thead><tbody><tr><td>CSDN 博客《普通家庭如何借助AI进行记账》</td><td><a href="https://blog.csdn.net/sinat_28750229/article/details/163530184" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/sinat_28750229/article/details/163530184</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>面向普通家庭、零基础读者：不讲理财模型，只讲"怎么用 AI 把账记下去、记明白"，10 分钟上手。</td><td>卡 3"AI 会看账"演示对话（月度开支表）——作方法佐证</td></tr><tr><td>网易·AI新榜《半年新增百万用户，这款AI应用让记账比花钱还上瘾 \</td><td>AI新榜对话》（2025-07-09）</td><td><a href="https://www.163.com/dy/article/K41NUAC605567EZL.html" target="_blank" rel="noopener noreferrer">https://www.163.com/dy/article/K41NUAC605567EZL.html</a></td><td><strong>403</strong>（反爬；Firecrawl 抓取 200 交叉印证，浏览器可访问）</td><td>2026-11-06</td><td>媒体深度对话：AI 记账应用"咔皮记账"半年用户破百万，支持文字/语音/截图记账，AI 自动分类汇总并指出消费习惯——"AI 替你跑腿初筛"的真实产品化案例。</td><td>卡 3 正面徽标"演示对话·数字为示意"旁的"真实案例"链接</td></tr><tr><td>个人技术博客 离别歌《AI记账的最佳实践》</td><td><a href="https://www.leavesongs.com/THINK/ai-bookkeeping-best-practices.html" target="_blank" rel="noopener noreferrer">https://www.leavesongs.com/THINK/ai-bookkeeping-best-practices.html</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>真实用户长期记录：用 AI 做家庭多账户记账的完整实践，涵盖汇率、家庭账本联动、数据备份等边角细节与取舍。</td><td>卡 3 背面"老手 + AI"的用法说明——真人一手记录</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">12</span><strong>场景 3：AI 修复老照片</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>真实素材</th><th>URL</th><th>状态码</th><th>访问日期</th><th>内容一句话摘要</th><th>可替换/佐证哪个演示对话</th></tr></thead><tbody><tr><td>天极下载《怎么用豆包修复老照片_豆包AI老照片修复实操教学》</td><td><a href="https://mydown.yesky.com/news/317462.html" target="_blank" rel="noopener noreferrer">https://mydown.yesky.com/news/317462.html</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>老牌 IT 媒体豆包修老照片分步实操：打开豆包→图像生成→选模型→上传老照片修复，与卡 4 背面"30 秒亲手做"步骤同路。</td><td>卡 4"AI 会修照片"背面教程——外部教程入口</td></tr><tr><td>央视网·人物频道《他们用AI技术修复照片为走失孩子照亮回家路》（2023-12-05）</td><td><a href="https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml" target="_blank" rel="noopener noreferrer">https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>权威报道：志愿者用 AI 算法修复模糊人像照片，几分钟后自动生成清晰图，用于为走失儿童寻亲。</td><td>卡 4 正面"泛黄老照片→修得清清楚楚"的权威事实依据</td></tr><tr><td>凤凰网《【记者走基层】AI修复岁月影像让泛黄记忆鲜活如初》（2026-11 初，记者走基层）</td><td><a href="https://feng.ifeng.com/c/8xh1XDSNfRP" target="_blank" rel="noopener noreferrer">https://feng.ifeng.com/c/8xh1XDSNfRP</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>最新报道："AI 修复旧照片"智慧助老活动中，志愿者帮长辈把模糊老照片修清晰、上色——正是"教爸妈用 AI 修老照片"的真实场景。</td><td>卡 4 正面场景描述（帮长辈修旧照）</td></tr><tr><td>知乎专栏（温谈）《这4款免费的"傻瓜式"操作AI修复工具，一键拯救模糊受损老照片》（2025-12-10）</td><td><a href="https://zhuanlan.zhihu.com/p/1982019771814920972" target="_blank" rel="noopener noreferrer">https://zhuanlan.zhihu.com/p/1982019771814920972</a></td><td><strong>403</strong>（反爬；Firecrawl 抓取 200 交叉印证，浏览器可访问）</td><td>2026-11-06</td><td>实测 4 款免费 AI 修复工具（美图秀秀、Palette、Face26、AIEnhancer）：上传照片→等几秒→人脸五官还原自然。</td><td>卡 4——"不止豆包一家能修"的多工具备选</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">13</span><strong>场景 4：微信清理内存（不误删聊天记录）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>真实素材</th><th>URL</th><th>状态码</th><th>访问日期</th><th>内容一句话摘要</th><th>可替换/佐证哪个演示对话</th></tr></thead><tbody><tr><td>腾讯客服官网·微信专区（官方）</td><td><a href="https://kf.qq.com/product/weixin.html" target="_blank" rel="noopener noreferrer">https://kf.qq.com/product/weixin.html</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>腾讯客服微信官方帮助专区：含"设置管理"等分类，存储空间/清理缓存类官方 FAQ 从此入口进入（见下方"403 与特殊说明"）。</td><td>卡 5"AI 随时问"演示对话（微信清理三步）——官方出处入口</td></tr><tr><td>新华报业网《微信存储一下少了10G！亲测有效》</td><td><a href="https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html" target="_blank" rel="noopener noreferrer">https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>权威媒体亲测：微信→我→设置→通用→存储空间→清理缓存（不影响聊天记录），再按大小清群聊大文件——步骤与卡 5 演示对话完全一致。</td><td>卡 5 演示对话——每一步路径的权威印证</td></tr><tr><td>知乎专栏（Ultra）《【教程】QQ、微信太占空间，想清理却担心聊天记录丢失？方法来了》（2020-11 发布，2022-04 更新）</td><td><a href="https://zhuanlan.zhihu.com/p/307904391" target="_blank" rel="noopener noreferrer">https://zhuanlan.zhihu.com/p/307904391</a></td><td><strong>403</strong>（反爬；Firecrawl 抓取 200 交叉印证，浏览器可访问）</td><td>2026-11-06</td><td>高赞教程（101 条评论）：清理前先备份、分清"能删的缓存"与"不能删的聊天记录"、通过设置而非卸载来腾出空间。</td><td>卡 5——"不误删"这条承诺的社区印证</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">14</span><strong>场景 5：AI 做海报/商品图</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>真实素材</th><th>URL</th><th>状态码</th><th>访问日期</th><th>内容一句话摘要</th><th>可替换/佐证哪个演示对话</th></tr></thead><tbody><tr><td>万相营造官网（阿里官方电商 AI 制图工具）</td><td><a href="https://www.wanxiang.art/" target="_blank" rel="noopener noreferrer">https://www.wanxiang.art/</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>阿里官方 AI 创意平台：商品图一键生成营销图/主图、图片秒变视频、AI 图片图文创意一键做。</td><td>卡 1"AI 会做海报"——"现在就试"的官方工具页</td></tr><tr><td>人民网·财经《阿里妈妈万相营造入选2025服贸会示范案例，以AI应用影响电商营销》（2025-09-20）</td><td><a href="http://finance.people.com.cn/n1/2025/0920/c1004-40568186.html" target="_blank" rel="noopener noreferrer">http://finance.people.com.cn/n1/2025/0920/c1004-40568186.html</a></td><td><strong>200</strong></td><td>2026-11-06</td><td>权威报道：阿里妈妈 AIGC 创意工具聚合站点"万相营造"入选 2025 服贸会示范案例，提供 AI 图片衍生、图生视频等电商创意能力。</td><td>卡 1——官方工具页的权威佐证（第二来源交叉印证）</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">15</span><strong>推荐替换方案（演示对话 → 真实素材）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>页面演示对话/卡</th><th>推荐挂载的真实素材</th><th>挂法建议</th></tr></thead><tbody><tr><td><strong>卡 1"AI 会做海报"</strong>（秋日读书会海报）</td><td>① 万相营造官网（200）② 人民网报道（200）</td><td>卡 1 背面"现在就试"旁补一行小字："真实案例：阿里官方 AI 制图工具[万相营造]（官方页），入选服贸会示范案例（人民网报道）"。海报本身仍保留代码渲染演示 + "（示意）"标注，不冒充实拍。</td></tr><tr><td><strong>卡 2"AI 会写作"</strong>（跳舞班朋友圈文案，演示样例）</td><td>① 火山引擎开发者社区教程（200，主）② 知乎零克Club（403 注明，辅）③ B站视频（200，辅）</td><td>演示对话右下角补"别人真的这么用"入口：主链接放火山引擎教程（官方社区、浏览器可直接打开）；知乎与 B站作次级链接。文案仍标"演示样例"，补一句"知乎/B站/火山引擎上都有真人用同样句式的教程"。</td></tr><tr><td><strong>卡 3"AI 会看账"</strong>（家庭月度开支表，演示对话）</td><td>① CSDN 普通家庭 AI 记账（200，主）② 网易 AI新榜对话（403 注明，辅）③ 离别歌实践记录（200，辅）</td><td>演示徽标下补一行："真人案例：CSDN《普通家庭如何借助AI进行记账》；媒体报道：AI 记账应用半年百万用户（网易·AI新榜，浏览器打开）"。演示对话维持"数字为示意"。</td></tr><tr><td><strong>卡 4"AI 会修照片"</strong>（背面豆包教程）</td><td>① 天极下载豆包实操（200，主）② 央视网报道（200，权威）③ 凤凰网智慧助老报道（200，最新）</td><td>背面步骤 2"打开豆包"后补链接："图文版教程（天极下载）"；正面图注下补一行："AI 修老照片已登上央视网、凤凰网报道——志愿者在智慧助老活动里真用这招帮长辈"。</td></tr><tr><td><strong>卡 5"AI 随时问"</strong>（微信清理三步，演示对话）</td><td>① 腾讯客服微信专区 kf.qq.com（200，官方）② 新华报业网亲测（200，主）③ 知乎 Ultra 教程（403 注明，辅）</td><td>对话气泡下方补"官方步骤核对"入口：主链接放新华报业网《微信存储一下少了10G！亲测有效》（步骤与演示逐字对得上），并注明"腾讯客服官网微信专区：kf.qq.com/product/weixin.html"。</td></tr></tbody></table></div>
+<p><strong>通用改法</strong>：不必替换演示对话本身——对话继续标"演示样例"，在每张卡背面/图注处增加一行"真人真事/官方出处"外链（1 主 1 辅），即可把"全部是演示样例"的诚实声明升级为"演示 + 真实记录可查"。</p></div></details><details class="dossier-part"><summary><span class="dossier-part-no">16</span><strong>403 链接的处理说明</strong></summary><div class="dossier-part-body"><p>共 4 条（知乎 3 条、网易 1 条），均为平台反爬（curl HEAD 被 403/418 拦截），已逐条用 Firecrawl 网页抓取（返回 200）交叉印证内容真实存在：</p>
+<ul>
+<li>知乎 <code>zhuanlan.zhihu.com</code>：对程序化请求返回 403，普通浏览器可直接阅读；</li>
+<li>网易 <code>www.163.com</code>：同上；</li>
+<li>处理原则同 <code>sources-p123.md</code>：403 链接不作主引用，每条都配了可 curl 验证的 200 链接作主引用（场景 1 主=火山引擎；场景 2 主=CSDN；场景 3 主=天极下载；场景 4 主=新华报业网）。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">17</span><strong>特殊说明：腾讯客服具体 FAQ 文档为何只给专区入口</strong></summary><div class="dossier-part-body"><ul>
+<li><code>kf.qq.com</code> 的 <code>robots.txt</code> 限制搜索引擎抓取（百度搜索结果页明确注明），因此具体 FAQ 文章页<strong>无稳定可被外部引用的固定 URL</strong>；</li>
+<li>FAQ 分类列表（含"设置管理→存储空间清理"类目）由页面 JS 动态加载，从 <code>https://kf.qq.com/product/weixin.html</code> 进入即可浏览；</li>
+<li>已实测：猜测性 FAQ 直链全部 404，微信官网 <code>weixin.qq.com</code> 对 HEAD 请求返回 405、<code>help.weixin.qq.com</code> 超时不可达；</li>
+<li>故场景 4 采用"官方专区入口（200）+ 权威媒体亲测教程（200）"组合，权威性不受影响。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">18</span><strong>搜索过程中出现但主动未采用的链接（备查）</strong></summary><div class="dossier-part-body"><ul>
+<li><code>https://www.bilibili.com/video/BV1YB6EB6Ekv/</code> — 主题是"vibe coding 手搓文案系统"，偏离"写文案"演示场景，不采用；</li>
+<li><code>https://agi.taobao.com/</code> — 反爬验证码页（同 sources-p123 记录）；</li>
+<li><code>https://kf.qq.com/product/wx_app.html</code>、<code>https://kf.qq.com/touch/product/weixin_app.html</code> — 404，猜测 URL 弃用；</li>
+<li>小红书站内笔记（xiaohongshu.com）— 无稳定公开可引用 URL 且平台强反爬，本轮未找到可直接引用的笔记直链，未采用；</li>
+<li>各类内容农场（百家号"娱圈星探"类、<code>3g.weihai.lantubestbuy.cn</code> 等镜像站）— 无权威性，不采用。</li>
+</ul></div></details></section><section class="dossier-doc"><h4>sources-p123.md</h4><details class="dossier-part"><summary><span class="dossier-part-no">19</span><strong>页首：标题与导语</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>覆盖页面：<code>what-ai-can-do.html</code> / <code>trends.html</code> / <code>lab.html</code> ｜ 格式规范见 <span class="dossier-ref">README.md</span> <strong>统一访问日期：2026-11-05</strong>（F 节为 2026-11-06 新增，访问日期 2026-11-06）。验证命令： ``<code>bash curl -sI -o /dev/null -w "%{http_code}" "&lt;url&gt;"        # 单次 curl -sIL -o /dev/null -w "%{http_code}" "&lt;url&gt;"       # 跟随跳转 </code>`` 维护规则：链接状态随时间变化，每次改稿重新跑一遍上表并更新访问日期；新增引用接着编号往下排，已删引用的编号<strong>不复用</strong>。</p></blockquote></div></details><details class="dossier-part"><summary><span class="dossier-part-no">20</span><strong>A. 演示验证渠道（官方工具站）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>#</th><th>名称</th><th>URL</th><th>状态码</th><th>用途</th></tr></thead><tbody><tr><td>1</td><td>豆包（字节跳动 AI 助手）</td><td><a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">https://www.doubao.com</a></td><td>302→200</td><td>P1 全部演示样例（修照片、写文案、看账、随问）的复现验证渠道；P1 诚实声明卡中"发给豆包"</td></tr><tr><td>2</td><td>即梦（字节跳动 AI 图像/视频创作）</td><td><a href="https://jimeng.jianying.com" target="_blank" rel="noopener noreferrer">https://jimeng.jianying.com</a></td><td>200</td><td>AI 图像类演示的验证渠道（P1 备查；站点后续演示用）</td></tr><tr><td>3</td><td>剪映（字节跳动视频剪辑）</td><td><a href="https://www.capcut.cn" target="_blank" rel="noopener noreferrer">https://www.capcut.cn</a></td><td>200</td><td>"图文成片"等产品功能官方入口（P2 卡"自媒体与内容"引用）</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">21</span><strong>B. 核心数据：CNNIC《生成式人工智能应用发展报告（2025）》</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>#</th><th>名称</th><th>URL</th><th>状态码</th><th>用途</th></tr></thead><tbody><tr><td>4</td><td>CNNIC 官方发布页《生成式人工智能应用发展报告（2025）》（2025-10-18 发布于中国互联网基础资源大会；网页载明：截至 2025 年 6 月用户 5.15 亿、普及率 36.5%、上半年增长 2.66 亿、半年增长 106.6%）</td><td><a href="https://www.cnnic.net.cn/n4/2025/1021/c88-11391.html" target="_blank" rel="noopener noreferrer">https://www.cnnic.net.cn/n4/2025/1021/c88-11391.html</a></td><td>200</td><td>P2 全部核心数字（5.15 亿 / +2.66 亿 / 36.5% / 半年翻番）的第一来源</td></tr><tr><td>5</td><td>新华网《我国生成式人工智能用户规模达5.15亿》（2025-10-20）</td><td><a href="http://www.news.cn/tech/20251020/c7c8f6c858c249e2bb69515f40eeab8b/c.html" target="_blank" rel="noopener noreferrer">http://www.news.cn/tech/20251020/c7c8f6c858c249e2bb69515f40eeab8b/c.html</a></td><td>200</td><td>P2 核心数字交叉印证（5.15 亿、36.5%）</td></tr><tr><td>6</td><td>新华网报道（2025-10-18，<code>pages/trends.html</code> 页脚原有链接）</td><td><a href="https://www.news.cn/fortune/20251018/95ddc306f29f494fb188ed41ad8e5cca/c.html" target="_blank" rel="noopener noreferrer">https://www.news.cn/fortune/20251018/95ddc306f29f494fb188ed41ad8e5cca/c.html</a></td><td>200</td><td>P2 图表卡来源行、页脚"新华网报道"链接</td></tr><tr><td>7</td><td>人民日报海外版报道（2025-10-21，<code>pages/trends.html</code> 页脚原有链接）</td><td><a href="http://paper.people.com.cn/rmrbhwb/pc/content/202510/21/content_30110422.html" target="_blank" rel="noopener noreferrer">http://paper.people.com.cn/rmrbhwb/pc/content/202510/21/content_30110422.html</a></td><td>200</td><td>P2 图表卡来源行、页脚"人民日报海外版报道"链接</td></tr><tr><td>8</td><td>世界互联网大会官网《报告称中国生成式AI用户最近半年翻番达5.15亿》（2025-10-20）</td><td><a href="https://cn.wicinternet.org/2025-10/20/content_38354748.htm" target="_blank" rel="noopener noreferrer">https://cn.wicinternet.org/2025-10/20/content_38354748.htm</a></td><td>200</td><td>P2 "较 2024 年 12 月激增 2.66 亿"与 2.49 亿时点数的交叉印证</td></tr><tr><td>9</td><td>CNNIC 官网首页（报告原文查询入口）</td><td><a href="https://www.cnnic.net.cn/" target="_blank" rel="noopener noreferrer">https://www.cnnic.net.cn/</a></td><td>200</td><td>P2 页脚"报告原文可在 CNNIC 官网查询"</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">22</span><strong>C. 时间线事件来源</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>#</th><th>名称</th><th>URL</th><th>状态码</th><th>用途</th></tr></thead><tbody><tr><td>10</td><td>新华网《新闻分析：ChatGPT，变革与风险》（2023-02-13）</td><td><a href="http://www.news.cn/2023-02/13/c_1129359575.htm" target="_blank" rel="noopener noreferrer">http://www.news.cn/2023-02/13/c_1129359575.htm</a></td><td>200</td><td>P2 时间线"2022-11 ChatGPT 发布，两个月用户破一亿"</td></tr><tr><td>11</td><td>新华网《特稿｜新版ChatGPT在哪些方面"更像人"》（2024-05）</td><td><a href="http://www.xinhuanet.com/tech/20240515/9a91d194f1114752bf38cc2cf6f9741f/c.html" target="_blank" rel="noopener noreferrer">http://www.xinhuanet.com/tech/20240515/9a91d194f1114752bf38cc2cf6f9741f/c.html</a></td><td>200</td><td>P2 时间线"2024-05 GPT-4o 发布（能听、能说、能看图）"主来源</td></tr><tr><td>12</td><td>新华网《新闻分析｜视频生成新模型Sora的突破与风险》（2024-02-20）</td><td><a href="http://www.news.cn/tech/20240220/92a8a5bcb35c4e09bfd7ee0e5393d5ac/c.html" target="_blank" rel="noopener noreferrer">http://www.news.cn/tech/20240220/92a8a5bcb35c4e09bfd7ee0e5393d5ac/c.html</a></td><td>200</td><td>P2 时间线"2024-12 Sora 开放"条目的模型背景来源</td></tr><tr><td>13</td><td>OpenAI 官方博客 "Sora is here"（2024-12）</td><td><a href="https://openai.com/index/sora-is-here/" target="_blank" rel="noopener noreferrer">https://openai.com/index/sora-is-here/</a></td><td><strong>403</strong>（官方域名，浏览器可访问；curl 被 Cloudflare 反爬拦截）</td><td>P2 时间线"2024-12 Sora 视频生成开放"的官方原始出处</td></tr><tr><td>14</td><td>新华网《声称战略转型 OpenAI宣布放弃视频生成应用Sora》（2026-03-25）</td><td><a href="https://www.news.cn/world/20260325/20c661ac2f5542d8b8eccd5c764af5c8/c.html" target="_blank" rel="noopener noreferrer">https://www.news.cn/world/20260325/20c661ac2f5542d8b8eccd5c764af5c8/c.html</a></td><td>200</td><td>P2 Sora 条目的诚实备注（该应用已于 2026 年宣布逐步淘汰）</td></tr><tr><td>15</td><td>DeepSeek 官方公告《DeepSeek-R1 发布》（2025-01-20）</td><td><a href="https://api-docs.deepseek.com/news/news250120" target="_blank" rel="noopener noreferrer">https://api-docs.deepseek.com/news/news250120</a></td><td>200</td><td>P2 时间线"2025-01 DeepSeek-R1 发布"</td></tr><tr><td>16</td><td>DeepSeek-R1 GitHub 仓库（开源权重）</td><td><a href="https://github.com/deepseek-ai/DeepSeek-R1" target="_blank" rel="noopener noreferrer">https://github.com/deepseek-ai/DeepSeek-R1</a></td><td>200</td><td>P2 "开源、免费、人人可用"的依据</td></tr><tr><td>21</td><td>人民日报海外版《资讯速览》（GPT-4o 直播演示，2024-05-17）</td><td><a href="http://paper.people.com.cn/rmrbhwb/html/2024-05/17/content_26058298.htm" target="_blank" rel="noopener noreferrer">http://paper.people.com.cn/rmrbhwb/html/2024-05/17/content_26058298.htm</a></td><td>200</td><td>P2 GPT-4o 条目交叉印证</td></tr><tr><td>22</td><td>OpenAI 官方公告 "Hello GPT-4o"（2024-05-13）</td><td><a href="https://openai.com/index/hello-gpt-4o/" target="_blank" rel="noopener noreferrer">https://openai.com/index/hello-gpt-4o/</a></td><td><strong>403</strong>（官方域名，浏览器可访问；curl 被 Cloudflare 反爬拦截）</td><td>P2 GPT-4o 条目的官方原始出处（备用，以新华网 [来源11] 为主引用）</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">23</span><strong>D. 行业应用案例来源（P2 五卡）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>#</th><th>名称</th><th>URL</th><th>状态码</th><th>用途</th></tr></thead><tbody><tr><td>17</td><td>万相营造（阿里官方电商 AI 制图工具：一张商品图生成商品主图/营销图）</td><td><a href="https://www.wanxiang.art/" target="_blank" rel="noopener noreferrer">https://www.wanxiang.art/</a></td><td>200</td><td>P2 电商卡"AI 生成商品图"功能举例；P1 卡 1 背面"📰 官方工具"链接（2026-11-06 新增用途，当日复核 200）</td></tr><tr><td>18</td><td>新华网《图片秒变短视频！阿里妈妈"淘宝星辰·图生视频"向商家开放使用》（2025-01-15）</td><td><a href="http://www.xinhuanet.com/tech/20250115/ad0511a9bd8746399f196800e5b47bee/c.html" target="_blank" rel="noopener noreferrer">http://www.xinhuanet.com/tech/20250115/ad0511a9bd8746399f196800e5b47bee/c.html</a></td><td>200</td><td>P2 电商卡"淘宝/天猫商家 AI 内容工具"权威报道</td></tr><tr><td>19</td><td>中国日报网《剪映推出新功能"图文成片"，输入文字一键生成视频》（2021-04-01）</td><td><a href="https://cn.chinadaily.com.cn/a/202104/01/WS606584cca3101e7ce97471f7.html" target="_blank" rel="noopener noreferrer">https://cn.chinadaily.com.cn/a/202104/01/WS606584cca3101e7ce97471f7.html</a></td><td>200</td><td>P2 自媒体卡"图文成片"功能举例</td></tr><tr><td>20</td><td>新华网《生成式人工智能应用场景持续拓展》（2025-10-29）</td><td><a href="http://www.news.cn/tech/20251029/b02bdb2d8bce4275ad12cab941c00c86/c.html" target="_blank" rel="noopener noreferrer">http://www.news.cn/tech/20251029/b02bdb2d8bce4275ad12cab941c00c86/c.html</a></td><td>200</td><td>P2 金融保险 / 财务办公 / 教育健康三卡<strong>定性表述</strong>的总体依据（报告应用场景章节转述）</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">24</span><strong>E. 第 ③ 关项目仓库（全部为作者自有公开仓库）</strong></summary><div class="dossier-part-body"><div class="dossier-table"><table><thead><tr><th>#</th><th>名称</th><th>URL</th><th>状态码</th><th>用途</th></tr></thead><tbody><tr><td>23</td><td>stray_papers（算法实验室等子项目入口）</td><td><a href="https://github.com/wsjgdg/stray_papers" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/stray_papers</a></td><td>200</td><td>P3 源码链接行；README 含各子项目入口</td></tr><tr><td>24</td><td>score-transcriber（乐谱识别器）</td><td><a href="https://github.com/wsjgdg/score-transcriber" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/score-transcriber</a></td><td>200</td><td>P3 项目卡"乐谱识别器"</td></tr><tr><td>25</td><td>matlit-miner（科研文献挖掘助手）</td><td><a href="https://github.com/wsjgdg/matlit-miner" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/matlit-miner</a></td><td>200</td><td>P3 项目卡"科研文献挖掘助手"</td></tr><tr><td>26</td><td>spot-visual（视觉分析网站）</td><td><a href="https://github.com/wsjgdg/spot-visual" target="_blank" rel="noopener noreferrer">https://github.com/wsjgdg/spot-visual</a></td><td>200</td><td>P3 项目卡"视觉分析网站"</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">25</span><strong>F. 第 ① 关真人教程/报道链接（P1 卡片挂载，2026-11-06 新增）</strong></summary><div class="dossier-part-body"><blockquote class="dossier-quote-block"><p>编号接 [来源26] 往下排，不重排旧编号；素材甄选与验证过程见 <span class="dossier-ref">real-cases-p1.md</span>。<strong>访问日期：2026-11-06。</strong></p></blockquote>
+<div class="dossier-table"><table><thead><tr><th>#</th><th>名称</th><th>URL</th><th>状态码</th><th>用途</th></tr></thead><tbody><tr><td>27</td><td>火山引擎开发者社区《我用豆包批量做小红书，1 天产出30篇笔记，保姆级教程来了！》</td><td><a href="https://developer.volcengine.com/articles/7545105759953289254" target="_blank" rel="noopener noreferrer">https://developer.volcengine.com/articles/7545105759953289254</a></td><td>200</td><td>P1 卡 2"AI 会写作"背面"📰 真人教程"链接</td></tr><tr><td>28</td><td>CSDN 博客《普通家庭如何借助AI进行记账》</td><td><a href="https://blog.csdn.net/sinat_28750229/article/details/163530184" target="_blank" rel="noopener noreferrer">https://blog.csdn.net/sinat_28750229/article/details/163530184</a></td><td>200</td><td>P1 卡 3"AI 会看账"背面"📰 真人分享"链接</td></tr><tr><td>29</td><td>天极下载《怎么用豆包修复老照片_豆包AI老照片修复实操教学》</td><td><a href="https://mydown.yesky.com/news/317462.html" target="_blank" rel="noopener noreferrer">https://mydown.yesky.com/news/317462.html</a></td><td>200</td><td>P1 卡 4"AI 会修照片"背面"📰 图文教程"链接</td></tr><tr><td>30</td><td>新华报业网《微信存储一下少了10G！亲测有效》</td><td><a href="https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html" target="_blank" rel="noopener noreferrer">https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html</a></td><td>200</td><td>P1 卡 5"AI 随时问"背面"📰 媒体亲测"链接</td></tr><tr><td>31</td><td>央视网·人物频道《他们用AI技术修复照片为走失孩子照亮回家路》（2023-12-05）</td><td><a href="https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml" target="_blank" rel="noopener noreferrer">https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml</a></td><td>200</td><td>P1 卡 4 正面报道佐证行"央视网"链接</td></tr><tr><td>32</td><td>凤凰网《【记者走基层】AI修复岁月影像让泛黄记忆鲜活如初》（2026-11）</td><td><a href="https://feng.ifeng.com/c/8xh1XDSNfRP" target="_blank" rel="noopener noreferrer">https://feng.ifeng.com/c/8xh1XDSNfRP</a></td><td>200</td><td>P1 卡 4 正面报道佐证行"凤凰网"链接</td></tr></tbody></table></div></div></details><details class="dossier-part"><summary><span class="dossier-part-no">26</span><strong>403 链接的处理说明</strong></summary><div class="dossier-part-body"><p>共 2 条（[来源13][来源22]，均为 openai.com 官方页面）：</p>
+<ul>
+<li>curl HEAD 请求被 Cloudflare 反爬拦截，返回 403；</li>
+<li>均为<strong>官方域名原始出处</strong>，普通浏览器可正常访问；</li>
+<li>按写作规范保留引用，但每条都已配一条可 curl 验证的权威媒体链接作主引用（[来源11][来源12][来源14][来源21]），读者无需访问 403 页面也能完成查证。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">27</span><strong>被剔除的链接</strong></summary><div class="dossier-part-body"><p><strong>无。</strong>本轮验证未遇到死链（404/超时/内容失效）。搜索过程中曾出现但<strong>主动未采用</strong>的来源（记录备查，防止后续误加）：</p>
+<ul>
+<li><code>https://pdf.dfcfw.com/pdf/H301_AP202510241768289458_1.pdf</code> — CNNIC 报告的第三方 PDF 镜像（东方财富网盘），非官方域名，官方发布页 [来源4] 已可访问，不采用；</li>
+<li><code>https://agi.taobao.com/</code> — 淘宝 AI 页面对 curl 返回验证码拦截页（反爬），无稳定状态码，改用 [来源17][来源18]；</li>
+<li>各类自媒体教程页（B 站教程、腾讯新闻教程等）——按规范"行业功能给官方/权威媒体报道"，不采用自媒体页作来源。</li>
+</ul></div></details><details class="dossier-part"><summary><span class="dossier-part-no">28</span><strong>三页引用分布速查</strong></summary><div class="dossier-part-body"><ul>
+<li><strong>P1</strong>（<code>p1-what-ai-can-do.md</code>）：[来源1]（主）、[来源2][来源3]（备查延伸）；真人教程/报道链接 = [来源17]、[来源27]—[来源32]（2026-11-06 新增，见 F 节）。无统计数字。</li>
+<li><strong>P2</strong>（<code>p2-trends.md</code>）：[来源3]—[来源22] 全部；核心数字链 = 4→5/6/7/8→9；时间线链 = 10、11/21/22、12/13/14、15/16；行业案例链 = 17/18、19/3、20。</li>
+<li><strong>P3</strong>（<code>p3-lab.md</code>）：[来源23]—[来源26]。无统计数字。</li>
+</ul></div></details></section>
+      </div>
+      <div class="dossier-sources">
+        <h3>本关全部外链 <span>18 LINKS / 访问日期 2026-11-05</span></h3>
+        <p>链接均取自 <code>docs/content</code> 的来源清单：状态码为清单记录值，403 / 521 为官方站点反爬，浏览器可正常打开；外部页面需要联网。</p>
+        <ul class="dossier-source-list"><li><a href="https://www.wanxiang.art/" target="_blank" rel="noopener noreferrer">万相营造：阿里官方电商 AI 制图</a><small>官方工具 · 200 · 2026-11-06</small></li><li><a href="http://finance.people.com.cn/n1/2025/0920/c1004-40568186.html" target="_blank" rel="noopener noreferrer">人民网：万相营造入选 2025 服贸会示范案例</a><small>权威报道 · 200 · 2026-11-06</small></li><li><a href="https://www.doubao.com" target="_blank" rel="noopener noreferrer">豆包（照抄提示词的验证渠道）</a><small>官方站点 · 302→200 · 2026-11-05</small></li><li><a href="https://developer.volcengine.com/articles/7545105759953289254" target="_blank" rel="noopener noreferrer">火山引擎开发者社区：我用豆包批量做小红书，1 天产出 30 篇</a><small>真人教程 · 200 · 2026-11-06</small></li><li><a href="https://www.bilibili.com/video/BV15w4m1v7Hv/" target="_blank" rel="noopener noreferrer">B 站：一套可直接照抄的 AI 写小红书文案提示词</a><small>视频教程 · 200 · 2026-11-06</small></li><li><a href="https://zhuanlan.zhihu.com/p/24440012751" target="_blank" rel="noopener noreferrer">知乎：小红书博主在用的 AI 工具（含同款提示词句式）</a><small>社区记录 · 403 反爬，浏览器可访问 · 2026-11-06</small></li><li><a href="https://blog.csdn.net/sinat_28750229/article/details/163530184" target="_blank" rel="noopener noreferrer">CSDN：普通家庭如何借助 AI 进行记账</a><small>真人分享 · 200 · 2026-11-06</small></li><li><a href="https://www.leavesongs.com/THINK/ai-bookkeeping-best-practices.html" target="_blank" rel="noopener noreferrer">离别歌：AI 记账的最佳实践</a><small>一手记录 · 200 · 2026-11-06</small></li><li><a href="https://www.163.com/dy/article/K41NUAC605567EZL.html" target="_blank" rel="noopener noreferrer">网易·AI 新榜：半年百万用户的 AI 记账应用</a><small>媒体报道 · 403 反爬，浏览器可访问 · 2026-11-06</small></li><li><a href="https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml" target="_blank" rel="noopener noreferrer">央视网：他们用 AI 技术修复照片，为走失孩子照亮回家路</a><small>权威报道 · 200 · 2026-11-06</small></li><li><a href="https://feng.ifeng.com/c/8xh1XDSNfRP" target="_blank" rel="noopener noreferrer">凤凰网：AI 修复岁月影像，让泛黄记忆鲜活如初</a><small>权威报道 · 200 · 2026-11-06</small></li><li><a href="https://mydown.yesky.com/news/317462.html" target="_blank" rel="noopener noreferrer">天极下载：豆包 AI 老照片修复实操教学</a><small>图文教程 · 200 · 2026-11-06</small></li><li><a href="https://zhuanlan.zhihu.com/p/1982019771814920972" target="_blank" rel="noopener noreferrer">知乎：4 款免费“傻瓜式”AI 修复工具实测</a><small>工具清单 · 403 反爬，浏览器可访问 · 2026-11-06</small></li><li><a href="https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html" target="_blank" rel="noopener noreferrer">新华报业网：微信存储一下少了 10G，亲测有效</a><small>媒体亲测 · 200 · 2026-11-06</small></li><li><a href="https://kf.qq.com/product/weixin.html" target="_blank" rel="noopener noreferrer">腾讯客服：微信官方帮助专区</a><small>官方入口 · 200 · 2026-11-06</small></li><li><a href="https://zhuanlan.zhihu.com/p/307904391" target="_blank" rel="noopener noreferrer">知乎：微信太占空间，怎样清理不丢聊天记录</a><small>社区教程 · 403 反爬，浏览器可访问 · 2026-11-06</small></li><li><a href="https://jimeng.jianying.com" target="_blank" rel="noopener noreferrer">即梦：AI 图像 / 视频创作</a><small>官方站点 · 200 · 2026-11-05</small></li><li><a href="https://www.capcut.cn" target="_blank" rel="noopener noreferrer">剪映：视频剪辑与“图文成片”</a><small>官方站点 · 200 · 2026-11-05</small></li></ul>
+      </div>
+      <p class="dossier-foot">上面这段文字与正式站第 ① AI 能做什么 关同源（<code>docs/content</code>）；改文案先改内容真源，再同步到页面。原型玩法不替代正文，也不改写原文里“演示样例”和“（示意）”的标注。</p>
+    </div>
+  </details>
+</section>
+<!-- DOSSIER:END -->
+<nav class="forge-onward" aria-label="原型导航"><span>下一关 / 02 OF 06</span><a href="chapter-02.html?v=desk-09">② 趋势编辑室 <b aria-hidden="true">↗</b></a><a href="index.html?v=switch-13">回到原型拨盘 ↗</a></nav>
+</main><footer class="proto-footer"><span>交互原型 · 不标记正式打卡</span><a href="index.html?v=switch-13">原型拨盘 ↗</a></footer><script src="../assets/vendor/gsap.min.js"></script><script src="prototype.js?v=press-08" defer></script><script>window.addEventListener('load',function(){setTimeout(function(){if(!document.documentElement.classList.contains('forge-ready'))document.getElementById('forge-connection').textContent='交互脚本未就绪，请刷新页面';},1800);});</script><script src="prototype-particles.js?v=dala-02" defer></script>
+</body></html>

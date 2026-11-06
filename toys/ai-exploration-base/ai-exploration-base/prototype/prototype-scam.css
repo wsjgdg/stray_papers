@@ -1,0 +1,174 @@
+/* 05 / An intercepted conversation and a sealed case file. The choices
+   bend a visible route and the analysis opens only after an action. */
+.page-scam{--case-red:#ef8b70;--case-mint:#a4d8bd;--case-paper:#ece5d6;--case-ink:#253b36;background:#101e20}
+.page-scam .topbar{background:#101d1e;border-color:#9c8b734c}
+.page-scam .brand-symbol{border:1px solid var(--case-red);border-radius:2px;transform:rotate(6deg)}
+.page-scam .brand-symbol span,.page-scam .prototype-tag{color:var(--case-red)}
+.page-scam .decision-section{padding:0 0 75px;background:radial-gradient(ellipse at 74% 8%,#3d3431 0%,#192a2b 48%,#111f22 76%);color:#f2e7d4;overflow:clip}
+.page-scam .case-opening{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:35px;align-items:end;position:relative;isolation:isolate;max-width:1580px;margin:auto;padding:clamp(45px,6vw,86px) clamp(25px,6vw,106px) clamp(25px,4vw,55px)}
+.page-scam .case-opening::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 84px,#d8ba9f08 84px 85px)}
+.page-scam .case-heading .eyebrow{font:750 11px "Noto Sans CJK SC",sans-serif;letter-spacing:.13em;color:var(--case-red)}
+.page-scam .case-heading .live-dot{background:var(--case-red);box-shadow:0 0 12px #ef8b70a8}
+.page-scam .case-heading h1{font-size:clamp(58px,6.4vw,105px);line-height:1.08;letter-spacing:-.08em;margin:24px 0 19px;font-weight:800}
+.page-scam .case-heading h1 em{font-style:normal;color:var(--case-red)}
+.page-scam .case-heading>p{max-width:510px;font-size:15px;line-height:1.8;color:#c5c8bd;margin-bottom:20px}
+.page-scam .case-instruction{display:inline-block;border-bottom:1px solid #edb4957d;padding-bottom:9px;color:#eacbb3;font:700 11px "Noto Sans CJK SC",sans-serif;letter-spacing:.05em}
+.page-scam .case-counter{display:flex;flex-direction:column;align-items:center;justify-content:space-between;width:clamp(140px,22vw,290px);min-height:clamp(240px,24vw,335px);padding:17px 15px;border:1px solid #a884704c;background:radial-gradient(circle at 45% 48%,#94473331,transparent 55%),repeating-linear-gradient(0deg,transparent 0 19px,#e2b79b0c 19px 20px);color:#cba488;transform:rotate(4deg)}
+.page-scam .case-counter span{font:700 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.08em}
+.page-scam .case-counter strong{font:800 clamp(105px,17vw,230px)/1 "Noto Sans CJK SC",sans-serif;letter-spacing:-.13em;margin-left:-.15em;color:#f7ac8c;text-shadow:5px 9px 0 #1d1a1a}
+.page-scam .scam-progress{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;max-width:1460px;margin:0 auto;padding:17px clamp(25px,6vw,85px);border:0;border-top:1px solid #d1ae9450;border-bottom:1px solid #d1ae9450;overflow-x:auto;scrollbar-color:#b0876b #253637}
+.page-scam .scam-progress::before{display:none}
+.page-scam .scam-progress button{min-width:0;min-height:61px;flex-direction:row;justify-content:flex-start;align-items:center;gap:8px;padding:10px 5px;border:1px solid #b4a2954c;background:#203032;color:#c9bbab;font:700 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.04em;white-space:nowrap;transition:background .3s,transform .35s,border-color .3s}
+.page-scam .scam-progress button span{width:31px;height:31px;flex:none;background:transparent;border:1px solid #caba9b66;border-radius:0;color:#d9bda1;font:700 13px "Noto Sans CJK SC",sans-serif;transition:background .35s,color .35s,transform .35s}
+.page-scam .scam-progress button.is-current{background:#e7d8c4;color:#283d37;border-color:#eed7b4;transform:translateY(-3px)}
+.page-scam .scam-progress button.is-current span{background:#ad5542;border-color:#ad5542;color:#fff;box-shadow:none;transform:none}
+.page-scam .scam-progress button.is-visited:not(.is-current){border-color:#93ae9a90;color:#ced8c9}
+.page-scam .scam-progress button.is-visited:not(.is-current) span{background:#537d68;border-color:#537d68;color:#fff}
+.page-scam .scam-progress button:disabled{opacity:.55}
+.page-scam .decision-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(290px,.7fr);max-width:1460px;min-height:600px;margin:24px auto 0;box-shadow:15px 24px 40px #070f1199;transition:grid-template-columns .6s cubic-bezier(.2,.8,.2,1)}
+.page-scam .decision-layout[data-revealed="true"]{grid-template-columns:minmax(0,1fr) minmax(330px,.8fr)}
+.page-scam .story-side{min-height:600px;background:radial-gradient(ellipse at 70% 37%,#3b423d,#182d2d 56%,#142325);border:1px solid #b3ab956d;color:#f2e7d8;box-shadow:inset 0 0 65px #07191a;isolation:isolate}
+.page-scam .story-side::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 8px,#f3d9c305 8px 9px)}
+.page-scam .story-top{z-index:3;padding:20px clamp(22px,3vw,43px);border-bottom:1px solid #e6cba455;color:#f0ba9c;font:750 11px "Noto Sans CJK SC",sans-serif;letter-spacing:.07em}
+.page-scam .simulation-tag{font-family:"Noto Sans CJK SC",sans-serif;color:#bdc9bb;letter-spacing:.02em}
+.page-scam .route-strip{z-index:3;position:relative;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px clamp(22px,3vw,43px);border-bottom:1px solid #e6cba42e;color:#eab298;font:700 11px "Noto Sans CJK SC",sans-serif;min-height:49px;transition:color .5s}
+.page-scam .route-graphic{display:block;position:relative;width:94px;height:16px;flex:none}
+.page-scam .route-graphic::before{content:"";position:absolute;top:7px;left:0;right:0;height:1px;background:currentColor;opacity:.7}
+.page-scam .route-graphic i{position:absolute;left:61%;top:7px;width:39px;height:2px;background:currentColor;transform-origin:left center;transition:transform .65s cubic-bezier(.16,.8,.24,1),background .5s}
+.page-scam .route-graphic i:first-child{transform:rotate(-25deg)}
+.page-scam .route-graphic i:last-child{transform:rotate(25deg)}
+.page-scam .story-side[data-branch="stop"] .route-strip,.page-scam .story-side[data-branch="check"] .route-strip{color:var(--case-mint)}
+.page-scam .story-side[data-branch="stop"] .route-graphic i:first-child,.page-scam .story-side[data-branch="check"] .route-graphic i:first-child{transform:rotate(-34deg) scaleX(1.25)}
+.page-scam .story-side[data-branch="stop"] .route-graphic i:last-child,.page-scam .story-side[data-branch="check"] .route-graphic i:last-child{transform:rotate(25deg) scaleX(.15);opacity:.3}
+.page-scam .story-side[data-branch="continue"] .route-strip,.page-scam .story-side[data-branch="pay"] .route-strip{color:#ff927b}
+.page-scam .story-side[data-branch="continue"] .route-graphic i:first-child,.page-scam .story-side[data-branch="pay"] .route-graphic i:first-child{transform:rotate(-25deg) scaleX(.15);opacity:.3}
+.page-scam .story-side[data-branch="continue"] .route-graphic i:last-child,.page-scam .story-side[data-branch="pay"] .route-graphic i:last-child{transform:rotate(34deg) scaleX(1.25)}
+.page-scam .story-backdrop{z-index:-1}
+.page-scam .story-signal{top:18%;left:30%;width:390px;height:390px;border-width:2px;border-color:#de887a78;border-right-color:#de887a14;box-shadow:0 0 0 30px #df8c7310,0 0 0 66px #e3856510;transform:rotate(-30deg);filter:none}
+.page-scam .story-side[data-branch="stop"] .story-signal,.page-scam .story-side[data-branch="check"] .story-signal{border-color:#a6d7b994;border-right-color:#a6d7b90d;transform:rotate(45deg) scale(.82);box-shadow:0 0 0 25px #a6d7b917,0 0 0 65px #a6d7b90b}
+.page-scam .story-side[data-branch="continue"] .story-signal,.page-scam .story-side[data-branch="pay"] .story-signal{border-color:#fb7d638f;border-right-color:#fb7d6312;transform:rotate(-65deg) scale(1.15);box-shadow:0 0 0 31px #fb7d6318,0 0 0 70px #fb7d630d}
+.page-scam #story-watermark{bottom:-100px;right:-24px;font-size:260px;color:#dceccc0e}
+.page-scam .evidence-meter{top:135px;left:clamp(22px,3vw,43px);right:clamp(22px,3vw,43px);height:68px;color:#e8b39e}
+.page-scam .evidence-thread{top:27px;background:linear-gradient(90deg,#d18270,#e9b8a4);box-shadow:0 2px 10px #dd918250}
+.page-scam .evidence-thread:nth-child(2){background:linear-gradient(90deg,#e9b8a4,#d18270)}
+.page-scam .evidence-meter strong{font:700 11px "Noto Sans CJK SC",sans-serif;letter-spacing:.06em}
+.page-scam .story-main{margin:auto 0 0;padding:145px clamp(25px,4vw,61px) 22px;z-index:2}
+.page-scam .story-persona{display:inline-block;color:#edb394;font:750 12px "Noto Sans CJK SC",sans-serif;letter-spacing:.04em;border-left:3px solid #ea8d76;padding-left:10px}
+.page-scam .story-main blockquote{max-width:710px;margin:21px 0 0;font-size:clamp(24px,2.55vw,37px);line-height:1.48;letter-spacing:-.04em;color:#fff1df;text-wrap:pretty}
+.page-scam .story-side.is-changing .story-main blockquote{animation:transmission .58s cubic-bezier(.16,.8,.24,1)}
+@keyframes transmission{from{opacity:.3;filter:blur(5px);transform:translateX(25px)}to{opacity:1;filter:blur(0);transform:translateX(0)}}
+.page-scam .story-side.is-new-clue .evidence-meter{animation:trace-blink .55s ease-out}
+@keyframes trace-blink{50%{filter:brightness(2.1);transform:translateY(-3px)}to{filter:brightness(1);transform:translateY(0)}}
+.page-scam .story-main blockquote mark{background:linear-gradient(transparent 58%,#ff9e7394 58%);color:#fff2dd;border:0;padding:0 2px}
+.page-scam .story-main blockquote mark::after{border-color:#ffd2aa}
+.page-scam .clue-area{margin-top:28px;padding-top:19px;border-color:#e7bda055}
+.page-scam .clue-area p{font-size:12px;color:#e5c7b5}
+.page-scam .clue-buttons{gap:10px}
+.page-scam .clue-buttons button{border-radius:2px;background:#172b2b;border-color:#e9a290;color:#f9d4c4;min-height:46px;font-size:12px;transition:transform .28s,background .28s}
+.page-scam .clue-buttons button[aria-pressed="true"]{background:#e59679;border-color:#e59679;color:#1b302d;transform:rotate(-2deg) translateY(-3px);box-shadow:4px 5px 0 #0a1719}
+.page-scam .text-button{color:#ffd6a7;font-size:12px}
+.page-scam .decision-actions{z-index:2;position:relative;margin:0 clamp(25px,4vw,61px);padding:22px 0 30px;gap:10px;border-color:#e1bc966e}
+.page-scam .decision-actions .action-label{color:#e7b998;font:700 11px "Noto Sans CJK SC",sans-serif;letter-spacing:.06em}
+.page-scam .decision-actions button,.page-scam .decision-actions a{background:#eadcc8;color:#293d34;border:1px solid #eadcc8;min-height:49px;font:750 13px "Noto Sans CJK SC",sans-serif;transition:transform .28s,background .28s}
+.page-scam .decision-actions button:hover,.page-scam .decision-actions a:hover{transform:translateY(-4px);background:#fff0d7}
+.page-scam .decision-actions .warning-action{background:#a8483c;color:#fff5e8;border-color:#ea8671}
+.page-scam .decision-actions .warning-action:hover{background:#923d33}
+.page-scam .decision-actions .safe-action{background:#39755d;color:#f5ffe9;border-color:#8cbea1}
+.page-scam .decision-actions .safe-action:hover{background:#2a684f}
+.page-scam .analysis-side{background:#e8e0cf;padding:0;min-width:0;color:#243931;border:1px solid #aa9b8055;border-left:0;transition:background .48s}
+.page-scam .analysis-eyebrow{padding:24px clamp(22px,3vw,43px);border-color:#bdb19b;font:750 11px "Noto Sans CJK SC",sans-serif;color:#9e6043;letter-spacing:.07em}
+.page-scam .analysis-cover{display:flex;flex:1;flex-direction:column;justify-content:space-between;padding:clamp(32px,4vw,67px) clamp(22px,3vw,43px);background:radial-gradient(circle at 80% 20%,#69403a31,transparent 50%),#262e2a;color:#e7b49d;min-height:440px}
+.page-scam .analysis-cover>span{font:700 11px "Noto Sans CJK SC",sans-serif;letter-spacing:.08em}
+.page-scam .analysis-cover strong{font-size:clamp(29px,3vw,44px);line-height:1.28;letter-spacing:-.06em;color:#f0e0c8}
+.page-scam .decision-layout[data-revealed="true"] .analysis-cover{display:none}
+.page-scam .analysis-content{display:none;flex:1;padding:clamp(28px,3vw,44px);color:#304439;font-size:15px;line-height:1.8}
+.page-scam .decision-layout[data-revealed="true"] .analysis-content{display:block;animation:notes-open .6s cubic-bezier(.16,.8,.24,1)}
+@keyframes notes-open{from{opacity:.2;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.page-scam .analysis-content h3{font-size:clamp(24px,2.2vw,35px);color:#28413a;line-height:1.3}
+.page-scam .analysis-content p{margin-bottom:18px}
+.page-scam .analysis-note{color:#42574e;border-color:#bb7259}
+.page-scam .analysis-note.safe{border-color:#419474;color:#345b48}
+.page-scam .session-controls{max-width:1460px;margin:25px auto 0;padding:0 4px}
+.page-scam .session-controls .ghost-button{color:#ecdec7;border:1px solid #a7947b;background:transparent;font-size:12px}
+.page-scam .session-controls .ghost-button:hover{background:#314541}
+.page-scam .source-note{max-width:1460px;margin:31px auto 0;padding:0 4px;color:#bac8bb;font:400 12px/1.8 "Noto Sans CJK SC",sans-serif}
+.page-scam .source-note a{color:#f0ab91}
+.page-scam .case-onward{display:grid;grid-template-columns:1fr auto auto;gap:15px 25px;align-items:center;padding:55px clamp(25px,7vw,120px) 65px;background:#0d1b1d;border-top:1px solid #bcb0924a}
+.page-scam .case-onward>span{grid-column:1/-1;color:#e99c80;font:700 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.12em}
+.page-scam .case-onward a{text-decoration:none;color:#e6d9c6}
+.page-scam .case-onward a:first-of-type{font-size:clamp(23px,2.7vw,39px);font-weight:750;letter-spacing:-.05em}
+.page-scam .case-onward a:first-of-type b{color:#ed9879;font-weight:400}
+.page-scam .case-onward a:not(:first-of-type){font-size:12px;border-bottom:1px solid #c29a7e;padding:7px 0}
+.page-scam .proto-footer{background:#0a1617}
+@media(max-width:1100px){.page-scam .decision-layout{margin-left:24px;margin-right:24px;grid-template-columns:minmax(0,1fr) minmax(270px,.7fr)}.page-scam .decision-layout[data-revealed="true"]{grid-template-columns:minmax(0,1fr) minmax(290px,.78fr)}.page-scam .session-controls,.page-scam .source-note{margin-left:24px;margin-right:24px}}
+@media(max-width:760px){.page-scam .case-opening{padding:36px 22px 26px;grid-template-columns:1fr 80px;gap:10px}.page-scam .case-heading h1{font-size:clamp(49px,10vw,73px);margin:17px 0}.page-scam .case-heading>p{font-size:13px;max-width:520px}.page-scam .case-instruction{font-size:10px}.page-scam .case-counter{width:78px;min-height:110px;align-self:start;padding:9px 5px;transform:rotate(4deg)}.page-scam .case-counter strong{font-size:53px;text-shadow:2px 3px 0 #1d1a1a}.page-scam .case-counter span{font-size:7px;text-align:center}.page-scam .scam-progress{grid-template-columns:repeat(7,68px);padding:13px 18px}.page-scam .scam-progress button{min-height:49px;justify-content:center;flex-direction:column;gap:2px;font-size:9px}.page-scam .scam-progress button span{width:21px;height:21px;font-size:10px}.page-scam .decision-layout,.page-scam .decision-layout[data-revealed="true"]{grid-template-columns:1fr;gap:0;margin:15px 17px 0}.page-scam .story-side{min-height:490px}.page-scam .story-main{padding:134px 25px 20px}.page-scam .story-main blockquote{font-size:clamp(22px,5vw,30px)}.page-scam .evidence-meter{top:121px;left:25px;right:25px}.page-scam .story-signal{width:285px;height:285px;left:22%;top:29%}.page-scam .analysis-side{border:1px solid #b2a185;border-top:0}.page-scam .analysis-cover{min-height:132px;padding:23px 25px;gap:12px}.page-scam .analysis-cover strong{font-size:25px}.page-scam .analysis-cover span:last-child{font-size:10px}.page-scam .analysis-content{padding:28px 25px}.page-scam .session-controls,.page-scam .source-note{margin-left:17px;margin-right:17px}.page-scam .case-onward{grid-template-columns:1fr;padding:46px 22px 60px}.page-scam .case-onward>span{grid-column:1/-1}}
+@media(max-width:400px){.page-scam .case-heading h1{font-size:clamp(44px,10.7vw,51px)}.page-scam .case-opening{grid-template-columns:1fr 55px}.page-scam .case-counter{width:55px;min-height:93px}.page-scam .case-counter strong{font-size:37px}.page-scam .case-counter span{font-size:6px}.page-scam .story-top{padding:17px 20px}.page-scam .route-strip{padding:12px 20px;font-size:10px}.page-scam .route-graphic{width:65px}.page-scam .story-main{padding:128px 23px 18px}.page-scam .story-main blockquote{font-size:22px}.page-scam .decision-actions{margin:0 23px;padding:17px 0 23px}.page-scam .decision-actions button{width:100%;text-align:center}}
+@media(prefers-reduced-motion:reduce){.page-scam .decision-layout,.page-scam .scam-progress button,.page-scam .route-graphic i,.page-scam .clue-buttons button{transition:none!important}.page-scam .story-side.is-changing .story-main blockquote,.page-scam .story-side.is-new-clue .evidence-meter,.page-scam .decision-layout[data-revealed="true"] .analysis-content{animation:none!important}}
+.page-scam .story-backdrop{z-index:1;pointer-events:none}
+@media(max-width:760px){.page-scam .case-opening{padding-top:27px;padding-bottom:18px}.page-scam .case-heading h1{margin:11px 0}.page-scam .case-heading>p{margin-bottom:12px}.page-scam .story-main{padding-top:105px}.page-scam .evidence-meter{top:116px}}
+@media(max-width:400px){.page-scam .story-main{padding-top:101px}}
+.page-scam .source-note{border-top:1px solid #bda89180;padding-top:18px}
+.page-scam .source-note summary{display:list-item;cursor:pointer;color:#f0b198;font-weight:750;font-size:12px;min-height:32px}
+.page-scam .source-note p{max-width:850px;margin:13px 0 0;line-height:1.9}
+.page-scam .source-note a{color:#efb392;text-underline-offset:3px}
+/* Evidence is now collected in every act. A chip may be clicked or physically
+   carried to the tray; marking it alters the quote, notes and final report. */
+.page-scam .story-side::before{content:"";position:absolute;z-index:4;top:0;bottom:0;left:0;width:4px;background:linear-gradient(#f7c7a6,#ee866b);transform:scaleY(var(--filed,0));transform-origin:top;transition:transform .7s cubic-bezier(.18,.86,.23,1);pointer-events:none}
+.page-scam .clue-area{position:relative;z-index:4;margin-top:24px;padding-top:19px}
+.page-scam .clue-area>p{margin-bottom:14px}
+.page-scam .clue-buttons button{position:relative;z-index:4;touch-action:none;cursor:grab;user-select:none;transform:translate(var(--drag-x,0px),var(--drag-y,0px)) rotate(-2deg);box-shadow:3px 4px 0 #09191b99;transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s,box-shadow .3s}
+.page-scam .clue-buttons button[aria-pressed="true"]{background:#a9d3b9;border-color:#b5e2c5;color:#1b392e;box-shadow:4px 5px 0 #0a1918;transform:translate(var(--drag-x,0px),var(--drag-y,0px)) rotate(2deg)}
+.page-scam .clue-buttons button.is-dragging,.page-scam .clue-buttons button.is-dragging[aria-pressed="true"]{transition:none;cursor:grabbing;z-index:8;transform:translate(var(--drag-x,0px),var(--drag-y,0px)) rotate(-8deg) scale(1.04);box-shadow:10px 15px 22px #081314a8}
+.page-scam .evidence-tray{position:relative;z-index:3;display:grid;grid-template-columns:1fr auto;gap:8px;min-height:95px;margin-top:18px;padding:13px 16px;background:#142525;border:1px dashed #b89578;color:#e9bf9f;transition:background .3s,border-color .3s,box-shadow .3s}
+.page-scam .evidence-tray::before{content:"";position:absolute;left:10px;right:10px;top:-5px;height:5px;background:#09191a}
+.page-scam .evidence-tray.is-target{background:#315743;border-color:#d8e7b8;box-shadow:0 0 0 4px #afd7ab33,inset 0 0 18px #b4e3b442}
+.page-scam .evidence-tray>span,.page-scam .evidence-tray>strong{font:750 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.07em}
+.page-scam .evidence-tray>strong{font-size:12px;color:#d4edce}
+.page-scam .evidence-tags{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:start}
+.page-scam .evidence-tags span{font:650 10px/1.4 "Noto Sans CJK SC",sans-serif;max-width:100%;overflow-wrap:anywhere;padding:5px 8px;border-left:2px solid #92c3a0;background:#cee9c41b;color:#d8ebcf;animation:tag-in .48s cubic-bezier(.17,.8,.22,1)}
+.page-scam .evidence-tags .evidence-empty{border:0;background:none;color:#a5b6a7;padding:0;font-weight:400;animation:none}
+@keyframes tag-in{from{opacity:0;transform:translateY(-9px) rotate(-5deg)}to{opacity:1;transform:translateY(0) rotate(0)}}
+.page-scam .evidence-ghost{position:fixed;z-index:100;pointer-events:none;display:grid;place-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 9px;background:#f3ab88;border:1px solid #ffb28d;box-shadow:6px 9px 15px #091719a8;color:#1e3730;font:750 12px "Noto Sans CJK SC",sans-serif}
+.page-scam .story-main blockquote mark{animation:mark-ink .55s ease-out;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+@keyframes mark-ink{from{background:linear-gradient(transparent 99%,#ff9e7394 99%);color:#fff2dd}to{background:linear-gradient(transparent 58%,#ff9e7394 58%);color:#fff2dd}}
+.page-scam .analysis-count{font-size:12px;color:#845e49;font-weight:750;border-top:1px solid #c8bba5;padding-top:13px}
+@media(max-width:480px){.page-scam .clue-buttons button{font-size:11px;min-height:43px}.page-scam .evidence-tray{min-height:89px;padding:11px}.page-scam .evidence-tray>span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.page-scam .story-side::before,.page-scam .evidence-tray,.page-scam .clue-buttons button{transition:none!important}.page-scam .evidence-tags span,.page-scam .story-main blockquote mark{animation:none!important}}
+/* The visible route inscription changes with each act while the dialogue stays
+   readable immediately (scroll/focus never wait for this animation). */
+.page-scam .story-side.is-changing #route-caption{animation:route-inscription .48s cubic-bezier(.16,.8,.2,1) both}
+@keyframes route-inscription{from{opacity:.2;clip-path:inset(0 100% 0 0);transform:translateX(-11px)}to{opacity:1;clip-path:inset(0);transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.page-scam .story-side.is-changing #route-caption{animation:none}}
+
+/* 核验渠道与出处：数字、工具、判例 */
+.page-scam .case-sources-body{max-width:1460px;margin-top:6px}
+.page-scam .case-sources-lead{max-width:96ch;margin:8px 0 18px;font-size:12px;line-height:1.95;color:#c3d0c4}
+.page-scam .case-sources-lead strong{color:#f0c9a4;font-weight:800}
+.page-scam .case-sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(266px,1fr));gap:1px;background:#bda89147;border:1px solid #bda89147}
+.page-scam .case-source-card{display:flex;flex-direction:column;gap:7px;padding:17px 18px 15px;background:#101b1a}
+.page-scam .case-source-card>span{font:700 9px ui-monospace,"Noto Sans CJK SC",monospace;letter-spacing:.16em;color:#e0a87f;text-transform:uppercase}
+.page-scam .case-source-card h3{margin:0;font-size:14px;line-height:1.45;color:#f3efe2;font-weight:800}
+.page-scam .case-source-card p{margin:0;font-size:11.5px;line-height:1.8;color:#aebdb1;max-width:none}
+.page-scam .case-source-card a{font-size:11.5px;font-weight:700;color:#f0b28f;text-decoration:none;border-bottom:1px solid #f0b28f4d;width:fit-content}
+.page-scam .case-source-card a:hover,.page-scam .case-source-card a:focus-visible{color:#ffd7bb;border-color:#ffd7bb}
+.page-scam .case-source-card small{font-size:9.5px;line-height:1.5;color:#7f9084;margin-top:-3px}
+.page-scam .case-sources-foot{margin:16px 0 0;font-size:10.5px;line-height:1.8;color:#8a9a8d}
+.page-scam .case-sources-foot code{font-size:10px;color:#a9bcae}
+@media(max-width:760px){.page-scam .case-sources-grid{grid-template-columns:1fr}}
+
+/* 解剖卡里的真实案件行（浅色面板） */
+.page-scam .analysis-content .story-source{display:block;margin:20px 0 0;padding-top:13px;border-top:1px dashed #b9c1c1;font-size:12px;line-height:1.8;color:#5f6d76}
+.page-scam .analysis-content .story-source b{display:block;margin-bottom:3px;font:700 9.5px/1.6 ui-monospace,"Noto Sans CJK SC",monospace;letter-spacing:.12em;color:#9c4338}
+.page-scam .analysis-content .story-source a{color:#8c3a2f;text-decoration:none;border-bottom:1px solid #b5685a80}
+.page-scam .analysis-content .story-source a:hover,.page-scam .analysis-content .story-source a:focus-visible{color:#c04a35;border-color:#c04a35}
+
+/* 原文 8 幕 / 交互 7 幕的差异说明（紧贴进度条，不折叠） */
+.page-scam .scam-eight-note {
+  max-width: 1180px;
+  margin: 10px auto 0;
+  padding: 0 clamp(16px, 3vw, 34px);
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, .46);
+}
+.page-scam .scam-eight-note b { color: rgba(255, 255, 255, .72); font-weight: 600; }
