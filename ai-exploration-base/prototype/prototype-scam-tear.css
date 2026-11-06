@@ -212,10 +212,26 @@
 .page-scam .tear-interlude .drum-cylinder{transform:rotateX(calc(var(--turn,0) * -60deg))}
 .page-scam .tear-interlude .drum-face{transform:rotateX(calc(var(--face)*60deg)) translateZ(150px);font-size:clamp(16px,1.7vw,22px);line-height:1.5;letter-spacing:0;white-space:normal;text-align:center;padding:0 14px}
 .page-scam .tear-interlude .drum-face.is-front{color:#1d302e;box-shadow:inset 0 0 0 1px #a89173aa,inset 0 0 27px #8c735745}
-.page-scam .tear-interlude .reading-fill{margin-top:28px;padding-top:22px;border-top:1px solid #9ea99467}
-.page-scam .tear-interlude .reading-fill h4{margin:0 0 10px;font-size:13px;letter-spacing:.04em;color:#e9d6b8}
-.page-scam .tear-interlude .reading-fill p{margin:0 0 10px;font-size:13px;line-height:1.85;color:#cbbfab}
-.page-scam .tear-interlude .reading-fill strong{color:#f1dfc9}
-.page-scam .tear-interlude .reading-fill ul{margin:0 0 18px;padding-left:1.1em}
-.page-scam .tear-interlude .reading-fill li{margin-bottom:8px;font-size:13px;line-height:1.8;color:#cbbfab}
 @media (max-width:720px){.page-scam .tear-interlude .drum-face{transform:rotateX(calc(var(--face)*60deg)) translateZ(124px);font-size:clamp(13px,3.4vw,17px)}}
+
+/* 决策室里的参照抽屉：解剖这一幕之后，机制 / 数字 / 工具就摊在这一侧 */
+.page-scam .desk-notes{display:none;padding:0 clamp(22px,3vw,44px) 24px}
+.page-scam .decision-layout[data-revealed="true"] .desk-notes{display:block;animation:desk-notes-in .5s cubic-bezier(.16,.8,.24,1)}
+@keyframes desk-notes-in{from{opacity:.25;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page-scam .desk-drawer{border-top:1px solid #c0b298}
+.page-scam .desk-drawer>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:baseline;padding:14px 0 13px;color:#2a3f37}
+.page-scam .desk-drawer>summary::-webkit-details-marker{display:none}
+.page-scam .desk-drawer>summary>span{font:800 9px ui-monospace,"Noto Sans CJK SC",monospace;letter-spacing:.14em;color:#9e6043}
+.page-scam .desk-drawer>summary>strong{font-size:16px;font-weight:750;letter-spacing:-.02em}
+.page-scam .desk-drawer>summary>small{grid-column:2;font-size:11px;color:#6d7d72}
+.page-scam .desk-drawer[open]>summary>small{color:#3f6a5b}
+.page-scam .desk-drawer>summary:hover>strong{color:#7b3b2c}
+.page-scam .desk-drawer>summary:focus-visible{outline:3px solid #b06a4e;outline-offset:2px}
+.page-scam .desk-drawer-body{padding:0 0 18px;color:#3a4b44;font-size:14px;line-height:1.85}
+.page-scam .desk-drawer-body ul{margin:0;padding:0;list-style:none}
+.page-scam .desk-drawer-body li{border-left:3px solid #b8604a;padding-left:14px;margin-bottom:16px}
+.page-scam .desk-drawer-body li:last-child{margin-bottom:4px}
+.page-scam .desk-drawer-body li>strong{display:block;font-size:15px;color:#8f3a2d;margin-bottom:3px;letter-spacing:-.01em}
+.page-scam .desk-drawer-body p{margin:0 0 5px}
+.page-scam .desk-drawer-body small{color:#6d7d72;font-size:11px;line-height:1.7}
+.page-scam .desk-drawer-body a{color:#8f3a2d;text-decoration:underline}

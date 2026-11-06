@@ -253,10 +253,16 @@ def fill_02(scene: str, md: str) -> str:
 # ------------------------------------------------------------------ ⑤ 关
 
 def fill_05(scene: str, md: str) -> str:
-    """⑤ 骗局解剖室：撕开账页后的长读，换成真源的心理机制、数字、工具与收尾。"""
+    """⑤ 骗局解剖室：正文长在决策室里——解剖台下方就是这一幕的参照抽屉。"""
     import chapter05 as _C5
 
     doc = _C5.parse(md)
+
+    def drawer(idx: str, title: str, inner: str) -> str:
+        return ('<details class="desk-drawer">'
+                f'<summary><span>REFERENCE / {idx}</span><strong>{html.escape(title)}</strong>'
+                '<small>点开查看 ↘</small></summary>'
+                f'<div class="desk-drawer-body">{inner}</div></details>')
 
     def mech_block() -> str:
         items = []
@@ -268,20 +274,19 @@ def fill_05(scene: str, md: str) -> str:
             if subs.get("解释"):
                 bits.append(f'<p>{rich(subs["解释"])}</p>')
             items.append("".join(bits) + "</li>")
-        return ('<div class="reading-fill"><h4>它靠的几样东西</h4>'
-                f'<ul>{"".join(items)}</ul></div>')
+        return drawer("01", "它靠的几样东西", f'<ul>{"".join(items)}</ul>')
 
     def numbers_block() -> str:
         items = "".join(
             f'<li><strong>{html.escape(n["big"])}</strong><p>{rich(n["body"])}</p>'
             f'<p><small>{rich(n.get("source") or "")}</small></p></li>' for n in doc["numbers"])
-        return f'<div class="reading-fill"><h4>两条真数字</h4><ul>{items}</ul></div>'
+        return drawer("02", "两条真数字", f'<ul>{items}</ul>')
 
     def tools_block() -> str:
         items = "".join(
             f'<li><strong>{html.escape(t["name"])}</strong><p>{rich(t.get("rest") or "")}</p></li>'
             for t in doc["tools"])
-        return f'<div class="reading-fill"><h4>拿不准时，用这几样</h4><ul>{items}</ul></div>'
+        return drawer("03", "拿不准时，用这几样", f'<ul>{items}</ul>')
 
     # 1) 撕开后的结论换成真源那两句
     m = re.search(r'<h3>显示盈利，<br><em>不等于能提走。</em></h3><p>[\s\S]*?</p>', scene)
@@ -292,17 +297,22 @@ def fill_05(scene: str, md: str) -> str:
              + f'<h3>{html.escape(keep["title"])}</h3>'
              + paras(keep["paras"]) + scene[m.end():])
 
-    # 2) 长读区补上心理机制 / 数字 / 工具
-    m = re.search(r'(<div class="reading-body">[\s\S]*?)(<a href="#case-sources">)', scene)
-    if not m:
-        raise SystemExit("⑤ 长读区结构变了")
-    scene = scene[: m.end(1)] + mech_block() + numbers_block() + tools_block() + scene[m.end(1):]
+    # 2) 正文进决策室：解剖台打开后，机制 / 数字 / 工具就摊在下面，不再另起长读区
+    notes = ('<div class="desk-notes" aria-label="这一幕的参照记录">'
+             + mech_block() + numbers_block() + tools_block() + '</div>')
+    anchor = '</div></div></div>\n<div class="session-controls">'
+    if anchor not in scene:
+        raise SystemExit("⑤ 决策室底部结构变了")
+    scene = scene.replace(anchor, '</div>' + notes + '</div></div>\n<div class="session-controls">', 1)
 
-    # 3) 页尾那张正文纸撤掉，正文已经在页里
+    # 3) 撕纸默认展开：进页面就能看到里面的证物，而不是让人先猜要不要点
+    scene = scene.replace('<details class="tear-interlude" id="tear-interlude">',
+                          '<details class="tear-interlude" id="tear-interlude" open>', 1)
+    scene = scene.replace("展开并撕开账页 ↘", "已展开 · 点标题可收起", 1)
+
+    # 4) 页尾那张正文纸撤掉，正文已经在决策室里
     scene = drop_section(scene, 'class="src-article src-verbatim"')
-    scene = scene.replace("原型-scam-tear.css?v=tear-in-04", "原型-scam-tear.css?v=tear-in-05")
-    scene = scene.replace("prototype-scam-tear.css?v=tear-in-04",
-                          "prototype-scam-tear.css?v=tear-in-05")
+    scene = scene.replace("prototype-scam-tear.css?v=tear-in-05", "prototype-scam-tear.css?v=tear-in-06")
     return scene
 
 

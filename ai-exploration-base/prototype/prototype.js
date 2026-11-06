@@ -699,6 +699,8 @@
       branch = null; finalDecision = null; clues.clear(); revealed.clear(); visited = 0; show(0);
     });
     show(0);
+    // 撕纸默认是展开的：不再等 toggle，进页面就把账页那层装上
+    if (tearInterlude.open) ensureTear();
     if (window.location.hash === '#tear-interlude') openTear();
     initDrum();
   }
