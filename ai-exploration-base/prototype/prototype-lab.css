@@ -138,3 +138,7 @@
 .page-lab .lab-projects p{display:grid;gap:3px;align-items:start}
 .page-lab .lab-projects p span{max-width:none;font-size:12px;line-height:1.75;color:#c2d4cf}
 .page-lab .lab-projects p a{margin-top:2px}
+.page-lab .lab-embed{margin:16px 0 0;border:1px solid #9dc5ba7d;background:#0b1c24;box-shadow:8px 9px 0 #06141d}
+.page-lab .lab-embed iframe{display:block;width:100%;height:min(78vh,620px);border:0;background:#080f14}
+.page-lab .lab-embed figcaption{padding:10px 14px;border-top:1px solid #ffffff14;font-size:11.5px;line-height:1.7;color:#a8c6b6}
+.page-lab .lab-embed a{color:#b9f4d1}
