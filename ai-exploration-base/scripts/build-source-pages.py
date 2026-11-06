@@ -299,7 +299,8 @@ def meta_from_doc(md: str) -> str:
     return "".join(out)
 
 
-def article_for(docs: list[str]) -> tuple[str, str, str, str]:
+def article_for(docs: list[str], stage_html: str = "",
+                anchor: str = "") -> tuple[str, str, str, str]:
     md = "\n\n".join((DOCS / d).read_text(encoding="utf-8") for d in docs)
     title, lead = hero_from_doc(md)
     chunks = re.split(r"^##\s+", md, flags=re.M)
@@ -325,7 +326,20 @@ def article_for(docs: list[str]) -> tuple[str, str, str, str]:
     kept = [(t, b) for t, b in parts
             if not skip_rx.search(t)
             and len(re.sub(r"<[^>]+>|\s", "", b)) > 20]
-    sections = "".join(section_html(i + 1, t, b) for i, (t, b) in enumerate(kept))
+    # 交互台放在讲它的那一节后面；找不到就放到第一节之后
+    anchor_rx = re.compile(anchor) if anchor else None
+    insert_at = 0
+    if anchor_rx:
+        for i, (t, _) in enumerate(kept):
+            if anchor_rx.search(t):
+                insert_at = i
+                break
+    chunks_out = []
+    for i, (t, b) in enumerate(kept):
+        chunks_out.append(section_html(i + 1, t, b))
+        if stage_html and i == insert_at:
+            chunks_out.append(stage_html)
+    sections = "".join(chunks_out)
     source_note = "、".join(f"<code>docs/content/{d}</code>" for d in docs)
     foot = (
         f'<p class="src-colophon">以上正文逐字来自内容真源 {source_note}，'
@@ -336,39 +350,39 @@ def article_for(docs: list[str]) -> tuple[str, str, str, str]:
     return title, lead, meta, f'<article class="src-article">{sections}{foot}</article>'
 
 
-# 只留正文：交互台整块不渲染（要恢复就把这里改回 True）
-WITH_STAGE = False
+# 正文即页面：交互台不单独占一块，而是嵌进对应的正文小节里
+WITH_STAGE = True
 
 
 # ------------------------------------------------------------------ page spec
 
 PAGES = [
-    dict(file="index.html", key="00", docs=["p0-index-graduation.md"],
+    dict(file="index.html", stage_anchor=r"英雄区|两张引导卡|探索地图", key="00", docs=["p0-index-graduation.md"],
          stage=[("section", 'id="mission"')]),
-    dict(file="chapter-01.html", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
+    dict(file="chapter-01.html", stage_anchor=r"会动手的|页首标题", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
          stage=[("section", 'id="forge"')]),
-    dict(file="chapter-02.html", key="02", docs=["p2-trends.md", "sources-p123.md"],
+    dict(file="chapter-02.html", stage_anchor=r"各行各业", key="02", docs=["p2-trends.md", "sources-p123.md"],
          stage=[("section", 'class="feed"'),
                 ("section", 'id="verdict"'),
                 ("section", 'class="editing-room"')]),
-    dict(file="chapter-03.html", key="03", docs=["p3-lab.md"],
+    dict(file="chapter-03.html", stage_anchor=r"先玩一个", key="03", docs=["p3-lab.md"],
          stage=[("section", 'id="lab-proof"'),
                 ("section", 'class="lab-onward"'),
                 ("section", 'class="lab-history"'),
                 ("section", 'class="lab-deck"')]),
-    dict(file="chapter-04.html", key="04", docs=["p4-side-jobs.md"],
+    dict(file="chapter-04.html", stage_anchor=r"第一层卡片|页首", key="04", docs=["p4-side-jobs.md"],
          stage=[("section", 'id="week-planner"'),
                 ("section", 'class="path-panel"'),
                 ("section", 'class="profile-panel"'),
                 ("section", 'id="route-stage"')]),
-    dict(file="chapter-05.html", key="05", docs=["p5-anti-scam.md", "real-cases-p5.md",
+    dict(file="chapter-05.html", stage_anchor=r"骗局模拟器|骗子心理学", key="05", docs=["p5-anti-scam.md", "real-cases-p5.md",
                                                  "sources-p456.md"],
          stage=[("section", 'class="phrases"'),
                 ("section", 'class="reading"'),
                 ("section", 'id="scene"'),
                 ("details", 'id="tear-interlude"'),
                 ("section", 'id="decision-room"')]),
-    dict(file="chapter-06.html", key="06", docs=["p6-academy.md"],
+    dict(file="chapter-06.html", stage_anchor=r"第二课|第一课", key="06", docs=["p6-academy.md"],
          stage=[("details", 'id="sample-expand"'),
                 ("details", 'id="after-expand"'),
                 ("section", 'id="sample-station"'),
@@ -417,7 +431,15 @@ def build(spec: dict) -> str:
                 found.append((pos, chunk))
         stage_bits = [c for _, c in sorted(found, key=lambda x: x[0])]
 
-    title, lead, meta, article = article_for(spec["docs"])
+    stage = (
+        '<section class="src-embed" id="play" aria-label="这一关的交互台">'
+        '<header class="src-embed-head"><span class="src-embed-kicker">PLAY IT / 亲手试一下</span>'
+        "<p>上面这一节讲的做法，这里可以直接动手试；规则、动效、按钮与正文说的是同一件事。</p>"
+        "</header>"
+        f'<div class="src-play-body">{"".join(stage_bits)}</div></section>'
+    )
+
+    title, lead, meta, article = article_for(spec["docs"], stage, spec.get("stage_anchor", ""))
 
     nav = ""
     if onward:
@@ -432,14 +454,6 @@ def build(spec: dict) -> str:
         head = head.replace("</head>", '<link rel="stylesheet" href="prototype-source.css?v=source-01"></head>')
 
     body_class = body_open.group(0) if body_open else "<body>"
-    stage = (
-        '<section class="src-play" id="play">'
-        '<header class="src-play-head"><span class="src-play-kicker">PLAY IT / 亲手试一下</span>'
-        f'<h2>这一关的可玩部分</h2>'
-        "<p>交互台原样保留：规则、动效、按钮都没动。它的文案与下面的正文同源"
-        "（<code>docs/content</code>），要改就改真源，然后重新生成。</p></header>"
-        f'<div class="src-play-body">{"".join(stage_bits)}</div></section>'
-    )
 
     hero = (
         '<section class="src-hero">'
@@ -450,7 +464,7 @@ def build(spec: dict) -> str:
         + "</section>"
     )
 
-    body_parts = hero + (stage if WITH_STAGE else "") + article + nav
+    body_parts = hero + article + nav
     main = f'<main class="src-main" id="source-{spec["key"]}">{body_parts}</main>'
 
     out = strip_dossier(
