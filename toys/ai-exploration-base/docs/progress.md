@@ -381,3 +381,18 @@
 - 改成一行一格（竖排），符号 / 名字 / 计数 / 说明 / 已收情报各归其位，375 实测 0 横向溢出。
 
 **验证：**`smoke`、`test` 全 PASS；`holistic-audit`（768 / 1280 七页全 0 报错、无横向溢出）、`overflow-375b` 六页 0 溢出、`content-wiring2`、`route-index-13`、`integrated-tear`（320/375/768/1280 + 减少动效）、`holistic-nojs` 全 OK；实拍复核 ② 的分拣刻度（0 → 错放 1 格紫 → 4 格全琥珀）、报告计数行（1280 与 375）、375 档案格竖排。CSS 升到 `?v=dala-15`，`prototype-trends.js` 升到 `desk-10`（页面互链的 `?v=desk-09` 不动，与往轮一致）。
+
+## 2026-11-06 · 回退：全部回到应用 DESIGN.MD 之前
+
+**原因：** 用户要求撤销按 `DESIGN.MD` 换成 Dala 视觉体系之后的全部工作，回到应用之前的样子。
+
+**做了什么（保留历史，不做 force push）：**
+- 建本地备份分支 `backup/pre-dala-50a2b7f`，指向回退前的 `50a2b7f`（第十三轮，含 `prototype/` 全套与 Dala 体系）。
+- 删除 `ai-exploration-base/prototype/`（40 个文件：六关页面、拨盘、材料研究、动效实验室、`prototype-dala.css`、粒子、字体等），以及只为原型服务的 `scripts/build-prototype-content.py`、`scripts/test.js`。
+- 站点仍是 `4d54418` 的静态八页（`index.html` + `pages/*.html` + `assets/`），这些文件在 Dala 那 13 个提交里本来就没被改动，所以页面代码自动回到应用 DESIGN.MD 前的状态。
+- 保留 `ai-exploration-base/docs/content/`（六关文字真源）与 `docs/progress.md` 全部历史：前者是内容而非视觉体系，后者是记录，删了反而丢证据。
+- 把 2026-11-05 第 10–11 轮遗留、一直未提交的「编辑式六关」改动（`assets/css/chapter.css`、`assets/media/chapter-01..06.jpg`、八页 HTML/JS 调整）单独提交存档，避免它们继续躺在工作区里随时可能被覆盖。
+
+**怎么恢复：** `git checkout backup/pre-dala-50a2b7f -- ai-exploration-base/prototype` 即可取回整套原型；要整体回去就基于该分支重开。
+
+**下一步：** 待在预览里确认八页旧站可用；若用户仍想丢弃编辑式外观、只要 `4d54418` 的原始米色站，回退上一条存档提交即可。
