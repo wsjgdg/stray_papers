@@ -952,12 +952,14 @@
       headT += (headT ? " " : "") + "rotate(-4 130 160)";
     if (f === "sad" && c.sadTilt) headT += (headT ? " " : "") + c.sadTilt;
     if (f === "surprised") headT += (headT ? " " : "") + "translate(0 -1)";
+    // neck lives OUTSIDE the rotated head group: it stays anchored to the
+    // collar while face/hair tilt. The rotated chin still overlaps the neck
+    // top (face bottom y156 vs neck top y142, 28px wide) so no seam shows.
+    var neck = p(NECK, SKIN) + p(NSHAD, SKIN_DK, ' opacity=".75"');
     var head =
       "<g" +
       (headT ? ' transform="' + headT + '"' : "") +
       ">" +
-      p(NECK, SKIN) +
-      p(NSHAD, SKIN_DK, ' opacity=".75"') +
       p(FACE, SKIN, ' stroke="' + SKIN_DK + '" stroke-width="1.4"') +
       p(BANGSH, SKIN_DK, ' opacity=".4"') +
       (c.ears ? c.ears + EAR_DETAIL : "") +
@@ -988,6 +990,7 @@
       c.body +
       (c.bodyDetail || "") +
       (c.bodyFx ? c.bodyFx(f) : "") +
+      neck +
       head +
       (c.front ? c.front(f) : "") +
       "</g></svg>"
