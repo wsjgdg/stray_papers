@@ -552,6 +552,35 @@ body {
   word-break: break-word;
 }
 
+/* typewriter caret: blinking block appended while characters reveal */
+.vn-text.vn-typing::after {
+  content: "▂";
+  color: var(--vn-accent, rgba(150, 190, 255, 0.9));
+  animation: vn-caret-blink 0.9s steps(1) infinite;
+}
+
+@keyframes vn-caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* advance indicator: breathing ▼ at the dialog's bottom-right corner —
+   the classic VN cue that the line is complete and a click awaits */
+.vn-next-ind {
+  position: absolute;
+  right: 20px;
+  bottom: 8px;
+  color: var(--vn-accent, rgba(150, 190, 255, 0.9));
+  font-size: 13px;
+  animation: vn-next-breathe 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes vn-next-breathe {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(3px); }
+}
+
 /* narration mode: italic-ish, muted, nameless */
 .vn-dialog.vn-narr {
   background:
@@ -2193,6 +2222,8 @@ input.vn-range {
   #vn-app .vn-prop.vn-prop-telescope,
   #vn-app .vn-prop.vn-prop-calendar,
   #vn-app .vn-prop.vn-prop-keys,
+  #vn-app .vn-text.vn-typing::after,
+  #vn-app .vn-next-ind,
   #vn-app .vn-ending-mark.vn-collected[data-ending="ending_true"] {
     animation: none !important;
   }
@@ -7505,6 +7536,9 @@ window.VN_PROPS = {"telescope": "data:image/webp;base64,UklGRmwvAABXRUJQVlA4WAoA
     var srLive = h("div", "vn-sr-live", dialog);
     srLive.setAttribute("aria-live", "polite");
     srLive.setAttribute("aria-atomic", "true");
+    // advance indicator: classic VN ▼ cue, shown once typing completes
+    var nextInd = h("div", "vn-next-ind vn-hidden", dialog);
+    nextInd.setAttribute("aria-hidden", "true");
     // decorative auto-mode progress line (aria-hidden: purely visual cue)
     var autoBar = h("div", "vn-auto-bar", dialog);
     autoBar.setAttribute("aria-hidden", "true");
@@ -7709,6 +7743,7 @@ window.VN_PROPS = {"telescope": "data:image/webp;base64,UklGRmwvAABXRUJQVlA4WAoA
       name: name,
       text: text,
       srLive: srLive,
+      nextInd: nextInd,
       autoBar: autoBar,
       autoBarFill: autoBarFill,
       choices: choices,
@@ -7874,6 +7909,8 @@ window.VN_PROPS = {"telescope": "data:image/webp;base64,UklGRmwvAABXRUJQVlA4WAoA
     state.typeFull = String(text);
     state.typePos = 0;
     els.text.textContent = "";
+    els.text.classList.add("vn-typing"); // blinking caret while chars reveal
+    hideNextIndicator();
     timers.type = setTimeout(typeStep, speedMs());
   }
 
@@ -7896,7 +7933,19 @@ window.VN_PROPS = {"telescope": "data:image/webp;base64,UklGRmwvAABXRUJQVlA4WAoA
     timers.type = null;
     state.typing = false;
     els.text.textContent = state.typeFull;
+    els.text.classList.remove("vn-typing");
+    showNextIndicator();
     scheduleAuto();
+  }
+
+  // Advance indicator (▼): appears once the line is fully typed — the
+  // classic VN "click to continue" cue; hidden while typing or mid-fx.
+  function showNextIndicator() {
+    if (els && els.nextInd) els.nextInd.classList.remove("vn-hidden");
+  }
+
+  function hideNextIndicator() {
+    if (els && els.nextInd) els.nextInd.classList.add("vn-hidden");
   }
 
   function completeTyping() {

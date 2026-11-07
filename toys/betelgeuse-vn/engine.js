@@ -223,6 +223,9 @@
     var srLive = h("div", "vn-sr-live", dialog);
     srLive.setAttribute("aria-live", "polite");
     srLive.setAttribute("aria-atomic", "true");
+    // advance indicator: classic VN ▼ cue, shown once typing completes
+    var nextInd = h("div", "vn-next-ind vn-hidden", dialog);
+    nextInd.setAttribute("aria-hidden", "true");
     // decorative auto-mode progress line (aria-hidden: purely visual cue)
     var autoBar = h("div", "vn-auto-bar", dialog);
     autoBar.setAttribute("aria-hidden", "true");
@@ -427,6 +430,7 @@
       name: name,
       text: text,
       srLive: srLive,
+      nextInd: nextInd,
       autoBar: autoBar,
       autoBarFill: autoBarFill,
       choices: choices,
@@ -592,6 +596,8 @@
     state.typeFull = String(text);
     state.typePos = 0;
     els.text.textContent = "";
+    els.text.classList.add("vn-typing"); // blinking caret while chars reveal
+    hideNextIndicator();
     timers.type = setTimeout(typeStep, speedMs());
   }
 
@@ -614,7 +620,19 @@
     timers.type = null;
     state.typing = false;
     els.text.textContent = state.typeFull;
+    els.text.classList.remove("vn-typing");
+    showNextIndicator();
     scheduleAuto();
+  }
+
+  // Advance indicator (▼): appears once the line is fully typed — the
+  // classic VN "click to continue" cue; hidden while typing or mid-fx.
+  function showNextIndicator() {
+    if (els && els.nextInd) els.nextInd.classList.remove("vn-hidden");
+  }
+
+  function hideNextIndicator() {
+    if (els && els.nextInd) els.nextInd.classList.add("vn-hidden");
   }
 
   function completeTyping() {

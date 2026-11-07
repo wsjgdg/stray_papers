@@ -540,6 +540,35 @@ body {
   word-break: break-word;
 }
 
+/* typewriter caret: blinking block appended while characters reveal */
+.vn-text.vn-typing::after {
+  content: "▂";
+  color: var(--vn-accent, rgba(150, 190, 255, 0.9));
+  animation: vn-caret-blink 0.9s steps(1) infinite;
+}
+
+@keyframes vn-caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* advance indicator: breathing ▼ at the dialog's bottom-right corner —
+   the classic VN cue that the line is complete and a click awaits */
+.vn-next-ind {
+  position: absolute;
+  right: 20px;
+  bottom: 8px;
+  color: var(--vn-accent, rgba(150, 190, 255, 0.9));
+  font-size: 13px;
+  animation: vn-next-breathe 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes vn-next-breathe {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(3px); }
+}
+
 /* narration mode: italic-ish, muted, nameless */
 .vn-dialog.vn-narr {
   background:
@@ -2181,6 +2210,8 @@ input.vn-range {
   #vn-app .vn-prop.vn-prop-telescope,
   #vn-app .vn-prop.vn-prop-calendar,
   #vn-app .vn-prop.vn-prop-keys,
+  #vn-app .vn-text.vn-typing::after,
+  #vn-app .vn-next-ind,
   #vn-app .vn-ending-mark.vn-collected[data-ending="ending_true"] {
     animation: none !important;
   }
