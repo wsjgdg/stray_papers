@@ -12,6 +12,7 @@ from PIL import Image
 
 DIR = Path(__file__).resolve().parent
 BGS = [
+    "title",
     "apartment_night",
     "email_screen",
     "streets_rain",

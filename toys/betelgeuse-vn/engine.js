@@ -3342,6 +3342,20 @@
     clearAuto();
     clearTimeout(timers.bg);
     state.mode = "title";
+    // full-bleed title art behind the starfield canvas when present — the
+    // canvas keeps adding twinkle motion on top of the painted sky
+    if (
+      typeof window !== "undefined" &&
+      window.VN_BG_IMG &&
+      typeof window.VN_BG_IMG.title === "string" &&
+      els.title &&
+      typeof els.title.style !== "undefined"
+    ) {
+      els.title.style.background =
+        'url("' +
+        window.VN_BG_IMG.title +
+        '") center / cover no-repeat, #05070f';
+    }
     state.typing = false;
     state.auto = false;
     els.btns.auto.classList.remove("vn-active");
