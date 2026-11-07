@@ -1784,11 +1784,22 @@
     activeChoices = choices.slice(); // 1..9 hotkeys read this snapshot
     var box = els.choices;
     box.textContent = "";
-    choices.forEach(function (choice) {
+    choices.forEach(function (choice, i) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "vn-choice";
-      btn.textContent = choice.text;
+      // hotkey badge: the 1..9 keyboard surface made visible (skipped for a
+      // single choice — a lone option needs no pick hint)
+      if (choices.length > 1 && i < 9) {
+        var num = document.createElement("span");
+        num.className = "vn-choice-num";
+        num.textContent = String(i + 1);
+        num.setAttribute("aria-hidden", "true");
+        btn.appendChild(num);
+        btn.appendChild(document.createTextNode(choice.text));
+      } else {
+        btn.textContent = choice.text;
+      }
       btn.addEventListener("click", function () {
         pickChoice(choice);
       });
@@ -3407,6 +3418,54 @@
     advance();
   }
 
+  // Focus trap for overlays (a11y): while a modal is open, Tab/Shift+Tab
+  // cycles inside the topmost open overlay instead of escaping to the
+  // background game. Mirrors the overlay stack used by overlaysOpen().
+  function trapTab(e) {
+    if (!els) return false;
+    var containers = [];
+    if (els.menu && !els.menu.classList.contains("vn-hidden")) {
+      containers.push(els.menu);
+    }
+    if (els.backlog && !els.backlog.classList.contains("vn-hidden")) {
+      containers.push(els.backlog);
+    }
+    if (els.settings && !els.settings.classList.contains("vn-hidden")) {
+      containers.push(els.settings);
+    }
+    if (galleryVisible() && els.gallery) containers.push(els.gallery);
+    if (containers.length === 0) return false;
+    var top = containers[containers.length - 1];
+    if (typeof top.querySelectorAll !== "function") return false;
+    var focusables = top.querySelectorAll("button, input, [tabindex]");
+    if (!focusables || focusables.length === 0) {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      return true;
+    }
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    var active =
+      typeof document !== "undefined" ? document.activeElement : null;
+    var inside = false;
+    for (var i = 0; i < focusables.length; i++) {
+      if (focusables[i] === active) {
+        inside = true;
+        break;
+      }
+    }
+    if (!inside || (!e.shiftKey && active === last)) {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      last.focus();
+      return true;
+    }
+    if (e.shiftKey && (active === first || !inside)) {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      first.focus();
+      return true;
+    }
+    return false;
+  }
+
   function onKeyDown(e) {
     if (!S || !els) return;
     if (e.key === "Escape" || e.key === "Esc") {
@@ -3415,6 +3474,10 @@
       hideSettings();
       if (galleryVisible()) closeGallery();
       return;
+    }
+    // keep Tab cycling inside whichever overlay is open
+    if (e.key === "Tab" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (trapTab(e)) return;
     }
     // hotkeys are inert while a form control owns the keyboard (settings
     // sliders), so arrow/number input there never double-fires

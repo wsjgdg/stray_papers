@@ -801,6 +801,29 @@ button.vn-choice:active {
   transform: translateY(0) scale(0.97);
 }
 
+/* hotkey badge: the 1..9 pick key shown inside each choice button */
+.vn-choice-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55em;
+  height: 1.55em;
+  margin-right: 0.65em;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-variant-numeric: tabular-nums;
+  color: var(--vn-text-faint);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  vertical-align: -0.25em;
+}
+
+button.vn-choice:hover .vn-choice-num {
+  color: #ffffff;
+  border-color: rgba(150, 190, 255, 0.6);
+  background: rgba(150, 190, 255, 0.14);
+}
+
 /* --------------------------------------------------------------------------
    7. Top bar buttons (glass chips)
    -------------------------------------------------------------------------- */
