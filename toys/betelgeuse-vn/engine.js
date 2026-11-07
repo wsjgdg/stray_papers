@@ -1077,6 +1077,21 @@
     els.app.classList.add("vn-g-" + grade);
   }
 
+  // Raster background override: window.VN_BG_IMG (AI-painted full-bleed art)
+  // wins over the scenario's CSS gradient; the gradient stays layered under
+  // the image as loading fallback / letterbox fill.
+  function bgPaint(bg, bgId) {
+    var img =
+      typeof window !== "undefined" && window.VN_BG_IMG
+        ? window.VN_BG_IMG[bgId]
+        : null;
+    var css = typeof bg.css === "string" ? bg.css : "#05070f";
+    if (typeof img === "string" && img) {
+      return 'url("' + img + '") center / cover no-repeat, ' + css;
+    }
+    return css;
+  }
+
   function applyBg(bgId) {
     if (!bgId || bgId === state.bg) return; // bg persists when omitted / unchanged
     var bg = S.backgrounds && S.backgrounds[bgId];
@@ -1095,7 +1110,7 @@
       els.bg.classList.remove("vn-fading");
     }, BG_FADING_MS);
     timers.bg = setTimeout(function () {
-      els.bg.style.background = bg.css;
+      els.bg.style.background = bgPaint(bg, bgId);
       syncBgFx(bg, bgId);
       syncGrade(bg); // grade follows the bg through the same fade window
       recordSeen(bgId); // gallery unlock: this scene has now been visited
@@ -1115,7 +1130,7 @@
       return;
     }
     state.bg = bgId;
-    els.bg.style.background = bg.css;
+    els.bg.style.background = bgPaint(bg, bgId);
     syncBgFx(bg, bgId); // re-apply the restored bg's fx html + canvas scene
     syncGrade(bg); // instant path: grade comes back with the bg
     recordSeen(bgId);

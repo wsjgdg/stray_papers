@@ -19,6 +19,9 @@ def main() -> None:
     sprites_data = (
         sprites_path.read_text(encoding="utf-8") if sprites_path.exists() else ""
     )
+    bg_path = DIR / "props" / "bg-data.js"
+    # optional raster backgrounds (AI-painted webp); absent = CSS-only build
+    bg_data = bg_path.read_text(encoding="utf-8") if bg_path.exists() else ""
     engine = (DIR / "engine.js").read_text(encoding="utf-8")
     # Guard against '</script>' sequences inside inline JS.
     scenario = scenario.replace("</script>", "<\\/script>")
@@ -28,6 +31,7 @@ def main() -> None:
     audio = audio.replace("</script>", "<\\/script>")
     props_data = props_data.replace("</script>", "<\\/script>")
     sprites_data = sprites_data.replace("</script>", "<\\/script>")
+    bg_data = bg_data.replace("</script>", "<\\/script>")
     engine = engine.replace("</script>", "<\\/script>")
     favicon = (
         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
@@ -56,6 +60,7 @@ def main() -> None:
         f"<script>\n{scenes_b}\n</script>\n"
         f"<script>\n{props_data}\n</script>\n"
         f"<script>\n{sprites_data}\n</script>\n"
+        f"<script>\n{bg_data}\n</script>\n"
         f"<script>\n{audio}\n</script>\n"
         f"<script>\n{engine}\n</script>\n"
         "<script>VN.start(window.SCENARIO);</script>\n</body>\n</html>\n"
