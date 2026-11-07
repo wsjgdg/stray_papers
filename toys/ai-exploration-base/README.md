@@ -62,8 +62,16 @@ gh release list                       # 看已发布的包
 gh release download v1.0.0            # 下载最新交付包
 ```
 
-带 `--release <tag>` 时会调用 `gh release create <tag> AI探索基地.zip`，标题与说明自动填好；
-没有安装 `gh` 时只提示命令，不会打包失败。包里**顶层只有四项**：
+带 `--release <tag>` 时会调用 `gh release create <tag> AI探索基地.zip`，标题与说明自动填好。
+两种例外它都会自己兜住，不让打包失败：
+
+- **没装 `gh`**：只打印该敲的命令。
+- **网络到不了 `uploads.github.com`**（附件上传专用的域名，有些受限网络只放行
+  `api.github.com`）：会把 Release 页面先建出来、在正文里写明怎么补附件，然后提示
+  `gh release upload <tag> AI探索基地.zip`。找个能直连的网络补这一条，或在 Release
+  页面直接把包拖进去，就齐了。
+
+包里**顶层只有四项**：
 
 ```
 AI探索基地/

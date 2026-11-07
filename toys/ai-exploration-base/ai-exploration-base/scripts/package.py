@@ -314,28 +314,49 @@ def main() -> int:
 
 
 def publish(tag: str) -> None:
-    """把包挂到 GitHub Release 上。没装 gh 或没登录时只提示命令，不算失败。"""
-    cmd = ["gh", "release", "create", tag, ZIP_PATH.name,
-           "--title", f"AI 探索基地 · 交付包 {tag}",
-           "--notes", ("解压即用：`AI探索基地/` 下是站点、docs、README.md 与 先读我.txt。\n\n"
-                       "打开方式：进入 `ai-exploration-base/`，起 `python3 -m http.server 8000`，"
-                       "访问 `http://localhost:8000/prototype/index.html`。\n\n"
-                       "包内站点不调用任何 AI 接口、不上传任何输入；页面里标着「演示样例 / 示意」的"
-                       "对话与图片都是预写的教学样例。"),
-           "--target", subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
-                                      capture_output=True, text=True).stdout.strip()]
-    print("\n→ " + " ".join(cmd[:6]) + " …")
+    """把交付包挂到 GitHub Release。
+
+    正常情况一步到位。但有些网络（比如只放行 api.github.com 的沙箱）连不上
+    uploads.github.com——附件传不上去。这时退一步：先把 Release 页面建出来，
+    页面上写明附件怎么补，不让发布整个失败。
+    """
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
+                          capture_output=True, text=True).stdout.strip()
+    title = f"AI 探索基地 · 交付包 {tag}"
+    notes = ("解压即用：`AI探索基地/` 下是站点、docs、README.md 与 先读我.txt。\n\n"
+             "打开方式：进入 `ai-exploration-base/`，起 `python3 -m http.server 8000`，"
+             "访问 `http://localhost:8000/prototype/index.html`。\n\n"
+             "包内站点不调用任何 AI 接口、不上传任何输入；页面里标着「演示样例 / 示意」的"
+             "对话与图片都是预写的教学样例。")
+
+    def gh(*args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["gh", *args], cwd=ROOT, capture_output=True, text=True)
+
     try:
-        done = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+        done = gh("release", "create", tag, ZIP_PATH.name, "--title", title,
+                  "--notes", notes, "--target", head)
     except FileNotFoundError:
-        print("✗ 没找到 gh 命令。装了之后手动发布：")
-        print("  " + " ".join(cmd))
+        print("\n✗ 没找到 gh 命令。装好之后手动发布：")
+        print(f"  gh release create {tag} {ZIP_PATH.name} --title \"{title}\" --target {head[:8]}")
         return
+
     if done.returncode == 0:
-        print("✓ 已发布：" + done.stdout.strip())
+        print("\n✓ 已发布（含附件）：" + done.stdout.strip())
+        return
+
+    # 附件上传失败（常见原因：当前网络到不了 uploads.github.com）
+    hint = f"gh release upload {tag} {ZIP_PATH.name}"
+    done2 = gh("release", "create", tag, "--title", title,
+               "--notes", notes + f"\n\n---\n\n**附件**：本环境的网络到不了 uploads.github.com，"
+                                  f"压缩包请在有网环境补挂：\n\n```\n{hint}\n```",
+               "--target", head)
+    if done2.returncode == 0:
+        print("\n△ Release 页面已建好，但附件没传上去（传不到 uploads.github.com）。")
+        print("  在有网环境补一条即可：" + hint)
     else:
-        print("✗ 发布失败：" + (done.stderr.strip() or done.stdout.strip()))
-        print("  可以手动执行：\n  " + " ".join(cmd))
+        print("\n✗ 发布失败：" + (done2.stderr.strip() or done2.stdout.strip()))
+        print("  手动执行：\n  gh release create " + tag + " " + ZIP_PATH.name +
+              " --title \"" + title + "\"")
 
 
 if __name__ == "__main__":
