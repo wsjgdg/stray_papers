@@ -40,12 +40,36 @@
     var nav = Array.prototype.slice.call(document.querySelectorAll('.channel-list [data-channel]'));
     var visual = document.getElementById('mission-visual');
     var launch = document.getElementById('mission-launch');
-    var active = 0, dragging = false;
+    var active = 0, dragging = false, glideFrame = 0, glideDeg = 0;
+    // 把指针放到某个角度上（拖动时逐帧调用，必须即时）
     function position(degrees) {
+      glideDeg = degrees;
       var radians = degrees * Math.PI / 180;
       handle.style.left = 'calc(50% + ' + (Math.sin(radians) * 50) + '% - 16px)';
       handle.style.top = 'calc(50% - ' + (Math.cos(radians) * 50) + '% - 16px)';
       dial.style.setProperty('--needle', degrees + 'deg');
+    }
+    function stopGlide() {
+      if (glideFrame) cancelAnimationFrame(glideFrame);
+      glideFrame = 0;
+      dial.classList.remove('is-gliding');
+    }
+    function jump(degrees) { stopGlide(); position(degrees); }
+    // 换台时让旋钮沿弧线滑过去：以前指针有 .75s 缓动、把手却是瞬移，两个指示器会打架。
+    function glideTo(target, animate) {
+      stopGlide();
+      if (!animate || reduced) { position(target); return; }
+      var from = glideDeg;
+      var delta = ((target - from + 540) % 360) - 180;   // 走短弧，别绕整圈
+      var started = performance.now(), duration = 750;
+      dial.classList.add('is-gliding');
+      (function frame(now) {
+        var t = Math.min(1, (now - started) / duration);
+        var eased = 1 - Math.pow(1 - t, 5);
+        position(from + delta * eased);
+        if (t < 1) { glideFrame = requestAnimationFrame(frame); }
+        else { glideFrame = 0; dial.classList.remove('is-gliding'); }
+      })(started);
     }
     function select(i, animate) {
       active = (i + channels.length) % channels.length;
@@ -71,21 +95,22 @@
       track.setAttribute('aria-valuenow', String(active + 1));
       track.setAttribute('aria-valuetext', '第 ' + (active + 1) + ' 关：' + nav[active].querySelector('strong').textContent + '；' + (ch.playable ? '可玩原型' : '原型尚未制作'));
       nav.forEach(function (button, n) { button.setAttribute('aria-pressed', String(n === active)); });
-      if (!dragging) position(active * 60);
+      if (!dragging) glideTo(active * 60, animate);
     }
     function chooseFromPointer(e) {
       var r = track.getBoundingClientRect();
       var degrees = ((Math.atan2(e.clientX - (r.left + r.width / 2), (r.top + r.height / 2) - e.clientY) * 180 / Math.PI) + 360) % 360;
-      position(degrees);
+      jump(degrees);
       var next = Math.round(degrees / 60) % 6;
       if (next !== active) select(next, true);
     }
     track.addEventListener('pointerdown', function (e) {
       if (e.button !== 0) return;
-      dragging = true; track.setPointerCapture(e.pointerId); chooseFromPointer(e);
+      dragging = true; dial.classList.add('is-dragging');
+      track.setPointerCapture(e.pointerId); chooseFromPointer(e);
     });
     track.addEventListener('pointermove', function (e) { if (dragging) chooseFromPointer(e); });
-    function stopDrag() { if (dragging) { dragging = false; position(active * 60); } }
+    function stopDrag() { if (dragging) { dragging = false; dial.classList.remove('is-dragging'); glideTo(active * 60, true); } }
     track.addEventListener('pointerup', stopDrag);
     track.addEventListener('pointercancel', stopDrag);
     track.addEventListener('keydown', function (e) {

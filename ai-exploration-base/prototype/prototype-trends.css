@@ -181,3 +181,27 @@
 .page-trends .ind-fact{color:#9fb0aa;border-left:2px solid #ffffff24;padding-left:10px}
 .page-trends .trend-coda{padding:22px clamp(20px,5vw,90px) 34px;border-top:1px solid #ffffff1f}
 .page-trends .trend-coda p{margin:8px 0 0;font-size:13.5px;line-height:1.9;color:#e6eadf}
+
+/* 换领域 / 清空重来时，脚本会给 .workbench 挂上 is-replating（1100ms 后摘掉）：
+   之前这个类是个空钩子，桌面是硬切。现在卡堆整体抬起、四张卡依次亮起来。 */
+.page-trends .workbench.is-replating .card-stack {
+  animation: desk-replate .5s cubic-bezier(.2, .8, .25, 1) both;
+}
+.page-trends .workbench.is-replating .signal-card {
+  animation: card-replate .45s ease-out both;
+}
+.page-trends .workbench.is-replating .signal-card:nth-child(2) { animation-delay: .05s; }
+.page-trends .workbench.is-replating .signal-card:nth-child(3) { animation-delay: .1s; }
+.page-trends .workbench.is-replating .signal-card:nth-child(4) { animation-delay: .15s; }
+@keyframes desk-replate {
+  from { opacity: .25; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes card-replate {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-trends .workbench.is-replating .card-stack,
+  .page-trends .workbench.is-replating .signal-card { animation: none; }
+}

@@ -433,17 +433,17 @@ WITH_STAGE = True
 #   · 页面之间互相跳转（`chapter-0X.html`）不带 `?v=`——HTML 不吃这套缓存策略，
 #     带戳只会让同一条链接在不同页面上出现三四种写法（这正是以前的老毛病）。
 VERSIONS = {
-    "prototype.js": "switch-16",            # 首页拨盘 + ⑤ 关共用同一份
-    "prototype-home.css": "switch-13",
+    "prototype.js": "switch-17",            # 首页拨盘 + ⑤ 关共用同一份
+    "prototype-home.css": "switch-14",
     "prototype-forge.css": "press-08",      # ① 关的 .page-forge 外用样式
     "prototype-dossier.css": "dossier-08",
-    "prototype-source.css": "source-05",    # 七页共用的正文 / 卡片台样式
-    "prototype-cards.js": "cards-04",
-    "prototype-trends.css": "desk-09",
+    "prototype-source.css": "source-07",    # 七页共用的正文 / 卡片台样式
+    "prototype-cards.js": "cards-06",
+    "prototype-trends.css": "desk-10",
     "prototype-trends.js": "desk-09",
     "trend-desk.js": "desk-01",
-    "prototype-lab.css": "lab-05",
-    "prototype-lab.js": "lab-05",
+    "prototype-lab.css": "lab-06",
+    "prototype-lab.js": "lab-06",
     "prototype-routes.css": "weave-07",
     "prototype-routes.js": "weave-07",
     "route-fill.js": "route-01",
@@ -952,12 +952,12 @@ def build(spec: dict) -> str:
             f'<script src="{js}" defer></script>' for js in spec.get("deck_js", [])
         )
         if spec.get("deck") and "prototype-deck-motion" not in extra:
-            extra += '<script src="prototype-deck-motion.js?v=deck-01" defer></script>'
+            extra += '<script src="prototype-deck-motion.js" defer></script>'
         out = out.replace("</body>",
                           '<script src="../assets/vendor/gsap.min.js"></script>'
                           '<script src="../assets/vendor/ScrollTrigger.min.js" defer></script>'
                           '<script src="../assets/vendor/TextPlugin.min.js" defer></script>'
-                          '<script src="prototype-cards.js?v=cards-03" defer></script>'
+                          f'<script src="prototype-cards.js?v={VERSIONS["prototype-cards.js"]}" defer></script>'
                           + extra + '</body>')
 
     if spec.get("legacy_pre_js"):

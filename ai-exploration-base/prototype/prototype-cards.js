@@ -24,6 +24,8 @@
 
   if (motion && window.ScrollTrigger) gsap.registerPlugin(window.ScrollTrigger);
   if (motion && window.TextPlugin) gsap.registerPlugin(window.TextPlugin);
+  // 告诉 CSS：翻面的 transform 归 GSAP，样式表别用 .is-flipped 把终态写死
+  if (motion) document.documentElement.classList.add('gsap-motion');
 
   /* ---------------- 进场：台面亮起，卡片一张张落位 ---------------- */
   if (motion) {
@@ -78,6 +80,8 @@
       if (motion) gsap.to(fill, { width: w + '%', duration: .5, ease: 'power2.out' });
       else fill.style.width = w + '%';
     }
+    // 五张都翻完，台面计数条从琥珀转成薄荷绿（纯状态色，不额外加动效）
+    floor.dataset.complete = String(total > 0 && n >= total);
     if (done) {
       if (n >= total) {
         done.hidden = false;
