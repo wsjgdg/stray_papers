@@ -50,10 +50,20 @@ docs/先读我.md             交付说明的源文件；先读我.txt 由它生
 ## 交付包
 
 ```bash
-python3 ai-exploration-base/scripts/package.py
+python3 ai-exploration-base/scripts/package.py            # 只打包
+python3 ai-exploration-base/scripts/package.py --release v1.0.1   # 打包并挂到 Release
 ```
 
-产出仓库根目录的 `AI探索基地.zip`（约 1.3 MB，84 个文件）。包里**顶层只有四项**：
+产出仓库根目录的 `AI探索基地.zip`（约 1.3 MB，84 个文件）。**包不进版本库**——每次重新打包
+都是一个 1.27 MB 的新二进制，堆在历史里没有意义；它挂在 GitHub Release 的附件上：
+
+```bash
+gh release list                       # 看已发布的包
+gh release download v1.0.0            # 下载最新交付包
+```
+
+带 `--release <tag>` 时会调用 `gh release create <tag> AI探索基地.zip`，标题与说明自动填好；
+没有安装 `gh` 时只提示命令，不会打包失败。包里**顶层只有四项**：
 
 ```
 AI探索基地/
@@ -65,8 +75,8 @@ AI探索基地/
 
 - 包里就是解压即用的静态站：起 `python3 -m http.server` 后七张页面全部 200，构建脚本也能在包内跑通、`--check` 全过。
 - 退休的旧实验已经删掉了（需要找回就看 git 历史）。`.git/`、`__pycache__/` 不进包。
-- `先读我.txt` 和 `AI探索基地.zip` **是进版本库的**：交付物要能在文件列表里直接看见，
-  所以不写进 `.gitignore`。重新打包后 `git add` 一下即可。
+- `先读我.txt` 进版本库（4KB 的纯文本，改起来看得见 diff）；`AI探索基地.zip` 不进，
+  走 Release。文件列表里看不到包是正常的——去 Releases 页下。
 - **要改交付说明，改 `docs/先读我.md`**，再跑一次打包命令，`先读我.txt` 会自动重排（中文断行按字、英文按词、标点不落行首）。
 
 ## 六关

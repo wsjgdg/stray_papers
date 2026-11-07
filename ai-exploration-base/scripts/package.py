@@ -5,7 +5,15 @@
 
     python3 ai-exploration-base/scripts/package.py
 
-产物：仓库根目录下的 `AI探索基地.zip` 与 `先读我.txt`（两个都进版本库）。
+产物：仓库根目录下的 `AI探索基地.zip` 与 `先读我.txt`。
+
+包不进版本库（.gitignore 里点名忽略）——每次重新打包都是 1.27MB 的新二进制，
+堆在历史里没有意义。要发布交付包，加 `--release <tag>`：
+
+    python3 ai-exploration-base/scripts/package.py --release v1.0.1
+
+它会在打包后调用 `gh release create <tag> AI探索基地.zip`；没装 gh 时只打印命令，
+不会让打包失败。
 zip 里的顶层只有四项：
 
     AI探索基地/
@@ -20,6 +28,7 @@ zip 里的顶层只有四项：
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 import unicodedata
 import zipfile
@@ -286,12 +295,47 @@ def main() -> int:
         for path, arc in entries:
             zf.write(path, arc)
 
+    release = None
+    for i, arg in enumerate(sys.argv):
+        if arg == "--release" and i + 1 < len(sys.argv):
+            release = sys.argv[i + 1]
+        elif arg.startswith("--release="):
+            release = arg.split("=", 1)[1]
+
     size = ZIP_PATH.stat().st_size / 1024 / 1024
     print(f"✓ {ZIP_PATH.name}  {len(entries)} 个文件  {size:.2f} MB")
     print(f"  先读我.txt  {len(guide_txt)} 字（源：docs/先读我.md）")
     tops = sorted({e[1].split("/")[1] for e in entries})
     print("  包内顶层：" + " / ".join(tops))
+
+    if release:
+        publish(release)
     return 0
+
+
+def publish(tag: str) -> None:
+    """把包挂到 GitHub Release 上。没装 gh 或没登录时只提示命令，不算失败。"""
+    cmd = ["gh", "release", "create", tag, ZIP_PATH.name,
+           "--title", f"AI 探索基地 · 交付包 {tag}",
+           "--notes", ("解压即用：`AI探索基地/` 下是站点、docs、README.md 与 先读我.txt。\n\n"
+                       "打开方式：进入 `ai-exploration-base/`，起 `python3 -m http.server 8000`，"
+                       "访问 `http://localhost:8000/prototype/index.html`。\n\n"
+                       "包内站点不调用任何 AI 接口、不上传任何输入；页面里标着「演示样例 / 示意」的"
+                       "对话与图片都是预写的教学样例。"),
+           "--target", subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
+                                      capture_output=True, text=True).stdout.strip()]
+    print("\n→ " + " ".join(cmd[:6]) + " …")
+    try:
+        done = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    except FileNotFoundError:
+        print("✗ 没找到 gh 命令。装了之后手动发布：")
+        print("  " + " ".join(cmd))
+        return
+    if done.returncode == 0:
+        print("✓ 已发布：" + done.stdout.strip())
+    else:
+        print("✗ 发布失败：" + (done.stderr.strip() or done.stdout.strip()))
+        print("  可以手动执行：\n  " + " ".join(cmd))
 
 
 if __name__ == "__main__":
