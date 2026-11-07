@@ -113,13 +113,15 @@
     }
     if (!motion || !inner) { sync(); return; }
 
-    gsap.to(inner, {
-      rotationY: on ? 180 : 0,
-      duration: .85,
-      ease: 'power3.inOut',
-      overwrite: 'auto',
-      onComplete: sync,
-    });
+    // 炫技版翻面：卡片整体先抬起、放大一点，转到位再落回去（回弹），
+    // 同时卡片上掠过一道扫光。三段时间轴叠在一起，比单纯转 180° 有分量。
+    card.classList.add('is-turning');
+    gsap.timeline({
+      onComplete: () => { card.classList.remove('is-turning'); sync(); },
+    })
+      .to(inner, { rotationY: on ? 180 : 0, duration: 1.15, ease: 'power4.inOut', overwrite: 'auto' }, 0)
+      .to(card, { y: -24, scale: 1.05, duration: .42, ease: 'power2.out' }, 0)
+      .to(card, { y: 0, scale: 1, duration: .62, ease: 'bounce.out' }, .42);
 
     if (!on) { gsap.to(back, { autoAlpha: 1, duration: .2 }); return; }
 

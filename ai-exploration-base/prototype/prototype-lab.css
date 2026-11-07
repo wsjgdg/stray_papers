@@ -158,3 +158,30 @@
 @media (prefers-reduced-motion: reduce) {
   .page-lab .generation-badge.is-ticking { animation: none; }
 }
+
+/* ---- 炫技版：每一代从上往下扫一道光 ---- */
+@keyframes grid-scan {
+  0% { opacity: 0; transform: translateY(-100%); }
+  16% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(100%); }
+}
+.page-lab #cell-grid { position: relative; }
+.page-lab #cell-grid::after {
+  content: "";
+  position: absolute;   /* 网格里必须绝对定位，否则会多占一格把细胞挤走 */
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(180deg,
+    rgba(190, 255, 214, 0) 0%,
+    rgba(190, 255, 214, .2) 38%,
+    rgba(255, 255, 255, .62) 50%,
+    rgba(190, 255, 214, .2) 62%,
+    rgba(190, 255, 214, 0) 100%);
+}
+.page-lab #cell-grid.is-advancing::after { animation: grid-scan .62s cubic-bezier(.4, 0, .22, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .page-lab #cell-grid.is-advancing::after { animation: none; }
+}

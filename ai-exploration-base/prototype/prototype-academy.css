@@ -96,3 +96,14 @@
 /* 可读性兜底：试投说明与修复回执是正文，抬到 12px */
 .page-academy .trial-header p,
 .page-academy .repair-receipt p { font-size: 12px; line-height: 1.65; }
+
+/* ---- 炫技版：试投结果整块"甩"出来（3D 前倾 + 回弹 + 去模糊） ---- */
+@keyframes verdict-throw {
+  0% { opacity: 0; filter: blur(6px); transform: perspective(1000px) rotateX(22deg) translateY(42px) scale(.94); }
+  55% { opacity: 1; filter: blur(0); transform: perspective(1000px) rotateX(-3deg) translateY(-9px) scale(1.016); }
+  100% { opacity: 1; filter: blur(0); transform: none; }
+}
+.page-academy .sample-result.is-revealing { animation: verdict-throw .82s cubic-bezier(.16, .9, .24, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .page-academy .sample-result.is-revealing { animation: none; }
+}
