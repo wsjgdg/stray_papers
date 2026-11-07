@@ -91,7 +91,7 @@
       "/>"
     );
   }
-  function e(cx, cy, rx, ry, f) {
+  function e(cx, cy, rx, ry, f, x) {
     return (
       '<ellipse cx="' +
       cx +
@@ -103,7 +103,9 @@
       ry +
       '" fill="' +
       f +
-      '"/>'
+      '"' +
+      (x || "") +
+      "/>"
     );
   }
 
@@ -112,6 +114,21 @@
   // Eyes are the primary emotional channel: each feel gets its own lid
   // geometry, iris size/position and support lines.
   function eyes(f, eye, dk) {
+    // iris definition ring: a thin stroke around the iris reads as limbal
+    // depth at sprite scale (one per open-eyed feel)
+    function ring(cx, cy, r) {
+      return (
+        '<circle cx="' +
+        cx +
+        '" cy="' +
+        cy +
+        '" r="' +
+        r +
+        '" fill="none" stroke="' +
+        eye +
+        '" stroke-width="1" opacity=".45"/>'
+      );
+    }
     function one(cx, right) {
       if (f === "happy") {
         // closed joy arcs + a lash tick flicking up-outward
@@ -145,6 +162,8 @@
           e(cx, 113, 9, 8, WHITE) +
           o(cx - 2, 115.5, 4.2, eye) +
           o(cx - 2, 115.5, 1.9, PUPIL) +
+          o(cx - 3.5, 113.5, 1.2, WHITE) + // catchlight the other feels have
+          ring(cx - 2, 115.5, 4.2) +
           p(
             "M" +
               so +
@@ -186,6 +205,7 @@
           e(cx, 112, 10, 12, WHITE) +
           o(cx, 113.5, 4.1, eye) +
           o(cx, 113.5, 1.8, PUPIL) +
+          ring(cx, 113.5, 4.1) +
           o(cx - 1.8, 109.8, 1.4, WHITE) +
           s(
             "M" + (cx - 10) + " 100.5 Q" + cx + " 98 " + (cx + 10) + " 100.5",
@@ -209,6 +229,7 @@
           e(cx, 113, 9.5, 9, WHITE) +
           o(cx, 114.5, 4.6, eye) +
           o(cx, 114.5, 1.6, PUPIL) +
+          ring(cx, 114.5, 4.6) +
           o(cx - 2.4, 111.8, 1.4, WHITE) +
           p(
             "M" +
@@ -230,6 +251,7 @@
         e(cx, 113, 9.5, 10, WHITE) +
         o(cx, 113.5, 4.8, eye) +
         o(cx, 113.5, 2.1, PUPIL) +
+        ring(cx, 113.5, 4.8) +
         o(cx - 2.6, 110, 1.7, WHITE) +
         s(
           "M" +
@@ -284,10 +306,81 @@
   }
 
   function accents(f) {
-    if (f === "happy") return o(98, 130, 7.5, BLUSH) + o(162, 130, 7.5, BLUSH);
+    if (f === "happy")
+      return (
+        o(98, 130, 7.5, BLUSH) +
+        o(162, 130, 7.5, BLUSH) +
+        // soft lower-lip hint under the open smile
+        s("M124.5 152.5 Q130 155 135.5 152.5", MOUTH, 1.4, ' opacity=".4"')
+      );
     if (f === "angry")
       return s("M165 94 Q173 122 164 150", "#ff6a4d", 4, ' opacity=".5"');
+    if (f === "normal" || f === "sad")
+      // faint lower-lip shadow grounds the simple stroke mouth
+      return s(
+        "M124.5 150.5 Q130 153 135.5 150.5",
+        MOUTH,
+        1.4,
+        ' opacity=".32"',
+      );
     return "";
+  }
+
+  // ---- shared refinement passes (all cast, every feel) -----------------------
+
+  // inner-ear curve: matches the ear ellipses at (93,114)/(167,114); rendered
+  // right after c.ears so fringe/sides still layer over it where hair covers
+  var EAR_DETAIL =
+    s(
+      "M91 111.5 Q94.5 112 94.5 114.5 Q93.5 117.5 90.5 117.5",
+      SKIN_DK,
+      1.5,
+      ' opacity=".65"',
+    ) +
+    s(
+      "M169 111.5 Q165.5 112 165.5 114.5 Q166.5 117.5 169.5 117.5",
+      SKIN_DK,
+      1.5,
+      ' opacity=".65"',
+    );
+
+  // hair refinement: lower-bang volume band, strand separations, crown gloss,
+  // flyaways — coordinates sit in the shared bangs region (x92-168, y52-100)
+  function hairDetail(c) {
+    var dk = c.hairDk || c.dk;
+    return (
+      p(
+        "M93 96 Q95 62 130 58 Q165 62 167 96 L167 90 Q152 80 130 82 Q108 80 93 90 Z",
+        dk,
+        ' opacity=".2"',
+      ) +
+      s("M112 58 Q108 76 112 93", dk, 1.6, ' opacity=".5"') +
+      s("M130 54 Q127 70 130 86", dk, 1.6, ' opacity=".42"') +
+      s("M148 58 Q152 76 148 93", dk, 1.6, ' opacity=".5"') +
+      e(126, 62, 24, 9, WHITE, ' opacity=".1"') +
+      s("M118 53 Q114 45 107 42", dk, 1.4, ' opacity=".55"') +
+      s("M138 53 Q142 44 150 42", dk, 1.4, ' opacity=".55"')
+    );
+  }
+
+  // face refinement: double-lid creases, outer lash ticks, nose-bridge
+  // highlight + nostril hint, soft jaw shadow under the chin
+  function faceDetail(f, c) {
+    var t =
+      s("M101 101.5 Q110 97 119 100.5", c.dk, 1.5, ' opacity=".35"') +
+      s("M141 100.5 Q150 97 159 101.5", c.dk, 1.5, ' opacity=".35"');
+    if (f !== "happy") {
+      // lash ticks at the outer corners (happy eyes have their own)
+      t +=
+        s("M100.5 108.5 L96.5 106", c.dk, 2, ' opacity=".65"') +
+        s("M159.5 108.5 L163.5 106", c.dk, 2, ' opacity=".65"');
+    }
+    return (
+      t +
+      s("M127 108 Q126 117 127.5 123", WHITE, 1.6, ' opacity=".26"') +
+      s("M126.5 128.6 Q128.2 129.6 130 128.8", c.dk, 1.2, ' opacity=".4"') +
+      s("M113 149.5 Q130 157.5 147 149.5", SKIN_DK, 4, ' opacity=".3"')
+    );
   }
 
   // ---- per-character identity ----------------------------------------------
@@ -300,6 +393,7 @@
     eye: "#3f7fa3",
     hi: "#c2e5f4",
     dk: "#48758f",
+    hairDk: "#4f83a0",
     stoop: "rotate(3 130 100)",
     sadTilt: "rotate(-2.5 130 150)",
     angryM:
@@ -396,6 +490,17 @@
         s("M48 248 Q48 210 92 198", "#9bd4e8", 2.5, ' opacity=".55"')
       );
     })(),
+    bodyDetail:
+      // jacket fold shadows + shoulder seams + neckline stitch
+      s(
+        "M98 204 Q92 240 94 272 M162 206 Q168 242 166 276",
+        "#0e1a30",
+        1.8,
+        ' opacity=".5"',
+      ) +
+      s("M108 196 Q100 226 104 258", "#2c3f63", 1.6, ' opacity=".7"') +
+      s("M152 198 Q160 228 156 260", "#2c3f63", 1.6, ' opacity=".7"') +
+      s("M116 190 Q130 204 144 190", "#2c3f63", 1.8, ' opacity=".9"'),
   };
 
   // 林晚 — long draped hair with a star hairpin (story motif), oversized
@@ -406,6 +511,7 @@
     eye: "#6b58a8",
     hi: "#cfc2f4",
     dk: "#6f5aa8",
+    hairDk: "#7a63b8",
     angryM: s("M121 143.5 H138 Q141.5 144.5 141.5 147.5", MOUTH, 2.6),
     ears: e(93, 114, 5, 8, SKIN) + e(167, 114, 5, 8, SKIN),
     back: p(
@@ -505,6 +611,17 @@
         s("M38 252 Q38 208 90 194", "#b7a8ec", 2.5, ' opacity=".55"')
       );
     })(),
+    bodyDetail:
+      // cardigan drape folds + sleeve seams + blouse neckline
+      s(
+        "M50 258 Q58 296 54 336 M210 258 Q202 296 206 336",
+        "#2d2547",
+        2,
+        ' opacity=".6"',
+      ) +
+      s("M104 194 Q100 240 103 284", "#4a3f6e", 2, ' opacity=".55"') +
+      s("M156 194 Q160 240 157 284", "#4a3f6e", 2, ' opacity=".55"') +
+      s("M112 190 Q130 206 148 190", "#b7a8ec", 1.6, ' opacity=".6"'),
   };
 
   // 栖 — the AI: sleek symmetric bob, high-collar fitted outfit, faint mint
@@ -515,6 +632,7 @@
     eye: "#2e8f7c",
     hi: "#aef2e0",
     dk: "#3f9a86",
+    hairDk: "#3f9a86",
     noTilt: true,
     angryM: s("M121 144 H139", MOUTH, 2.7),
     back: p(
@@ -634,6 +752,21 @@
         s("M56 246 Q56 206 96 194", "#86efd8", 2.5, ' opacity=".5"')
       );
     })(),
+    bodyDetail:
+      // suit panel seams + side contour seams + shoulder glints
+      s(
+        "M104 200 Q100 260 102 336 M156 200 Q160 260 158 336",
+        "#1d4a42",
+        1.6,
+        ' opacity=".8"',
+      ) +
+      s(
+        "M64 250 Q60 290 62 336 M196 250 Q200 290 198 336",
+        "#0b1f1d",
+        2,
+        ' opacity=".7"',
+      ) +
+      s("M98 196 L112 188 M162 196 L148 188", "#86efd8", 1.2, ' opacity=".5"'),
   };
 
   // 沈眠 — the missing friend: loose wavy hair, hospital-pale palette, faint
@@ -644,6 +777,7 @@
     eye: "#7c86ac",
     hi: "#f3f6fd",
     dk: "#9aa5c2",
+    hairDk: "#9aa5c2",
     opFor: function (f) {
       return f === "sad" ? ".78" : ".88";
     },
@@ -717,6 +851,26 @@
         s("M48 246 Q48 206 92 194", "#f3f6fd", 2.5, ' opacity=".8"')
       );
     })(),
+    bodyDetail:
+      // gown drape folds + side shading + scarf fold hints
+      s(
+        "M82 240 Q86 280 82 320 M178 242 Q174 282 178 322",
+        "#c3cade",
+        2,
+        ' opacity=".6"',
+      ) +
+      s(
+        "M96 200 Q92 250 95 296 M164 202 Q168 250 165 296",
+        "#c3cade",
+        1.8,
+        ' opacity=".5"',
+      ) +
+      s(
+        "M112 178 Q122 186 130 187 M148 178 Q138 186 130 187",
+        "#c9d4e8",
+        1.5,
+        ' opacity=".7"',
+      ),
   };
 
   var CAST = { yu: YU, lin: LIN, qi: QI, mian: MIAN };
@@ -737,14 +891,16 @@
       p(NSHAD, SKIN_DK, ' opacity=".75"') +
       p(FACE, SKIN) +
       p(BANGSH, SKIN_DK, ' opacity=".4"') +
-      (c.ears || "") +
+      (c.ears ? c.ears + EAR_DETAIL : "") +
       c.fringe +
       c.sides +
       (c.sheen || "") +
+      hairDetail(c) +
       s("M97 70 Q90 94 94 118", c.hi, 3, ' opacity=".7"') +
       eyes(f, c.eye, c.dk) +
       brows(f, c.dk) +
       s(NOSE, SKIN_DK, 2, ' opacity=".9"') +
+      faceDetail(f, c) +
       mouth(f, c) +
       accents(f) +
       (c.extra || "") +
@@ -761,6 +917,7 @@
       (c.blurSil || "") +
       c.back +
       c.body +
+      (c.bodyDetail || "") +
       (c.bodyFx ? c.bodyFx(f) : "") +
       head +
       (c.front ? c.front(f) : "") +
