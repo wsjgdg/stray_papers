@@ -423,7 +423,15 @@
   color: #1b2625;
   box-shadow: 0 18px 34px rgba(0, 0, 0, .34), 0 1px 0 rgba(255, 255, 255, .5) inset;
 }
-.fcard.is-flipped .fcard-inner { transform: rotateY(180deg); }
+/* 翻面：有 GSAP 时由脚本逐帧驱动 rotationY（见 prototype-cards.js），CSS 别抢——
+   否则类一加上就把终态写死了，GSAP 读到 180° 再缓动到 180°，转面会变成硬切。
+   没有 GSAP / 减弱动效时（html 上没有 .gsap-motion），才用 CSS 直接翻。 */
+html:not(.gsap-motion) .fcard.is-flipped .fcard-inner { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.gsap-motion) .fcard-inner {
+    transition: transform .7s cubic-bezier(.18, .85, .22, 1);
+  }
+}
 .fcard-back {
   transform: rotateY(180deg);
 }
@@ -2260,4 +2268,14 @@ a.back-go:hover { color: #ffb829; }
   min-block-size: 34px;
   padding: 6px 11px;
   font-size: 10.5px;
+}
+
+/* ① 台面：五张都翻完时，计数条由琥珀转薄荷绿，和「已翻完」那张提示纸同一个颜色语言 */
+.castfloor-meter .meter-num b,
+.castfloor-meter .meter-track i { transition: color .4s ease, background .4s ease; }
+.castfloor[data-complete="true"] .castfloor-meter .meter-num b { color: #a9f8e5; }
+.castfloor[data-complete="true"] .meter-track i { background: #a9f8e5; }
+@media (prefers-reduced-motion: reduce) {
+  .castfloor-meter .meter-num b,
+  .castfloor-meter .meter-track i { transition: none; }
 }

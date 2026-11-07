@@ -38,6 +38,8 @@
     buttons.forEach(function (button, i) {
       var live = cells.has(i);
       button.className = 'cell' + (live ? ' alive' : '') + (target && target.has(i) ? ' expected' : '') + (target && target.has(i) && !live ? ' missing' : '') + (target && !target.has(i) && live ? ' extra' : '');
+      // 新生细胞从左到右依次亮起：把动画延迟按列错开（--delay 在 CSS 里兜底 0s）
+      button.style.setProperty('--delay', ((i % size) * 7) + 'ms');
       button.setAttribute('aria-pressed', String(live));
       button.setAttribute('aria-label', '第 ' + (Math.floor(i / size) + 1) + ' 行第 ' + (i % size + 1) + ' 列：' + (live ? '亮' : '暗') + (target && target.has(i) && !live ? '，预期亮' : target && !target.has(i) && live ? '，多出的亮格' : ''));
       button.tabIndex = i === focusIndex ? 0 : -1;

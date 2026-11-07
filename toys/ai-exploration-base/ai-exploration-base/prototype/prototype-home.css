@@ -157,3 +157,6 @@
 /* 拨盘到内容真源附页 */
 .page-home .deck-source{margin-left:8px;color:#efbd8b;text-decoration:none;border-bottom:1px solid #efbd8b73;white-space:nowrap}
 .page-home .deck-source:hover,.page-home .deck-source:focus-visible{border-color:#efbd8b}
+/* 旋钮跟指针：拖动和程序滑行时都关掉 CSS 过渡，交给 JS 逐帧驱动（见 prototype.js 的 glideTo） */
+.page-home .dial.is-dragging .dial-rotor,
+.page-home .dial.is-gliding .dial-rotor { transition: none; }

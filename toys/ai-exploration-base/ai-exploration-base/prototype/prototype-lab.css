@@ -48,7 +48,7 @@
 .page-lab .cell-grid{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:2px;width:100%;aspect-ratio:1;touch-action:none;user-select:none}
 .page-lab .cell{position:relative;min-width:0;min-height:0;padding:0;border:1px solid #6f998c26;border-radius:0;background:#1c3742;transition:background .2s,box-shadow .2s,transform .2s}
 .page-lab .cell:nth-child(5n){background-color:#23414a}
-.page-lab .cell.alive{z-index:1;border-color:#f3ffc7;background:#d8f69d;box-shadow:0 0 11px #d8f69d8a,inset 0 0 6px #fffad4;animation:cell-ignite .25s ease-out var(--delay) both}
+.page-lab .cell.alive{z-index:1;border-color:#f3ffc7;background:#d8f69d;box-shadow:0 0 11px #d8f69d8a,inset 0 0 6px #fffad4;animation:cell-ignite .25s ease-out var(--delay,0s) both}
 @keyframes cell-ignite{from{transform:scale(.55);filter:brightness(2)}to{transform:scale(1);filter:brightness(1)}}
 .page-lab .cell.expected{outline:2px solid #6cebd5;outline-offset:-3px}
 .page-lab .cell.missing{background:repeating-linear-gradient(45deg,#934e4d,#934e4d 3px,#283b47 3px,#283b47 6px);border-color:#f5ad99;box-shadow:0 0 13px #f59582a3}
