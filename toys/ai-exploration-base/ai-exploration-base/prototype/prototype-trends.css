@@ -132,59 +132,59 @@
 @media(max-width:480px){.page-trends .topbar{gap:6px}.page-trends .opening-copy h1{font-size:clamp(49px,11.8vw,59px)}.page-trends .opening-steps{gap:6px;font-size:9px}.page-trends .opening-steps i{width:12px}.page-trends .track-chooser{gap:5px}.page-trends .track-chooser button{padding:9px 5px}.page-trends .track-chooser strong{font-size:11px}.page-trends .track-chooser span{font-size:8px}.page-trends .track-chooser small{font-size:8px}.page-trends .feed,.page-trends .sort-desk{padding:11px}.page-trends .card-stack{grid-template-columns:1fr;gap:9px}.page-trends .signal-card{min-height:0}.page-trends .card-pick{min-height:0;gap:6px;padding:2px 2px 8px}.page-trends .card-pick strong{font-size:14px}.page-trends .card-tray button{font-size:10px}.page-trends .verdict-head{flex-direction:column}.page-trends .verdict h2{margin-bottom:0}.page-trends .reset-track{margin-bottom:12px}.page-trends .plan-choices{grid-template-columns:1fr}.page-trends .data-exhibit>small{max-width:320px}}
 @media(max-width:330px){.page-trends .opening-copy h1{font-size:46px}.page-trends .track-chooser strong{font-size:10px}.page-trends .track-chooser small{letter-spacing:-.02em}}
 @media(prefers-reduced-motion:reduce){.page-trends .progress-fill,.page-trends .signal-card,.page-trends .track-chooser button,.page-trends .bin{transition:none!important}.page-trends .plan-ticket.is-printing{animation:none!important}}
-/* Consequence of sorting: a paper slip crosses the desk, then its verdict is stamped. */
-.page-trends .filing-flight{position:fixed;z-index:70;pointer-events:none;display:block;padding:11px 16px;max-width:200px;border:1px solid #f9e9c9;background:#eae7d4;color:#28433e;font-size:12px;font-weight:850;box-shadow:6px 7px 0 #07141c}
-.page-trends .bin.bin-receiving{animation:bin-catch .6s cubic-bezier(.2,.7,.2,1)}
-@keyframes bin-catch{40%{border-color:#d7faa0;box-shadow:0 0 25px #c5ee9a80;transform:translateX(-6px)}to{box-shadow:none;transform:translateX(0)}}
-.page-trends .signal-card.just-filed .card-status{display:inline-block;animation:ink-stamp .42s cubic-bezier(.15,.82,.2,1)}
-@keyframes ink-stamp{from{opacity:.2;transform:scale(1.6) rotate(-10deg)}60%{opacity:1;transform:scale(.94) rotate(2deg)}to{transform:scale(1) rotate(0)}}
+  /* Consequence of sorting: a paper slip crosses the desk, then its verdict is stamped. */
+  .page-trends .filing-flight{position:fixed;z-index:70;pointer-events:none;display:block;padding:11px 16px;max-width:200px;border:1px solid #f9e9c9;background:#eae7d4;color:#28433e;font-size:12px;font-weight:850;box-shadow:6px 7px 0 #07141c}
+  .page-trends .bin.bin-receiving{animation:bin-catch .6s cubic-bezier(.2,.7,.2,1)}
+  @keyframes bin-catch{40%{border-color:#d7faa0;box-shadow:0 0 25px #c5ee9a80;transform:translateX(-6px)}to{box-shadow:none;transform:translateX(0)}}
+  .page-trends .signal-card.just-filed .card-status{display:inline-block;animation:ink-stamp .42s cubic-bezier(.15,.82,.2,1)}
+  @keyframes ink-stamp{from{opacity:.2;transform:scale(1.6) rotate(-10deg)}60%{opacity:1;transform:scale(.94) rotate(2deg)}to{transform:scale(1) rotate(0)}}
 @media(prefers-reduced-motion:reduce){.page-trends .bin.bin-receiving,.page-trends .signal-card.just-filed .card-status{animation:none!important}}
-/* Keep the explanation beside the card the user just judged, especially when
-   the archive bins sit below the entire card stack on narrow screens. */
-.page-trends .card-reason{margin:9px 0 0;padding:9px 10px;border-left:3px solid #8aaf71;background:#ddebd3;color:#314d3c;font-size:11px;line-height:1.65}
-.page-trends .card-reason[data-result="wrong"]{border-color:#cc755d;background:#f7e4d8;color:#713e34}
-.page-trends .data-exhibit>small a,.page-trends .source-drawer a{color:inherit;text-decoration:underline;text-underline-offset:3px;font-weight:800}
-.page-trends .data-exhibit>small a:hover,.page-trends .source-drawer a:hover{color:#8eac53}
-/* The explanation is printed on the judged card, not at the distant archive. */
-.page-trends .signal-card.just-filed .card-reason{animation:reason-print .5s cubic-bezier(.18,.82,.22,1) both}
-@keyframes reason-print{from{opacity:.25;clip-path:inset(0 100% 0 0);transform:translateY(-7px)}to{opacity:1;clip-path:inset(0);transform:translateY(0)}}
+  /* Keep the explanation beside the card the user just judged, especially when
+  the archive bins sit below the entire card stack on narrow screens. */
+  .page-trends .card-reason{margin:9px 0 0;padding:9px 10px;border-left:3px solid #8aaf71;background:#ddebd3;color:#314d3c;font-size:11px;line-height:1.65}
+  .page-trends .card-reason[data-result="wrong"]{border-color:#cc755d;background:#f7e4d8;color:#713e34}
+  .page-trends .data-exhibit>small a,.page-trends .source-drawer a{color:inherit;text-decoration:underline;text-underline-offset:3px;font-weight:800}
+  .page-trends .data-exhibit>small a:hover,.page-trends .source-drawer a:hover{color:#8eac53}
+  /* The explanation is printed on the judged card, not at the distant archive. */
+  .page-trends .signal-card.just-filed .card-reason{animation:reason-print .5s cubic-bezier(.18,.82,.22,1) both}
+  @keyframes reason-print{from{opacity:.25;clip-path:inset(0 100% 0 0);transform:translateY(-7px)}to{opacity:1;clip-path:inset(0);transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.page-trends .signal-card.just-filed .card-reason{animation:none}}
 
-/* 数字补充与领域出处 */
-.page-trends .exhibit-metrics{display:flex;flex-wrap:wrap;gap:10px 26px;padding:13px 3px 0;border-top:1px solid #5669546b}
-.page-trends .exhibit-metrics span{display:flex;align-items:baseline;gap:8px}
-.page-trends .exhibit-metrics b{font:800 19px/1 "Noto Sans CJK SC","Noto Sans SC",serif;letter-spacing:-.02em}
-.page-trends .exhibit-metrics small{font:650 10px/1.5 "Noto Sans CJK SC",sans-serif;color:#3f5a4d}
-.page-trends .data-exhibit>p{margin-top:10px}
-.page-trends .track-source{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 14px;margin:0 clamp(20px,4vw,54px) 18px;padding:11px 0 0;border-top:1px dashed #b9c9b84a;font-size:11px;line-height:1.8;color:#aebbb4}
-.page-trends .track-source b{font:700 9.5px ui-monospace,"Noto Sans CJK SC",monospace;letter-spacing:.1em;color:#cbe08f}
-.page-trends .track-source a{color:#d5e6c0;text-decoration:none;border-bottom:1px solid #9cb58666}
-.page-trends .track-source a:hover,.page-trends .track-source a:focus-visible{color:#f0f7d4;border-color:#cbe08f}
-.page-trends .track-source small{flex-basis:100%;color:#8fa096;font-size:10px}
+  /* 数字补充与领域出处 */
+  .page-trends .exhibit-metrics{display:flex;flex-wrap:wrap;gap:10px 26px;padding:13px 3px 0;border-top:1px solid #5669546b}
+  .page-trends .exhibit-metrics span{display:flex;align-items:baseline;gap:8px}
+  .page-trends .exhibit-metrics b{font:800 19px/1 "Noto Sans CJK SC","Noto Sans SC",serif;letter-spacing:-.02em}
+  .page-trends .exhibit-metrics small{font:650 10px/1.5 "Noto Sans CJK SC",sans-serif;color:#3f5a4d}
+  .page-trends .data-exhibit>p{margin-top:10px}
+  .page-trends .track-source{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 14px;margin:0 clamp(20px,4vw,54px) 18px;padding:11px 0 0;border-top:1px dashed #b9c9b84a;font-size:11px;line-height:1.8;color:#aebbb4}
+  .page-trends .track-source b{font:700 9.5px ui-monospace,"Noto Sans CJK SC",monospace;letter-spacing:.1em;color:#cbe08f}
+  .page-trends .track-source a{color:#d5e6c0;text-decoration:none;border-bottom:1px solid #9cb58666}
+  .page-trends .track-source a:hover,.page-trends .track-source a:focus-visible{color:#f0f7d4;border-color:#cbe08f}
+  .page-trends .track-source small{flex-basis:100%;color:#8fa096;font-size:10px}
 @media(max-width:760px){.page-trends .track-source{margin:0 19px 16px}.page-trends .exhibit-metrics{gap:8px 18px}}
 
-/* 真源正文填进老趋势台：时间线 / 五个行业 / 收尾，版式沿用台面的细线格 */
-.page-trends .trend-fill{padding:clamp(26px,4vw,46px) clamp(20px,5vw,90px)}
-.page-trends .fill-head{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
-.page-trends .fill-head>span,.page-trends .fill-kicker{color:#f0b48a;font:750 10px/1 "Noto Sans CJK SC",sans-serif;letter-spacing:.14em}
-.page-trends .fill-head h2{margin:0;font-size:clamp(22px,2.4vw,32px);line-height:1.25;letter-spacing:-.02em}
-.page-trends .tl-rows{list-style:none;margin:0;padding:0;display:grid;gap:0;border-top:1px solid #ffffff1f}
-.page-trends .tl-rows li{display:grid;grid-template-columns:132px minmax(0,1fr);gap:18px;align-items:baseline;padding:14px 0;border-bottom:1px solid #ffffff14}
-.page-trends .tl-when{color:#f0b48a;font:750 11.5px/1.6 "Noto Sans CJK SC",sans-serif;letter-spacing:.04em}
-.page-trends .tl-rows p{margin:0;font-size:13px;line-height:1.85;color:#dfe3dc}
-.page-trends .ind-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-.page-trends .ind-card{padding:16px 18px;border:1px solid #ffffff1f;background:#141a1c99}
-.page-trends .ind-card.is-wide{grid-column:1/-1}
-.page-trends .ind-no{color:#f0b48a;font:750 10px/1 monospace;letter-spacing:.14em}
-.page-trends .ind-card h3{margin:8px 0 10px;font-size:15.5px;letter-spacing:.01em}
-.page-trends .ind-card p{margin:0 0 8px;font-size:12.5px;line-height:1.85;color:#d3d8d2}
-.page-trends .ind-fact{color:#9fb0aa;border-left:2px solid #ffffff24;padding-left:10px}
-.page-trends .trend-coda{padding:22px clamp(20px,5vw,90px) 34px;border-top:1px solid #ffffff1f}
-.page-trends .trend-coda p{margin:8px 0 0;font-size:13.5px;line-height:1.9;color:#e6eadf}
+  /* 真源正文填进老趋势台：时间线 / 五个行业 / 收尾，版式沿用台面的细线格 */
+  .page-trends .trend-fill{padding:clamp(26px,4vw,46px) clamp(20px,5vw,90px)}
+  .page-trends .fill-head{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+  .page-trends .fill-head>span,.page-trends .fill-kicker{color:#f0b48a;font:750 10px/1 "Noto Sans CJK SC",sans-serif;letter-spacing:.14em}
+  .page-trends .fill-head h2{margin:0;font-size:clamp(22px,2.4vw,32px);line-height:1.25;letter-spacing:-.02em}
+  .page-trends .tl-rows{list-style:none;margin:0;padding:0;display:grid;gap:0;border-top:1px solid #ffffff1f}
+  .page-trends .tl-rows li{display:grid;grid-template-columns:132px minmax(0,1fr);gap:18px;align-items:baseline;padding:14px 0;border-bottom:1px solid #ffffff14}
+  .page-trends .tl-when{color:#f0b48a;font:750 11.5px/1.6 "Noto Sans CJK SC",sans-serif;letter-spacing:.04em}
+  .page-trends .tl-rows p{margin:0;font-size:13px;line-height:1.85;color:#dfe3dc}
+  .page-trends .ind-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .page-trends .ind-card{padding:16px 18px;border:1px solid #ffffff1f;background:#141a1c99}
+  .page-trends .ind-card.is-wide{grid-column:1/-1}
+  .page-trends .ind-no{color:#f0b48a;font:750 10px/1 monospace;letter-spacing:.14em}
+  .page-trends .ind-card h3{margin:8px 0 10px;font-size:15.5px;letter-spacing:.01em}
+  .page-trends .ind-card p{margin:0 0 8px;font-size:12.5px;line-height:1.85;color:#d3d8d2}
+  .page-trends .ind-fact{color:#9fb0aa;border-left:2px solid #ffffff24;padding-left:10px}
+  .page-trends .trend-coda{padding:22px clamp(20px,5vw,90px) 34px;border-top:1px solid #ffffff1f}
+  .page-trends .trend-coda p{margin:8px 0 0;font-size:13.5px;line-height:1.9;color:#e6eadf}
 
-/* 换领域 / 清空重来时，脚本会给 .workbench 挂上 is-replating（1100ms 后摘掉）：
-   之前这个类是个空钩子，桌面是硬切。现在卡堆整体抬起、四张卡依次亮起来。 */
-.page-trends .workbench.is-replating .card-stack {
+  /* 换领域 / 清空重来时，脚本会给 .workbench 挂上 is-replating（1100ms 后摘掉）：
+  之前这个类是个空钩子，桌面是硬切。现在卡堆整体抬起、四张卡依次亮起来。 */
+  .page-trends .workbench.is-replating .card-stack {
   animation: desk-replate .5s cubic-bezier(.2, .8, .25, 1) both;
 }
 .page-trends .workbench.is-replating .signal-card {
@@ -214,4 +214,185 @@
 .page-trends .bin.bin-receiving .bin-count { animation: count-pop .42s cubic-bezier(.2, .8, .25, 1); }
 @media (prefers-reduced-motion: reduce) {
   .page-trends .bin.bin-receiving .bin-count { animation: none; }
+}
+
+/* ==========================================================================
+   ② 关首屏与数据展台（原先写在 prototype-source.css 里，2026-11 收归本页样式表）
+   搬家时只保留"页面上真的存在这些类"的规则；另有 46 条是上一版渲染器
+   （.trend-world / .trend-block / .wire / .trend-rows / .trend-close …）留下的，
+   页面上已无对应元素，一并删除（jsdom 计算样式前后比对：0 差异）。
+   这一组写在本文件最末尾，层叠结果与"原来放在最后加载的 source.css 里"完全一致。
+   ========================================================================== */
+
+/* ---------------- 页首 ---------------- */
+.page-trends .trend-opening {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: clamp(22px, 4vw, 62px);
+  align-items: end;
+  /* 大屏撑满：不设内容宽度上限，左右留白与 .trend-fill / .editing-room 用同一把尺子
+     （clamp(20px, 5vw, 90px)），这样页首、正文块、分拣台在宽屏上是一条竖线对齐的。 */
+  padding: clamp(40px, 6vw, 92px) clamp(20px, 5vw, 90px) clamp(30px, 4vw, 58px);
+}
+
+.page-trends .trend-opening::before {
+  content: "02";
+  position: absolute;
+  right: clamp(10px, 3vw, 60px);
+  top: -0.06em;
+  font: 900 clamp(220px, 26vw, 420px)/1 "Noto Sans CJK SC", sans-serif;
+  letter-spacing: -.1em;
+  color: #d1dfe2;
+  opacity: .03;
+  pointer-events: none;
+}
+
+.page-trends .trend-opening .opening-copy { position: relative; z-index: 1; }
+
+.page-trends .trend-opening .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 700 10.5px/1 "Noto Sans CJK SC", ui-monospace, monospace;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #c9f2a2;
+}
+
+.page-trends .trend-opening h1 {
+  margin: 22px 0 20px;
+  font-size: clamp(52px, 8.4vw, 118px);
+  font-weight: 850;
+  line-height: 1.02;
+  letter-spacing: -.055em;
+}
+
+.page-trends .trend-opening h1 em { font-style: normal; color: #c9f2a2; }
+
+/* 大屏撑满：数据牌跟着网格列走，不再钉死 620px */
+.page-trends .data-exhibit {
+  padding: 24px clamp(22px, 3vw, 40px) 22px;
+  background: linear-gradient(145deg, #e7e8d6, #c9d1c0);
+  border: 1px solid #f4efdc;
+  color: #23333e;
+  box-shadow: 10px 12px 0 #091319;
+}
+
+.page-trends .data-exhibit .exhibit-eyebrow {
+  display: block;
+  padding-left: 6px;
+  font: 800 10px/1.5 "Noto Sans CJK SC", ui-monospace, monospace;
+  letter-spacing: .09em;
+  color: #466258;
+}
+
+.page-trends .data-exhibit .exhibit-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin-top: 10px;
+  padding: 14px 3px 0;
+  border-top: 1px solid #5669546b;
+}
+
+.page-trends .data-exhibit .exhibit-metrics span { display: block; }
+
+.page-trends .data-exhibit .exhibit-metrics b {
+  display: block;
+  font: 800 clamp(17px, 2vw, 22px)/1.1 "Noto Sans CJK SC", sans-serif;
+  letter-spacing: -.02em;
+}
+
+.page-trends .data-exhibit .exhibit-metrics small {
+  display: block;
+  margin-top: 5px;
+  font: 650 10px/1.45 "Noto Sans CJK SC", sans-serif;
+  color: #3f5a4d;
+}
+
+.page-trends .data-exhibit .exhibit-axis {
+  display: grid;
+  gap: 18px;
+  padding: 20px 3px 8px;
+}
+
+.page-trends .data-exhibit .exhibit-bar {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.page-trends .data-exhibit .exhibit-bar > span {
+  font: 700 10px/1.4 "Noto Sans CJK SC", ui-monospace, monospace;
+  color: #435968;
+}
+
+.page-trends .data-exhibit .exhibit-bar b {
+  width: var(--length);
+  min-width: 86px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  padding: 10px 13px;
+  background: #496568;
+  color: #f9f5e9;
+  font-size: clamp(18px, 2.4vw, 26px);
+  font-weight: 800;
+  white-space: nowrap;
+  transition: width 1.1s cubic-bezier(.16, .84, .24, 1) .12s;
+}
+
+.page-trends .data-exhibit .exhibit-bar.late b { background: #213b43; color: #d4f9a5; }
+
+.page-trends .data-exhibit .exhibit-bar small { font-size: 11px; font-weight: 600; }
+
+/* ---------------- ② 关进场：只做“浮上来”这一件事 ----------------
+   纯 CSS，页面一打开就跑：不装脚本、不用 IntersectionObserver，
+   正文默认可见，动画只叠一层淡入——脚本没跑、动效被减弱，页面什么都不缺。 */
+@media (prefers-reduced-motion: no-preference) {
+  .page-trends .trend-opening .opening-copy > .eyebrow,
+  .page-trends .trend-opening .opening-copy > h1,
+  .page-trends .trend-opening .opening-copy > .opening-lead,
+  .page-trends .trend-opening .opening-copy > .opening-steps {
+  animation: trend-lead-in .72s cubic-bezier(.18, .85, .22, 1) both;
+}
+.page-trends .trend-opening .opening-copy > h1 { animation-delay: .05s; }
+.page-trends .trend-opening .opening-copy > .opening-lead { animation-delay: .1s; }
+.page-trends .trend-opening .opening-copy > .opening-steps { animation-delay: .15s; }
+/* 数据牌本身带 1 度倾斜：只淡入，别用 transform 把它扶正 */
+  .page-trends .trend-opening .data-exhibit {
+    animation: trend-fade-in .8s cubic-bezier(.18, .85, .22, 1) .12s both;
+  }
+/* 台面在 .trend-ready 之前是 display:none，切到 grid 的那一刻才淡进来——
+     不会出现“先画出来再消失”的闪。 */
+  .trend-ready .page-trends .workbench {
+    animation: trend-fade-in .55s cubic-bezier(.18, .85, .22, 1) both;
+  }
+}
+
+@keyframes trend-lead-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes trend-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-trends .data-exhibit .exhibit-bar b { width: var(--length); transition: none; }
+}
+
+@media (max-width: 720px) {
+  .page-trends .trend-opening h1 { font-size: clamp(44px, 13vw, 64px); }
+  .page-trends .data-exhibit { max-width: none; box-shadow: 6px 7px 0 #091319; }
+  .page-trends .data-exhibit .exhibit-bar { grid-template-columns: 62px minmax(0, 1fr); }
+}
+
+@media (max-width: 980px) {
+  .page-trends .trend-opening { grid-template-columns: minmax(0, 1fr); }
 }

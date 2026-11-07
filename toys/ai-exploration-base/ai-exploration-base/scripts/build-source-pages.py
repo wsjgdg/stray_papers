@@ -437,9 +437,9 @@ VERSIONS = {
     "prototype-home.css": "switch-15",
     "prototype-forge.css": "press-08",      # ① 关的 .page-forge 外用样式
     "prototype-dossier.css": "dossier-09",
-    "prototype-source.css": "source-09",    # 七页共用的正文 / 卡片台样式
+    "prototype-source.css": "source-10",    # 七页共用的正文 / 卡片台样式
     "prototype-cards.js": "cards-06",
-    "prototype-trends.css": "desk-11",
+    "prototype-trends.css": "desk-12",
     "prototype-trends.js": "desk-09",
     "trend-desk.js": "desk-01",
     "prototype-lab.css": "lab-07",
