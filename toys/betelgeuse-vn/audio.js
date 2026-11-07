@@ -1461,7 +1461,9 @@
         tryResume();
         rampParam(master.gain, MASTER_LEVEL * vol, now(), KILL_RAMP_S);
         if (desiredBg) applyScene();
+        if (lastSampleKey) playSampleBed(lastSampleKey); // resume sampled bed
       } else {
+        stopSampleBed();
         disableAudio();
       }
       return apiEnabled();
@@ -1502,6 +1504,7 @@
       vol = v;
       writeVolume();
       if (on) applyVolumeGain();
+      if (sampleBed) sampleBed.audio.volume = vol * 0.9; // sampled bed follows
       return vol;
     } catch (e) {
       return vol;
@@ -1527,8 +1530,80 @@
     }
   }
 
+  // --- sampled beds (AI-generated, window.VN_AUDIO_ASSETS) -------------------
+  // When a sampled track exists for the requested bg id, an HTMLAudio loop
+  // replaces the synthesized bed entirely (real instrument timbres at the
+  // cost of ~150KB per track). Missing keys fall back to synthesis.
+  var sampleBed = null;
+  var lastSampleKey = null;
+
+  function sampledAssets() {
+    try {
+      return typeof window !== "undefined" &&
+        window.VN_AUDIO_ASSETS &&
+        typeof window.VN_AUDIO_ASSETS === "object"
+        ? window.VN_AUDIO_ASSETS
+        : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function stopSampleBed() {
+    if (!sampleBed) return;
+    var a = sampleBed.audio;
+    sampleBed = null;
+    try {
+      var step = a.volume / 8;
+      var iv = setInterval(function () {
+        a.volume = Math.max(0, a.volume - step);
+        if (a.volume <= 0) {
+          clearInterval(iv);
+          a.pause();
+        }
+      }, 100);
+    } catch (e) {
+      try {
+        a.pause();
+      } catch (e2) {}
+    }
+  }
+
+  function playSampleBed(key) {
+    if (sampleBed) {
+      if (sampleBed.key === key) return;
+      stopSampleBed();
+    }
+    var assets = sampledAssets();
+    if (!assets || typeof assets[key] !== "string") return;
+    var a;
+    try {
+      a = new Audio(assets[key]);
+    } catch (e) {
+      return;
+    }
+    a.loop = true;
+    a.volume = vol * 0.9;
+    lastSampleKey = key;
+    sampleBed = { audio: a, key: key };
+    var p = a.play();
+    if (p && typeof p.catch === "function") p.catch(function () {});
+  }
+
   function apiScene(bgId) {
     try {
+      var assets = sampledAssets();
+      var sampleKey =
+        bgId && assets && typeof assets[String(bgId)] === "string"
+          ? String(bgId)
+          : null;
+      if (sampleKey) {
+        // sampled bed replaces the synthesized one for this bg
+        desiredBg = null;
+        playSampleBed(sampleKey);
+        return;
+      }
+      stopSampleBed();
       desiredBg = bgId && BED_DEFS[bgId] ? String(bgId) : null;
       if (!ensureCtx()) return;
       applyScene();
