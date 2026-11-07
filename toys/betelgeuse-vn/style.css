@@ -188,29 +188,60 @@ body {
 }
 
 @keyframes vn-idle-tremble {
-  0%, 92%, 100% { transform: rotate(0deg); }
-  94% { transform: rotate(0.6deg); }
-  97% { transform: rotate(-0.4deg); }
+  0%,
+  92%,
+  100% {
+    transform: rotate(0deg);
+  }
+  94% {
+    transform: rotate(0.6deg);
+  }
+  97% {
+    transform: rotate(-0.4deg);
+  }
 }
 
 @keyframes vn-idle-hang {
-  0%, 100% { transform: rotate(-0.8deg); }
-  50% { transform: rotate(0.8deg); }
+  0%,
+  100% {
+    transform: rotate(-0.8deg);
+  }
+  50% {
+    transform: rotate(0.8deg);
+  }
 }
 
 @keyframes vn-idle-sway {
-  0%, 100% { transform: rotate(-1.1deg); }
-  50% { transform: rotate(1.1deg); }
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
 }
 
 @keyframes vn-idle-glow {
-  0%, 100% { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1); }
-  50% { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1.14) drop-shadow(0 0 22px rgba(111, 195, 255, 0.18)); }
+  0%,
+  100% {
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1);
+  }
+  50% {
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1.14)
+      drop-shadow(0 0 22px rgba(111, 195, 255, 0.18));
+  }
 }
 
 @keyframes vn-idle-glint {
-  0%, 100% { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)); }
-  38%, 52% { filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1.1) drop-shadow(0 0 16px rgba(201, 161, 90, 0.2)); }
+  0%,
+  100% {
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5));
+  }
+  38%,
+  52% {
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1.1)
+      drop-shadow(0 0 16px rgba(201, 161, 90, 0.2));
+  }
 }
 
 .vn-bg-canvas {
@@ -443,8 +474,16 @@ body {
   padding: 18px 24px;
   /* gradient glass: two stacked rgba layers + blur/saturate behind */
   background:
-    linear-gradient(180deg, rgba(18, 27, 48, 0.85) 0%, rgba(9, 14, 27, 0.8) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0) 42%);
+    linear-gradient(
+      180deg,
+      rgba(18, 27, 48, 0.85) 0%,
+      rgba(9, 14, 27, 0.8) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.045) 0%,
+      rgba(255, 255, 255, 0) 42%
+    );
   border: 1px solid var(--vn-border);
   border-top-color: rgba(255, 255, 255, 0.2); /* 1px top highlight edge */
   border-radius: 14px;
@@ -493,8 +532,7 @@ body {
   letter-spacing: 0.1em;
   white-space: nowrap;
   /* clip-path cuts box-shadow, so the lift + subtle glow ride on filter */
-  filter:
-    drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45))
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45))
     drop-shadow(0 0 7px rgba(120, 165, 255, 0.16));
 }
 
@@ -519,8 +557,7 @@ body {
   }
 
   .vn-name {
-    filter:
-      drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45))
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45))
       drop-shadow(0 0 8px color-mix(in srgb, currentColor 30%, transparent));
   }
 }
@@ -548,8 +585,13 @@ body {
 }
 
 @keyframes vn-caret-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* advance indicator: breathing ▼ at the dialog's bottom-right corner —
@@ -565,15 +607,30 @@ body {
 }
 
 @keyframes vn-next-breathe {
-  0%, 100% { opacity: 0.25; transform: translateY(0); }
-  50% { opacity: 1; transform: translateY(3px); }
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(3px);
+  }
 }
 
 /* narration mode: italic-ish, muted, nameless */
 .vn-dialog.vn-narr {
   background:
-    linear-gradient(180deg, rgba(10, 15, 28, 0.72) 0%, rgba(6, 10, 20, 0.62) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 42%);
+    linear-gradient(
+      180deg,
+      rgba(10, 15, 28, 0.72) 0%,
+      rgba(6, 10, 20, 0.62) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03) 0%,
+      rgba(255, 255, 255, 0) 42%
+    );
 }
 
 .vn-dialog.vn-narr .vn-text {
@@ -682,11 +739,21 @@ button.vn-choice {
     transform 0.2s ease;
 }
 
-.vn-choices button.vn-choice:nth-child(1) { animation-delay: 0.05s; }
-.vn-choices button.vn-choice:nth-child(2) { animation-delay: 0.13s; }
-.vn-choices button.vn-choice:nth-child(3) { animation-delay: 0.21s; }
-.vn-choices button.vn-choice:nth-child(4) { animation-delay: 0.29s; }
-.vn-choices button.vn-choice:nth-child(5) { animation-delay: 0.37s; }
+.vn-choices button.vn-choice:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.vn-choices button.vn-choice:nth-child(2) {
+  animation-delay: 0.13s;
+}
+.vn-choices button.vn-choice:nth-child(3) {
+  animation-delay: 0.21s;
+}
+.vn-choices button.vn-choice:nth-child(4) {
+  animation-delay: 0.29s;
+}
+.vn-choices button.vn-choice:nth-child(5) {
+  animation-delay: 0.37s;
+}
 
 button.vn-choice:hover {
   background: rgba(22, 33, 60, 0.82);
@@ -719,7 +786,11 @@ button.vn-btn {
   height: 32px;
   padding: 0 15px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(20, 29, 50, 0.6) 0%, rgba(10, 16, 30, 0.55) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(20, 29, 50, 0.6) 0%,
+    rgba(10, 16, 30, 0.55) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: rgba(222, 232, 250, 0.8);
   font-size: 12px;
@@ -999,6 +1070,36 @@ input.vn-range {
   text-align: right;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+  color: var(--vn-text-faint);
+}
+
+/* fullscreen row button (settings) */
+.vn-fs-btn {
+  margin-left: auto;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--vn-text-dim, #cfd6e4);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--vn-border-soft);
+  border-radius: 9px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.vn-fs-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: var(--vn-accent);
+}
+
+/* keyboard shortcut legend (settings footer, non-interactive) */
+.vn-keys {
+  margin: 4px 0 12px;
+  padding: 0 14px;
+  font-size: 11px;
+  line-height: 1.9;
   color: var(--vn-text-faint);
 }
 
@@ -1291,14 +1392,46 @@ input.vn-range {
   pointer-events: none;
   opacity: 0.8;
   background-image:
-    radial-gradient(1px 1px at 18% 26%, rgba(255, 255, 255, 0.85) 50%, transparent 51%),
-    radial-gradient(1.4px 1.4px at 64% 18%, rgba(214, 230, 255, 0.8) 50%, transparent 51%),
-    radial-gradient(1px 1px at 82% 44%, rgba(255, 255, 255, 0.6) 50%, transparent 51%),
-    radial-gradient(1.2px 1.2px at 38% 12%, rgba(200, 220, 255, 0.7) 50%, transparent 51%),
-    radial-gradient(1px 1px at 8% 62%, rgba(255, 255, 255, 0.5) 50%, transparent 51%),
-    radial-gradient(1.6px 1.6px at 48% 34%, rgba(235, 244, 255, 0.9) 50%, transparent 51%),
-    radial-gradient(1px 1px at 72% 68%, rgba(255, 255, 255, 0.45) 50%, transparent 51%),
-    radial-gradient(1.2px 1.2px at 26% 48%, rgba(210, 228, 255, 0.65) 50%, transparent 51%);
+    radial-gradient(
+      1px 1px at 18% 26%,
+      rgba(255, 255, 255, 0.85) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1.4px 1.4px at 64% 18%,
+      rgba(214, 230, 255, 0.8) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 82% 44%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 38% 12%,
+      rgba(200, 220, 255, 0.7) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 8% 62%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1.6px 1.6px at 48% 34%,
+      rgba(235, 244, 255, 0.9) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 72% 68%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 26% 48%,
+      rgba(210, 228, 255, 0.65) 50%,
+      transparent 51%
+    );
   background-size: 340px 300px;
   background-repeat: repeat;
   animation: vn-star-drift 90s linear infinite;
@@ -1439,8 +1572,7 @@ input.vn-range {
   animation: vn-sheen 6s ease-in-out infinite;
   /* text-shadow would bleed through the transparent fill; the glow rides on
      drop-shadow instead, which applies to the rendered gradient glyphs */
-  filter:
-    drop-shadow(0 0 18px rgba(140, 180, 255, 0.35))
+  filter: drop-shadow(0 0 18px rgba(140, 180, 255, 0.35))
     drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
 }
 
@@ -1886,83 +2018,157 @@ input.vn-range {
 }
 
 @keyframes vn-grain-jitter {
-  0% { transform: translate(0, 0); }
-  6% { transform: translate(-3px, 2px); }
-  12% { transform: translate(2px, -3px); }
-  18% { transform: translate(-2px, -2px); }
-  24% { transform: translate(3px, 1px); }
-  30% { transform: translate(-1px, 3px); }
-  36% { transform: translate(3px, -2px); }
-  42% { transform: translate(-3px, -1px); }
-  48% { transform: translate(1px, 2px); }
-  54% { transform: translate(-2px, 3px); }
-  60% { transform: translate(2px, -1px); }
-  66% { transform: translate(-3px, 1px); }
-  72% { transform: translate(1px, -3px); }
-  78% { transform: translate(3px, 2px); }
-  84% { transform: translate(-2px, -3px); }
-  90% { transform: translate(2px, 3px); }
-  96%, 100% { transform: translate(0, 0); }
+  0% {
+    transform: translate(0, 0);
+  }
+  6% {
+    transform: translate(-3px, 2px);
+  }
+  12% {
+    transform: translate(2px, -3px);
+  }
+  18% {
+    transform: translate(-2px, -2px);
+  }
+  24% {
+    transform: translate(3px, 1px);
+  }
+  30% {
+    transform: translate(-1px, 3px);
+  }
+  36% {
+    transform: translate(3px, -2px);
+  }
+  42% {
+    transform: translate(-3px, -1px);
+  }
+  48% {
+    transform: translate(1px, 2px);
+  }
+  54% {
+    transform: translate(-2px, 3px);
+  }
+  60% {
+    transform: translate(2px, -1px);
+  }
+  66% {
+    transform: translate(-3px, 1px);
+  }
+  72% {
+    transform: translate(1px, -3px);
+  }
+  78% {
+    transform: translate(3px, 2px);
+  }
+  84% {
+    transform: translate(-2px, -3px);
+  }
+  90% {
+    transform: translate(2px, 3px);
+  }
+  96%,
+  100% {
+    transform: translate(0, 0);
+  }
 }
 
 /* RGB-split glitch: red/cyan shadows split ±2px with tiny translate jitters;
    steps(1, end) makes every segment snap instead of tween. One-shot 1.2s. */
 @keyframes vn-glitch {
-  0% { text-shadow: none; transform: none; }
+  0% {
+    text-shadow: none;
+    transform: none;
+  }
   6% {
-    text-shadow: 2px 0 rgba(255, 64, 84, 0.8), -2px 0 rgba(64, 224, 255, 0.8);
+    text-shadow:
+      2px 0 rgba(255, 64, 84, 0.8),
+      -2px 0 rgba(64, 224, 255, 0.8);
     transform: translate(1px, -1px);
   }
   12% {
-    text-shadow: -2px 0 rgba(255, 64, 84, 0.8), 2px 0 rgba(64, 224, 255, 0.8);
+    text-shadow:
+      -2px 0 rgba(255, 64, 84, 0.8),
+      2px 0 rgba(64, 224, 255, 0.8);
     transform: translate(-2px, 1px);
   }
   18% {
-    text-shadow: 1px 0 rgba(255, 64, 84, 0.7), -1px 0 rgba(64, 224, 255, 0.7);
+    text-shadow:
+      1px 0 rgba(255, 64, 84, 0.7),
+      -1px 0 rgba(64, 224, 255, 0.7);
     transform: translate(2px, 0);
   }
   24% {
     text-shadow: none;
     transform: translate(-1px, 0);
   }
-  30%, 52% {
+  30%,
+  52% {
     text-shadow: none;
     transform: none;
   }
   56% {
-    text-shadow: 2px 0 rgba(255, 64, 84, 0.8), -2px 0 rgba(64, 224, 255, 0.8);
+    text-shadow:
+      2px 0 rgba(255, 64, 84, 0.8),
+      -2px 0 rgba(64, 224, 255, 0.8);
     transform: translate(-1px, 1px);
   }
   62% {
-    text-shadow: -2px 1px rgba(255, 64, 84, 0.8), 2px -1px rgba(64, 224, 255, 0.8);
+    text-shadow:
+      -2px 1px rgba(255, 64, 84, 0.8),
+      2px -1px rgba(64, 224, 255, 0.8);
     transform: translate(2px, -1px);
   }
   68% {
-    text-shadow: 1px 0 rgba(255, 64, 84, 0.6), -1px 0 rgba(64, 224, 255, 0.6);
+    text-shadow:
+      1px 0 rgba(255, 64, 84, 0.6),
+      -1px 0 rgba(64, 224, 255, 0.6);
     transform: translate(-1px, 0);
   }
-  74%, 100% {
+  74%,
+  100% {
     text-shadow: none;
     transform: none;
   }
 }
 
 @keyframes vn-shake {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  10% { transform: translate(-6px, 2px) rotate(-0.3deg); }
-  20% { transform: translate(5px, -3px) rotate(0.3deg); }
-  30% { transform: translate(-6px, -2px) rotate(-0.3deg); }
-  40% { transform: translate(6px, 2px) rotate(-0.3deg); }
-  50% { transform: translate(-5px, 3px) rotate(-0.2deg); }
-  60% { transform: translate(4px, -2px) rotate(0.2deg); }
-  70% { transform: translate(-3px, 1px) rotate(-0.2deg); }
-  80% { transform: translate(3px, -1px) rotate(0.15deg); }
-  90% { transform: translate(-1px, 1px) rotate(0deg); }
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(-6px, 2px) rotate(-0.3deg);
+  }
+  20% {
+    transform: translate(5px, -3px) rotate(0.3deg);
+  }
+  30% {
+    transform: translate(-6px, -2px) rotate(-0.3deg);
+  }
+  40% {
+    transform: translate(6px, 2px) rotate(-0.3deg);
+  }
+  50% {
+    transform: translate(-5px, 3px) rotate(-0.2deg);
+  }
+  60% {
+    transform: translate(4px, -2px) rotate(0.2deg);
+  }
+  70% {
+    transform: translate(-3px, 1px) rotate(-0.2deg);
+  }
+  80% {
+    transform: translate(3px, -1px) rotate(0.15deg);
+  }
+  90% {
+    transform: translate(-1px, 1px) rotate(0deg);
+  }
 }
 
 /* collected true-ending pill: slow warm glow pulse (Betelgeuse breathing) */
 @keyframes vn-ending-breathe {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 8px rgba(255, 124, 92, 0.3);
   }
   50% {

@@ -152,6 +152,7 @@
   var S = null; // active scenario object
   var els = null; // dom references, filled by buildDom()
   var docBound = false;
+  var docBoundFs = false;
 
   var state = {
     mode: "title", // 'title' | 'line' | 'choices' | 'end'
@@ -307,6 +308,19 @@
     autoLabel.textContent = "自动推进";
     autoRow.appendChild(autoRange);
     autoRow.appendChild(autoVal);
+    var fsRow = h("div", "vn-setting-row", settings);
+    var fsLabel = h("label", null, fsRow);
+    fsLabel.textContent = "全屏";
+    var fsBtn = h("button", "vn-fs-btn", fsRow);
+    fsBtn.type = "button";
+    fsBtn.textContent = fullscreenLabel();
+    fsBtn.addEventListener("click", toggleFullscreen);
+    fsRow.appendChild(fsBtn);
+    // shortcut legend: one quiet block, no interaction — the full keyboard
+    // surface lives here so it is discoverable without leaving the game
+    var keys = h("div", "vn-keys", settings);
+    keys.textContent =
+      "空格 / Enter 推进 · 长按 S 快进 · 1-9 选分支 · ↑ 记录 · A 自动 · Ctrl+S 快存 · Ctrl+L 快读 · F 全屏 · Esc 关闭";
     var settingsClose = h("button", "vn-close", settings);
     settingsClose.type = "button";
     settingsClose.textContent = "关闭";
@@ -449,6 +463,7 @@
       volVal: volVal,
       autoRange: autoRange,
       autoVal: autoVal,
+      fsBtn: fsBtn,
       gallery: gallery,
       galleryBtn: galleryBtn,
       gtabScenes: gtabScenes,
@@ -482,6 +497,7 @@
       document.addEventListener("keyup", onKeyUp);
       docBound = true;
     }
+    bindFsEvents();
     loadSettings(); // once per build: volume -> VN_AUDIO, delay -> state
     renderEndings(); // initial collector readout (empty storage -> 0/3, ？x3)
     syncBonusButton(); // 星语 · 后日谈 joins the title only at 3/3 + finale_star
@@ -2325,6 +2341,7 @@
   function openSettings() {
     captureFocusReturn();
     syncSettingsUi(); // sliders always show the current values
+    syncFsBtn(); // fullscreen label always shows the current mode
     els.settings.classList.remove("vn-hidden");
     var close =
       typeof els.settings.querySelector === "function"
@@ -2336,6 +2353,74 @@
   function hideSettings() {
     els.settings.classList.add("vn-hidden");
     restoreFocusReturn();
+  }
+
+  /* ------------------------------------------------------------- fullscreen */
+
+  // Fullscreen uses the standard API with webkit fallbacks (older Safari).
+  // Every access is guarded: an unsupported host just leaves the button
+  // showing 进入全屏, and pressing it warns once instead of throwing.
+  var FS_WARNED = { value: false };
+
+  function fsElement() {
+    if (typeof document === "undefined") return null;
+    return (
+      document.fullscreenElement ||
+      (typeof document.webkitFullscreenElement !== "undefined"
+        ? document.webkitFullscreenElement
+        : null)
+    );
+  }
+
+  function fullscreenActive() {
+    return fsElement() != null;
+  }
+
+  function fullscreenLabel() {
+    return fullscreenActive() ? "退出全屏 (F)" : "进入全屏 (F)";
+  }
+
+  function syncFsBtn() {
+    if (!els || !els.fsBtn) return;
+    els.fsBtn.textContent = fullscreenLabel();
+  }
+
+  function toggleFullscreen() {
+    var root =
+      typeof document === "undefined" ? null : document.documentElement;
+    if (!root) return;
+    try {
+      if (fullscreenActive()) {
+        if (typeof document.exitFullscreen === "function") {
+          document.exitFullscreen();
+        } else if (typeof document.webkitExitFullscreen === "function") {
+          document.webkitExitFullscreen();
+        }
+      } else if (typeof root.requestFullscreen === "function") {
+        root.requestFullscreen();
+      } else if (typeof root.webkitRequestFullscreen === "function") {
+        root.webkitRequestFullscreen();
+      } else if (!FS_WARNED.value) {
+        FS_WARNED.value = true;
+        console.warn("[VN] fullscreen API unavailable in this host");
+        toast("当前环境不支持全屏");
+      }
+    } catch (err) {
+      console.warn("[VN] fullscreen toggle failed: " + err);
+    }
+  }
+
+  // keep the settings label honest when the user exits via F11/Escape/OS
+  function bindFsEvents() {
+    if (typeof document === "undefined" || docBoundFs) return;
+    docBoundFs = true;
+    var onFsChange = function () {
+      syncFsBtn();
+    };
+    if (typeof document.addEventListener === "function") {
+      document.addEventListener("fullscreenchange", onFsChange);
+      document.addEventListener("webkitfullscreenchange", onFsChange);
+    }
   }
 
   /* -------------------------------------------------- gallery / music box */
@@ -3342,6 +3427,18 @@
           pickChoice(activeChoices[pick]);
         }
       }
+      return;
+    }
+    // F toggles fullscreen — available from the title screen too, and while
+    // overlays are open (the settings button and this key stay in sync)
+    if (
+      (e.key === "f" || e.key === "F") &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey
+    ) {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      toggleFullscreen();
       return;
     }
     // A toggles auto mode; ArrowUp toggles the backlog — line mode only
