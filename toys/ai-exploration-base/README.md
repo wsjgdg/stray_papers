@@ -78,22 +78,22 @@ docs/                     方案、评审、进度、交付说明
 
 - 戳记在 `scripts/build-source-pages.py` 的 `VERSIONS` 表里，构建时统一刷进七张页面；
   页面骨架里写错、写旧都没关系，构建完就是表里的值。
-- 改了哪个 `.css` / `.js`，就把表里对应那一行加一（`source-10` → `source-11`）。
+- 改了哪个 `.css` / `.js`，就把表里对应那一行加一（`source-11` → `source-12`）。
 - **页面之间互相跳转不带戳**（`chapter-0X.html`、`index.html` 都是裸链接）。HTML 不吃这套
   缓存策略，带戳只会让同一条链接在不同页面上出现三四种写法。
 
 | 文件 | 当前 | 用在哪 |
 |---|---|---|
-| `prototype.js` | `switch-19` | 首页拨盘 + ⑤ 关共用 |
+| `prototype.js` | `switch-20` | 首页拨盘 + ⑤ 关共用 |
 | `prototype-home.css` | `switch-15` | 首页 |
 | `prototype-cards.js` | `cards-06` | ① 关 |
 | `prototype-forge.css` | `press-08` | ① 关（`.page-forge` 外用样式） |
-| `prototype-source.css` | `source-10` | 七页共用（正文、卡片台、焦点兜底） |
+| `prototype-source.css` | `source-11` | 七页共用（正文、卡片台、焦点兜底） |
 | `prototype-dossier.css` | `dossier-09` | 七页共用（来源表） |
-| `trend-desk.js` / `prototype-trends.css` / `prototype-trends.js` | `desk-01` / `desk-12` / `desk-09` | ② 关 |
-| `prototype-lab.css` / `prototype-lab.js` | `lab-07` / `lab-06` | ③ 关 |
+| `trend-desk.js` / `prototype-trends.css` / `prototype-trends.js` | `desk-01` / `desk-13` / `desk-10` | ② 关 |
+| `prototype-lab.css` / `prototype-lab.js` | `lab-08` / `lab-07` | ③ 关 |
 | `route-fill.js` / `prototype-routes.css` / `prototype-routes.js` | `route-01` / `weave-08` / `weave-07` | ④ 关 |
-| `prototype-scam.css` / `prototype-scam-tear.css` / `scam-acts.js` | `case-12` / `tear-in-08` / `acts-02` | ⑤ 关 |
+| `prototype-scam.css` / `prototype-scam-tear.css` / `scam-acts.js` | `case-13` / `tear-in-08` / `acts-02` | ⑤ 关 |
 | `motion-lab-v2.js` | `tear-in-07`（与撕纸样式同包） | ⑤ 关，由 `prototype.js` 懒加载 |
 | `prototype-academy.css` / `prototype-academy.js` | `calibrate-09` / `calibrate-08` | ⑥ 关 |
 

@@ -5,7 +5,9 @@
    ============================================================ */
 
 .src-main {
-  max-width: 1180px;
+  /* 大屏撑满：和 ⑤ 关的 .case-opening 用同一个上限（1580），窄屏仍是满宽。
+     以前钉在 1180，1920 的屏上两边各空 370px，页首怎么调都撑不开。 */
+  max-width: min(100%, 1580px);
   margin: 0 auto;
   padding: 0 clamp(16px, 4vw, 44px) clamp(56px, 8vw, 104px);
 }
@@ -1906,4 +1908,11 @@ a.back-go:hover { color: #ffb829; }
 @media (prefers-reduced-motion: reduce) {
   .castfloor-meter .meter-num b,
   .castfloor-meter .meter-track i { transition: none; }
+}
+
+/* 整站按压反馈：手指按下去的那一下都有一点下沉。
+   :where() 优先级为 0，任何页面自己写的 transform 仍然优先，不会顶掉排版。 */
+:where(button, summary, [role="button"]):active { transform: translateY(1px); }
+@media (prefers-reduced-motion: reduce) {
+  :where(button, summary, [role="button"]):active { transform: none; }
 }

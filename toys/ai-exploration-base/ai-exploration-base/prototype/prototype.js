@@ -390,6 +390,17 @@
       if (Math.abs(progress.scrollLeft - target) < 4) return;
       progress.scrollTo({ left: Math.max(0, target), behavior: railDrag.on ? 'auto' : 'smooth' });
     }
+    // 键盘：← → 在幕条上前后走一格，走完焦点跟到新的当前幕（读屏用户像翻页一样推进）
+    progress.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+      var step = event.key === 'ArrowRight' ? 1 : -1;
+      var next = index + step;
+      if (next < 0 || next > last) return;
+      event.preventDefault();
+      show(next);
+      var cur = progress.querySelector('.is-current');
+      if (cur) cur.focus({ preventScroll: true });
+    });
     progress.addEventListener('pointerdown', function (event) {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
       railDrag.on = true; railDrag.x = event.clientX; railDrag.left = progress.scrollLeft; railDrag.moved = 0;
