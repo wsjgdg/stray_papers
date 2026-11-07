@@ -461,7 +461,7 @@
       ctx.fillRect(pad, y - 40, inner, 1);
       ctx.font = '200 19px "Dala Sans", "Noto Sans CJK SC", sans-serif';
       ctx.fillStyle = '#9a9a9a';
-      ctx.fillText('AI 探索基地 · 可玩原型 04 · 本地生成的练习计划，不是收入预测', pad, y);
+      ctx.fillText('AI 探索基地 · 04 · 本地生成的练习计划，不是收入预测', pad, y);
       y += 30;
       ctx.fillText(new Date().toLocaleDateString('zh-CN') + ' · 由本页在浏览器里画出，未上传任何内容', pad, y);
 
