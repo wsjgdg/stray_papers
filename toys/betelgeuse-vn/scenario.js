@@ -201,6 +201,7 @@ window.SCENARIO = {
         {
           who: "lin",
           feel: "surprised",
+          pose: "b",
           text: "师兄？！等一下——我也收到了！就在十分钟前！",
         },
         {
@@ -354,6 +355,7 @@ window.SCENARIO = {
         {
           who: "qi",
           feel: "normal",
+          pose: "b",
           text: "晚上好，陈屿。现在是凌晨两点十一分。",
         },
         { who: "yu", feel: "surprised", text: "谁在说话？" },
@@ -495,6 +497,7 @@ window.SCENARIO = {
         {
           who: "yu",
           feel: "worried",
+          pose: "b",
           text: "断电之后，机房里还在运行的东西——",
         },
         {
@@ -752,6 +755,7 @@ window.SCENARIO = {
         {
           who: "mian",
           feel: "normal",
+          pose: "b",
           text: "今天上来，不是为了纪念。只是想看看它。",
         },
         { who: "yu", feel: "happy", text: "它也在看你。整晚都是。" },

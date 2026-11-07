@@ -166,6 +166,7 @@
     flags: new Set(), // story flags
     bg: null, // current background id
     cg: null, // current full-screen CG id (VN_CG_IMG key), null when none
+    poses: {}, // charId -> current sprite pose ("a" default, "b", ...)
     recent: [], // [{ id, feel }] latest two speakers, most recent first
     backlog: [], // [{ name, text }] displayed lines, capped at BACKLOG_LIMIT
     typing: false,
@@ -810,32 +811,51 @@
   // null when no usable art exists so callers keep the letter fallback.
   // Raster art (window.CHAR_ART_IMG, AI-generated webp) wins when present —
   // both maps store ready-to-inject markup strings, so callers are agnostic.
-  function charArtFor(charId, feel) {
+  //
+  // pose axis (optional second argument): "a" is the default standing set,
+  // keyed plain ("normal", "b" absent). A pose B sprite is keyed with a
+  // "b_" prefix ("b_happy"). Resolution: pose+feel, pose+normal, plain
+  // feel (pose A), plain normal — so a missing pose-B feel degrades to
+  // pose A rather than to a letter.
+  function charArtFor(charId, feel, pose) {
     var raster =
       typeof window !== "undefined" && window.CHAR_ART_IMG
         ? window.CHAR_ART_IMG
         : null;
+    var map =
+      typeof window !== "undefined" && window.CHAR_ART ? window.CHAR_ART : null;
+    function pick(entry, key, fallbackKey) {
+      if (!entry || typeof entry !== "object") return null;
+      if (typeof entry[key] === "string" && entry[key]) return entry[key];
+      if (
+        fallbackKey &&
+        typeof entry[fallbackKey] === "string" &&
+        entry[fallbackKey]
+      ) {
+        return entry[fallbackKey];
+      }
+      return null;
+    }
+    var poseKey = pose && pose !== "a" ? pose + "_" + feel : feel;
+    var poseNormalKey = pose && pose !== "a" ? pose + "_normal" : "normal";
     if (raster && typeof raster === "object") {
       var r = raster[charId];
       if (r && typeof r === "object") {
-        if (typeof r[feel] === "string" && r[feel]) return r[feel];
-        if (typeof r.normal === "string" && r.normal) return r.normal;
+        var hit = pick(r, poseKey, poseNormalKey);
+        if (hit) return hit;
+        hit = pick(r, feel, "normal");
+        if (hit) return hit;
       }
     }
-    var map =
-      typeof window !== "undefined" && window.CHAR_ART ? window.CHAR_ART : null;
     if (!map || typeof map !== "object") return null;
     var entry = map[charId];
-    if (!entry || typeof entry !== "object") return null;
-    if (typeof entry[feel] === "string" && entry[feel]) return entry[feel];
-    if (typeof entry.normal === "string" && entry.normal) return entry.normal;
-    return null;
+    return pick(entry, feel, "normal");
   }
 
-  // Paints a sprite's portrait: CHAR_ART svg (replaces the initial letter)
-  // when available, else the original initial-letter circle fallback.
-  function applySpriteArt(sp, charId, feel, ch) {
-    var art = charArtFor(charId, feel);
+  // Paints a sprite's portrait: raster/CHAR_ART art (replaces the initial
+  // letter) when available, else the original initial-letter fallback.
+  function applySpriteArt(sp, charId, feel, ch, pose) {
+    var art = charArtFor(charId, feel, pose);
     if (art != null) {
       sp.innerHTML = art; // trusted, authored inline SVG
     } else {
@@ -843,11 +863,22 @@
     }
   }
 
-  function showSprite(charId, feel) {
+  function showSprite(charId, feel, pose) {
     var ch = S.characters && S.characters[charId];
     if (!ch) {
       console.warn("[VN] unknown character: " + charId);
       return;
+    }
+    // pose semantics mirror the CG convention: "b" switches stance, null
+    // resets to the default set, absent keeps whatever the character wears
+    var effPose = "a";
+    if (pose === null) {
+      delete state.poses[charId];
+    } else if (typeof pose === "string" && pose) {
+      state.poses[charId] = pose;
+      effPose = pose;
+    } else if (typeof state.poses[charId] === "string") {
+      effPose = state.poses[charId];
     }
     var arr = state.recent;
     for (var i = 0; i < arr.length; i++) {
@@ -859,6 +890,7 @@
     arr.unshift({
       id: charId,
       feel: typeof feel === "string" && feel ? feel : "normal",
+      pose: effPose,
     });
     if (arr.length > 2) arr.length = 2; // keep only the latest two speakers
     renderSprites();
@@ -936,27 +968,33 @@
     desired.forEach(function (item) {
       var sp = existing[item.id];
       var feel = item.feel || "normal";
+      var poseKey = (item.pose || "a") + "/" + feel;
       if (!sp) {
         var ch = S.characters && S.characters[item.id];
         if (!ch) return; // already warned when the character was used
         sp = document.createElement("div");
         sp.className = "vn-sprite";
         sp.setAttribute("data-char", item.id);
+        sp.setAttribute("data-posekey", poseKey);
         sp.style.setProperty("--vn-color", charColor(ch));
-        applySpriteArt(sp, item.id, feel, ch);
+        applySpriteArt(sp, item.id, feel, ch, item.pose);
         layer.appendChild(sp);
         spriteEnter(sp); // slide up + fade in; class self-removes
       } else {
         // Same character back on stage inside the leave window: cancel the
         // pending removal and replay the entrance on the kept element.
         if (spriteCancelLeave(sp)) spriteEnter(sp);
-        if (sp.getAttribute("data-feel") !== feel) {
-          // Feel changed on an on-screen sprite: swap to the new feel's art
-          // (falls back to normal art, then to the initial letter) under a
-          // quick .vn-swap crossfade/scale pulse.
+        if (
+          sp.getAttribute("data-feel") !== feel ||
+          sp.getAttribute("data-posekey") !== poseKey
+        ) {
+          // Feel and/or pose changed on an on-screen sprite: swap to the new
+          // art (falls back down the art resolution chain, then to the
+          // initial letter) under a quick .vn-swap crossfade/scale pulse.
           var ch2 = S.characters && S.characters[item.id];
           if (ch2) {
-            applySpriteArt(sp, item.id, feel, ch2);
+            sp.setAttribute("data-posekey", poseKey);
+            applySpriteArt(sp, item.id, feel, ch2, item.pose);
             sp.classList.add("vn-swap");
             clearTimeout(sp._vnSwapTimer);
             sp._vnSwapTimer = setTimeout(function () {
@@ -1831,7 +1869,7 @@
       els.name.textContent = nameText;
       els.name.style.color = color;
       els.name.style.borderColor = color;
-      showSprite(speakerId, line.feel);
+      showSprite(speakerId, line.feel, "pose" in line ? line.pose : undefined);
       recordMet(speakerId); // gallery 立绘 unlock: this character has spoken
       pushBacklog(nameText, text);
       if (els.srLive) els.srLive.textContent = nameText + "：" + text; // full line, once
@@ -2101,6 +2139,7 @@
       title: S.meta && S.meta.title != null ? String(S.meta.title) : "",
       bg: state.bg,
       cg: state.cg || null,
+      poses: state.poses || {},
     };
     try {
       localStorage.setItem(QUICK_SAVE_KEY, JSON.stringify(data));
@@ -2159,6 +2198,7 @@
       title: S.meta && S.meta.title != null ? String(S.meta.title) : "",
       bg: state.bg,
       cg: state.cg || null,
+      poses: state.poses || {},
     };
     var thumb = captureThumb(); // display-only: omitted when no canvas / capture failed
     if (thumb) data.thumb = thumb;
@@ -2252,6 +2292,10 @@
     state.cg =
       typeof data.cg === "string" && cgImageFor(data.cg) ? data.cg : null;
     syncCgDisplay();
+    state.poses =
+      data.poses && typeof data.poses === "object" && !Array.isArray(data.poses)
+        ? data.poses
+        : {};
     audioHook("ui", "load"); // save-loaded blip
     presentCurrent(0);
   }
@@ -3452,6 +3496,7 @@
     state.line = 0;
     state.flags = new Set();
     state.bg = null;
+    state.poses = {}; // pose B does not survive a return to the title
     hideCg(); // the title screen never shows a story CG
     state.recent = [];
     state.backlog = [];
