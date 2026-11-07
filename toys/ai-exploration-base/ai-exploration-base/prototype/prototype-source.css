@@ -2202,23 +2202,39 @@ a.back-go:hover { color: #ffb829; }
 }
 .page-trends .trend-close strong { color: #c9f2a2; }
 
-/* ---------------- 入场：只做“浮上来”这一件事 ---------------- */
-.reveal-ready .page-trends [data-reveal] {
-  opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity .7s cubic-bezier(.2, .7, .2, 1) var(--d, 0s),
-    transform .7s cubic-bezier(.2, .7, .2, 1) var(--d, 0s);
+/* ---------------- ② 关进场：只做“浮上来”这一件事 ----------------
+   纯 CSS，页面一打开就跑：不装脚本、不用 IntersectionObserver，
+   正文默认可见，动画只叠一层淡入——脚本没跑、动效被减弱，页面什么都不缺。 */
+@media (prefers-reduced-motion: no-preference) {
+  .page-trends .trend-opening .opening-copy > .eyebrow,
+  .page-trends .trend-opening .opening-copy > h1,
+  .page-trends .trend-opening .opening-copy > .opening-lead,
+  .page-trends .trend-opening .opening-copy > .opening-steps {
+    animation: trend-lead-in .72s cubic-bezier(.18, .85, .22, 1) both;
+  }
+  .page-trends .trend-opening .opening-copy > h1 { animation-delay: .05s; }
+  .page-trends .trend-opening .opening-copy > .opening-lead { animation-delay: .1s; }
+  .page-trends .trend-opening .opening-copy > .opening-steps { animation-delay: .15s; }
+  /* 数据牌本身带 1 度倾斜：只淡入，别用 transform 把它扶正 */
+  .page-trends .trend-opening .data-exhibit {
+    animation: trend-fade-in .8s cubic-bezier(.18, .85, .22, 1) .12s both;
+  }
+  /* 台面在 .trend-ready 之前是 display:none，切到 grid 的那一刻才淡进来——
+     不会出现“先画出来再消失”的闪。 */
+  .trend-ready .page-trends .workbench {
+    animation: trend-fade-in .55s cubic-bezier(.18, .85, .22, 1) both;
+  }
 }
-.reveal-ready .page-trends [data-reveal].is-in {
-  opacity: 1;
-  transform: none;
+@keyframes trend-lead-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
-.reveal-ready .page-trends .data-exhibit .exhibit-bar b { width: 0; }
-.reveal-ready .page-trends [data-reveal].is-in .exhibit-bar b { width: var(--length); }
+@keyframes trend-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal-ready .page-trends [data-reveal] { opacity: 1; transform: none; transition: none; }
   .page-trends .data-exhibit .exhibit-bar b { width: var(--length); transition: none; }
 }
 
