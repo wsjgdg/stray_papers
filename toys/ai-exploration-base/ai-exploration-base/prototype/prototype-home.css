@@ -25,7 +25,7 @@
 .page-home .dial[data-playable="false"]{--frequency:#92a29b;border-color:#88958d80}
 .page-home .dial::before{inset:11%;border:1px dashed #efddbe50}
 .page-home .dial::after{content:"";position:absolute;inset:-11%;border-radius:50%;border:1px solid #ccb79b6e;pointer-events:none;box-shadow:0 0 0 2px #152826}
-.page-home .dial-rotor{position:absolute;z-index:1;inset:-4%;border-radius:50%;transform:rotate(var(--needle));transition:transform .75s cubic-bezier(.18,.85,.22,1);pointer-events:none}
+.page-home .dial-rotor{position:absolute;z-index:1;inset:-4%;border-radius:50%;transform:rotate(var(--needle));transition:transform .78s cubic-bezier(.26,1.42,.42,1);pointer-events:none}
 .page-home .dial-rotor::before{content:"";position:absolute;left:calc(50% - 2px);top:2%;height:31%;width:4px;background:linear-gradient(var(--frequency),transparent);box-shadow:0 0 10px var(--frequency)}
 .page-home .dial-rotor::after{content:"";position:absolute;inset:3%;border-radius:50%;border:1px solid #e8b78918;border-top-color:var(--frequency);transform:rotate(-12deg)}
 .page-home .dial:has(.dial-track:active) .dial-rotor{transition:none}

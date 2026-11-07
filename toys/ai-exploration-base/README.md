@@ -85,17 +85,17 @@ docs/                     方案、评审、进度、交付说明
 | 文件 | 当前 | 用在哪 |
 |---|---|---|
 | `prototype.js` | `switch-20` | 首页拨盘 + ⑤ 关共用 |
-| `prototype-home.css` | `switch-15` | 首页 |
-| `prototype-cards.js` | `cards-06` | ① 关 |
+| `prototype-home.css` | `switch-16` | 首页 |
+| `prototype-cards.js` | `cards-07` | ① 关 |
 | `prototype-forge.css` | `press-08` | ① 关（`.page-forge` 外用样式） |
-| `prototype-source.css` | `source-11` | 七页共用（正文、卡片台、焦点兜底） |
+| `prototype-source.css` | `source-12` | 七页共用（正文、卡片台、焦点兜底） |
 | `prototype-dossier.css` | `dossier-09` | 七页共用（来源表） |
-| `trend-desk.js` / `prototype-trends.css` / `prototype-trends.js` | `desk-01` / `desk-13` / `desk-10` | ② 关 |
-| `prototype-lab.css` / `prototype-lab.js` | `lab-08` / `lab-07` | ③ 关 |
+| `trend-desk.js` / `prototype-trends.css` / `prototype-trends.js` | `desk-01` / `desk-14` / `desk-11` | ② 关 |
+| `prototype-lab.css` / `prototype-lab.js` | `lab-09` / `lab-08` | ③ 关 |
 | `route-fill.js` / `prototype-routes.css` / `prototype-routes.js` | `route-01` / `weave-08` / `weave-07` | ④ 关 |
-| `prototype-scam.css` / `prototype-scam-tear.css` / `scam-acts.js` | `case-13` / `tear-in-08` / `acts-02` | ⑤ 关 |
+| `prototype-scam.css` / `prototype-scam-tear.css` / `scam-acts.js` | `case-14` / `tear-in-08` / `acts-02` | ⑤ 关 |
 | `motion-lab-v2.js` | `tear-in-07`（与撕纸样式同包） | ⑤ 关，由 `prototype.js` 懒加载 |
-| `prototype-academy.css` / `prototype-academy.js` | `calibrate-09` / `calibrate-08` | ⑥ 关 |
+| `prototype-academy.css` / `prototype-academy.js` | `calibrate-10` / `calibrate-08` | ⑥ 关 |
 
 标题、顶栏标签（`原型入口 · 00 / 06`、`可玩原型 · 0X / 06`）也在 `PAGES` 里一处定义，七页同源。
 

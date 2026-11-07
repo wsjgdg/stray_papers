@@ -259,6 +259,14 @@
     var next = getCards().find(function (item) { return !state[current].choices[item.id]; });
     selected = right && next ? next.id : id;
     renderAll();
+    // 砸章：卡片落格的那一刻，目标档案格弹一下、并盖上一枚"已归档"
+    var binEl = document.querySelector('[data-bin="' + category + '"]');
+    if (binEl && !reduced) {
+      binEl.classList.remove('is-stamped'); void binEl.offsetWidth;
+      binEl.classList.add('is-stamped');
+      clearTimeout(binEl.stampTimer);
+      binEl.stampTimer = setTimeout(function () { binEl.classList.remove('is-stamped'); }, 980);
+    }
     var focusTarget = stack.querySelector('[data-pick="' + selected + '"]');
     if (focusTarget) focusTarget.focus({ preventScroll: true });
   }

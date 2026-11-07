@@ -127,6 +127,14 @@
     }
     recent.push({ gen: generation, live: cells.size, born: born, died: died });
     document.getElementById('delta-count').textContent = '变化 ' + pad(born + died);
+    // 每一代都从上往下扫一道光，让"整片网格重新算了一遍"看得见
+    var gridEl = document.getElementById('cell-grid');
+    if (gridEl && !reduced) {
+      gridEl.classList.remove('is-advancing'); void gridEl.offsetWidth;
+      gridEl.classList.add('is-advancing');
+      clearTimeout(gridEl.scanTimer);
+      gridEl.scanTimer = setTimeout(function () { gridEl.classList.remove('is-advancing'); }, 700);
+    }
     renderGrid(goals[preset] && generation === goals[preset].gen);
     renderHistory(); auditStep();
     if (timer !== null && ((goals[preset] && generation >= goals[preset].gen) || generation >= 24 || cells.size === 0)) stopPlay();

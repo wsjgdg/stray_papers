@@ -1916,3 +1916,27 @@ a.back-go:hover { color: #ffb829; }
 @media (prefers-reduced-motion: reduce) {
   :where(button, summary, [role="button"]):active { transform: none; }
 }
+
+/* ① 翻面时的扫光：卡片抬起的那一下有一道高光横掠过去（脚本只在 GSAP 动效可用时加 .is-turning） */
+.fcard.is-turning::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(104deg,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(255, 255, 255, .42) 45%,
+    rgba(255, 246, 208, .72) 50%,
+    rgba(255, 255, 255, .42) 55%,
+    rgba(255, 255, 255, 0) 66%);
+  background-size: 260% 100%;
+  animation: card-sheen 1.05s cubic-bezier(.3, 0, .2, 1) both;
+}
+@keyframes card-sheen {
+  from { background-position: 185% 0; }
+  to { background-position: -55% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fcard.is-turning::after { animation: none; content: none; }
+}
