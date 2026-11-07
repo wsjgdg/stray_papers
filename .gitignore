@@ -1,5 +1,8 @@
 *.zip
 
+# 由 docs/先读我.md 生成（scripts/package.py），不进版本库
+先读我.txt
+
 # local screenshot workspace (not part of the site)
 .arena/
 

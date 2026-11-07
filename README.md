@@ -41,9 +41,31 @@ ai-exploration-base/
 │   └── *.js / *.css      各关交互（含 route-fill.js 这类由真源生成的纯数据层）
 ├── docs/content/         文字真源：每一句话都先在这里定稿
 ├── scripts/              真源 → 页面：chapter0X.py 解析、legacy_pages.py 落位、build-source-pages.py 组装
+│                         package.py = 打交付包
 └── assets/               vendor 库、内嵌实验室、字体与媒体
 docs/                     方案、评审、进度、交付说明
+docs/先读我.md             交付说明的源文件；先读我.txt 由它生成
 ```
+
+## 交付包
+
+```bash
+python3 ai-exploration-base/scripts/package.py
+```
+
+产出仓库根目录的 `AI探索基地.zip`（约 1.3 MB，84 个文件）。包里**顶层只有四项**：
+
+```
+AI探索基地/
+├── ai-exploration-base/   站点本身（prototype/ + assets/ + docs/content/ + scripts/）
+├── docs/                  过程文档 + 先读我.md
+├── README.md
+└── 先读我.txt              由 docs/先读我.md 生成，UTF-8 带 BOM（老版记事本不乱码）
+```
+
+- 包里就是解压即用的静态站：起 `python3 -m http.server` 后七张页面全部 200，构建脚本也能在包内跑通、`--check` 全过。
+- `bak/`（退休的旧实验）、`.git/`、`__pycache__/` 不进包；`*.zip` 已在 `.gitignore` 里，包本身不进版本库。
+- **要改交付说明，改 `docs/先读我.md`**，再跑一次打包命令，`先读我.txt` 会自动重排（中文断行按字、英文按词、标点不落行首）。
 
 ## 六关
 
