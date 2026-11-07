@@ -36,7 +36,7 @@
 .page-lab .bench-head h2,.page-lab .rule-head h2{font-size:clamp(25px,2.5vw,36px);line-height:1.24;letter-spacing:-.06em;margin:8px 0 0}
 .page-lab .generation-badge{flex:none;min-width:89px;text-align:center;padding:9px 8px;color:#263e37;background:#d7eea0;font:850 14px "Noto Sans CJK SC",sans-serif;box-shadow:4px 4px 0 #06151b}
 .page-lab .sample-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-width:520px;margin-bottom:14px}
-.page-lab .sample-switch button{min-height:42px;padding:7px 8px;text-align:left;border:1px solid #9fc2b776;background:#1c3b43;color:#d7ebdc;font-size:12px;font-weight:800;white-space:nowrap}
+.page-lab .sample-switch button{min-height:44px;padding:8px 9px;text-align:left;border:1px solid #9fc2b776;background:#1c3b43;color:#d7ebdc;font-size:12px;font-weight:800;white-space:nowrap}
 .page-lab .sample-switch button span{font-size:10px;color:#9fdcc1;margin-right:5px}
 .page-lab .sample-switch button[aria-pressed="true"]{background:#d2eca2;color:#213c36;border-color:#d2eca2;box-shadow:0 4px 0 #658876}
 .page-lab .sample-switch button[aria-pressed="true"] span{color:#486b50}
@@ -48,7 +48,7 @@
 .page-lab .cell-grid{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:2px;width:100%;aspect-ratio:1;touch-action:none;user-select:none}
 .page-lab .cell{position:relative;min-width:0;min-height:0;padding:0;border:1px solid #6f998c26;border-radius:0;background:#1c3742;transition:background .2s,box-shadow .2s,transform .2s}
 .page-lab .cell:nth-child(5n){background-color:#23414a}
-.page-lab .cell.alive{z-index:1;border-color:#f3ffc7;background:#d8f69d;box-shadow:0 0 11px #d8f69d8a,inset 0 0 6px #fffad4;animation:cell-ignite .25s ease-out var(--delay) both}
+.page-lab .cell.alive{z-index:1;border-color:#f3ffc7;background:#d8f69d;box-shadow:0 0 11px #d8f69d8a,inset 0 0 6px #fffad4;animation:cell-ignite .25s ease-out var(--delay,0s) both}
 @keyframes cell-ignite{from{transform:scale(.55);filter:brightness(2)}to{transform:scale(1);filter:brightness(1)}}
 .page-lab .cell.expected{outline:2px solid #6cebd5;outline-offset:-3px}
 .page-lab .cell.missing{background:repeating-linear-gradient(45deg,#934e4d,#934e4d 3px,#283b47 3px,#283b47 6px);border-color:#f5ad99;box-shadow:0 0 13px #f59582a3}
@@ -142,3 +142,46 @@
 .page-lab .lab-embed iframe{display:block;width:100%;height:min(78vh,620px);border:0;background:#080f14}
 .page-lab .lab-embed figcaption{padding:10px 14px;border-top:1px solid #ffffff14;font-size:11.5px;line-height:1.7;color:#a8c6b6}
 .page-lab .lab-embed a{color:#b9f4d1}
+
+/* 可读性兜底：实验说明、结论、历史都是正文，抬到 12px */
+.page-lab .audit p,
+.page-lab .lab-projects p,
+.page-lab .lab-history li { font-size: 12px; line-height: 1.65; }
+
+/* 世代徽章：每长一代轻轻跳一下（脚本加 .is-ticking，340ms 后自然结束） */
+@keyframes gen-tick {
+  0% { transform: scale(1); }
+  38% { transform: scale(1.09); background: #f2ffcf; }
+  100% { transform: scale(1); }
+}
+.page-lab .generation-badge.is-ticking { animation: gen-tick .34s cubic-bezier(.2, .8, .25, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .page-lab .generation-badge.is-ticking { animation: none; }
+}
+
+/* ---- 炫技版：每一代从上往下扫一道光 ---- */
+@keyframes grid-scan {
+  0% { opacity: 0; transform: translateY(-100%); }
+  16% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(100%); }
+}
+.page-lab #cell-grid { position: relative; }
+.page-lab #cell-grid::after {
+  content: "";
+  position: absolute;   /* 网格里必须绝对定位，否则会多占一格把细胞挤走 */
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(180deg,
+    rgba(190, 255, 214, 0) 0%,
+    rgba(190, 255, 214, .2) 38%,
+    rgba(255, 255, 255, .62) 50%,
+    rgba(190, 255, 214, .2) 62%,
+    rgba(190, 255, 214, 0) 100%);
+}
+.page-lab #cell-grid.is-advancing::after { animation: grid-scan .62s cubic-bezier(.4, 0, .22, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .page-lab #cell-grid.is-advancing::after { animation: none; }
+}

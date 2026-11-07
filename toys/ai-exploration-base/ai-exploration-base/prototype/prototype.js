@@ -2,6 +2,7 @@
    or touch the production site's completion/progress state. */
 (function () {
   'use strict';
+
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function motion(targets) {
     if (!reduced && window.gsap) {
@@ -20,17 +21,17 @@
   }
   var page = document.body.getAttribute('data-page');
   if (page === 'home') initHome();
-  if (page === 'forge') initForge();
   if (page === 'scam') initScam();
 
   function initHome() {
     var channels = [
-      { name: 'AI 能做什么', desc: '五个真实场景：写作、识图、翻译、查资料、写代码——看清它做完什么、又在哪掉链子。', href: 'chapter-01.html?v=press-07', playable: true, mode: 'forge', a: '想法', b: '提问稿' },
-      { name: 'AI 趋势与行业', desc: '一条时间线、一张示意图、三个数字、一张柱状图，五个行业正在发生的事。', href: 'chapter-02.html?v=desk-09', playable: true, mode: 'trends', a: '情报', b: '试验票' },
-      { name: '儿子的 AI 实验室', desc: '把一条细胞规则真的跑起来，看它自己长出图案，再翻孩子这学期交的四个作品。', href: 'chapter-03.html?v=lab-05', playable: true, mode: 'lab', a: '规则', b: '实验记录' },
-      { name: '副业地图', desc: '三条路线摆在一张地图上，先算时间再算钱，挑一个能落地的第一步。', href: 'chapter-04.html?v=weave-06', playable: true, mode: 'routes', a: '条件', b: '试运行' },
-      { name: '骗局解剖室', desc: '八幕演完一场骗局，关键处自己踩一脚，看话术怎么一步步合围。', href: 'chapter-05.html?v=case-10', playable: true, mode: 'scam', a: '话术', b: '证据' },
-      { name: '提示词学院', desc: '角色、背景、要求三块拼一版能用的提问，再让 Agent 演示走一遍。', href: 'chapter-06.html?v=calibrate-07', playable: true, mode: 'academy', a: '模糊问题', b: '校准稿' }
+      // mode 是给样式用的内部代号（.preview-forge 等），不必跟页面名字一致
+      { name: 'AI 能做什么', desc: '五张能翻面的实物卡：海报、朋友圈、小票、修照片、微信问答——背面是能照抄的提示词。', href: 'chapter-01.html', playable: true, mode: 'forge', a: '正面', b: '背面' },
+      { name: 'AI 趋势与行业', desc: '一条时间线、一张十人里 3.6 个在用的数据展台、五个行业——把情报分拣成两档。', href: 'chapter-02.html', playable: true, mode: 'trends', a: '情报', b: '试验票' },
+      { name: '儿子的 AI 实验室', desc: '把一条细胞规则真的跑起来，看它自己长出图案，再翻孩子这学期交的三件作品。', href: 'chapter-03.html', playable: true, mode: 'lab', a: '规则', b: '实验记录' },
+      { name: '副业地图', desc: '三条路线摆在一张地图上，先算时间再算钱，挑一个能落地的第一步。', href: 'chapter-04.html', playable: true, mode: 'routes', a: '条件', b: '试运行' },
+      { name: '骗局解剖室', desc: '八幕演完一场骗局，关键处自己踩一脚，看话术怎么一步步合围。', href: 'chapter-05.html', playable: true, mode: 'scam', a: '话术', b: '证据' },
+      { name: '提示词学院', desc: '三课：拆出好提示词的三要素、把一句烂提示词试投三档看差别、再看 AI 下一步怎么自己干活。', href: 'chapter-06.html', playable: true, mode: 'academy', a: '模糊问题', b: '校准稿' }
     ];
     var track = document.getElementById('dial-track');
     var dial = document.getElementById('dial');
@@ -38,12 +39,46 @@
     var nav = Array.prototype.slice.call(document.querySelectorAll('.channel-list [data-channel]'));
     var visual = document.getElementById('mission-visual');
     var launch = document.getElementById('mission-launch');
-    var active = 0, dragging = false;
+    var active = 0, dragging = false, glideFrame = 0, glideDeg = 0;
+    // 把指针放到某个角度上（拖动时逐帧调用，必须即时）
     function position(degrees) {
+      glideDeg = degrees;
       var radians = degrees * Math.PI / 180;
       handle.style.left = 'calc(50% + ' + (Math.sin(radians) * 50) + '% - 16px)';
       handle.style.top = 'calc(50% - ' + (Math.cos(radians) * 50) + '% - 16px)';
       dial.style.setProperty('--needle', degrees + 'deg');
+    }
+    function stopGlide() {
+      if (glideFrame) cancelAnimationFrame(glideFrame);
+      glideFrame = 0;
+      dial.classList.remove('is-gliding');
+    }
+    function jump(degrees) { stopGlide(); position(degrees); }
+    // 换台时让旋钮沿弧线滑过去：以前指针有 .75s 缓动、把手却是瞬移，两个指示器会打架。
+    function glideTo(target, animate) {
+      stopGlide();
+      if (!animate || reduced) { position(target); return; }
+      var from = glideDeg;
+      var delta = ((target - from + 540) % 360) - 180;   // 走短弧，别绕整圈
+      var started = performance.now(), duration = 750;
+      dial.classList.add('is-gliding');
+      (function frame(now) {
+        var t = Math.min(1, (now - started) / duration);
+        var eased = 1 - Math.pow(1 - t, 5);
+        position(from + delta * eased);
+        if (t < 1) { glideFrame = requestAnimationFrame(frame); }
+        else {
+          glideFrame = 0;
+          dial.classList.remove('is-gliding');
+          // 到位"咔哒"一下：让指针落定的手感和旋钮同步（减弱动效时由 CSS 关掉）
+          if (delta) {
+            dial.classList.remove('is-seated');
+            void dial.offsetWidth;
+            dial.classList.add('is-seated');
+            setTimeout(function () { dial.classList.remove('is-seated'); }, 340);
+          }
+        }
+      })(started);
     }
     function select(i, animate) {
       active = (i + channels.length) % channels.length;
@@ -52,7 +87,7 @@
       dial.dataset.playable = String(ch.playable);
       document.getElementById('dial-number').textContent = number;
       document.getElementById('dial-mode').textContent = ch.playable ? 'ON AIR' : 'NO SIGNAL';
-      document.getElementById('mission-index').textContent = number + ' / 06 · ' + (ch.playable ? '可玩原型' : '预留频段');
+      document.getElementById('mission-index').textContent = number + ' / 06 · ' + (ch.playable ? '已开放' : '预留频段');
       document.getElementById('signal-power').textContent = ch.playable ? 'LIVE / 已接通' : 'OFFLINE / 未制作';
       document.getElementById('deck-readout').textContent = 'CH.' + number + (ch.playable ? ' 接通 · ' : ' 尚未制作 · ') + ch.name;
       document.getElementById('mission-name').textContent = ch.name;
@@ -67,23 +102,24 @@
       document.getElementById('mission-caption').hidden = !ch.playable;
       document.getElementById('mission-caption').textContent = ch.mode === 'scam' ? '情景模拟 · 不涉及真钱或个人资料' : ch.mode === 'trends' ? '离线资料练习 · 不连接实时新闻' : ch.mode === 'lab' ? '本地规则计算 · 不调用 AI 或上传数据' : ch.mode === 'routes' ? '定性路线练习 · 不预测收入或保存条件' : ch.mode === 'academy' ? '本地整理提问 · 不调用 AI 或保存输入' : '离线可用 · 不提交任何输入';
       track.setAttribute('aria-valuenow', String(active + 1));
-      track.setAttribute('aria-valuetext', '第 ' + (active + 1) + ' 关：' + nav[active].querySelector('strong').textContent + '；' + (ch.playable ? '可玩原型' : '原型尚未制作'));
+      track.setAttribute('aria-valuetext', '第 ' + (active + 1) + ' 关：' + nav[active].querySelector('strong').textContent + '；' + (ch.playable ? '已开放' : '尚未制作'));
       nav.forEach(function (button, n) { button.setAttribute('aria-pressed', String(n === active)); });
-      if (!dragging) position(active * 60);
+      if (!dragging) glideTo(active * 60, animate);
     }
     function chooseFromPointer(e) {
       var r = track.getBoundingClientRect();
       var degrees = ((Math.atan2(e.clientX - (r.left + r.width / 2), (r.top + r.height / 2) - e.clientY) * 180 / Math.PI) + 360) % 360;
-      position(degrees);
+      jump(degrees);
       var next = Math.round(degrees / 60) % 6;
       if (next !== active) select(next, true);
     }
     track.addEventListener('pointerdown', function (e) {
       if (e.button !== 0) return;
-      dragging = true; track.setPointerCapture(e.pointerId); chooseFromPointer(e);
+      dragging = true; dial.classList.add('is-dragging');
+      track.setPointerCapture(e.pointerId); chooseFromPointer(e);
     });
     track.addEventListener('pointermove', function (e) { if (dragging) chooseFromPointer(e); });
-    function stopDrag() { if (dragging) { dragging = false; position(active * 60); } }
+    function stopDrag() { if (dragging) { dragging = false; dial.classList.remove('is-dragging'); glideTo(active * 60, true); } }
     track.addEventListener('pointerup', stopDrag);
     track.addEventListener('pointercancel', stopDrag);
     track.addEventListener('keydown', function (e) {
@@ -105,232 +141,6 @@
       button.addEventListener('click', function () { select(Number(button.dataset.quickChannel), true); });
     });
     select(0, false);
-  }
-
-  function initForge() {
-    var examples = {
-      poster: { task: '做一张秋日读书会海报', audience: '给社区里 50—60 岁的邻居看', constraints: '暖色调，包含周六下午三点、社区活动室和一句话标语', title: '秋日读书会 · 海报排版', desc: '以社区读书会为起点；铸造台只整理提问方式，不会自动生成海报。', caution: '',
-        source: [{ t: '万相营造：阿里官方电商 AI 制图', u: 'https://www.wanxiang.art/' }, { t: '人民网：万相营造入选服贸会示范案例', u: 'http://finance.people.com.cn/n1/2025/0920/c1004-40568186.html' }] },
-      writing: { task: '写一篇稳健理财的生活感悟', audience: '给 50—60 岁的姐妹发小红书', constraints: '口语化，300 字以内，不推荐产品，结尾加话题标签', title: '稳健理财 · 预置文案', desc: '用一则提前设定的写作场景练习提问，不会自动生成笔记。', caution: '涉及理财时请自行核实信息，不要让 AI 代替专业判断。',
-        source: [{ t: '火山引擎开发者社区：豆包批量做小红书教程', u: 'https://developer.volcengine.com/articles/7545105759953289254' }, { t: 'B 站：可直接照抄的写文案提示词', u: 'https://www.bilibili.com/video/BV15w4m1v7Hv/' }] },
-      finance: { task: '找出月度开支表里值得复核的项目', audience: '给有财务经验的家庭成员做初筛', constraints: '用通俗语言列出三项、说明依据，不要替我做财务决定', title: '家庭账本 · 演示对话', desc: '演示用金额与建议不对应你的真实账本；本页不会读取财务数据。', caution: '给任何工具发账本前，先遮住姓名、账号等私人信息。',
-        source: [{ t: 'CSDN：普通家庭如何借助 AI 记账', u: 'https://blog.csdn.net/sinat_28750229/article/details/163530184' }, { t: '离别歌：AI 记账的最佳实践', u: 'https://www.leavesongs.com/THINK/ai-bookkeeping-best-practices.html' }] },
-      photo: { task: '修复一张有划痕的老照片', audience: '给家人保存回忆', constraints: '去掉划痕，自然上色，尽量保留原始面貌；保留原图', title: '老照片 · 亲手试试', desc: '这里仅练习修复需求的说法；本站不上传、不处理你的照片。', caution: '发送照片前确认拥有使用权限，修复图不应代替原图。',
-        source: [{ t: '央视网：AI 修复照片，为走失孩子照亮回家路', u: 'https://people.cctv.com/2023/12/05/ARTIhd6fhEgEJjk2s88tUN3O231205.shtml' }, { t: '凤凰网：AI 修复岁月影像', u: 'https://feng.ifeng.com/c/8xh1XDSNfRP' }, { t: '天极下载：豆包修复老照片实操', u: 'https://mydown.yesky.com/news/317462.html' }] },
-      phone: { task: '清理手机和微信占用的空间', audience: '给不熟悉手机设置的人说明', constraints: '按顺序解释，不误删聊天记录；每一步先核对界面名称', title: '手机问题 · 日常问答', desc: '练习把操作步骤交代清楚；真实界面因机型与版本而异。', caution: '操作前备份重要照片，并核对手机界面名称。',
-        source: [{ t: '新华报业网：微信存储一下少了 10G', u: 'https://www.xhby.net/content/s68cd560de4b0b6a4ec2506f3.html' }, { t: '腾讯客服：微信官方帮助专区', u: 'https://kf.qq.com/product/weixin.html' }] }
-    };
-    var current = 'poster';
-    var task = document.getElementById('task');
-    var audience = document.getElementById('audience');
-    var constraints = document.getElementById('constraints');
-    var output = document.getElementById('refined-output');
-    var status = document.getElementById('copy-status');
-    var printout = document.getElementById('printout'), snapshot = null, printCount = 0;
-    var stage = document.getElementById('forge-stage');
-    var ticket = document.getElementById('machine-receipt');
-    var slots = { task: task, audience: audience, constraints: constraints };
-    var remembered = { task: task.value, audience: audience.value, constraints: constraints.value };
-    function editedFields() {
-      if (!snapshot) return;
-      var differences = [
-        { label: '场景', before: examples[snapshot.scenario].title, after: examples[current].title },
-        { label: '目标', before: snapshot.task, after: task.value.trim() },
-        { label: '对象', before: snapshot.audience, after: audience.value.trim() },
-        { label: '要求', before: snapshot.constraints, after: constraints.value.trim() }
-      ].filter(function (row) { return row.before !== row.after; });
-      var edits = differences.length;
-      stage.dataset.changed = String(edits);
-      document.getElementById('printout-change').textContent = edits ? '相比压印稿，当前版本已改变 ' + edits + ' 处' : '与当前编辑版本相同';
-      document.getElementById('machine-receipt-state').textContent = edits ? '已改变 ' + edits + ' 处 · 点击看版本差异 ↘' : String(printCount).padStart(2, '0') + ' / 已压印 · 点击看版本凭证 ↘';
-      var proof = document.getElementById('change-proof');
-      proof.hidden = !edits;
-      var rows = differences.map(function (item) {
-        var line = create('div', 'change-proof-line');
-        line.appendChild(create('strong', '', item.label));
-        line.appendChild(create('span', 'proof-before', '旧 · ' + (item.before || '未填写')));
-        line.appendChild(create('span', 'proof-after', '新 · ' + (item.after || '未填写')));
-        return line;
-      });
-      replace(document.getElementById('change-proof-lines'), rows);
-    }
-    function update() {
-      var t = task.value.trim(), a = audience.value.trim(), c = constraints.value.trim();
-      var score = Number(!!t) + Number(!!a) + Number(!!c);
-      ['task', 'audience', 'constraints'].forEach(function (name, i) {
-        var active = !![t, a, c][i];
-        var tile = document.querySelector('.page-forge .forge-fragment[data-fragment="' + name + '"]');
-        tile.classList.toggle('is-locked', active);
-        tile.setAttribute('aria-pressed', String(active));
-        var label = { task: '目标', audience: '对象', constraints: '要求' }[name];
-        tile.textContent = active ? label : '+ ' + label;
-        tile.setAttribute('aria-label', (active ? '抽出' : '装回') + label + '字模');
-      });
-      var press = stage;
-      press.style.setProperty('--coherence', String(score / 3));
-      press.dataset.level = String(score);
-      press.dataset.scenario = current;
-      document.getElementById('press-imprint').textContent = t || '目标未装入';
-      document.getElementById('press-audience').textContent = a ? '对象 / ' + a : '对象 / 未装入';
-      document.getElementById('press-constraints').textContent = c ? '要求 / ' + c : '要求 / 未装入';
-      document.getElementById('press-detail').textContent = score === 3 ? '三块字模已装入' : '少了 ' + (3 - score) + ' 块字模 · 提问稿同步改变';
-      document.getElementById('forge-score').textContent = '0' + score + ' / 03';
-      document.getElementById('forge-orb-word').textContent = score >= 3 ? '成形' : score === 2 ? '继续' : score === 1 ? '想法' : '未定';
-      document.getElementById('output-state').textContent = score === 3 ? '三项已明确 · 可试用' : score === 0 ? '还没有描述任务' : '还可补充 ' + (3 - score) + ' 项信息';
-      document.getElementById('rough-output').textContent = t ? '帮我' + t + '。' : '帮我做点东西。';
-      var lines = [];
-      if (t) lines.push('请帮我' + t + '。');
-      if (a) lines.push('这件事是' + a + '。');
-      if (c) lines.push('具体要求：' + c.replace(/[。；;\s]+$/, '') + '。');
-      if (lines.length) lines.push('请先给出一个可供修改的初稿，并标明需要我核对的信息；不确定的地方不要编造。');
-      if (examples[current].caution && lines.length) lines.push(examples[current].caution);
-      output.value = lines.join('\n');
-      fitOutput();
-      document.getElementById('copy-prompt').disabled = !lines.length;
-      document.getElementById('imprint-prompt').disabled = !lines.length;
-      document.getElementById('forge-lever').disabled = !lines.length;
-      editedFields();
-      status.textContent = '';
-    }
-    /* 提示词是这一关的产物，必须整段看得见：按内容高度撑开，不靠滚动 */
-    function fitOutput() {
-      if (window.CSS && CSS.supports('field-sizing', 'content')) return;
-      output.style.height = 'auto';
-      var needed = output.scrollHeight;
-      var max = Math.round(window.innerHeight * 0.62);
-      output.style.height = Math.min(Math.max(needed, 132), Math.max(max, 132)) + 'px';
-      output.style.overflowY = needed > max ? 'auto' : 'hidden';
-    }
-    window.addEventListener('resize', function () { clearTimeout(fitOutput._t); fitOutput._t = setTimeout(fitOutput, 150); });
-    function paintSource(ex) {
-      var row = document.getElementById('sample-case');
-      if (!row) return;
-      row.replaceChildren(create('b', '', '📰 真实案例'));
-      (ex.source || []).forEach(function (item) {
-        var a = create('a', '', item.t);
-        a.href = item.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
-        row.appendChild(a);
-      });
-    }
-    function load(key) {
-      current = key;
-      var ex = examples[key];
-      task.value = ex.task; audience.value = ex.audience; constraints.value = ex.constraints;
-      remembered = { task: ex.task, audience: ex.audience, constraints: ex.constraints };
-      document.getElementById('sample-title').textContent = ex.title;
-      document.getElementById('sample-description').textContent = ex.desc;
-      paintSource(ex);
-      document.querySelectorAll('[data-scenario]').forEach(function (button) {
-        var selected = button.getAttribute('data-scenario') === key;
-        button.classList.toggle('active', selected);
-        button.setAttribute('aria-pressed', String(selected));
-      });
-      update();
-      stage.classList.remove('is-switching');
-      if (!reduced) { void stage.offsetWidth; stage.classList.add('is-switching'); }
-    }
-    document.querySelectorAll('[data-scenario]').forEach(function (button) { button.addEventListener('click', function () { load(button.getAttribute('data-scenario')); }); });
-    Object.keys(slots).forEach(function (name) {
-      slots[name].addEventListener('input', function () { if (slots[name].value.trim()) remembered[name] = slots[name].value; update(); });
-      document.querySelector('.page-forge .forge-fragment[data-fragment="' + name + '"]').addEventListener('click', function () {
-        var input = slots[name];
-        if (input.value.trim()) { remembered[name] = input.value; input.value = ''; }
-        else input.value = remembered[name] || examples[current][name];
-        update();
-        stage.classList.remove('is-relocking');
-        if (!reduced) { void stage.offsetWidth; stage.classList.add('is-relocking'); }
-      });
-    });
-    document.getElementById('reset-example').addEventListener('click', function () { load(current); task.focus(); });
-    document.getElementById('clear-details').addEventListener('click', function () { audience.value = ''; constraints.value = ''; update(); audience.focus(); });
-    function imprint() {
-      if (!output.value) return;
-      snapshot = { scenario: current, task: task.value.trim(), audience: audience.value.trim(), constraints: constraints.value.trim() };
-      printCount += 1;
-      printout.hidden = false;
-      var version = String(printCount).padStart(2, '0');
-      document.getElementById('printout-number').textContent = version + ' / PRESS';
-      document.getElementById('printout-seal').textContent = version;
-      document.getElementById('printout-task').textContent = snapshot.task || '尚未写下目标';
-      document.getElementById('printout-audience').textContent = snapshot.audience || '未装入';
-      document.getElementById('printout-constraints').textContent = snapshot.constraints || '未装入';
-      printout.dataset.scenario = snapshot.scenario;
-      var missing = 3 - Number(!!snapshot.task) - Number(!!snapshot.audience) - Number(!!snapshot.constraints);
-      document.getElementById('printout-caption').textContent = missing ? '版本已封存 · 仍缺 ' + missing + ' 块字模' : '版本已封存 · 三块字模均已装入';
-      stage.dataset.printed = 'true';
-      ticket.tabIndex = 0;
-      document.getElementById('machine-receipt-text').textContent = snapshot.task || '本版未填写目标 · 查看版本凭证';
-      editedFields();
-      var press = stage;
-      press.classList.remove('is-printed'); void press.offsetWidth;
-      if (!reduced) press.classList.add('is-printed');
-      printout.classList.remove('imprint-enter'); void printout.offsetWidth;
-      if (!reduced) printout.classList.add('imprint-enter');
-    }
-    document.getElementById('imprint-prompt').addEventListener('click', imprint);
-    document.getElementById('reprint-prompt').addEventListener('click', imprint);
-    var lever = document.getElementById('forge-lever'), leverPointer = null;
-    var leverStart = 0, leverPull = 0, suppressLeverClick = false;
-    function settleLever() {
-      lever.classList.remove('is-pulling');
-      stage.classList.remove('is-pulling');
-      lever.style.setProperty('--pull', '0px');
-      stage.style.setProperty('--force', '0');
-    }
-    lever.addEventListener('pointerdown', function (event) {
-      if (lever.disabled || event.button !== 0) return;
-      leverPointer = event.pointerId; leverStart = event.clientY; leverPull = 0;
-      lever.setPointerCapture(event.pointerId);
-      lever.classList.add('is-pulling');
-      stage.classList.add('is-pulling');
-      event.preventDefault();
-    });
-    lever.addEventListener('pointermove', function (event) {
-      if (event.pointerId !== leverPointer) return;
-      leverPull = Math.max(0, Math.min(72, event.clientY - leverStart));
-      lever.style.setProperty('--pull', leverPull + 'px');
-      document.getElementById('forge-stage').style.setProperty('--force', String(leverPull / 72));
-    });
-    lever.addEventListener('pointerup', function (event) {
-      if (event.pointerId !== leverPointer) return;
-      leverPointer = null;
-      if (leverPull > 5) {
-        suppressLeverClick = true;
-        setTimeout(function () { suppressLeverClick = false; }, 0);
-      }
-      var complete = leverPull >= 30;
-      settleLever();
-      if (complete) imprint();
-    });
-    lever.addEventListener('pointercancel', function (event) {
-      if (event.pointerId === leverPointer) { leverPointer = null; settleLever(); }
-    });
-    lever.addEventListener('click', function () {
-      if (suppressLeverClick) { suppressLeverClick = false; return; }
-      imprint();
-    });
-    document.getElementById('copy-prompt').addEventListener('click', function () {
-      var text = output.value;
-      function printed() {
-        var press = document.getElementById('forge-stage');
-        press.classList.remove('is-printed'); void press.offsetWidth;
-        if (!reduced) press.classList.add('is-printed');
-        status.textContent = '已复制。去你信任的 AI 工具里试问吧。';
-      }
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(printed, fallbackCopy);
-      } else fallbackCopy();
-      function fallbackCopy() {
-        output.focus(); output.select();
-        var ok = document.execCommand && document.execCommand('copy');
-        if (ok) printed(); else status.textContent = '已选中文本，请手动复制。';
-      }
-    });
-    var requested = new URLSearchParams(window.location.search).get('scenario');
-    if (Object.prototype.hasOwnProperty.call(examples, requested)) load(requested);
-    else { paintSource(examples[current]); update(); }
-    document.documentElement.classList.add('forge-ready');
-    document.getElementById('forge-connection').textContent = '交互已接通 · 点字模试试 ↘';
   }
 
   function initScam() {
@@ -580,6 +390,17 @@
       if (Math.abs(progress.scrollLeft - target) < 4) return;
       progress.scrollTo({ left: Math.max(0, target), behavior: railDrag.on ? 'auto' : 'smooth' });
     }
+    // 键盘：← → 在幕条上前后走一格，走完焦点跟到新的当前幕（读屏用户像翻页一样推进）
+    progress.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+      var step = event.key === 'ArrowRight' ? 1 : -1;
+      var next = index + step;
+      if (next < 0 || next > last) return;
+      event.preventDefault();
+      show(next);
+      var cur = progress.querySelector('.is-current');
+      if (cur) cur.focus({ preventScroll: true });
+    });
     progress.addEventListener('pointerdown', function (event) {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
       railDrag.on = true; railDrag.x = event.clientX; railDrag.left = progress.scrollLeft; railDrag.moved = 0;
@@ -621,7 +442,8 @@
       if (tearRequested) return;
       tearRequested = true;
       var script = document.createElement('script');
-      script.src = 'motion-lab-v2.js?v=tear-in-05';
+      // 撕纸动效懒加载；戳跟 prototype-scam-tear.css 同一包（登记在 build-source-pages.py 的 VERSIONS）
+      script.src = 'motion-lab-v2.js?v=tear-in-07';
       script.addEventListener('load', function () { initDrum(); });
       document.body.appendChild(script);
     }

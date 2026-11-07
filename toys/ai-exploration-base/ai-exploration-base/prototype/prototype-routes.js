@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var lastOrderKey = '';
   var FILL = window.ROUTE_FILL || null;   // 真源三层卡片（route-fill.js）
   var profile = { hours: '2', field: 'start', camera: 'no', learn: 'no' };
   var selected = null, pinned = false, firstMove = null;
@@ -307,6 +308,27 @@
     document.getElementById('copy-status').textContent = '';
     document.getElementById('live-top').textContent = description(order[0]).title + (pinned && selected !== order[0] ? ' · 你正在看另一条' : ' · 根据你的条件');
     paintHero(order);
+    // 页首那三条路线：条件一变就重新"画"一遍，现在排第一的那条先长出来并亮一下
+    // （三根 <i> 的顺序就是 starter / craft / systems，与前面算出来的 order 同序）
+    var graphic = document.querySelector('.route-graphic');
+    var orderKey = order.join('|');
+    // 只有"顺序真的变了"才重画：滑杆连续拖动时 render() 会被反复调用，
+    // 每调一次都重画会变成抖屏。第一次进入也不画，交给样式表里那条载入动画。
+    if (graphic && !reduced && lastOrderKey && orderKey !== lastOrderKey) {
+      var strands = graphic.querySelectorAll('i');
+      var lead = ['starter', 'craft', 'systems'].indexOf(order[0]);
+      graphic.classList.remove('is-redraw'); void graphic.offsetWidth;
+      graphic.classList.add('is-redraw');
+      Array.prototype.forEach.call(strands, function (strand, i) {
+        strand.classList.toggle('is-lead', i === lead);
+      });
+      clearTimeout(graphic.redrawTimer);
+      graphic.redrawTimer = setTimeout(function () {
+        graphic.classList.remove('is-redraw');
+        Array.prototype.forEach.call(strands, function (strand) { strand.classList.remove('is-lead'); });
+      }, 1500);
+    }
+    lastOrderKey = orderKey;
     renderPlanner(); renderTicket();
   }
   function update(fromInput) {
@@ -439,7 +461,7 @@
       ctx.fillRect(pad, y - 40, inner, 1);
       ctx.font = '200 19px "Dala Sans", "Noto Sans CJK SC", sans-serif';
       ctx.fillStyle = '#9a9a9a';
-      ctx.fillText('AI 探索基地 · 可玩原型 04 · 本地生成的练习计划，不是收入预测', pad, y);
+      ctx.fillText('AI 探索基地 · 04 · 本地生成的练习计划，不是收入预测', pad, y);
       y += 30;
       ctx.fillText(new Date().toLocaleDateString('zh-CN') + ' · 由本页在浏览器里画出，未上传任何内容', pad, y);
 

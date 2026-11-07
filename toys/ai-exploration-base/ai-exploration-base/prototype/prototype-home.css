@@ -25,7 +25,7 @@
 .page-home .dial[data-playable="false"]{--frequency:#92a29b;border-color:#88958d80}
 .page-home .dial::before{inset:11%;border:1px dashed #efddbe50}
 .page-home .dial::after{content:"";position:absolute;inset:-11%;border-radius:50%;border:1px solid #ccb79b6e;pointer-events:none;box-shadow:0 0 0 2px #152826}
-.page-home .dial-rotor{position:absolute;z-index:1;inset:-4%;border-radius:50%;transform:rotate(var(--needle));transition:transform .75s cubic-bezier(.18,.85,.22,1);pointer-events:none}
+.page-home .dial-rotor{position:absolute;z-index:1;inset:-4%;border-radius:50%;transform:rotate(var(--needle));transition:transform .78s cubic-bezier(.26,1.42,.42,1);pointer-events:none}
 .page-home .dial-rotor::before{content:"";position:absolute;left:calc(50% - 2px);top:2%;height:31%;width:4px;background:linear-gradient(var(--frequency),transparent);box-shadow:0 0 10px var(--frequency)}
 .page-home .dial-rotor::after{content:"";position:absolute;inset:3%;border-radius:50%;border:1px solid #e8b78918;border-top-color:var(--frequency);transform:rotate(-12deg)}
 .page-home .dial:has(.dial-track:active) .dial-rotor{transition:none}
@@ -157,3 +157,12 @@
 /* 拨盘到内容真源附页 */
 .page-home .deck-source{margin-left:8px;color:#efbd8b;text-decoration:none;border-bottom:1px solid #efbd8b73;white-space:nowrap}
 .page-home .deck-source:hover,.page-home .deck-source:focus-visible{border-color:#efbd8b}
+/* 旋钮跟指针：拖动和程序滑行时都关掉 CSS 过渡，交给 JS 逐帧驱动（见 prototype.js 的 glideTo） */
+.page-home .dial.is-dragging .dial-rotor,
+.page-home .dial.is-gliding .dial-rotor { transition: none; }
+/* 旋钮到位时轻轻"咔哒"一下：松手/换台后指针落定的手感 */
+@keyframes dial-seat { 0% { transform: scale(1); } 45% { transform: scale(1.13); } 100% { transform: scale(1); } }
+.page-home .dial.is-seated .dial-handle { animation: dial-seat .3s cubic-bezier(.2, .8, .25, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .page-home .dial.is-seated .dial-handle { animation: none; }
+}

@@ -1,4 +1,6 @@
-*.zip
+# 交付包不进版本库：每次打包都是 1.27MB 的新二进制，堆历史没意义。
+# 它挂在 GitHub Release 上，用 scripts/package.py --release 发布。
+AI探索基地.zip
 
 # local screenshot workspace (not part of the site)
 .arena/

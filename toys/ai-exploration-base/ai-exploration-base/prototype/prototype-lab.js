@@ -38,6 +38,8 @@
     buttons.forEach(function (button, i) {
       var live = cells.has(i);
       button.className = 'cell' + (live ? ' alive' : '') + (target && target.has(i) ? ' expected' : '') + (target && target.has(i) && !live ? ' missing' : '') + (target && !target.has(i) && live ? ' extra' : '');
+      // 新生细胞从左到右依次亮起：把动画延迟按列错开（--delay 在 CSS 里兜底 0s）
+      button.style.setProperty('--delay', ((i % size) * 7) + 'ms');
       button.setAttribute('aria-pressed', String(live));
       button.setAttribute('aria-label', '第 ' + (Math.floor(i / size) + 1) + ' 行第 ' + (i % size + 1) + ' 列：' + (live ? '亮' : '暗') + (target && target.has(i) && !live ? '，预期亮' : target && !target.has(i) && live ? '，多出的亮格' : ''));
       button.tabIndex = i === focusIndex ? 0 : -1;
@@ -118,8 +120,21 @@
       if (!lives && wasAlive) died++;
     }
     cells = next; generation++;
+    // 世代徽章跳一下：让"又长了一代"这件事在眼角有动静（减弱动效时由 CSS 关掉）
+    var badge = document.getElementById('generation-badge');
+    if (badge && !reduced) {
+      badge.classList.remove('is-ticking'); void badge.offsetWidth; badge.classList.add('is-ticking');
+    }
     recent.push({ gen: generation, live: cells.size, born: born, died: died });
     document.getElementById('delta-count').textContent = '变化 ' + pad(born + died);
+    // 每一代都从上往下扫一道光，让"整片网格重新算了一遍"看得见
+    var gridEl = document.getElementById('cell-grid');
+    if (gridEl && !reduced) {
+      gridEl.classList.remove('is-advancing'); void gridEl.offsetWidth;
+      gridEl.classList.add('is-advancing');
+      clearTimeout(gridEl.scanTimer);
+      gridEl.scanTimer = setTimeout(function () { gridEl.classList.remove('is-advancing'); }, 700);
+    }
     renderGrid(goals[preset] && generation === goals[preset].gen);
     renderHistory(); auditStep();
     if (timer !== null && ((goals[preset] && generation >= goals[preset].gen) || generation >= 24 || cells.size === 0)) stopPlay();

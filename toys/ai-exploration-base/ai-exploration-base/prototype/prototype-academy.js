@@ -48,11 +48,11 @@
   function render() {
     var current = snapshot();
     var checks = fields.map(function (id) { return id === 'task' ? qualityTask(current[id]) : usableClue(current[id]); });
-    var count = checks.filter(Boolean).length;
-    document.getElementById('clarity-count').textContent = count + ' / 4 栏有线索';
-    document.getElementById('signal-word').textContent = count === 4 ? '四栏有线索 / 还需判断内容' : '待补 ' + (4 - count) + ' 栏线索';
+    var count = checks.filter(Boolean).length, slots = fields.length;
+    document.getElementById('clarity-count').textContent = count + ' / ' + slots + ' 栏有线索';
+    document.getElementById('signal-word').textContent = count === slots ? '四栏有线索 / 还需判断内容' : '待补 ' + (slots - count) + ' 栏线索';
     var orbit = document.getElementById('signal-orbit');
-    orbit.style.setProperty('--power', (count / 4).toFixed(2));
+    orbit.style.setProperty('--power', (count / slots).toFixed(2));
     orbit.dataset.level = String(count);
     document.getElementById('orbit-number').firstChild.textContent = String(count);
     orbit.querySelectorAll(':scope > i').forEach(function (dot, i) { dot.classList.toggle('on', checks[i]); });
@@ -74,8 +74,8 @@
     composed.push('请先给出可修改的草稿；不确定的事实请标明，别编造。最终内容由我核对后再使用。');
     document.getElementById('prompt-output').value = composed.join('\n');
     var copyState = document.getElementById('copy-state');
-    copyState.textContent = count === 4 ? '四栏有线索 · 仍需自己判断' : '仍有 ' + (4 - count) + ' 栏待补';
-    copyState.dataset.ready = String(count === 4);
+    copyState.textContent = count === fields.length ? '四栏有线索 · 仍需自己判断' : '仍有 ' + (fields.length - count) + ' 栏待补';
+    copyState.dataset.ready = String(count === fields.length);
     document.getElementById('copy-prompt').disabled = !current.task;
     state.previous = checks;
     renderCompare();

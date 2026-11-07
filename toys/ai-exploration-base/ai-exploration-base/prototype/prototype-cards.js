@@ -8,12 +8,24 @@
   const meter = floor.querySelector('[data-flip-count]');
   const fill = floor.querySelector('[data-meter-fill]');
   const done = floor.querySelector('[data-flip-done]');
+  /* 背面在没有翻面时对读屏和 Tab 键是关着的——否则按 Tab 会先跳进看不见的
+     提示词与链接里。inert 支持就用 inert，老浏览器退回 aria-hidden。 */
+  const setBackState = (card, open) => {
+    const back = card.querySelector('.fcard-back');
+    if (!back) return;
+    if ('inert' in back) back.inert = !open;
+    back.setAttribute('aria-hidden', String(!open));
+  };
+  cards.forEach(card => setBackState(card, false));
+
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const gsap = window.gsap;
   const motion = !!(gsap && !reduce);
 
   if (motion && window.ScrollTrigger) gsap.registerPlugin(window.ScrollTrigger);
   if (motion && window.TextPlugin) gsap.registerPlugin(window.TextPlugin);
+  // 告诉 CSS：翻面的 transform 归 GSAP，样式表别用 .is-flipped 把终态写死
+  if (motion) document.documentElement.classList.add('gsap-motion');
 
   /* ---------------- 进场：台面亮起，卡片一张张落位 ---------------- */
   if (motion) {
@@ -68,6 +80,8 @@
       if (motion) gsap.to(fill, { width: w + '%', duration: .5, ease: 'power2.out' });
       else fill.style.width = w + '%';
     }
+    // 五张都翻完，台面计数条从琥珀转成薄荷绿（纯状态色，不额外加动效）
+    floor.dataset.complete = String(total > 0 && n >= total);
     if (done) {
       if (n >= total) {
         done.hidden = false;
@@ -86,6 +100,9 @@
     const back = card.querySelector('.fcard-back');
     const on = typeof force === 'boolean' ? force : !card.classList.contains('is-flipped');
     card.classList.toggle('is-flipped', on);
+    setBackState(card, on);
+    const scroller = card.querySelector('.back-scroll');
+    if (on && scroller) scroller.scrollTop = 0;
     if (btn) {
       btn.setAttribute('aria-expanded', String(on));
       const label = btn.querySelector('.fcard-flip-label');
@@ -96,13 +113,15 @@
     }
     if (!motion || !inner) { sync(); return; }
 
-    gsap.to(inner, {
-      rotationY: on ? 180 : 0,
-      duration: .85,
-      ease: 'power3.inOut',
-      overwrite: 'auto',
-      onComplete: sync,
-    });
+    // 炫技版翻面：卡片整体先抬起、放大一点，转到位再落回去（回弹），
+    // 同时卡片上掠过一道扫光。三段时间轴叠在一起，比单纯转 180° 有分量。
+    card.classList.add('is-turning');
+    gsap.timeline({
+      onComplete: () => { card.classList.remove('is-turning'); sync(); },
+    })
+      .to(inner, { rotationY: on ? 180 : 0, duration: 1.15, ease: 'power4.inOut', overwrite: 'auto' }, 0)
+      .to(card, { y: -24, scale: 1.05, duration: .42, ease: 'power2.out' }, 0)
+      .to(card, { y: 0, scale: 1, duration: .62, ease: 'bounce.out' }, .42);
 
     if (!on) { gsap.to(back, { autoAlpha: 1, duration: .2 }); return; }
 

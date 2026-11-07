@@ -426,32 +426,92 @@ def article_for(docs: list[str], stage_html: str = "", anchor: str = "",
 WITH_STAGE = True
 
 
+# ------------------------------------------------------- 版本戳：全站唯一真源
+# 规则只有一条：**同一份文件在七张页面上只有一个戳**。
+#   · 改了某个 .css / .js，就把下面对应的值加一（`source-05` → `source-06`）；
+#   · 构建时会把七张页面里所有 `?v=` 统一刷成这里的值，旧页面骨架里的戳写错也没关系；
+#   · 页面之间互相跳转（`chapter-0X.html`）不带 `?v=`——HTML 不吃这套缓存策略，
+#     带戳只会让同一条链接在不同页面上出现三四种写法（这正是以前的老毛病）。
+VERSIONS = {
+    "prototype.js": "switch-20",            # 首页拨盘 + ⑤ 关共用同一份
+    "prototype-home.css": "switch-16",
+    "prototype-forge.css": "press-08",      # ① 关的 .page-forge 外用样式
+    "prototype-dossier.css": "dossier-09",
+    "prototype-source.css": "source-13",    # 七页共用的正文 / 卡片台样式
+    "prototype-cards.js": "cards-07",
+    "prototype-trends.css": "desk-15",
+    "prototype-trends.js": "desk-12",
+    "trend-desk.js": "desk-01",
+    "prototype-lab.css": "lab-09",
+    "prototype-lab.js": "lab-08",
+    "prototype-routes.css": "weave-09",
+    "prototype-routes.js": "weave-08",
+    "route-fill.js": "route-01",
+    "prototype-scam.css": "case-15",
+    "prototype-scam-tear.css": "tear-in-08",
+    "motion-lab-v2.js": "tear-in-07",     # 撕纸动效，由 prototype.js 懒加载
+    "scam-acts.js": "acts-02",
+    "prototype-academy.css": "calibrate-11",
+    "prototype-academy.js": "calibrate-09",
+}
+
+ASSET_RX = re.compile(r'(?P<attr>\b(?:href|src)=")(?P<path>[^"?#]+)(?P<old>\?v=[^"]*)?(?=")')
+UNSTAMPED: set[str] = set()
+
+
+def _stamp(m: re.Match) -> str:
+    """把一条 href/src 变成规范写法：页面不带戳，静态资源带唯一戳。"""
+    attr, path = m.group("attr"), m.group("path")
+    if "://" in path:                      # 外链不动
+        return m.group(0)
+    base = path.rsplit("/", 1)[-1]
+    if base.endswith(".html"):
+        return attr + path
+    if base in VERSIONS:
+        return f'{attr}{path}?v={VERSIONS[base]}'
+    if m.group("old"):                     # 带戳却没登记：记一笔，别静默丢掉
+        UNSTAMPED.add(base)
+    return m.group(0)
+
+
+def normalize_marks(text: str) -> str:
+    """版本戳 + 标题 + 顶栏标签：七页统一从这里出，不再各写各的。"""
+    return ASSET_RX.sub(_stamp, text)
+
+
 # ------------------------------------------------------------------ page spec
 
 PAGES = [
     dict(file="index.html", stage_anchor=r"英雄区|两张引导卡|探索地图", key="00", docs=["p0-index-graduation.md"],
          stage=[("section", 'id="mission"')], no_article=True,
+         title="原型拨盘 · 可玩原型 | AI 探索基地", tag="原型入口 · 00 / 06",
          kicker="PLAYABLE PROTOTYPE / 可玩原型 · 六个频道"),
     dict(file="chapter-01.html", key="01", docs=["p1-what-ai-can-do.md", "real-cases-p1.md"],
-         cards=True, stage=[]),
-    dict(file="chapter-02.html", key="02", docs=["p2-trends.md"], legacy=True,
+         cards=True, stage=[],
+         title="① AI 能做什么 · 可玩原型 | AI 探索基地", tag="可玩原型 · 01 / 06"),
+    dict(file="chapter-02.html", key="02",
+         title="② AI 趋势与行业 · 可玩原型 | AI 探索基地", tag="可玩原型 · 02 / 06", docs=["p2-trends.md"], legacy=True,
          legacy_src="legacy/chapter-02.html",
          legacy_sources="sources-p123.md",
          legacy_keys=["CNNIC", "时间线事件来源", "P2 五卡", "演示验证渠道"],
          legacy_pre_js=["trend-desk.js?v=desk-01"], stage=[]),
-    dict(file="chapter-03.html", key="03", docs=["p3-lab.md"], legacy=True,
+    dict(file="chapter-03.html", key="03",
+         title="③ 儿子的 AI 实验室 · 可玩原型 | AI 探索基地", tag="可玩原型 · 03 / 06", docs=["p3-lab.md"], legacy=True,
          legacy_src="legacy/chapter-03.html",
          legacy_sources="sources-p123.md", legacy_key="第 ③ 关", stage=[]),
-    dict(file="chapter-04.html", key="04", docs=["p4-side-jobs.md"], legacy=True,
+    dict(file="chapter-04.html", key="04",
+         title="④ 副业地图 · 可玩原型 | AI 探索基地", tag="可玩原型 · 04 / 06", docs=["p4-side-jobs.md"], legacy=True,
          legacy_src="legacy/chapter-04.html",
          legacy_sources="sources-p456.md", legacy_key="第④关",
          legacy_pre_js=["route-fill.js?v=route-01"], stage=[]),
-    dict(file="chapter-05.html", key="05", docs=["p5-anti-scam.md", "real-cases-p5.md",
+    dict(file="chapter-05.html", key="05",
+         title="⑤ 骗局解剖室 · 可玩原型 | AI 探索基地", tag="可玩原型 · 05 / 06", docs=["p5-anti-scam.md", "real-cases-p5.md",
                                                  "sources-p456.md"],
          legacy=True, legacy_src="legacy/chapter-05.html",
          legacy_sources="sources-p456.md", legacy_key="第⑤关",
          legacy_noscript="p5-anti-scam.md", stage=[]),
-    dict(file="chapter-06.html", key="06", docs=["p6-academy.md"], legacy=True,
+    dict(file="chapter-06.html", key="06",
+         title="⑥ 提示词学院 · 可玩原型 | AI 探索基地", tag="可玩原型 · 06 / 06", docs=["p6-academy.md"], legacy=True,
          legacy_src="legacy/chapter-06.html",
          legacy_sources="sources-p456.md", legacy_key="第⑥关", stage=[]),
 ]
@@ -545,7 +605,10 @@ def source_rows_any(sources_md: str, section_hint: str) -> list[dict]:
         name = next((c for c in cells[1:] if c and not c.startswith("http")
                      and not re.fullmatch(r"\d{3}", c)), "")
         title = re.split(r"[（(]", name)[0].strip() or re.sub(r"^https?://", "", url).split("/")[0]
-        out.append({"no": "", "title": title, "url": url, "code": status, "use": use})
+        # 表格单元格里可能带 Markdown 的 **加粗** 和反引号，这里是兜底分支，
+        # 不经过 deckkit.source_rows，所以要自己洗一遍——否则 ** 会原样印在页面上。
+        out.append({"no": "", "title": _K.strip_md(title), "url": url,
+                    "code": status, "use": _K.strip_md(use)})
     return out
 
 
@@ -635,19 +698,19 @@ def deck_nav(key: str) -> str:
     prev_link = ""
     if idx > 0:
         _, f, t = ORDER[idx - 1]
-        prev_link = f'<a class="deck-onward-prev" href="{f}?v=deck-01">← {t}</a>'
+        prev_link = f'<a class="deck-onward-prev" href="{f}">← {t}</a>'
     if 0 <= idx < len(ORDER) - 1:
         _, f, t = ORDER[idx + 1]
         next_bit = ('<span class="deck-onward-main">'
                     f'<span class="deck-onward-k">下一关 / {int(key) + 1:02d} OF 06</span>'
-                    f'<a class="deck-onward-next" href="{f}?v=deck-01">{t} <b aria-hidden="true">↗</b></a></span>')
+                    f'<a class="deck-onward-next" href="{f}">{t} <b aria-hidden="true">↗</b></a></span>')
     else:
         next_bit = ('<span class="deck-onward-main">'
                     '<span class="deck-onward-k">六关走完 / 06 OF 06</span>'
-                    '<a class="deck-onward-next" href="index.html?v=switch-14">'
+                    '<a class="deck-onward-next" href="index.html">'
                     '回到探索地图 <b aria-hidden="true">↗</b></a></span>')
     return ('<nav class="deck-onward" aria-label="原型导航">' + next_bit + prev_link
-            + '<a class="deck-onward-home" href="index.html?v=switch-14">回到原型拨盘 ↗</a>'
+            + '<a class="deck-onward-home" href="index.html">回到原型拨盘 ↗</a>'
             + '</nav>')
 
 
@@ -792,8 +855,11 @@ def build(spec: dict) -> str:
 
     # 真源样式表只留一份（历次构建在同一张页面上追加过很多份）
     head = re.sub(r'<link rel="stylesheet" href="prototype-source\.css[^"]*">', "", head)
+    # prototype-v2.css 那一层已整份删除（活的部分搬进了 scam.css），这里顺手把旧链接摘掉
+    head = re.sub(r'<link rel="stylesheet" href="prototype-v2\.css[^"]*">', "", head)
     head = head.replace(
-        "</head>", '<link rel="stylesheet" href="prototype-source.css?v=source-04"></head>'
+        "</head>",
+        f'<link rel="stylesheet" href="prototype-source.css?v={VERSIONS["prototype-source.css"]}"></head>',
     )
 
     body_class = body_open.group(0) if body_open else "<body>"
@@ -890,13 +956,11 @@ def build(spec: dict) -> str:
         extra = "".join(
             f'<script src="{js}" defer></script>' for js in spec.get("deck_js", [])
         )
-        if spec.get("deck") and "prototype-deck-motion" not in extra:
-            extra += '<script src="prototype-deck-motion.js?v=deck-01" defer></script>'
         out = out.replace("</body>",
                           '<script src="../assets/vendor/gsap.min.js"></script>'
                           '<script src="../assets/vendor/ScrollTrigger.min.js" defer></script>'
                           '<script src="../assets/vendor/TextPlugin.min.js" defer></script>'
-                          '<script src="prototype-cards.js?v=cards-03" defer></script>'
+                          f'<script src="prototype-cards.js?v={VERSIONS["prototype-cards.js"]}" defer></script>'
                           + extra + '</body>')
 
     if spec.get("legacy_pre_js"):
@@ -905,12 +969,6 @@ def build(spec: dict) -> str:
         out = out.replace("</main>", "</main>" + tags, 1)
 
     if spec.get("legacy"):
-        out = out.replace("prototype-scam-tear.css?v=tear-in-04",
-                          "prototype-scam-tear.css?v=tear-in-07")
-        out = out.replace("prototype-scam-tear.css?v=tear-in-05",
-                          "prototype-scam-tear.css?v=tear-in-07")
-        out = out.replace("prototype.js?v=case-12", "prototype.js?v=case-15")
-        out = out.replace("scam-acts.js?v=acts-01", "scam-acts.js?v=acts-02")
         # ⑤ 关的逐字正文躺在撕纸账页里：断 JS 时 details 打不开，正文会被浏览器藏起来。
         # 这里补一份 noscript 样式，直接把账页里的正文摊平显示（先清掉上次补的那份）。
         out = re.sub(r"<noscript><style>\.page-scam \.tear-interlude[\s\S]*?</style></noscript>",
@@ -927,15 +985,137 @@ def build(spec: dict) -> str:
             1,
         )
 
-    return out
+    # 标题与顶栏标签：七页同一套写法，由 PAGES 里的 title / tag 决定
+    if spec.get("title"):
+        out = re.sub(r"<title>[\s\S]*?</title>", f"<title>{spec['title']}</title>", out, count=1)
+    if spec.get("tag"):
+        out = re.sub(r'(<span class="prototype-tag">)[^<]*(</span>)',
+                     lambda m: m.group(1) + spec["tag"] + m.group(2), out, count=1)
+    return normalize_marks(out)
+
+
+def check() -> int:
+    """七页自检：本地引用、锚点、重复 id、版本戳、页间链接。
+
+    不依赖浏览器，也不联网：只对着磁盘和已经生成好的 HTML 说话。
+    返回问题条数（0 就是全过），方便挂在 CI 或命令行里。
+    """
+    problems: list[str] = []
+    for spec in PAGES:
+        path = PROTO / spec["file"]
+        text = path.read_text(encoding="utf-8")
+        name = spec["file"]
+
+        for token in BANNED_TOKENS:
+            if token in text:
+                problems.append(f"{name}: 还有原型口径残留 —— {token} × {text.count(token)}")
+
+        ids = re.findall(r'\sid="([^"]+)"', text)
+        for dup in {i for i in ids if ids.count(i) > 1}:
+            problems.append(f"{name}: id 重复 —— #{dup}")
+
+        for tag in re.findall(r'<[^>]*\s(?:href|src)="([^"]+)"', text):
+            if tag.startswith(("http://", "https://", "//", "mailto:", "#")):
+                if tag.startswith("#") and tag[1:] not in ids:
+                    problems.append(f"{name}: 锚点没有落点 —— {tag}")
+                continue
+            target = tag.split("?")[0].split("#")[0]
+            if target and not (path.parent / target).exists():
+                problems.append(f"{name}: 本地文件不存在 —— {tag}")
+            if target.endswith(".html") and "?v=" in tag:
+                problems.append(f"{name}: 页间链接不该带版本戳 —— {tag}")
+
+        for asset in re.findall(r'(?:href|src)="([^"?#]+\.(?:css|js))(\?v=[^"]*)?"', text):
+            base = asset[0].rsplit("/", 1)[-1]
+            if base in VERSIONS and asset[1] != f"?v={VERSIONS[base]}":
+                problems.append(f"{name}: 版本戳不对 —— {base}{asset[1] or '（没有戳）'}")
+
+    # 脚本里动态拼出来的资源（懒加载、按需插入）也要守同一条规则
+    for js in sorted(PROTO.glob("*.js")):
+        for url, stamp in re.findall(r'["\']([\w./-]+\.(?:css|js))\?v=([\w-]+)["\']', js.read_text(encoding="utf-8")):
+            base = url.rsplit("/", 1)[-1]
+            if base not in VERSIONS:
+                problems.append(f"{js.name}: 引用 {base} 但 VERSIONS 里没有登记")
+            elif VERSIONS[base] != stamp:
+                problems.append(f"{js.name}: {base} 的戳是 {stamp}，表里是 {VERSIONS[base]}")
+
+    for base in sorted(UNSTAMPED):
+        problems.append(f"VERSIONS 表里没有登记 —— {base}（它带着 ?v= 被引用）")
+
+    for line in problems:
+        print("✗ " + line)
+    print("✓ 七页自检全过" if not problems else f"共 {len(problems)} 处问题")
+    return len(problems)
+
+
+# ---------------------------------------------------- 正式版口径
+# 站点从「可玩原型」转正式版之后，页面上不许再出现"这是原型 / 不算正式打卡"这类阶段标签。
+# 正文真源在 docs/（按约定不动），所以统一在构建末尾改写一次；表里只放"说法"，
+# 不放事实——"不调用 AI""不保存输入"这类对读者的承诺原样保留，只去掉"原型/正式"那半句。
+PRODUCTION_COPY: tuple[tuple[str, str], ...] = (
+    # ---- 标题与页眉 ----
+    ("原型拨盘 · 可玩原型 | AI 探索基地", "探索地图 | AI 探索基地"),
+    ("· 可玩原型 | AI 探索基地", "| AI 探索基地"),
+    ('<span class="prototype-tag">可玩原型 · ', '<span class="prototype-tag">'),
+    ('aria-label="原型导航"', 'aria-label="关间导航"'),
+    ("PLAYABLE PROTOTYPE / 可玩原型 · 六个频道", "SWITCHBOARD / AI 探索基地 · 六个频道"),
+    ("/ PROTOTYPE ", "/ "),
+    ("原型入口 · 00 / 06", "探索地图 · 00 / 06"),
+    # ---- 页尾口径：留承诺，去阶段 ----
+    ("交互原型 · 不标记正式打卡", "本地运行 · 不上传资料"),
+    ("只展示原型 · 不更改正式打卡进度", "本地运行 · 不上传资料"),
+    ("教学模拟，不调用 AI · 不修改正式打卡进度", "不调用 AI · 不上传资料"),
+    ("仅为定性练习 · 不修改正式打卡进度", "定性判断 · 不预测收入"),
+    ("不调用 AI · 不保存输入 · 不计正式打卡", "不调用 AI · 不保存输入"),
+    # ---- 导航与首页称呼 ----
+    ("返回原型拨盘 ↗", "返回探索地图 ↗"),
+    ("回到原型拨盘 ↗", "回到探索地图 ↗"),
+    ("← 原型拨盘", "← 探索地图"),
+    ("原型拨盘 ↗", "探索地图 ↗"),
+    ("返回可玩原型首页", "返回首页"),
+    ("返回原型首页 ↗", "返回首页 ↗"),
+    ("不开脚本也能进入原型", "不开脚本也能进入每一关"),
+    ("六张可玩原型均可直接打开。它们与正式关卡的打卡进度互不影响。", "六关均可直接打开，互不影响。"),
+    ("六个频段都已接通独立原型，不会把你送到正式版。", "六个频段都已接通，点编号就能进入。"),
+    # ---- 正文里的自称 ----
+    ("这是一则离线原型，不调用 AI。", "这是一则离线示例，不调用 AI。"),
+    ("原型玩法不替代正文", "互动玩法不替代正文"),
+    ("本原型没有伪造它们的在线演示", "本站没有伪造它们的在线演示"),
+    ("原型里的规则调试台是新做的教学切片", "这里的规则调试台是新做的教学切片"),
+    ("上面的规则调试台是这次新做的教学原型", "上面的规则调试台是这次新做的教学切片"),
+    ("注意：原型里的四步只是教学示意", "注意：这里的四步只是教学示意"),
+    ("站内原型 · 本地打开", "站内实验 · 本地打开"),
+    ("进入可玩原型", "进入这一关"),
+    ("跳到原型选台", "跳到选台"),
+    ("刷新后消失，不会记录到正式站的打卡进度。", "刷新后消失，不留任何记录。"),
+    # 首页拨盘的无脚本初值：脚本一跑就会被 JS 覆盖，但没脚本时也不该露出旧口径
+    ("01 / 06 · 可玩原型", "01 / 06 · 已开放"),
+    ("；可玩原型\">", "；已开放\">"),
+    ("也不标记正式关卡进度", "也不记录任何进度"),
+)
+
+# 这些词一旦还留在成品页面上，--check 直接报错（不是警告）
+BANNED_TOKENS: tuple[str, ...] = ("可玩原型", "交互原型", "原型拨盘", "原型导航",
+                                  "正式打卡", "正式关卡", "正式版")
+
+
+def to_production(html: str) -> str:
+    """把页面从"原型口径"改成"正式版口径"。表是有序的：长串在前，避免被短串切碎。"""
+    for old, new in PRODUCTION_COPY:
+        html = html.replace(old, new)
+    # 页尾品牌行原写作 "AI 探索基地 / 可玩原型 03"，整段收成站名（页号在上面页眉已有）
+    html = re.sub(r"AI 探索基地 / 可玩原型(?:\s*\d{2})?", "AI 探索基地", html)
+    return html
 
 
 def main() -> None:
     for spec in PAGES:
-        out = build(spec)
+        out = to_production(build(spec))
         (PROTO / spec["file"]).write_text(out, encoding="utf-8")
         print(f'{spec["file"]}: {len(out):>7} 字节 · {len(spec["docs"])} 份真源 · '
               f'{len(spec["stage"])} 块交互')
+    if "--check" in sys.argv:
+        raise SystemExit(1 if check() else 0)
 
 
 if __name__ == "__main__":

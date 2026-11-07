@@ -29,7 +29,7 @@
   var tracks = (DESK && DESK.tracks) || FALLBACK_TRACKS;
   var state = {};
   Object.keys(tracks).forEach(function (key) { state[key] = { choices: {}, plan: null }; });
-  var current = Object.keys(tracks)[0], selected = null, justFiled = null, lastDecision = null;
+  var current = Object.keys(tracks)[0], selected = null, justFiled = null, lastDecision = null, settledFor = null;
 
   var fieldSources = {
     finance: [
@@ -127,7 +127,7 @@
       document.getElementById('contents-' + key).textContent = filed.length ? filed.map(function (card) { return card.short; }).join(' / ') : '还没有情报';
     });
   }
-  /* 右栏刻度：四张卡就是四格，归档一张亮一格（对的琥珀，错的紫） */
+  /* 右栏刻度：一张卡一格，归档一张亮一格（对的琥珀，错的紫） */
   function renderGauge() {
     var counts = grades(), choices = state[current].choices;
     var ticks = document.querySelectorAll('#sort-gauge i');
@@ -138,10 +138,10 @@
       tick.className = choice ? (choice === card.correct ? 'is-on' : 'is-wrong') : '';
     });
     if (note) {
-      var n = total(), unit = (DESK && DESK.count) || '四张';
+      var n = total(), unit = (DESK && DESK.count) || '两条';
       note.textContent = counts.sorted < n
         ? '还差 ' + (n - counts.sorted) + ' 张没归档'
-        : (counts.right === n ? (DESK && DESK.done) || '四张都已核对 · 可以选一个试验'
+        : (counts.right === n ? (DESK && DESK.done) || '两条都已核对 · 可以选一个试验'
            : unit + '已归档 · 有 ' + (n - counts.right) + ' 张要改判');
     }
     if (next) next.hidden = counts.sorted < total();
@@ -164,6 +164,21 @@
   function renderReport() {
     var counts = grades(), choices = state[current].choices;
     var n = total();
+    // 本领域的情报全部有去处时，档案区收一次章（每个领域只响一次；减弱动效时不动）
+    if (n > 0 && counts.sorted === n) {
+      if (settledFor !== current) {
+        settledFor = current;
+        var binsBox = document.querySelector('.bins');
+        if (binsBox && !reduced) {
+          binsBox.classList.remove('is-settled'); void binsBox.offsetWidth;
+          binsBox.classList.add('is-settled');
+          clearTimeout(binsBox.settleTimer);
+          binsBox.settleTimer = setTimeout(function () { binsBox.classList.remove('is-settled'); }, 1200);
+        }
+      }
+    } else {
+      settledFor = null;
+    }
     document.getElementById('progress-fill').style.width = counts.sorted / n * 100 + '%';
     document.getElementById('progress-label').textContent = '已分拣 ' + counts.sorted + ' / ' + n + ' · 已核对 ' + counts.right + ' / ' + n;
     var report = document.getElementById('report-content'), planStage = document.getElementById('plan-stage');
@@ -240,10 +255,21 @@
     feedback.dataset.result = right ? 'right' : 'wrong';
     feedback.textContent = (right ? '已归档到“' + bins[category] + '”。' : '这张不宜归到“' + bins[category] + '”，应放“' + bins[card.correct] + '”。') + ' ' + card.why + (right ? '' : ' 点卡可改判。');
     var progress = grades();
-    if (progress.sorted === 4) feedback.textContent += progress.right === 4 ? ' 四张都已核对，往下领取试验票。' : ' 四张已归档，往下看需要改判的报告。';
+    var all = total(), countWord = (DESK && DESK.count) || '全部';
+    if (progress.sorted === all) feedback.textContent += progress.right === all
+      ? ' ' + countWord + '都已核对，往下领取试验票。'
+      : ' ' + countWord + '已归档，往下看需要改判的报告。';
     var next = getCards().find(function (item) { return !state[current].choices[item.id]; });
     selected = right && next ? next.id : id;
     renderAll();
+    // 砸章：卡片落格的那一刻，目标档案格弹一下、并盖上一枚"已归档"
+    var binEl = document.querySelector('[data-bin="' + category + '"]');
+    if (binEl && !reduced) {
+      binEl.classList.remove('is-stamped'); void binEl.offsetWidth;
+      binEl.classList.add('is-stamped');
+      clearTimeout(binEl.stampTimer);
+      binEl.stampTimer = setTimeout(function () { binEl.classList.remove('is-stamped'); }, 980);
+    }
     var focusTarget = stack.querySelector('[data-pick="' + selected + '"]');
     if (focusTarget) focusTarget.focus({ preventScroll: true });
   }
@@ -293,10 +319,23 @@
     clearTimeout(desk.replateTimer);
     desk.replateTimer = setTimeout(function () { desk.classList.remove('is-replating'); }, 1100);
   }
+  // 键盘：选中一张卡后按 1 / 2 / 3 直接归档，不用一路 Tab 到档案格。
+  // 只在焦点确实在分拣台里时生效，避免在页面别处按数字键被误判。
+  document.addEventListener('keydown', function (event) {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    var slot = ['1', '2', '3'].indexOf(event.key);
+    if (slot < 0 || !selected) return;
+    var desk = document.querySelector('.workbench');
+    if (!desk || !desk.contains(document.activeElement)) return;
+    var target = document.querySelectorAll('[data-bin]')[slot];
+    if (!target) return;
+    event.preventDefault();
+    assign(selected, target.dataset.bin);
+  });
   document.querySelectorAll('[data-bin]').forEach(function (button) {
     button.addEventListener('click', function () {
       if (selected) assign(selected, button.dataset.bin);
-      else { feedback.dataset.result = ''; feedback.textContent = '先点一张情报卡，再点这个档案格；或者把卡角手柄拖进来。'; stack.querySelector('.card-pick').focus(); }
+      else { feedback.dataset.result = ''; feedback.textContent = '先点一张情报卡，再点这个档案格；也可以把卡角手柄拖进来，或用 1 / 2 / 3 键。'; stack.querySelector('.card-pick').focus(); }
     });
   });
   document.querySelectorAll('[data-track]').forEach(function (button) {

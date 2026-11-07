@@ -5,7 +5,9 @@
    ============================================================ */
 
 .src-main {
-  max-width: 1180px;
+  /* 大屏撑满：和 ⑤ 关的 .case-opening 用同一个上限（1580），窄屏仍是满宽。
+     以前钉在 1180，1920 的屏上两边各空 370px，页首怎么调都撑不开。 */
+  max-width: min(100%, 1580px);
   margin: 0 auto;
   padding: 0 clamp(16px, 4vw, 44px) clamp(56px, 8vw, 104px);
 }
@@ -423,7 +425,15 @@
   color: #1b2625;
   box-shadow: 0 18px 34px rgba(0, 0, 0, .34), 0 1px 0 rgba(255, 255, 255, .5) inset;
 }
-.fcard.is-flipped .fcard-inner { transform: rotateY(180deg); }
+/* 翻面：有 GSAP 时由脚本逐帧驱动 rotationY（见 prototype-cards.js），CSS 别抢——
+   否则类一加上就把终态写死了，GSAP 读到 180° 再缓动到 180°，转面会变成硬切。
+   没有 GSAP / 减弱动效时（html 上没有 .gsap-motion），才用 CSS 直接翻。 */
+html:not(.gsap-motion) .fcard.is-flipped .fcard-inner { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.gsap-motion) .fcard-inner {
+    transition: transform .7s cubic-bezier(.18, .85, .22, 1);
+  }
+}
 .fcard-back {
   transform: rotateY(180deg);
 }
@@ -1868,374 +1878,68 @@ a.back-go:hover { color: #ffb829; }
   .fcard-inner, .fcard-front, .back-copy { transition: none; }
 }
 
-/* ==========================================================================
-   ② 趋势台：塞原文前定下来的那套排版，把真源正文填进去
-   大标题顶格、细线分栏、数据展台压在纸上；入场只做一件事——读到哪，哪一行浮上来。
-   ========================================================================== */
+/* ============================================================
+   全站收尾：键盘焦点 / 点按尺寸 / 长文本不越界
+   这一份是七张页面最后加载的样式，所以兜底规则放这儿。
+   ============================================================ */
 
-.page-trends .src-main--world {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-}
-.page-trends .trend-world {
-  min-height: 100vh;
-  overflow: clip;
-  background:
-    radial-gradient(ellipse at 86% 4%, #293e47 0%, transparent 38%),
-    radial-gradient(ellipse at 8% 52%, #292d43 0%, transparent 52%),
-    #101825;
-  color: #f7f1e3;
+/* 焦点环：用 currentColor，深色台面与浅色纸面各自都看得清；
+   :where() 的优先级是 0，各页自己写过的 focus-visible 仍然优先。 */
+:where(a, button, summary, [tabindex], input, textarea, select):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
 }
 
-/* ---------------- 页首 ---------------- */
-.page-trends .trend-opening {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
-  gap: clamp(22px, 4vw, 62px);
-  align-items: end;
-  max-width: 1320px;
-  margin-inline: auto;
-  padding: clamp(40px, 6vw, 92px) clamp(22px, 6vw, 110px) clamp(30px, 4vw, 58px);
-}
-.page-trends .trend-opening::before {
-  content: "02";
-  position: absolute;
-  right: clamp(10px, 3vw, 60px);
-  top: -0.06em;
-  font: 900 clamp(220px, 26vw, 420px)/1 "Noto Sans CJK SC", sans-serif;
-  letter-spacing: -.1em;
-  color: #d1dfe2;
-  opacity: .03;
-  pointer-events: none;
-}
-.page-trends .trend-opening .opening-copy { position: relative; z-index: 1; }
-.page-trends .trend-opening .eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  font: 700 10.5px/1 "Noto Sans CJK SC", ui-monospace, monospace;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: #c9f2a2;
-}
-.page-trends .trend-opening h1 {
-  margin: 22px 0 20px;
-  font-size: clamp(52px, 8.4vw, 118px);
-  font-weight: 850;
-  line-height: 1.02;
-  letter-spacing: -.055em;
-}
-.page-trends .trend-opening h1 em { font-style: normal; color: #c9f2a2; }
-.page-trends .trend-lead {
-  max-width: 46ch;
-  margin: 0;
-  font-size: clamp(13.5px, 1.25vw, 16px);
-  line-height: 1.95;
-  color: #c0cdd0;
-}
-.page-trends .trend-lead strong { color: #e9f5d6; }
+/* 背面是窄栏里的长句：中文不断词，但英文提示词与链接不能顶破卡片 */
+.back-scroll :where(p, li, span, b, em, ol, ul) { overflow-wrap: anywhere; }
 
-/* ---------------- 每一块：细线分栏 ---------------- */
-.page-trends .trend-block {
-  max-width: 1320px;
-  margin-inline: auto;
-  padding: clamp(30px, 4vw, 56px) clamp(22px, 6vw, 110px) clamp(34px, 4.6vw, 64px);
-  border-top: 1px solid #8da09c33;
-}
-.page-trends .trend-block-head {
-  display: block;
-  margin: 0 0 clamp(18px, 2.6vw, 30px);
-}
-.page-trends .trend-kicker {
-  display: block;
-  margin-bottom: 10px;
-  font: 800 10px/1 "Noto Sans CJK SC", ui-monospace, monospace;
-  letter-spacing: .16em;
-  color: #c9ec9e;
-  white-space: nowrap;
-}
-.page-trends .trend-block h2,
-.page-trends .trend-close p {
-  margin: 0;
-  font-size: clamp(28px, 3.9vw, 54px);
-  font-weight: 800;
-  line-height: 1.18;
-  letter-spacing: -.05em;
-}
-.page-trends .trend-block h2 { flex: 1 1 auto; min-width: 0; }
-
-/* ---------------- 时间线：一条细线，五个时间点 ---------------- */
-.page-trends .wire {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-width: min(100%, 920px);
-}
-.page-trends .wire-item {
-  display: grid;
-  grid-template-columns: clamp(92px, 10vw, 132px) minmax(0, 1fr);
-  gap: clamp(12px, 2.4vw, 40px);
-  padding: clamp(15px, 2vw, 22px) 0;
-  border-top: 1px solid #8da09c26;
-}
-.page-trends .wire-item:first-child { border-top: 0; padding-top: 0; }
-.page-trends .wire-when {
-  font: 700 11px/1.9 "Noto Sans CJK SC", ui-monospace, monospace;
-  letter-spacing: .04em;
-  color: #c9f2a2;
-  white-space: nowrap;
-}
-.page-trends .wire-body p {
-  margin: 0 0 8px;
-  max-width: none;
-  font-size: clamp(13.5px, 1.2vw, 15.5px);
-  line-height: 1.9;
-  color: #dbe4dc;
-}
-.page-trends .wire-body p:last-child { margin-bottom: 0; }
-.page-trends .wire-body strong { color: #f3f9e6; }
-
-/* 十个人里三个人在用 */
-.page-trends .trend-people {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 22px;
-  margin-top: clamp(20px, 2.6vw, 30px);
-  padding-top: clamp(16px, 2vw, 24px);
-  border-top: 1px solid #8da09c26;
-}
-.page-trends .pp-row { display: flex; gap: 6px; }
-.page-trends .pp-dot {
-  width: clamp(13px, 1.5vw, 17px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 1px solid #93c47d88;
-  background: linear-gradient(#c9f2a2 calc(var(--fill) * 100%), transparent 0);
-}
-.page-trends .pp-caption {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 14px;
-  font-size: clamp(13px, 1.2vw, 15px);
-  color: #e2ecdc;
-}
-.page-trends .pp-caption small {
-  font: 650 10px/1.5 "Noto Sans CJK SC", sans-serif;
-  color: #8fa9a0;
+/* 「复制」是这一页最常点的按钮，24px 的头像级尺寸对妈妈太小了 */
+.back-copy {
+  min-block-size: 34px;
+  padding: 6px 11px;
+  font-size: 10.5px;
 }
 
-/* ---------------- 数据展台：沿用原来那张压在纸上的展板 ---------------- */
-.page-trends .trend-data {
-  display: grid;
-  grid-template-columns: minmax(0, 620px) minmax(0, 1fr);
-  gap: clamp(22px, 3.4vw, 48px);
-  align-items: start;
-}
-.page-trends .data-exhibit {
-  max-width: 620px;
-  padding: 24px clamp(22px, 3vw, 40px) 22px;
-  background: linear-gradient(145deg, #e7e8d6, #c9d1c0);
-  border: 1px solid #f4efdc;
-  color: #23333e;
-  box-shadow: 10px 12px 0 #091319;
-}
-.page-trends .data-exhibit .exhibit-eyebrow {
-  display: block;
-  padding-left: 6px;
-  font: 800 10px/1.5 "Noto Sans CJK SC", ui-monospace, monospace;
-  letter-spacing: .09em;
-  color: #466258;
-}
-.page-trends .data-exhibit .exhibit-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px 18px;
-  margin-top: 10px;
-  padding: 14px 3px 0;
-  border-top: 1px solid #5669546b;
-}
-.page-trends .data-exhibit .exhibit-metrics span { display: block; }
-.page-trends .data-exhibit .exhibit-metrics b {
-  display: block;
-  font: 800 clamp(17px, 2vw, 22px)/1.1 "Noto Sans CJK SC", sans-serif;
-  letter-spacing: -.02em;
-}
-.page-trends .data-exhibit .exhibit-metrics small {
-  display: block;
-  margin-top: 5px;
-  font: 650 10px/1.45 "Noto Sans CJK SC", sans-serif;
-  color: #3f5a4d;
-}
-.page-trends .data-exhibit .exhibit-axis {
-  display: grid;
-  gap: 18px;
-  padding: 20px 3px 8px;
-}
-.page-trends .data-exhibit .exhibit-bar {
-  display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
-}
-.page-trends .data-exhibit .exhibit-bar > span {
-  font: 700 10px/1.4 "Noto Sans CJK SC", ui-monospace, monospace;
-  color: #435968;
-}
-.page-trends .data-exhibit .exhibit-bar b {
-  width: var(--length);
-  min-width: 86px;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 6px;
-  padding: 10px 13px;
-  background: #496568;
-  color: #f9f5e9;
-  font-size: clamp(18px, 2.4vw, 26px);
-  font-weight: 800;
-  white-space: nowrap;
-  transition: width 1.1s cubic-bezier(.16, .84, .24, 1) .12s;
-}
-.page-trends .data-exhibit .exhibit-bar.late b { background: #213b43; color: #d4f9a5; }
-.page-trends .data-exhibit .exhibit-bar small { font-size: 11px; font-weight: 600; }
-.page-trends .data-exhibit .exhibit-source {
-  margin: 12px 0 0;
-  padding-top: 12px;
-  border-top: 1px solid #5669546b;
-  font: 650 10px/1.6 "Noto Sans CJK SC", sans-serif;
-  color: #436053;
-}
-.page-trends .data-exhibit .exhibit-source strong { color: #2c4a3c; }
-
-/* 怎么读这个数 */
-.page-trends .trend-note {
-  max-width: 46ch;
-  margin: 0;
-  padding-left: clamp(14px, 1.6vw, 20px);
-  border-left: 2px solid #c9f2a266;
-}
-.page-trends .trend-note p {
-  margin: 0 0 8px;
-  font-size: clamp(13.5px, 1.2vw, 15.5px);
-  line-height: 1.95;
-  color: #c8d4cd;
-}
-.page-trends .trend-note strong { color: #eaf6db; }
-
-/* ---------------- 五个行业：一条条细线 ---------------- */
-.page-trends .trend-rows {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-width: min(100%, 920px);
-}
-.page-trends .trend-row {
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  gap: clamp(8px, 2vw, 26px);
-  padding: clamp(18px, 2.4vw, 30px) 0;
-  border-top: 1px solid #8da09c26;
-}
-.page-trends .trend-row:first-child { border-top: 0; padding-top: 0; }
-.page-trends .row-no {
-  font: 800 10px/1.9 "Noto Sans CJK SC", ui-monospace, monospace;
-  letter-spacing: .12em;
-  color: #7f9690;
-  padding-top: 5px;
-}
-.page-trends .trend-row h3 {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  margin: 0 0 10px;
-  font-size: clamp(18px, 2vw, 25px);
-  font-weight: 800;
-  letter-spacing: -.03em;
-  color: #f2f7e8;
-}
-.page-trends .trend-row .row-body {
-  margin: 0 0 9px;
-  max-width: none;
-  font-size: clamp(13px, 1.2vw, 15px);
-  line-height: 1.9;
-  color: #c6d2cb;
-}
-.page-trends .trend-row .row-body strong { color: #eaf6db; }
-.page-trends .trend-row .row-fact {
-  margin: 11px 0 0;
-  max-width: none;
-  padding-left: 12px;
-  border-left: 2px solid #c9f2a259;
-  font-size: 12.5px;
-  line-height: 1.8;
-  color: #a7c4b4;
-}
-
-/* ---------------- 收尾一句话 ---------------- */
-.page-trends .trend-close {
-  max-width: 1320px;
-  margin-inline: auto;
-  padding: clamp(34px, 4.6vw, 66px) clamp(22px, 6vw, 110px) clamp(24px, 3vw, 44px);
-  border-top: 1px solid #8da09c33;
-}
-.page-trends .trend-close .trend-kicker { display: block; margin-bottom: 16px; }
-.page-trends .trend-close p {
-  max-width: 34ch;
-  font-size: clamp(21px, 2.5vw, 32px);
-  line-height: 1.45;
-  letter-spacing: -.02em;
-  text-wrap: balance;
-  color: #f7f1e3;
-}
-.page-trends .trend-close strong { color: #c9f2a2; }
-
-/* ---------------- 入场：只做“浮上来”这一件事 ---------------- */
-.reveal-ready .page-trends [data-reveal] {
-  opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity .7s cubic-bezier(.2, .7, .2, 1) var(--d, 0s),
-    transform .7s cubic-bezier(.2, .7, .2, 1) var(--d, 0s);
-}
-.reveal-ready .page-trends [data-reveal].is-in {
-  opacity: 1;
-  transform: none;
-}
-.reveal-ready .page-trends .data-exhibit .exhibit-bar b { width: 0; }
-.reveal-ready .page-trends [data-reveal].is-in .exhibit-bar b { width: var(--length); }
-
+/* ① 台面：五张都翻完时，计数条由琥珀转薄荷绿，和「已翻完」那张提示纸同一个颜色语言 */
+.castfloor-meter .meter-num b,
+.castfloor-meter .meter-track i { transition: color .4s ease, background .4s ease; }
+.castfloor[data-complete="true"] .castfloor-meter .meter-num b { color: #a9f8e5; }
+.castfloor[data-complete="true"] .meter-track i { background: #a9f8e5; }
 @media (prefers-reduced-motion: reduce) {
-  .reveal-ready .page-trends [data-reveal] { opacity: 1; transform: none; transition: none; }
-  .page-trends .data-exhibit .exhibit-bar b { width: var(--length); transition: none; }
+  .castfloor-meter .meter-num b,
+  .castfloor-meter .meter-track i { transition: none; }
 }
 
-@media (max-width: 720px) {
-  .page-trends .trend-opening h1 { font-size: clamp(44px, 13vw, 64px); }
-  .page-trends .wire-item,
-  .page-trends .trend-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-  .page-trends .row-no { display: none; }
-  .page-trends .data-exhibit { max-width: none; box-shadow: 6px 7px 0 #091319; }
-  .page-trends .data-exhibit .exhibit-bar { grid-template-columns: 62px minmax(0, 1fr); }
-  .page-trends .trend-close p { max-width: none; }
+/* 整站按压反馈：手指按下去的那一下都有一点下沉。
+   :where() 优先级为 0，任何页面自己写的 transform 仍然优先，不会顶掉排版。 */
+:where(button, summary, [role="button"]):active { transform: translateY(1px); }
+@media (prefers-reduced-motion: reduce) {
+  :where(button, summary, [role="button"]):active { transform: none; }
 }
 
-.page-trends .src-main--world > .deck-onward {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: clamp(18px, 2.6vw, 30px) clamp(22px, 6vw, 110px) 0;
+/* ① 翻面时的扫光：卡片抬起的那一下有一道高光横掠过去（脚本只在 GSAP 动效可用时加 .is-turning） */
+.fcard.is-turning::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(104deg,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(255, 255, 255, .42) 45%,
+    rgba(255, 246, 208, .72) 50%,
+    rgba(255, 255, 255, .42) 55%,
+    rgba(255, 255, 255, 0) 66%);
+  background-size: 260% 100%;
+  animation: card-sheen 1.05s cubic-bezier(.3, 0, .2, 1) both;
 }
-.page-trends .src-main--world > .ktable-sec {
-  max-width: 1240px;
-  margin: clamp(24px, 3.4vw, 44px) auto clamp(28px, 4vw, 56px);
-  padding-inline: clamp(14px, 3vw, 40px);
+@keyframes card-sheen {
+  from { background-position: 185% 0; }
+  to { background-position: -55% 0; }
 }
-@media (max-width: 980px) {
-  .page-trends .trend-opening { grid-template-columns: minmax(0, 1fr); }
-  .page-trends .trend-data { grid-template-columns: minmax(0, 1fr); }
-  .page-trends .trend-note { max-width: none; }
+@media (prefers-reduced-motion: reduce) {
+  .fcard.is-turning::after { animation: none; content: none; }
 }
+
+/* ① 翻面的抬升阶段是整卡变换，临时提一层，结束后随类一起消失 */
+.fcard.is-turning { will-change: transform; }
