@@ -1,5 +1,9 @@
 # DELIVERY — 「AI 探索基地」交付说明
 
+> **状态：历史文档。** 下面描述的是 2026-11-05 的 v1 完整站交付（`先读我.txt` + `pages/` + zip 打包）。
+> 那套文件和 `scripts/build-zip.sh` 已于 `0930842` 之后从仓库撤出；本仓库现在只交付**七页可玩原型**。
+> 当前的跑法 / 构建 / 自查见根目录 `README.md`，逐轮记录见 `docs/progress.md`。
+
 > 初版交付日期：2026-11-05 ｜ 版本：v1 ｜ 交付物：运行 `bash ai-exploration-base/scripts/build-zip.sh` 生成 `ai-exploration-base-v1.zip`（文件数及体积以当次打包结果为准）
 
 ## 怎么交到妈妈手里
@@ -36,7 +40,19 @@
 - 「先读我」可按她姓氏/昵称个性化
 - 给她的浏览器收藏夹做一个快捷方式说明
 
-## 维护
+## 维护（已按当前仓库改写）
 
-- 修改页面后（在 `ai-exploration-base/` 目录内）：`node scripts/test.js` → `node scripts/smoke.js` → `bash scripts/build-zip.sh` 重新打包；通过后再提交代码
+早期那条 `test.js → smoke.js → build-zip.sh` 的流程已经不适用——这三个脚本都不在仓库里了。现在只有三步：
+
+```bash
+# 1) 改文案：先改 ai-exploration-base/docs/content/*.md
+# 2) 重新生成七张页面
+python3 ai-exploration-base/scripts/build-source-pages.py
+# 3) 再跑一遍，确认 prototype/*.html 的 md5 没变（幂等）
+md5sum ai-exploration-base/prototype/*.html
+```
+
+自查可用：脚本自带的本地引用与锚点检查（见 README「改动流程」）、`node --check` 逐个 JS 查语法、
+1280 / 375 两个宽度过一遍。
+
 - 设计文档：`docs/superpowers/specs/`；实施计划：`docs/superpowers/plans/`；进度日志：`docs/progress.md`

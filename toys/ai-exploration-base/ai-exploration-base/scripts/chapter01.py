@@ -24,6 +24,12 @@ CASES = "real-cases-p1.md"
 _STEP_NO = re.compile(r"^\d+[.、]\s*")
 _CARD_NO = re.compile(r"卡\s*(\d+)")
 
+# 真源里「现在就试」的行动链接写的是 academy.html（原正式站的提示词学院）。
+# 那一页已经撤掉，但同一件事就是本仓库的第 ⑥ 关，所以旧路径逐个映射过去。
+ACADEMY_FALLBACK = {
+    "academy.html": "chapter-06.html",
+}
+
 
 # ------------------------------------------------------------------ 解析
 
@@ -528,7 +534,12 @@ def _back(card: dict) -> str:
         if url.startswith("http"):
             return (f'<li><a href="{_esc(url)}" target="_blank" rel="noopener noreferrer">'
                     f'{_esc(label)}</a></li>')
-        # 原型里没有 academy.html（正式站撤掉了），这一行保留原文，不做假链接
+        # 真源里的行动链接指向 academy.html（提示词学院）。正式站撤掉了那一页，
+        # 但它就是本仓库的第 ⑥ 关「提示词学院」——译成 chapter-06.html，别留不可点的死字。
+        target = ACADEMY_FALLBACK.get(url.rsplit("/", 1)[-1], "")
+        if target:
+            return (f'<li><a class="back-go" href="{_esc(target)}">'
+                    f'{_esc(label)}</a></li>')
         return f'<li><span class="back-go">{_esc(label)}</span></li>'
 
     links = "".join(link_li(l, u) for l, u in card["links"])
@@ -537,7 +548,7 @@ def _back(card: dict) -> str:
     if card["demo"]:
         bits.append(f'<p class="back-demo">{_esc(card["demo"])}</p>')
 
-    return ('<div class="fcard-back">'
+    return (f'<div class="fcard-back" id="card-{card["no"]}-back">'
             '<div class="back-scroll">' + "".join(bits) + "</div>"
             '<span class="stamp" aria-hidden="true"><b>已压印</b><i>已压印</i></span>'
             "</div>")
@@ -553,7 +564,8 @@ def _card_tile(card: dict) -> str:
         f'{_front(card, kind)}</div>'
         f'{_back(card)}'
         "</div>"
-        '<button class="fcard-flip" type="button" aria-expanded="false">'
+        f'<button class="fcard-flip" type="button" aria-expanded="false" '
+        f'aria-controls="card-{card["no"]}-back">'
         f'<span class="fcard-flip-label">{_esc(card["hint"] or "点一下，看提示词与出处")}</span>'
         '<span class="fcard-flip-mark" aria-hidden="true">翻 →</span></button>'
         "</article>"

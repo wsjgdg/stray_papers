@@ -103,6 +103,8 @@
 ```bash
 # 在仓库根目录执行；产物是 ai-exploration-base/prototype/*.html
 python3 ai-exploration-base/scripts/build-source-pages.py
+# 顺带自检：本地引用 / 锚点 / 重复 id / 版本戳
+python3 ai-exploration-base/scripts/build-source-pages.py --check
 ```
 
 - **幂等**：连跑两次，`prototype/*.html` 的 md5 必须一致；不一致说明脚本里有随机或漏改的拼接。

@@ -2,6 +2,7 @@
    or touch the production site's completion/progress state. */
 (function () {
   'use strict';
+
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function motion(targets) {
     if (!reduced && window.gsap) {
@@ -25,12 +26,13 @@
 
   function initHome() {
     var channels = [
-      { name: 'AI 能做什么', desc: '五个真实场景：写作、识图、翻译、查资料、写代码——看清它做完什么、又在哪掉链子。', href: 'chapter-01.html?v=press-07', playable: true, mode: 'forge', a: '想法', b: '提问稿' },
-      { name: 'AI 趋势与行业', desc: '一条时间线、一张示意图、三个数字、一张柱状图，五个行业正在发生的事。', href: 'chapter-02.html?v=desk-09', playable: true, mode: 'trends', a: '情报', b: '试验票' },
-      { name: '儿子的 AI 实验室', desc: '把一条细胞规则真的跑起来，看它自己长出图案，再翻孩子这学期交的四个作品。', href: 'chapter-03.html?v=lab-05', playable: true, mode: 'lab', a: '规则', b: '实验记录' },
-      { name: '副业地图', desc: '三条路线摆在一张地图上，先算时间再算钱，挑一个能落地的第一步。', href: 'chapter-04.html?v=weave-06', playable: true, mode: 'routes', a: '条件', b: '试运行' },
-      { name: '骗局解剖室', desc: '八幕演完一场骗局，关键处自己踩一脚，看话术怎么一步步合围。', href: 'chapter-05.html?v=case-10', playable: true, mode: 'scam', a: '话术', b: '证据' },
-      { name: '提示词学院', desc: '角色、背景、要求三块拼一版能用的提问，再让 Agent 演示走一遍。', href: 'chapter-06.html?v=calibrate-07', playable: true, mode: 'academy', a: '模糊问题', b: '校准稿' }
+      // mode 是给样式用的内部代号（.preview-forge 等），不必跟页面名字一致
+      { name: 'AI 能做什么', desc: '五张能翻面的实物卡：海报、朋友圈、小票、修照片、微信问答——背面是能照抄的提示词。', href: 'chapter-01.html', playable: true, mode: 'forge', a: '正面', b: '背面' },
+      { name: 'AI 趋势与行业', desc: '一条时间线、一张十人里 3.6 个在用的数据展台、五个行业——把情报分拣成两档。', href: 'chapter-02.html', playable: true, mode: 'trends', a: '情报', b: '试验票' },
+      { name: '儿子的 AI 实验室', desc: '把一条细胞规则真的跑起来，看它自己长出图案，再翻孩子这学期交的三件作品。', href: 'chapter-03.html', playable: true, mode: 'lab', a: '规则', b: '实验记录' },
+      { name: '副业地图', desc: '三条路线摆在一张地图上，先算时间再算钱，挑一个能落地的第一步。', href: 'chapter-04.html', playable: true, mode: 'routes', a: '条件', b: '试运行' },
+      { name: '骗局解剖室', desc: '八幕演完一场骗局，关键处自己踩一脚，看话术怎么一步步合围。', href: 'chapter-05.html', playable: true, mode: 'scam', a: '话术', b: '证据' },
+      { name: '提示词学院', desc: '三课：拆出好提示词的三要素、把一句烂提示词试投三档看差别、再看 AI 下一步怎么自己干活。', href: 'chapter-06.html', playable: true, mode: 'academy', a: '模糊问题', b: '校准稿' }
     ];
     var track = document.getElementById('dial-track');
     var dial = document.getElementById('dial');
@@ -621,7 +623,8 @@
       if (tearRequested) return;
       tearRequested = true;
       var script = document.createElement('script');
-      script.src = 'motion-lab-v2.js?v=tear-in-05';
+      // 撕纸动效懒加载；戳跟 prototype-scam-tear.css 同一包（登记在 build-source-pages.py 的 VERSIONS）
+      script.src = 'motion-lab-v2.js?v=tear-in-07';
       script.addEventListener('load', function () { initDrum(); });
       document.body.appendChild(script);
     }

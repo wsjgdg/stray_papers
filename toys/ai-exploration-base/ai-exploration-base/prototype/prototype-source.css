@@ -2239,3 +2239,25 @@ a.back-go:hover { color: #ffb829; }
   .page-trends .trend-data { grid-template-columns: minmax(0, 1fr); }
   .page-trends .trend-note { max-width: none; }
 }
+
+/* ============================================================
+   全站收尾：键盘焦点 / 点按尺寸 / 长文本不越界
+   这一份是七张页面最后加载的样式，所以兜底规则放这儿。
+   ============================================================ */
+
+/* 焦点环：用 currentColor，深色台面与浅色纸面各自都看得清；
+   :where() 的优先级是 0，各页自己写过的 focus-visible 仍然优先。 */
+:where(a, button, summary, [tabindex], input, textarea, select):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* 背面是窄栏里的长句：中文不断词，但英文提示词与链接不能顶破卡片 */
+.back-scroll :where(p, li, span, b, em, ol, ul) { overflow-wrap: anywhere; }
+
+/* 「复制」是这一页最常点的按钮，24px 的头像级尺寸对妈妈太小了 */
+.back-copy {
+  min-block-size: 34px;
+  padding: 6px 11px;
+  font-size: 10.5px;
+}

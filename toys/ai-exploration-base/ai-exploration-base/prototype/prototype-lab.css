@@ -36,7 +36,7 @@
 .page-lab .bench-head h2,.page-lab .rule-head h2{font-size:clamp(25px,2.5vw,36px);line-height:1.24;letter-spacing:-.06em;margin:8px 0 0}
 .page-lab .generation-badge{flex:none;min-width:89px;text-align:center;padding:9px 8px;color:#263e37;background:#d7eea0;font:850 14px "Noto Sans CJK SC",sans-serif;box-shadow:4px 4px 0 #06151b}
 .page-lab .sample-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-width:520px;margin-bottom:14px}
-.page-lab .sample-switch button{min-height:42px;padding:7px 8px;text-align:left;border:1px solid #9fc2b776;background:#1c3b43;color:#d7ebdc;font-size:12px;font-weight:800;white-space:nowrap}
+.page-lab .sample-switch button{min-height:44px;padding:8px 9px;text-align:left;border:1px solid #9fc2b776;background:#1c3b43;color:#d7ebdc;font-size:12px;font-weight:800;white-space:nowrap}
 .page-lab .sample-switch button span{font-size:10px;color:#9fdcc1;margin-right:5px}
 .page-lab .sample-switch button[aria-pressed="true"]{background:#d2eca2;color:#213c36;border-color:#d2eca2;box-shadow:0 4px 0 #658876}
 .page-lab .sample-switch button[aria-pressed="true"] span{color:#486b50}
