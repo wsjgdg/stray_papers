@@ -1903,9 +1903,9 @@ a.back-go:hover { color: #ffb829; }
   grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
   gap: clamp(22px, 4vw, 62px);
   align-items: end;
-  max-width: 1320px;
-  margin-inline: auto;
-  padding: clamp(40px, 6vw, 92px) clamp(22px, 6vw, 110px) clamp(30px, 4vw, 58px);
+  /* 大屏撑满：不设内容宽度上限，左右留白与 .trend-fill / .editing-room 用同一把尺子
+     （clamp(20px, 5vw, 90px)），这样页首、正文块、分拣台在宽屏上是一条竖线对齐的。 */
+  padding: clamp(40px, 6vw, 92px) clamp(20px, 5vw, 90px) clamp(30px, 4vw, 58px);
 }
 .page-trends .trend-opening::before {
   content: "02";
@@ -2044,8 +2044,8 @@ a.back-go:hover { color: #ffb829; }
   gap: clamp(22px, 3.4vw, 48px);
   align-items: start;
 }
+/* 大屏撑满：数据牌跟着网格列走，不再钉死 620px */
 .page-trends .data-exhibit {
-  max-width: 620px;
   padding: 24px clamp(22px, 3vw, 40px) 22px;
   background: linear-gradient(145deg, #e7e8d6, #c9d1c0);
   border: 1px solid #f4efdc;
