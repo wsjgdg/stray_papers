@@ -1,0 +1,76 @@
+/* Two separate tactile studies. Page 01 is a setting press; page 05 is a breakable evidence thread. */
+.page-forge .eyebrow,.page-forge .forge-stage-caption,.page-forge .output-label,.page-forge .output-label>span,.page-forge .step-title>span,.page-scam .eyebrow,.page-scam .story-persona,.page-scam .story-top,.page-scam .simulation-tag,.page-scam .analysis-eyebrow,.page-scam .source-note{font-family:ui-monospace,"Noto Sans CJK SC",monospace}
+.page-forge .forge-stage{height:340px;min-width:0;border-radius:0;--coherence:0;background:repeating-linear-gradient(90deg,transparent 0 39px,#b5d0c50b 40px),linear-gradient(135deg,#29453f,#142a2d 76%);border:1px solid #668776;box-shadow:inset 0 0 50px #0d262a,12px 16px 34px #263c3428;isolation:isolate}
+.page-forge .forge-stage::before{content:"";position:absolute;inset:12px;border:1px solid #c5b49457;pointer-events:none}
+.page-forge .forge-ring{border:0;border-radius:0;box-shadow:none;transform:none}
+.page-forge .forge-ring.one{inset:0 auto 0 76%;width:2px;background:#e5b78a80;transform:scaleY(calc(.15 + var(--coherence)*.85));transform-origin:center;transition:transform .5s cubic-bezier(.2,.9,.2,1)}
+.page-forge .forge-ring.two,.page-forge .forge-ring.three{display:none}
+.page-forge .press-sheet{position:absolute;left:8%;right:24%;top:22%;bottom:19%;padding:clamp(17px,2vw,27px);display:flex;flex-direction:column;justify-content:space-between;gap:10px;color:#1e3430;background:linear-gradient(145deg,#f3ebd8,#d7d0b8);box-shadow:7px 9px 0 #0c1d20a3,inset 0 0 0 1px #8e8f78;transform:translateY(calc((1 - var(--coherence))*8px)) rotate(calc((1 - var(--coherence))*-2deg));transition:transform .55s cubic-bezier(.2,.9,.2,1),box-shadow .55s}
+.page-forge .press-sheet::before{content:"";position:absolute;inset:9px;border:1px solid #536c5747;pointer-events:none}
+.page-forge .press-sheet-label,.page-forge #press-detail{font:10px/1.5 ui-monospace,"Noto Sans CJK SC",sans-serif;letter-spacing:.09em;color:#536660}
+.page-forge #press-imprint{font-size:clamp(23px,2.6vw,39px);line-height:1.28;letter-spacing:-.04em;overflow-wrap:anywhere;max-height:2.56em;overflow:hidden;text-shadow:1px 1px #fff7;transition:color .3s,transform .45s}
+.page-forge .forge-stage[data-level="0"] #press-imprint{color:#677974;transform:translateY(7px)}
+.page-forge .forge-stage[data-level="3"] #press-imprint{color:#254239;transform:translateY(-2px)}
+.page-forge .forge-orb{left:84%;top:51%;width:106px;height:106px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#f0d8aa,#aa7453 72%,#694535);box-shadow:inset -8px -12px 20px #4d2c31a1,6px 10px 0 #0c2225;border:6px solid #bd9875;color:#263934;font-size:19px;transform:translate(-50%,-50%) rotate(calc((1 - var(--coherence))*-16deg)) scale(calc(.77 + var(--coherence)*.23));transition:transform .5s cubic-bezier(.2,.9,.2,1)}
+.page-forge .forge-fragment{z-index:3;border-radius:2px;background:#253e38;color:#efddc3;border:1px solid #d9bc9a;opacity:1;box-shadow:4px 5px 0 #111f229e;transform:translateY(-8px) rotate(-5deg) scale(.94);font-size:11px}
+.page-forge .forge-fragment.is-locked{background:#d7aa77;color:#1f3a35;border-color:#f4d4a2;box-shadow:4px 5px 0 #0c1d20a1;transform:translateY(5px) rotate(0) scale(1)}
+.page-forge .forge-fragment[data-fragment="task"]{left:9%;top:6%}.page-forge .forge-fragment[data-fragment="audience"]{left:38%;right:auto;top:6%}.page-forge .forge-fragment[data-fragment="constraints"]{left:66%;right:auto;top:6%;bottom:auto}
+.page-forge .forge-stage-caption{left:8%;right:8%;bottom:5%;color:#e6d1aa}
+.page-forge .forge-stage.is-printed .press-sheet{animation:press-down .6s ease-out}
+@keyframes press-down{0%,100%{filter:brightness(1);transform:translateY(0)}30%{filter:brightness(1.22);transform:translateY(9px)}60%{transform:translateY(-3px)}}
+.page-forge .work-heading h2 i,.page-forge .next-section h2 i{transition:transform .35s,color .35s;display:inline-block}.page-forge .work-heading h2:hover i{transform:translateX(6px) scale(1.02);color:#ae5e3f}
+
+.page-scam .story-side{background:radial-gradient(ellipse at 70% 38%,#334147,#152527 70%,#111f24);isolation:isolate}
+.page-scam .story-signal{border-color:#aa504942;border-right-color:#aa504908;filter:drop-shadow(0 15px 13px #06191e)}
+.page-scam .evidence-meter{position:absolute;top:70px;left:9%;right:9%;height:72px;color:#efad92}
+.page-scam .evidence-thread{position:absolute;top:26px;height:3px;width:50%;background:linear-gradient(90deg,#bb695f,#f0b091);box-shadow:0 5px 0 #090f1466;transform-origin:left;transition:transform .55s cubic-bezier(.2,.8,.2,1),background .45s,opacity .45s}
+.page-scam .evidence-thread:nth-child(2){left:50%;background:linear-gradient(90deg,#f0b091,#bb695f)}
+.page-scam .evidence-meter strong{position:absolute;left:0;top:0;font:11px ui-monospace,"Noto Sans SC",sans-serif;letter-spacing:.08em}
+.page-scam .story-side[data-act="2"][data-clues="1"] .evidence-thread:first-child{transform:translate(-5px,-2px) rotate(-1deg);opacity:.65}
+.page-scam .story-side[data-act="2"][data-clues="2"] .evidence-thread:first-child{transform:translate(-8px,-3px) rotate(-1deg);opacity:.5}
+.page-scam .story-side[data-act="2"][data-clues="2"] .evidence-thread:nth-child(2){transform:translate(8px,5px) rotate(1deg);opacity:.65}
+.page-scam .story-side[data-branch="stop"] .evidence-thread,.page-scam .story-side[data-branch="check"] .evidence-thread{background:#94d6b6;transform:translateY(2px) rotate(-1deg)}
+.page-scam .story-side[data-branch="stop"] .evidence-meter,.page-scam .story-side[data-branch="check"] .evidence-meter{color:#b8eed1}
+.page-scam .story-side[data-branch="continue"] .evidence-thread:nth-child(2),.page-scam .story-side[data-branch="pay"] .evidence-thread:nth-child(2){transform:translateY(6px) rotate(1deg);background:#ff856a}
+.page-scam .story-main blockquote mark{position:relative;box-decoration-break:clone;-webkit-box-decoration-break:clone;transition:background .3s}
+.page-scam .story-main blockquote mark::after{content:"";position:absolute;left:0;right:0;top:52%;border-top:1px solid #ffb48f;transform:rotate(-4deg);pointer-events:none}
+.page-scam .work-heading h2 i{display:inline-block;transition:transform .35s}.page-scam .work-heading h2:hover i{transform:translateX(5px) scale(1.02)}
+@media(max-width:650px){.page-forge .forge-stage{height:270px}.page-forge .press-sheet{left:6%;right:27%;top:27%;bottom:19%;padding:16px}.page-forge #press-imprint{font-size:clamp(19px,5vw,26px)}.page-forge .press-sheet-label,.page-forge #press-detail{font-size:8px}.page-forge .forge-orb{width:74px;height:74px;font-size:14px;left:84%;top:51%;border-width:4px}.page-forge .forge-fragment{padding:6px 8px;font-size:9px}.page-forge .forge-stage-caption{font-size:9px}.page-scam .evidence-meter{top:65px;height:65px;left:8%;right:8%}.page-scam .story-main{padding-top:65px}}
+@media(prefers-reduced-motion:reduce){.page-forge .press-sheet,.page-forge #press-imprint,.page-forge .forge-orb,.page-forge .forge-fragment,.page-scam .evidence-thread{transition:none!important}.page-forge .forge-stage.is-printed .press-sheet{animation:none!important}.page-forge .work-heading h2:hover i,.page-scam .work-heading h2:hover i{transform:none}}
+
+/* A press is useful only if a print can be taken away and compared to edits. */
+.page-forge .forge-stage{--plate:#d7aa77}
+.page-forge .forge-stage[data-scenario="writing"]{--plate:#9cc8b2}
+.page-forge .forge-stage[data-scenario="finance"]{--plate:#b8bdd0}
+.page-forge .forge-stage[data-scenario="photo"]{--plate:#dfbb9a}
+.page-forge .forge-stage[data-scenario="phone"]{--plate:#9fbfd3}
+.page-forge .forge-fragment.is-locked{background:var(--plate)}
+.page-forge .forge-orb{background:radial-gradient(circle at 35% 28%,#f6e6c5,var(--plate) 58%,#654943);transition:transform .5s cubic-bezier(.2,.9,.2,1),background .45s}
+.page-forge .imprint-button{min-height:55px;border:1px solid #526e63;background:transparent;padding:12px 17px;color:#1a4038;font-size:14px;font-weight:750;transition:transform .25s,background .25s}
+.page-forge .imprint-button:hover:not(:disabled){transform:translateY(-3px);background:#dce9e2}
+.page-forge .printout{position:relative;margin:20px 0 31px;padding:clamp(22px,3vw,36px);max-width:720px;background:repeating-linear-gradient(130deg,transparent 0 16px,#4b554006 17px 18px),#eee9d9;color:#233a34;box-shadow:9px 12px 0 #7f8d7c3b,inset 0 0 0 1px #b4b3a2}
+.page-forge .printout[hidden]{display:none}
+.page-forge .printout::before{content:"";position:absolute;inset:12px;border:1px solid #4f695637;pointer-events:none}
+.page-forge .printout-head,.page-forge .printout-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;font:10px/1.6 ui-monospace,"Noto Sans CJK SC",monospace;letter-spacing:.08em}
+.page-forge .printout-head{border-bottom:1px solid #afb4a5;padding-bottom:14px;color:#526d60}
+.page-forge #printout-caption{font-size:15px;font-weight:700;color:#3c6154;margin:21px 0 13px}
+.page-forge .printout-foot{border-top:1px solid #afb4a5;margin-top:22px;padding-top:12px;color:#995538}
+.page-forge .printout-foot button{min-height:44px;border:0;border-bottom:1px solid currentColor;color:#315e50;background:none;font:700 12px "Noto Sans CJK SC",sans-serif}
+.page-forge .printout-foot button:hover{color:#a1553b}
+.page-forge .printout.imprint-enter{animation:sheet-drop .5s cubic-bezier(.15,.8,.2,1)}
+@keyframes sheet-drop{from{opacity:.6;transform:translateY(-12px) rotate(-1deg)}to{opacity:1;transform:translateY(0) rotate(0)}}
+@media(max-width:650px){.page-forge .output-actions{align-items:stretch}.page-forge .imprint-button{width:100%}.page-forge .printout-foot{align-items:flex-start;flex-direction:column}.page-forge .printout{padding:24px 19px}}
+@media(prefers-reduced-motion:reduce){.page-forge .printout.imprint-enter{animation:none}.page-forge .imprint-button{transition:none}}
+
+/* Hand-operated press piston. A pull moves the paper before it commits a
+   snapshot; button activation is the equivalent keyboard/tap path. */
+.page-forge .forge-output{position:relative}
+.page-forge .forge-stage .forge-orb{display:none}
+.page-forge .press-sheet{transform:translateY(calc((1 - var(--coherence))*8px + var(--force,0)*8px)) rotate(calc((1 - var(--coherence))*-2deg))}
+.page-forge .forge-lever{position:absolute;top:117px;right:7%;z-index:5;width:106px;height:106px;border:6px solid #bd9875;border-radius:50%;background:radial-gradient(circle at 35% 28%,#f6e6c5,var(--plate,#d7aa77) 58%,#654943);color:#263934;font-size:19px;font-weight:800;box-shadow:inset -8px -12px 20px #4d2c31a1,6px 10px 0 #0c2225;touch-action:none;user-select:none;cursor:grab;transform:translateY(var(--pull,0px));transition:transform .4s cubic-bezier(.18,.9,.25,1),background .45s}
+.page-forge .forge-lever.is-pulling{transition:none;cursor:grabbing}
+.page-forge .forge-lever:hover:not(:disabled){filter:brightness(1.13)}
+.page-forge .forge-lever:disabled{opacity:.55}
+.page-forge .forge-output:has(.forge-stage[data-scenario="writing"]) .forge-lever{--plate:#9cc8b2}.page-forge .forge-output:has(.forge-stage[data-scenario="finance"]) .forge-lever{--plate:#b8bdd0}.page-forge .forge-output:has(.forge-stage[data-scenario="photo"]) .forge-lever{--plate:#dfbb9a}.page-forge .forge-output:has(.forge-stage[data-scenario="phone"]) .forge-lever{--plate:#9fbfd3}
+@media(max-width:650px){.page-forge .forge-lever{top:95px;right:5%;width:74px;height:74px;font-size:14px;border-width:4px}}
+@media(prefers-reduced-motion:reduce){.page-forge .forge-lever{transition:none}}

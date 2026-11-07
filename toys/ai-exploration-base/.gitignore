@@ -1,1 +1,8 @@
 *.zip
+
+# local screenshot workspace (not part of the site)
+.arena/
+
+# python build cache
+__pycache__/
+*.pyc

@@ -1,0 +1,225 @@
+/* 04 / route weaving, scoped to the prototype. Sorting is based on conditions,
+   never income, success probability or a simulated job market. */
+.page-routes{--ink:#f5eddc;--soft:#c6bfca;--mint:#e9e19f;background:#1c1b29;color:#f5eddc}
+.page-routes .topbar{background:#1a1b28;border-color:#c3b3ad59}
+.page-routes .brand-symbol{border-color:#f3d4ad;border-radius:18px 4px 18px 4px;transform:rotate(6deg)}
+.page-routes .brand-symbol span,.page-routes .prototype-tag{color:#eadbaf}
+.page-routes .route-world{overflow:clip;background:radial-gradient(ellipse at 81% 10%,#504157ab,transparent 34%),radial-gradient(ellipse at 9% 52%,#253a4c99,transparent 50%),#1b1d2a}
+.page-routes .nojs-fallback{max-width:930px;margin:25px clamp(17px,5vw,90px) 0;padding:23px;background:#efe4d0;color:#332e3a;border:1px solid #f2dca8;box-shadow:8px 9px 0 #10131e;line-height:1.8}
+.page-routes .nojs-fallback a{color:#5d483c;font-weight:800}
+.routes-ready .page-routes .nojs-fallback{display:none}
+.page-routes .route-opening{position:relative;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:center;gap:clamp(18px,5vw,80px);padding:clamp(38px,4.5vw,70px) clamp(20px,6vw,105px) 50px;min-height:390px}
+.page-routes .route-opening::before{content:"04";position:absolute;right:2%;top:-13%;font:900 clamp(270px,31vw,490px)/1 "Noto Sans CJK SC",sans-serif;letter-spacing:-.12em;color:#e6d2a6;opacity:.026;pointer-events:none}
+.page-routes .route-opening>div{position:relative}
+.page-routes .eyebrow{color:#f3d5aa;font-size:10px;letter-spacing:.14em}
+.page-routes .live-dot{background:#f3d5aa;box-shadow:0 0 12px #f3d5aa}
+.page-routes .route-opening h1{font-size:clamp(56px,5.8vw,96px);letter-spacing:-.09em;line-height:1.09;margin:23px 0 19px;white-space:nowrap}
+.page-routes .route-opening h1 em{font-style:normal;color:#ebdbab}
+.page-routes .route-opening p{font-size:13px;line-height:1.85;color:#d4cbd3;max-width:570px;margin:0}
+.page-routes .route-graphic{justify-self:center;width:min(100%,410px);padding:24px 25px;border:1px solid #e6c89d80;background:#252938;box-shadow:9px 10px 0 #0b111c;transform:rotate(-2deg)}
+.page-routes .route-graphic>span{font:800 10px "Noto Sans CJK SC",sans-serif;color:#f0d7a9;letter-spacing:.1em}
+.page-routes .route-graphic i{display:block;margin-top:18px;height:18px;border:1px solid #f2d8b2c7;border-radius:35px 4px 35px 4px;box-shadow:4px 5px 0 #10151f;transform:skew(-13deg);background:linear-gradient(90deg,#b8b4d4,#8d9bb3)}
+.page-routes .route-graphic i:nth-of-type(1){width:85%;background:linear-gradient(90deg,#e6db9b,#dcaf8d)}
+.page-routes .route-graphic i:nth-of-type(2){width:69%;margin-left:18%;background:linear-gradient(90deg,#a5d6bf,#8fc8c4)}
+.page-routes .route-graphic i:nth-of-type(3){width:57%;margin-left:7%;background:linear-gradient(90deg,#ada5cf,#c5a8d1)}
+.page-routes .route-graphic strong{display:block;margin-top:24px;color:#eadabe;text-align:right;font-size:12px}
+.page-routes .route-stage{display:none;position:relative;margin:0 clamp(15px,4vw,76px);border:1px solid #bfb2ad85;background:linear-gradient(155deg,#2d2d3b,#1a2635 72%);box-shadow:12px 14px 0 #10121d}
+.routes-ready .page-routes .route-stage{display:block}
+.page-routes .route-stage::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 60px,#f2d9b808 60px 61px),repeating-linear-gradient(90deg,transparent 0 60px,#f2d9b806 60px 61px)}
+.page-routes .route-stage>*{position:relative}
+.page-routes .stage-bar{min-height:42px;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 22px;background:#393743;border-bottom:1px solid #c5b6ad8b;color:#edd6b0;font:750 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.06em}
+.page-routes .stage-bar b{margin-right:6px;color:#f4cf9b;text-shadow:0 0 9px #e6a879}
+.page-routes .route-telemetry{position:sticky;top:0;z-index:9;display:flex;align-items:center;gap:14px;min-height:56px;padding:10px clamp(15px,2vw,28px);background:#e8ddbf;color:#263943;border-bottom:3px solid #c7977a;box-shadow:0 5px 17px #090d1990;font:700 11px "Noto Sans CJK SC",sans-serif}
+.page-routes .route-telemetry>span{color:#655756;white-space:nowrap}
+.page-routes .route-telemetry strong{flex:1;font-size:13px}
+.page-routes .route-telemetry a{color:#3f5451;font-size:11px;text-decoration:none;border-bottom:1px solid #5c685c;white-space:nowrap}
+.page-routes .telemetry-pulse{flex:none;display:grid;align-content:center;gap:2px;width:80px;height:23px;padding:2px 0;border-left:1px solid #676e6280;padding-left:7px}
+.page-routes .telemetry-pulse i{display:block;width:var(--wire,45%);height:4px;background:#ad8857;box-shadow:1px 0 5px #b5846470;transition:width .55s cubic-bezier(.16,.86,.22,1)}
+.page-routes .telemetry-pulse i[data-strand="craft"]{background:#4d9c91}
+.page-routes .telemetry-pulse i[data-strand="systems"]{background:#9a7276}
+.page-routes .telemetry-pulse.is-switching i{animation:wire-feed .55s cubic-bezier(.18,.8,.25,1) both}
+.page-routes .telemetry-pulse.is-switching i:nth-child(2){animation-delay:.08s}
+.page-routes .telemetry-pulse.is-switching i:nth-child(3){animation-delay:.16s}
+@keyframes wire-feed{from{transform:translateX(-8px) scaleX(.48);opacity:.45}to{transform:translateX(0) scaleX(1);opacity:1}}
+.page-routes .stage-body{display:grid;grid-template-columns:minmax(265px,.66fr) minmax(0,1.34fr);gap:clamp(20px,3vw,48px);padding:clamp(20px,3vw,42px);align-items:start}
+.page-routes .panel-kicker{color:#efcda4;font:800 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.1em}
+.page-routes .profile-panel{min-width:0}
+.page-routes .profile-panel h2,.page-routes .paths-head h2{font-size:clamp(28px,3vw,43px);line-height:1.22;letter-spacing:-.06em;margin:10px 0 12px}
+.page-routes .profile-panel h2 em,.page-routes .paths-head h2 em{color:#f2d5ad;font-style:normal}
+.page-routes .profile-panel>p,.page-routes .paths-head>p{color:#d0cdd4;font-size:12px;line-height:1.78;margin:0 0 17px}
+.page-routes .choice-group{display:flex;flex-wrap:wrap;gap:6px;border:0;border-top:1px solid #c3aeb179;margin:0 0 15px;padding:9px 0 0;min-width:0}
+.page-routes .choice-group legend{padding:0 0 3px;color:#f3e2ce;font-size:13px;font-weight:800}
+.page-routes .choice-group button{min-height:42px;border:1px solid #9e9baba8;background:#35384b;color:#e1dce3;padding:7px 11px;font-size:11px;font-weight:750;transition:background .25s,transform .25s,border-color .25s}
+.page-routes .choice-group button:hover{transform:translateY(-2px);border-color:#f1d4a8}
+.page-routes .choice-group button[aria-pressed="true"]{background:#ead9ab;color:#323842;border-color:#ead9ab;box-shadow:0 4px 0 #9c746d}
+.page-routes .reset-conditions{border:1px solid #c5b0a2;background:transparent;color:#eddcc3;padding:9px 10px;font-size:10px;font-weight:750}
+.page-routes .reset-conditions:hover{background:#55515e}
+.page-routes .profile-panel .profile-note{border-left:3px solid #cca88d;padding-left:10px;margin:17px 0 0;color:#c2bbc1;font-size:10px;line-height:1.7}
+.page-routes .paths-head{margin-bottom:18px}
+.page-routes .route-lanes{display:grid;gap:9px;isolation:isolate}
+.page-routes .route-lane{--lane:#e6d89d;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-height:126px;padding:16px 21px 15px;border:1px solid #aaa5af91;background:#292e40;color:#eee6dd;text-align:left;box-shadow:5px 6px 0 #0e1620;transition:background .3s,border-color .3s}
+.page-routes .route-lane[data-route="craft"]{--lane:#a4dbce}
+.page-routes .route-lane[data-route="systems"]{--lane:#c5b2de}
+.page-routes .route-lane:hover{border-color:var(--lane)}
+.page-routes .route-lane[aria-pressed="true"]{background:#414454;border-color:var(--lane);box-shadow:5px 6px 0 #0e1620,inset 4px 0 0 var(--lane)}
+.page-routes .route-lane .lane-kicker{color:var(--lane);font:800 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.08em}
+.page-routes .route-lane .lane-title{font-size:clamp(19px,2vw,27px);letter-spacing:-.05em;line-height:1.2}
+.page-routes .route-lane .lane-subtitle{color:#d0d2d3;font-size:11px;line-height:1.5}
+.page-routes .lane-rail{position:relative;width:100%;height:13px;border:1px solid #a7a6ac7e;background:#222838;overflow:hidden;transform:skewX(-12deg)}
+.page-routes .lane-rail i{display:block;height:100%;width:var(--rail-length);background:repeating-linear-gradient(105deg,var(--lane) 0 17px,#fff6 17px 19px,var(--lane) 19px 36px);transition:width .6s cubic-bezier(.15,.8,.2,1)}
+.page-routes .lane-reason{font-size:10px;color:#edd2b7}
+.page-routes .route-detail{margin-top:25px;padding:24px;background:#ece2d0;color:#293842;border:1px solid #f6e5c7;box-shadow:7px 8px 0 #0b1521;clip-path:polygon(0 0,calc(100% - 21px) 0,100% 21px,100% 100%,0 100%)}
+.page-routes .detail-head{display:flex;justify-content:space-between;gap:12px}
+.page-routes .route-detail .panel-kicker{color:#6a5b53}
+.page-routes #detail-rank{font:800 10px "Noto Sans CJK SC",sans-serif;color:#42625e}
+.page-routes .route-detail h3{font-size:clamp(26px,2.7vw,38px);line-height:1.24;letter-spacing:-.06em;margin:17px 0 10px}
+.page-routes .detail-reason{font-size:12px;line-height:1.85;margin:0 0 12px;color:#374e4b}
+.page-routes .detail-caution{padding:10px 12px;margin:0 0 18px;border-left:3px solid #b3745e;color:#875140;background:#ead6c7;font-size:11px;line-height:1.75;font-weight:750}
+.page-routes .detail-instruction{display:block;border-top:1px solid #a9aa9b;padding:15px 0 11px;font-size:11px;font-weight:800;color:#3d544f}
+.page-routes .step-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.page-routes .step-choice{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:105px;padding:12px;border:1px solid #70887b;background:#dce6d5;color:#2d4a42;text-align:left}
+.page-routes .step-choice:hover,.page-routes .step-choice[aria-pressed="true"]{background:#375e54;color:#f4f0db;border-color:#375e54}
+.page-routes .step-choice span{font-size:10px;font-weight:750;opacity:.8}
+.page-routes .step-choice strong{font-size:14px;line-height:1.35}
+.page-routes .step-choice small{font-size:10px;line-height:1.5}
+.page-routes .route-ticket{margin-top:23px;padding:20px;background:#faf1da;border:1px dashed #6c7768;box-shadow:5px 5px 0 #a3ae9c;color:#293c37}
+.page-routes .route-ticket[hidden]{display:none!important}
+.page-routes .route-ticket.is-printed{animation:ticket-unfold .55s cubic-bezier(.16,.82,.2,1)}
+@keyframes ticket-unfold{from{opacity:.3;transform:translateY(-18px) scaleY(.9)}to{opacity:1;transform:translateY(0) scaleY(1)}}
+.page-routes .ticket-heading{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #a8b0a0;padding-bottom:10px;font:800 10px "Noto Sans CJK SC",sans-serif;color:#567064}
+.page-routes .ticket-heading strong{color:#31574b}
+.page-routes .route-ticket h4{font-size:clamp(20px,2.3vw,28px);margin:15px 0 8px;letter-spacing:-.05em}
+.page-routes .route-ticket>p{font-size:11px;line-height:1.7;margin:0 0 10px}
+.page-routes .route-ticket ol{margin:0 0 13px;padding-left:20px;font-size:11px;line-height:1.7}
+.page-routes .route-ticket li{margin:5px 0;padding-left:4px}
+.page-routes .route-ticket li:first-child{font-weight:800;color:#355b4c}
+.page-routes #ticket-boundary{border-top:1px solid #b8b8a4;padding-top:9px;color:#965a44;font-weight:800}
+.page-routes .route-ticket textarea{width:100%;max-height:170px;resize:vertical;border:1px solid #80978a;background:#fffaf0;color:#334943;padding:10px;font:650 10px/1.65 "Noto Sans CJK SC",sans-serif}
+.page-routes .ticket-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px}
+.page-routes .ticket-actions button{background:#315a4d;color:#f7f2db;border:0;padding:10px 15px;font-size:11px;font-weight:800}
+.page-routes .ticket-actions button:hover{background:#47715f}
+.page-routes .ticket-actions span{color:#346a54;font-size:10px}
+.page-routes .rules-drawer{margin:0 clamp(20px,3vw,42px) 29px;padding:18px 0;border-top:1px solid #bdb0ad8b;color:#d6cdd1;font-size:11px;line-height:1.85}
+.page-routes .rules-drawer summary{cursor:pointer;display:flex;justify-content:space-between;gap:10px;list-style:none;color:#eddfbd;font-weight:800;font-size:12px}
+.page-routes .rules-drawer summary::-webkit-details-marker{display:none}
+.page-routes .rules-drawer p{max-width:910px;margin:12px 0 0}
+.page-routes .route-context{display:grid;grid-template-columns:.6fr 1.2fr .8fr;gap:25px;align-items:start;margin:60px clamp(20px,6vw,105px) 20px;padding:28px 0;border-top:1px solid #c7aca795}
+.page-routes .route-context h2{font-size:clamp(27px,3.2vw,47px);line-height:1.3;letter-spacing:-.06em;margin:0 0 12px}
+.page-routes .route-context h2 em{font-style:normal;color:#e9dba9}
+.page-routes .route-context p{font-size:11px;line-height:1.8;color:#d2cbd0}
+.page-routes .context-warning{border-left:3px solid #e5b795;padding:5px 0 5px 15px}
+.page-routes .context-warning strong{font-size:13px;color:#f1d5a8}
+.page-routes .context-warning a{color:#f4d6aa;font-size:11px;text-decoration:none;border-bottom:1px solid #f4d6aa}
+.page-routes .route-onward{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px clamp(20px,6vw,105px) 65px;font-size:12px}
+.page-routes .route-onward a{color:#e9dcca;text-decoration:none;border-bottom:1px solid #ddc8b1;padding-bottom:6px}
+.page-routes .proto-footer{background:#10141f}
+@media(max-width:1100px){.page-routes .route-opening h1{font-size:clamp(52px,5.7vw,77px)}.page-routes .stage-body{grid-template-columns:minmax(235px,.75fr) minmax(0,1.25fr);gap:22px}.page-routes .profile-panel h2,.page-routes .paths-head h2{font-size:30px}.page-routes .route-context{grid-template-columns:1fr 1.4fr;gap:20px}.page-routes .context-warning{grid-column:2}}
+@media(max-width:760px){.page-routes .route-opening{grid-template-columns:1fr;min-height:0;padding:31px 18px 29px}.page-routes .route-opening h1{font-size:clamp(47px,8.8vw,70px);margin:15px 0}.page-routes .route-opening p{font-size:12px}.page-routes .route-graphic{display:none}.page-routes .route-stage{margin:0 10px;box-shadow:6px 8px 0 #10121d}.page-routes .route-telemetry{top:0;gap:5px;flex-wrap:wrap;padding:9px 14px;min-height:57px}.page-routes .route-telemetry>span{font-size:9px}.page-routes .route-telemetry strong{flex:1 1 100%;font-size:12px;order:2}.page-routes .route-telemetry a{margin-left:auto;order:1}.page-routes .telemetry-pulse{order:3;width:90px;height:14px}.page-routes .stage-body{grid-template-columns:1fr;padding:20px 15px;gap:37px}.page-routes .profile-panel h2,.page-routes .paths-head h2{font-size:32px}.page-routes .route-context{grid-template-columns:1fr;margin:55px 19px 15px;gap:10px}.page-routes .context-warning{grid-column:1}.page-routes .route-onward{padding:10px 19px 60px}}
+@media(max-width:390px){.page-routes .route-opening h1{font-size:clamp(42px,10.8vw,48px)}.page-routes .stage-bar{font-size:9px;padding:9px 12px}.page-routes .stage-bar span:last-child{max-width:85px;text-align:right}.page-routes .stage-body{padding:18px 11px}.page-routes .choice-group button{padding:7px 9px}.page-routes .route-detail{padding:18px 14px}.page-routes .step-choices{grid-template-columns:1fr}.page-routes .step-choice{min-height:81px}}
+@media(prefers-reduced-motion:reduce){.page-routes .choice-group button,.page-routes .route-lane,.page-routes .lane-rail i,.page-routes .telemetry-pulse i{transition:none!important}.page-routes .telemetry-pulse.is-switching i,.page-routes .route-ticket.is-printed{animation:none!important}}
+.page-routes .route-ticket .ticket-time{display:inline-block;margin:0 0 10px;padding:6px 9px;border:1px solid #9cac91;background:#e8ecd8;color:#3f5b4e;font-weight:800}
+/* 04 / second loop: physically schedule time, run a consequence, then print. */
+.page-routes .week-planner{margin:27px 0 0;padding:22px;background:#1e313b;color:#f1f0dd;border:1px solid #8bb5a895;box-shadow:7px 8px 0 #182530}
+.page-routes .week-planner[hidden],.page-routes .week-simulation[hidden]{display:none!important}
+.page-routes .planner-heading>span,.page-routes .planner-subhead{color:#c9e6b2;font:800 10px "Noto Sans CJK SC",sans-serif;letter-spacing:.1em}
+.page-routes .planner-heading h4{font-size:clamp(23px,2.8vw,34px);line-height:1.25;letter-spacing:-.055em;margin:8px 0 7px}
+.page-routes .planner-heading p{color:#c9d9d1;font-size:11px;line-height:1.75;margin:0 0 16px}
+.page-routes .budget-display{padding:14px;border:1px solid #bddaba8c;background:#0f2530;transition:background .3s,border-color .3s}
+.page-routes .budget-numbers{display:flex;justify-content:space-between;align-items:baseline;gap:7px;flex-wrap:wrap;margin-bottom:10px;font:750 11px "Noto Sans CJK SC",sans-serif}
+.page-routes .budget-numbers strong{font-size:17px;color:#dcf0c2}
+.page-routes .budget-numbers span{color:#ccdccc}
+.page-routes .budget-track{position:relative;height:19px;border:1px solid #a2c4ad;background:repeating-linear-gradient(90deg,#264b4b 0 27px,#203b44 27px 28px);overflow:hidden}
+.page-routes .budget-track i{display:block;height:100%;width:0;background:repeating-linear-gradient(105deg,#c8e9ad 0 19px,#e1edbb 19px 23px);box-shadow:4px 0 15px #dff4bb70;transition:width .58s cubic-bezier(.16,.8,.23,1),background .25s}
+.page-routes .budget-display[data-state="over"]{border-color:#f0a98b;background:#3d3038}
+.page-routes .budget-display[data-state="over"] .budget-numbers strong,.page-routes .budget-display[data-state="over"] .budget-numbers span{color:#ffd3be}
+.page-routes .budget-display[data-state="over"] .budget-track i{background:repeating-linear-gradient(105deg,#ef9a7f 0 15px,#ffc1a0 15px 18px);box-shadow:0 0 20px #f28b73}
+.page-routes #budget-overflow{position:absolute;right:0;top:0;background:#421f2d;color:#ffcfb8;font:850 10px/18px "Noto Sans CJK SC",sans-serif;padding:0 6px}
+.page-routes #budget-overflow[hidden]{display:none}
+.page-routes .planning-columns{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:17px 0 14px}
+.page-routes .module-shelf,.page-routes .week-slots{min-width:0;border:1px solid #89afa59a;padding:11px;background:#17303a;transition:border-color .28s,background .28s,box-shadow .28s}
+.page-routes .week-slots{background:#25434a;border-style:dashed}
+.page-routes .week-slots.drag-ready{border-color:#e3f4bd;background:#3c5c51;box-shadow:inset 0 0 25px #c9f0af5c}
+.page-routes .module-shelf .planner-subhead,.page-routes .week-slots .planner-subhead{display:block;margin-bottom:10px}
+.page-routes #module-shelf,#scheduled-tasks{display:grid;gap:7px}
+.page-routes .module-chip{display:grid;grid-template-columns:38px 1fr;gap:3px 8px;align-items:center;width:100%;min-height:68px;padding:9px 10px;border:1px solid #a6cab697;background:#dce8ca;color:#273f3c;text-align:left;cursor:grab;transition:transform .24s,background .24s}
+.page-routes .module-chip:hover{transform:translateX(4px);background:#f1f0d4}
+.page-routes .module-chip[aria-pressed="true"]{background:#739d85;border-color:#b2e8ae;color:#f1f4dd}
+.page-routes .module-chip .chip-hour{grid-row:1/3;display:grid;place-items:center;align-self:stretch;border:1px solid #6d8876;font:850 12px "Noto Sans CJK SC",sans-serif}
+.page-routes .module-chip strong{font-size:12px;line-height:1.3}
+.page-routes .module-chip small{font-size:10px;line-height:1.45}
+.page-routes .scheduled-task{position:relative;display:grid;grid-template-columns:31px 1fr;gap:2px 7px;align-items:center;width:100%;min-height:62px;padding:9px 9px;border:1px solid #cce2bcaa;background:#395e55;color:#f8f5df;text-align:left;animation:slot-attach .34s cubic-bezier(.14,.75,.2,1)}
+@keyframes slot-attach{from{opacity:.2;transform:translateX(-24px) rotate(-2deg)}to{opacity:1;transform:translateX(0) rotate(0)}}
+.page-routes .scheduled-task:hover{background:#4a7663}
+.page-routes .scheduled-task .slot-number{grid-row:1/3;color:#c7e5ac;font:850 12px "Noto Sans CJK SC",sans-serif}
+.page-routes .scheduled-task strong{font-size:12px;line-height:1.3}
+.page-routes .scheduled-task small{font-size:10px;color:#d5e9cd}
+.page-routes .empty-schedule{border:1px dashed #aed0be78;padding:15px;color:#c5d9c9;font-size:11px;line-height:1.65;margin:0}
+.page-routes .micro-toggle{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border:1px solid #b4e5c19c;background:#1f3b44;color:#cde9ca;font-size:11px;font-weight:800}
+.page-routes .micro-toggle[aria-pressed="true"]{background:#f0dcac;color:#334741;border-color:#f0dcac}
+.page-routes .micro-toggle:hover{border-color:#f1edc5}
+.page-routes .run-week{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:57px;margin:14px 0 0;padding:9px 16px;border:1px solid #e6ecbb;background:#dae8b6;color:#283d3c;font-size:15px;font-weight:850;box-shadow:5px 5px 0 #091d25;transition:transform .25s,background .25s}
+.page-routes .run-week span{font-size:24px}
+.page-routes .run-week:hover{transform:translateY(-3px);background:#f3ecc7}
+.page-routes .week-simulation{margin:20px 0 0;padding:18px;border:1px solid #d0edc2;background:#2d5248;color:#f3f2de}
+.page-routes .week-simulation[data-outcome="over"],.page-routes .week-simulation[data-outcome="unsafe"],.page-routes .week-simulation[data-outcome="empty"]{background:#5b393e;border-color:#f0a58d}
+.page-routes .simulation-phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:17px}
+.page-routes .simulation-phase{display:block;min-height:50px;padding:9px 6px;border:1px solid #d4eac493;background:#456a57;color:#f7f3dc;font-size:10px;font-weight:800;line-height:1.4}
+.page-routes .simulation-phase.is-missing{background:#795752;border-color:#dfa88f}
+.page-routes .week-simulation.is-running .simulation-phase{animation:phase-advance .42s cubic-bezier(.14,.84,.2,1) both}
+.page-routes .week-simulation.is-running .simulation-phase:nth-child(2){animation-delay:.13s}
+.page-routes .week-simulation.is-running .simulation-phase:nth-child(3){animation-delay:.26s}
+@keyframes phase-advance{from{opacity:0;transform:translateY(19px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+.page-routes .week-simulation strong{display:block;font-size:18px;line-height:1.35;margin-bottom:7px}
+.page-routes .week-simulation p{color:#f2e9de;font-size:11px;line-height:1.75;margin:0}
+.page-routes .module-flight{position:fixed;z-index:80;pointer-events:none;border:1px solid #e9d2ac;background:#e8dfc5;color:#314a42;box-shadow:5px 5px 0 #10242a;padding:8px 13px;font-size:11px;font-weight:850}
+@media(max-width:1060px){.page-routes .planning-columns{grid-template-columns:1fr}.page-routes #module-shelf{grid-template-columns:repeat(2,minmax(0,1fr))}.page-routes .module-chip{grid-template-columns:1fr;min-height:98px}.page-routes .module-chip .chip-hour{grid-row:1;justify-self:start;padding:3px 6px}.page-routes .module-chip strong,.page-routes .module-chip small{grid-column:1}}
+@media(max-width:390px){.page-routes .week-planner{padding:14px 11px}.page-routes #module-shelf{grid-template-columns:1fr}.page-routes .module-chip{grid-template-columns:38px 1fr;min-height:64px}.page-routes .module-chip .chip-hour{grid-row:1/3;justify-self:stretch}.page-routes .module-chip strong,.page-routes .module-chip small{grid-column:2}}
+@media(prefers-reduced-motion:reduce){.page-routes .budget-track i,.page-routes .module-chip,.page-routes .run-week{transition:none!important}.page-routes .scheduled-task,.page-routes .week-simulation.is-running .simulation-phase{animation:none!important}}
+
+/* 收入实话与合规出处 */
+.page-routes .route-disclosure{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:34px 48px;margin:8px clamp(20px,6vw,105px) 64px;padding:34px 0 0;border-top:1px solid #a9c7bb42}
+.page-routes .disclosure-copy h2{font-size:clamp(28px,3.4vw,48px);line-height:1.28;letter-spacing:-.055em;margin:0 0 14px}
+.page-routes .disclosure-copy h2 em{font-style:normal;color:#e9dba9}
+.page-routes .disclosure-copy p{font-size:12px;line-height:1.95;color:#d3ccd2;margin:0 0 11px;max-width:56ch}
+.page-routes .disclosure-copy strong{color:#f2e7cf}
+.page-routes .disclosure-note{color:#a9a2ab;font-size:11px}
+.page-routes .disclosure-links{display:grid;gap:22px}
+.page-routes .disclosure-group{display:grid;gap:0}
+.page-routes .disclosure-group>span{font:700 9.5px ui-monospace,"Noto Sans CJK SC",monospace;letter-spacing:.14em;color:#bfb4c4;text-transform:uppercase;margin-bottom:9px}
+.page-routes .disclosure-group a{display:block;padding:9px 0;border-top:1px solid #a9c7bb33;color:#f0e7d3;font-size:12px;font-weight:700;text-decoration:none}
+.page-routes .disclosure-group a:hover,.page-routes .disclosure-group a:focus-visible{color:#fff3cf}
+.page-routes .disclosure-group a small{display:block;margin-top:3px;font-size:10px;font-weight:400;color:#a9a2ab;letter-spacing:.01em}
+.page-routes .disclosure-group>small{font-size:10.5px;line-height:1.8;color:#a9a2ab;margin-top:9px}
+.page-routes .tool-links{display:flex;flex-wrap:wrap;gap:5px 13px;margin:0;padding:10px 0 2px;border-top:1px solid #a9c7bb33}
+.page-routes .tool-links a{display:inline;padding:0;border:0;border-bottom:1px solid #e9e19f66;font-weight:600;font-size:11.5px;color:#efe8c9}
+.page-routes .tool-links a:hover,.page-routes .tool-links a:focus-visible{color:#fff6cf;border-color:#e9e19f}
+@media(max-width:900px){.page-routes .route-disclosure{grid-template-columns:1fr;gap:26px;margin-bottom:46px}}
+
+/* 真源三层卡片排在路线台之后、页内（不再另起一张纸） */
+.page-routes .page-fill{padding:clamp(26px,4vw,52px) clamp(20px,5vw,72px);border-top:1px solid #ffffff1a;background:#10182080}
+.page-routes .page-fill-head{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.page-routes .page-fill-head>span{color:#f0b48a;font:750 10px/1 "Noto Sans CJK SC",sans-serif;letter-spacing:.14em}
+.page-routes .page-fill-head h2{margin:0;font-size:clamp(22px,2.4vw,30px);line-height:1.28;letter-spacing:-.02em;color:#f2ede2}
+.page-routes .page-fill .src-section{border-top:1px solid #ffffff14;padding:20px 0}
+.page-routes .page-fill .src-h2{color:#f2ede2;font-size:19px}
+.page-routes .page-fill .src-no{color:#f0b48a}
+.page-routes .page-fill .src-body p,.page-routes .page-fill .src-body li{color:#d6d9d2;font-size:13px;line-height:1.9}
+.page-routes .page-fill .src-body strong{color:#f6efdd}
+.page-routes .page-fill .src-body h3,.page-routes .page-fill .src-body h4{color:#e8dfcc;font-size:15px}
+.page-routes .page-fill .src-body blockquote{border-left-color:#f0b48a55;background:#ffffff0a;color:#d6d9d2}
+.page-routes .page-fill .src-body a{color:#f0b48a}
+.page-routes .page-fill .src-body blockquote,.page-academy .page-fill .src-body blockquote{background:none;padding:0 0 0 12px;margin:0 0 12px}
+
+.page-routes .page-fill .src-body blockquote{border-left-color:#f0b48a66}
+
+/* 选中的那条路线，详情里摊开真源那一层的子卡（正文在台面上，不在页尾） */
+.page-routes .route-md{margin-top:18px;border-top:1px solid #2b3a341f;padding-top:16px;display:grid;gap:12px}
+.page-routes .route-md[hidden]{display:none}
+.page-routes .route-md-k{color:#8a5a2b;font:750 10px/1 "Noto Sans CJK SC",sans-serif;letter-spacing:.14em}
+.page-routes .route-md-card{padding:12px 14px;border:1px solid #2b3a3414;background:#ffffff59}
+.page-routes .route-md-card h4{margin:0 0 8px;font-size:14px;color:#22332f}
+.page-routes .route-md-card p{margin:0 0 8px;font-size:12.5px;line-height:1.85;color:#3b4a45}
+.page-routes .route-md-steps{margin:0 0 8px;padding-left:1.2em;display:grid;gap:4px}
+.page-routes .route-md-steps li{font-size:12px;line-height:1.75;color:#41504a}
+.page-routes .route-md-note{color:#5b6a62}
+.page-routes .route-md-risk{color:#8d5230}
