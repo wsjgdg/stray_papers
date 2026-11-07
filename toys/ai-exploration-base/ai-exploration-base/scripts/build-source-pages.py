@@ -440,7 +440,7 @@ VERSIONS = {
     "prototype-source.css": "source-13",    # 七页共用的正文 / 卡片台样式
     "prototype-cards.js": "cards-07",
     "prototype-trends.css": "desk-15",
-    "prototype-trends.js": "desk-11",
+    "prototype-trends.js": "desk-12",
     "trend-desk.js": "desk-01",
     "prototype-lab.css": "lab-09",
     "prototype-lab.js": "lab-08",
@@ -452,7 +452,7 @@ VERSIONS = {
     "motion-lab-v2.js": "tear-in-07",     # 撕纸动效，由 prototype.js 懒加载
     "scam-acts.js": "acts-02",
     "prototype-academy.css": "calibrate-11",
-    "prototype-academy.js": "calibrate-08",
+    "prototype-academy.js": "calibrate-09",
 }
 
 ASSET_RX = re.compile(r'(?P<attr>\b(?:href|src)=")(?P<path>[^"?#]+)(?P<old>\?v=[^"]*)?(?=")')
@@ -605,7 +605,10 @@ def source_rows_any(sources_md: str, section_hint: str) -> list[dict]:
         name = next((c for c in cells[1:] if c and not c.startswith("http")
                      and not re.fullmatch(r"\d{3}", c)), "")
         title = re.split(r"[（(]", name)[0].strip() or re.sub(r"^https?://", "", url).split("/")[0]
-        out.append({"no": "", "title": title, "url": url, "code": status, "use": use})
+        # 表格单元格里可能带 Markdown 的 **加粗** 和反引号，这里是兜底分支，
+        # 不经过 deckkit.source_rows，所以要自己洗一遍——否则 ** 会原样印在页面上。
+        out.append({"no": "", "title": _K.strip_md(title), "url": url,
+                    "code": status, "use": _K.strip_md(use)})
     return out
 
 
