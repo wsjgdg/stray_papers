@@ -223,3 +223,10 @@
 .page-routes .route-md-steps li{font-size:12px;line-height:1.75;color:#41504a}
 .page-routes .route-md-note{color:#5b6a62}
 .page-routes .route-md-risk{color:#8d5230}
+
+/* 可读性兜底：说明类段落抬到 12px，行高 1.65 */
+.page-routes .route-context p,
+.page-routes .planner-heading p,
+.page-routes .week-simulation p,
+.page-routes .detail-caution,
+.page-routes .detail-instruction { font-size: 12px; line-height: 1.65; }

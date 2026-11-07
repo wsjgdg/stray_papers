@@ -67,7 +67,17 @@
         var eased = 1 - Math.pow(1 - t, 5);
         position(from + delta * eased);
         if (t < 1) { glideFrame = requestAnimationFrame(frame); }
-        else { glideFrame = 0; dial.classList.remove('is-gliding'); }
+        else {
+          glideFrame = 0;
+          dial.classList.remove('is-gliding');
+          // 到位"咔哒"一下：让指针落定的手感和旋钮同步（减弱动效时由 CSS 关掉）
+          if (delta) {
+            dial.classList.remove('is-seated');
+            void dial.offsetWidth;
+            dial.classList.add('is-seated');
+            setTimeout(function () { dial.classList.remove('is-seated'); }, 340);
+          }
+        }
       })(started);
     }
     function select(i, animate) {
