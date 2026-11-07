@@ -903,16 +903,24 @@ button.vn-btn {
     background 0.25s ease,
     border-color 0.25s ease,
     color 0.25s ease,
-    box-shadow 0.25s ease;
+    box-shadow 0.25s ease,
+    transform 0.16s ease;
 }
 
 button.vn-btn:hover {
   background: rgba(24, 34, 58, 0.75);
   border-color: rgba(150, 190, 255, 0.45);
   color: #ffffff;
+  transform: translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 14px var(--vn-accent-glow);
+    0 0 14px var(--vn-accent-glow),
+    0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+button.vn-btn:active {
+  transform: translateY(0) scale(0.94);
+  transition-duration: 0.08s;
 }
 
 button.vn-btn.vn-active {
@@ -1040,13 +1048,19 @@ button.vn-slot {
   transition:
     border-color 0.25s ease,
     background 0.25s ease,
-    box-shadow 0.25s ease;
+    box-shadow 0.25s ease,
+    transform 0.16s ease;
 }
 
 button.vn-slot:hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: var(--vn-accent-soft);
   box-shadow: 0 0 16px rgba(110, 160, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+button.vn-slot:active {
+  transform: translateY(0) scale(0.99);
 }
 
 button.vn-slot:last-of-type {
@@ -1062,7 +1076,8 @@ button.vn-slot:last-of-type {
 }
 
 /* Save-slot scene thumbnail (load mode only): fixed 16:9 box, cover-cropped.
-   Slot rows grow naturally; 96px still fits the 320px .vn-menu (92% + padding). */
+   Slot rows grow naturally; 96px still fits the 320px .vn-menu (92% + padding).
+   Hover zooms the thumb slightly — the row feels alive under the cursor. */
 .vn-slot-thumb {
   display: block;
   width: 96px;
@@ -1071,6 +1086,11 @@ button.vn-slot:last-of-type {
   border-radius: 6px;
   border: 1px solid var(--vn-border);
   margin-bottom: 6px;
+  transition: transform 0.25s ease;
+}
+
+button.vn-slot:hover .vn-slot-thumb {
+  transform: scale(1.04);
 }
 
 button.vn-close {
@@ -1994,6 +2014,40 @@ input.vn-range {
    -------------------------------------------------------------------------- */
 .vn-text.vn-glitch {
   animation: vn-glitch 1.2s steps(1, end) 1;
+}
+
+/* whisper (fx:"whisper"): a hushed line — recorded voice, machine speech,
+   memory quotations. Smaller, fainter, wider-tracked; the typing caret and
+   name plate stay untouched so it reads as the same voice, further away. */
+.vn-text.vn-whisper {
+  font-size: 0.92em;
+  letter-spacing: 0.14em;
+  color: rgba(206, 218, 240, 0.62);
+  text-shadow: 0 0 10px rgba(150, 190, 255, 0.12);
+}
+
+/* flash (fx:"flash"): one-shot white blink over everything below the topbar
+   (z 6), self-removing — used for white-outs and archive cuts */
+#vn-app.vn-flash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: #f3f7ff;
+  animation: vn-flashout 0.7s ease-out forwards;
+}
+
+@keyframes vn-flashout {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 #vn-app.vn-shake {
@@ -3041,20 +3095,35 @@ window.SCENARIO = {
       bg: "memory_white",
       chapter: "第二章 · 那一夜的白光",
       lines: [
-        { narr: "白光涌起，淹没机柜、灰尘和我们的影子。" },
-        { narr: "监控画面无声地浮起来。三年前，同一个房间。" },
+        { narr: "白光涌起，淹没机柜、灰尘和我们的影子。", fx: "flash" },
+        { narr: "监控画面无声地浮起来。三年前，同一个房间。", fx: "whisper" },
         { narr: "画面里的沈眠坐在机房中央，面前摊着一叠检查单。" },
         { narr: "她对着摄像头笑了笑，像早就知道三年后有人在看。" },
-        { narr: "「陈屿，看到这里，说明林晚也来了。很好，人齐了。」" },
-        { narr: "「确诊那天我就想好了。我的时间不够，但存储够。」" },
-        { narr: "「栖是我写的容器。今晚我把自己放进去。不可逆。别哭。」" },
+        {
+          narr: "「陈屿，看到这里，说明林晚也来了。很好，人齐了。」",
+          fx: "whisper",
+        },
+        {
+          narr: "「确诊那天我就想好了。我的时间不够，但存储够。」",
+          fx: "whisper",
+        },
+        {
+          narr: "「栖是我写的容器。今晚我把自己放进去。不可逆。别哭。」",
+          fx: "whisper",
+        },
         { who: "lin", feel: "cry", text: "眠姐……你病了为什么不告诉我们……" },
         {
           narr: "画面里，她躺进扫描环，像躺进一场排练过的雪。",
           cg: "cg_archive",
         },
-        { narr: "「参宿四今晚很亮。替我记住。往后的夜空，拜托你们了。」" },
-        { narr: "扫描环合拢，白光熄灭。2023 年 11 月 2 日，23 点 59 分。" },
+        {
+          narr: "「参宿四今晚很亮。替我记住。往后的夜空，拜托你们了。」",
+          fx: "whisper",
+        },
+        {
+          narr: "扫描环合拢，白光熄灭。2023 年 11 月 2 日，23 点 59 分。",
+          fx: "flash",
+        },
         {
           who: "yu",
           feel: "sad",
@@ -3281,7 +3350,10 @@ window.SCENARIO = {
           text: "参宿四。前年冬天它骤暗过一次，全世界的望远镜都在看。",
         },
         { narr: "扬声器那边静了三秒。对机器和昨天来说，都很长。" },
-        { narr: "「……骤暗？可是我记得它亮着。我记得，我亲眼看过。」" },
+        {
+          narr: "「……骤暗？可是我记得它亮着。我记得，我亲眼看过。」",
+          fx: "whisper",
+        },
         {
           who: "yu",
           feel: "sad",
@@ -3292,8 +3364,14 @@ window.SCENARIO = {
           feel: "cry",
           text: "栖把新闻读给你听，你却把一切都当成梦。你早就发现了吧。",
         },
-        { narr: "「……嗯。每次醒来，参宿四都亮得一模一样。可梦会累积。」" },
-        { narr: "「我数过那些梦。一千零九十六个夜晚的新闻。我不敢问。」" },
+        {
+          narr: "「……嗯。每次醒来，参宿四都亮得一模一样。可梦会累积。」",
+          fx: "whisper",
+        },
+        {
+          narr: "「我数过那些梦。一千零九十六个夜晚的新闻。我不敢问。」",
+          fx: "whisper",
+        },
         {
           who: "yu",
           feel: "sad",
@@ -8366,6 +8444,7 @@ window.VN_CG_IMG = {
   var BG_FADE_MS = 300; // keep in sync with the .vn-bg opacity transition in style.css
   var BG_FADING_MS = 650; // .vn-fading (fade through black) window on bg change
   var SHAKE_MS = 500; // duration of .vn-shake on #vn-app for fx:"shake" lines
+  var FLASH_MS = 700; // duration of the one-shot .vn-flash white blink
   var TOAST_MS = 1500;
   var BACKLOG_LIMIT = 100; // keep only the last N displayed lines
   var SLOT_COUNT = 3; // vn-save-1 .. vn-save-3
@@ -8428,6 +8507,7 @@ window.VN_CG_IMG = {
     bg: null,
     fading: null,
     shake: null,
+    flash: null,
     toast: null,
     chapter: null,
     credits: null,
@@ -9847,6 +9927,23 @@ window.VN_CG_IMG = {
       els.app.classList.add("vn-grade");
       return;
     }
+    if (fx === "whisper") {
+      // hushed line: smaller, faded, wider-tracked text (recorded voice,
+      // machine speech, memories); rides on .vn-text, cleared on advance
+      els.text.classList.add("vn-whisper");
+      return;
+    }
+    if (fx === "flash") {
+      // one-shot white blink (white-outs, lightning, archive cuts); the
+      // overlay is CSS on #vn-app::after and self-removes after FLASH_MS
+      els.app.classList.add("vn-flash");
+      clearTimeout(timers.flash);
+      timers.flash = setTimeout(function () {
+        timers.flash = null;
+        if (els) els.app.classList.remove("vn-flash");
+      }, FLASH_MS);
+      return;
+    }
     if (fx === "dolly") {
       // emotional peak: push the camera in — the background scales up and
       // softens while the focus sprite leans closer; lasts while the line
@@ -9865,17 +9962,22 @@ window.VN_CG_IMG = {
   // Glitch is tied to the currently displayed line — cleared on advance and
   // whenever the engine stops presenting lines.
   function clearGlitch() {
-    if (els) els.text.classList.remove("vn-glitch");
+    // text-level fx clear: glitch RGB-split and the whisper treatment both
+    // ride on .vn-text and stop when the line advances
+    if (els) els.text.classList.remove("vn-glitch", "vn-whisper");
   }
 
-  // Full fx reset (title screen): also cancels a pending shake, dolly, and
-  // any scene-level grade (the title runs its own ungraded starfield).
+  // Full fx reset (title screen): also cancels a pending shake, flash,
+  // dolly, and any scene-level grade (the title runs its own starfield).
   function clearLineFx() {
     clearGlitch();
     clearTimeout(timers.shake);
     timers.shake = null;
+    clearTimeout(timers.flash);
+    timers.flash = null;
     if (els) {
       els.app.classList.remove("vn-shake");
+      els.app.classList.remove("vn-flash");
       els.app.classList.remove("vn-dolly");
       els.app.classList.remove("vn-grade");
       for (var i = els.app.classList.length - 1; i >= 0; i--) {

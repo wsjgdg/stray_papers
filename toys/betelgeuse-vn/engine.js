@@ -122,6 +122,7 @@
   var BG_FADE_MS = 300; // keep in sync with the .vn-bg opacity transition in style.css
   var BG_FADING_MS = 650; // .vn-fading (fade through black) window on bg change
   var SHAKE_MS = 500; // duration of .vn-shake on #vn-app for fx:"shake" lines
+  var FLASH_MS = 700; // duration of the one-shot .vn-flash white blink
   var TOAST_MS = 1500;
   var BACKLOG_LIMIT = 100; // keep only the last N displayed lines
   var SLOT_COUNT = 3; // vn-save-1 .. vn-save-3
@@ -184,6 +185,7 @@
     bg: null,
     fading: null,
     shake: null,
+    flash: null,
     toast: null,
     chapter: null,
     credits: null,
@@ -1603,6 +1605,23 @@
       els.app.classList.add("vn-grade");
       return;
     }
+    if (fx === "whisper") {
+      // hushed line: smaller, faded, wider-tracked text (recorded voice,
+      // machine speech, memories); rides on .vn-text, cleared on advance
+      els.text.classList.add("vn-whisper");
+      return;
+    }
+    if (fx === "flash") {
+      // one-shot white blink (white-outs, lightning, archive cuts); the
+      // overlay is CSS on #vn-app::after and self-removes after FLASH_MS
+      els.app.classList.add("vn-flash");
+      clearTimeout(timers.flash);
+      timers.flash = setTimeout(function () {
+        timers.flash = null;
+        if (els) els.app.classList.remove("vn-flash");
+      }, FLASH_MS);
+      return;
+    }
     if (fx === "dolly") {
       // emotional peak: push the camera in — the background scales up and
       // softens while the focus sprite leans closer; lasts while the line
@@ -1621,17 +1640,22 @@
   // Glitch is tied to the currently displayed line — cleared on advance and
   // whenever the engine stops presenting lines.
   function clearGlitch() {
-    if (els) els.text.classList.remove("vn-glitch");
+    // text-level fx clear: glitch RGB-split and the whisper treatment both
+    // ride on .vn-text and stop when the line advances
+    if (els) els.text.classList.remove("vn-glitch", "vn-whisper");
   }
 
-  // Full fx reset (title screen): also cancels a pending shake, dolly, and
-  // any scene-level grade (the title runs its own ungraded starfield).
+  // Full fx reset (title screen): also cancels a pending shake, flash,
+  // dolly, and any scene-level grade (the title runs its own starfield).
   function clearLineFx() {
     clearGlitch();
     clearTimeout(timers.shake);
     timers.shake = null;
+    clearTimeout(timers.flash);
+    timers.flash = null;
     if (els) {
       els.app.classList.remove("vn-shake");
+      els.app.classList.remove("vn-flash");
       els.app.classList.remove("vn-dolly");
       els.app.classList.remove("vn-grade");
       for (var i = els.app.classList.length - 1; i >= 0; i--) {
