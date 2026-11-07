@@ -437,21 +437,21 @@ VERSIONS = {
     "prototype-home.css": "switch-16",
     "prototype-forge.css": "press-08",      # ① 关的 .page-forge 外用样式
     "prototype-dossier.css": "dossier-09",
-    "prototype-source.css": "source-12",    # 七页共用的正文 / 卡片台样式
+    "prototype-source.css": "source-13",    # 七页共用的正文 / 卡片台样式
     "prototype-cards.js": "cards-07",
-    "prototype-trends.css": "desk-14",
+    "prototype-trends.css": "desk-15",
     "prototype-trends.js": "desk-11",
     "trend-desk.js": "desk-01",
     "prototype-lab.css": "lab-09",
     "prototype-lab.js": "lab-08",
-    "prototype-routes.css": "weave-08",
-    "prototype-routes.js": "weave-07",
+    "prototype-routes.css": "weave-09",
+    "prototype-routes.js": "weave-08",
     "route-fill.js": "route-01",
-    "prototype-scam.css": "case-14",
+    "prototype-scam.css": "case-15",
     "prototype-scam-tear.css": "tear-in-08",
     "motion-lab-v2.js": "tear-in-07",     # 撕纸动效，由 prototype.js 懒加载
     "scam-acts.js": "acts-02",
-    "prototype-academy.css": "calibrate-10",
+    "prototype-academy.css": "calibrate-11",
     "prototype-academy.js": "calibrate-08",
 }
 

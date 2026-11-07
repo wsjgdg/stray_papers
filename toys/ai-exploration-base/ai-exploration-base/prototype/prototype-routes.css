@@ -230,3 +230,36 @@
 .page-routes .week-simulation p,
 .page-routes .detail-caution,
 .page-routes .detail-instruction { font-size: 12px; line-height: 1.65; }
+
+/* ---- ④ 页首三条路线逐段"画"出来 ----
+   基础规则里的 transform 是 skew(-13deg)，关键帧必须带上它，否则笔画到一半会变正。
+   载入时按 starter → craft → systems 依次长出；条件一变（.is-redraw）再画一遍，
+   当前排第一的那条先长、并亮一下。≤760px 时 .route-graphic 本身是 display:none。 */
+@keyframes strand-draw {
+  from { transform: skew(-13deg) scaleX(0); }
+  to { transform: skew(-13deg) scaleX(1); }
+}
+@keyframes strand-glow {
+  0% { filter: brightness(2.3); }
+  100% { filter: brightness(1); }
+}
+.page-routes .route-graphic i {
+  transform-origin: left center;
+  animation: strand-draw .6s cubic-bezier(.2, .85, .25, 1) both;
+}
+.page-routes .route-graphic i:nth-of-type(1) { animation-delay: .12s; }
+.page-routes .route-graphic i:nth-of-type(2) { animation-delay: .28s; }
+.page-routes .route-graphic i:nth-of-type(3) { animation-delay: .44s; }
+.page-routes .route-graphic.is-redraw i { animation: strand-draw .52s cubic-bezier(.2, .85, .25, 1) both; }
+.page-routes .route-graphic i.is-lead {
+  animation: strand-draw .52s cubic-bezier(.2, .85, .25, 1) both, strand-glow 1.25s ease-out;
+  box-shadow: 4px 5px 0 #10151f, 0 0 0 2px rgba(255, 248, 220, .4), 0 0 26px rgba(255, 233, 168, .67);
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-routes .route-graphic i,
+  .page-routes .route-graphic.is-redraw i,
+  .page-routes .route-graphic i.is-lead {
+    animation: none;
+    transform: skew(-13deg);
+  }
+}
