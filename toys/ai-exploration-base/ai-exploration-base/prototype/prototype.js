@@ -87,7 +87,7 @@
       dial.dataset.playable = String(ch.playable);
       document.getElementById('dial-number').textContent = number;
       document.getElementById('dial-mode').textContent = ch.playable ? 'ON AIR' : 'NO SIGNAL';
-      document.getElementById('mission-index').textContent = number + ' / 06 · ' + (ch.playable ? '可玩原型' : '预留频段');
+      document.getElementById('mission-index').textContent = number + ' / 06 · ' + (ch.playable ? '已开放' : '预留频段');
       document.getElementById('signal-power').textContent = ch.playable ? 'LIVE / 已接通' : 'OFFLINE / 未制作';
       document.getElementById('deck-readout').textContent = 'CH.' + number + (ch.playable ? ' 接通 · ' : ' 尚未制作 · ') + ch.name;
       document.getElementById('mission-name').textContent = ch.name;
@@ -102,7 +102,7 @@
       document.getElementById('mission-caption').hidden = !ch.playable;
       document.getElementById('mission-caption').textContent = ch.mode === 'scam' ? '情景模拟 · 不涉及真钱或个人资料' : ch.mode === 'trends' ? '离线资料练习 · 不连接实时新闻' : ch.mode === 'lab' ? '本地规则计算 · 不调用 AI 或上传数据' : ch.mode === 'routes' ? '定性路线练习 · 不预测收入或保存条件' : ch.mode === 'academy' ? '本地整理提问 · 不调用 AI 或保存输入' : '离线可用 · 不提交任何输入';
       track.setAttribute('aria-valuenow', String(active + 1));
-      track.setAttribute('aria-valuetext', '第 ' + (active + 1) + ' 关：' + nav[active].querySelector('strong').textContent + '；' + (ch.playable ? '可玩原型' : '原型尚未制作'));
+      track.setAttribute('aria-valuetext', '第 ' + (active + 1) + ' 关：' + nav[active].querySelector('strong').textContent + '；' + (ch.playable ? '已开放' : '尚未制作'));
       nav.forEach(function (button, n) { button.setAttribute('aria-pressed', String(n === active)); });
       if (!dragging) glideTo(active * 60, animate);
     }
