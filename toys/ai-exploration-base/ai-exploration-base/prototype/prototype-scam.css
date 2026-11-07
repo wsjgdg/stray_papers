@@ -172,3 +172,7 @@
   color: rgba(255, 255, 255, .46);
 }
 .page-scam .scam-eight-note b { color: rgba(255, 255, 255, .72); font-weight: 600; }
+
+/* 可读性兜底：给长辈看的说明句不小于 12px（机读小标签仍保持原尺寸） */
+.page-scam .case-instruction { font-size: 12px; line-height: 1.6; }
+.page-scam .case-source-card p { font-size: 12px; line-height: 1.6; }

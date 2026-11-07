@@ -433,25 +433,25 @@ WITH_STAGE = True
 #   · 页面之间互相跳转（`chapter-0X.html`）不带 `?v=`——HTML 不吃这套缓存策略，
 #     带戳只会让同一条链接在不同页面上出现三四种写法（这正是以前的老毛病）。
 VERSIONS = {
-    "prototype.js": "switch-18",            # 首页拨盘 + ⑤ 关共用同一份
-    "prototype-home.css": "switch-14",
+    "prototype.js": "switch-19",            # 首页拨盘 + ⑤ 关共用同一份
+    "prototype-home.css": "switch-15",
     "prototype-forge.css": "press-08",      # ① 关的 .page-forge 外用样式
-    "prototype-dossier.css": "dossier-08",
+    "prototype-dossier.css": "dossier-09",
     "prototype-source.css": "source-08",    # 七页共用的正文 / 卡片台样式
     "prototype-cards.js": "cards-06",
-    "prototype-trends.css": "desk-10",
+    "prototype-trends.css": "desk-11",
     "prototype-trends.js": "desk-09",
     "trend-desk.js": "desk-01",
-    "prototype-lab.css": "lab-06",
+    "prototype-lab.css": "lab-07",
     "prototype-lab.js": "lab-06",
-    "prototype-routes.css": "weave-07",
+    "prototype-routes.css": "weave-08",
     "prototype-routes.js": "weave-07",
     "route-fill.js": "route-01",
-    "prototype-scam.css": "case-10",
-    "prototype-scam-tear.css": "tear-in-07",
+    "prototype-scam.css": "case-11",
+    "prototype-scam-tear.css": "tear-in-08",
     "motion-lab-v2.js": "tear-in-07",     # 撕纸动效，由 prototype.js 懒加载
     "scam-acts.js": "acts-02",
-    "prototype-academy.css": "calibrate-08",
+    "prototype-academy.css": "calibrate-09",
     "prototype-academy.js": "calibrate-08",
 }
 

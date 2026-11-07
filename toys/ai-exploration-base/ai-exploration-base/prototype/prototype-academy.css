@@ -92,3 +92,7 @@
 .page-routes .page-fill .src-body blockquote,.page-academy .page-fill .src-body blockquote{background:none;padding:0 0 0 12px;margin:0 0 12px}
 
 .page-academy .page-fill .src-body blockquote{border-left-color:#b9d98a66}
+
+/* 可读性兜底：试投说明与修复回执是正文，抬到 12px */
+.page-academy .trial-header p,
+.page-academy .repair-receipt p { font-size: 12px; line-height: 1.65; }

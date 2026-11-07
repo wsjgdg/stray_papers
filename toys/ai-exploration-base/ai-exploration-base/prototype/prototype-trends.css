@@ -205,3 +205,13 @@
   .page-trends .workbench.is-replating .card-stack,
   .page-trends .workbench.is-replating .signal-card { animation: none; }
 }
+/* 卡片落格时，档格里的计数跟着弹一下（复用已有的 bin-receiving 状态） */
+@keyframes count-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); color: #f2ffd0; }
+  100% { transform: scale(1); }
+}
+.page-trends .bin.bin-receiving .bin-count { animation: count-pop .42s cubic-bezier(.2, .8, .25, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .page-trends .bin.bin-receiving .bin-count { animation: none; }
+}
