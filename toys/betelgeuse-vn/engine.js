@@ -51,6 +51,10 @@
  *
  * Optional, backward-compatible scenario extensions:
  *   backgrounds[id].html — fx layer synced into .vn-bg-fx on every bg change
+ *   backgrounds[id].grade — persistent scene mood filter (warm/cold/dusk/
+ *                          sepia/night/ember), .vn-g-<grade> on #vn-app;
+ *                          follows bg fades, restores with saves; unknown
+ *                          values warn once and are ignored
  *   line.fx              — "glitch" (.vn-glitch on .vn-text while the line
  *                          displays) or "shake" (.vn-shake on #vn-app for
  *                          SHAKE_MS); unknown values warn once and are ignored
@@ -1028,6 +1032,38 @@
     });
   }
 
+  // Scene-level color grade: backgrounds[id].grade picks a persistent mood
+  // filter (CSS class on #vn-app; .vn-bg and .vn-grain are graded — sprites
+  // keep their own palette, matching the line-level fx:"grade" precedent).
+  // One vn-g-* class at a time; unknown values warn once and are ignored.
+  var BG_GRADES = {
+    warm: 1, // golden homely glow (apartment, dawn)
+    cold: 1, // clinical screen chill
+    dusk: 1, // violet dome atmosphere
+    sepia: 1, // aged memory tone
+    night: 1, // deep late-hour blue
+    ember: 1, // red-supergiant finale warmth
+  };
+  var gradeWarned = false;
+
+  function syncGrade(bg) {
+    if (!els || !els.app) return;
+    for (var i = els.app.classList.length - 1; i >= 0; i--) {
+      var cls = els.app.classList[i];
+      if (cls.indexOf("vn-g-") === 0) els.app.classList.remove(cls);
+    }
+    var grade = bg && typeof bg.grade === "string" ? bg.grade : "";
+    if (!grade) return;
+    if (!BG_GRADES[grade]) {
+      if (!gradeWarned) {
+        gradeWarned = true;
+        console.warn("[VN] unknown background grade: " + grade);
+      }
+      return;
+    }
+    els.app.classList.add("vn-g-" + grade);
+  }
+
   function applyBg(bgId) {
     if (!bgId || bgId === state.bg) return; // bg persists when omitted / unchanged
     var bg = S.backgrounds && S.backgrounds[bgId];
@@ -1048,6 +1084,7 @@
     timers.bg = setTimeout(function () {
       els.bg.style.background = bg.css;
       syncBgFx(bg, bgId);
+      syncGrade(bg); // grade follows the bg through the same fade window
       recordSeen(bgId); // gallery unlock: this scene has now been visited
       audioHook("scene", bgId); // bg now active: switch the ambient loop
       els.bg.classList.remove("vn-fade");
@@ -1067,6 +1104,7 @@
     state.bg = bgId;
     els.bg.style.background = bg.css;
     syncBgFx(bg, bgId); // re-apply the restored bg's fx html + canvas scene
+    syncGrade(bg); // instant path: grade comes back with the bg
     recordSeen(bgId);
     audioHook("scene", bgId); // restored bg now active: ambient loop follows
   }
@@ -1501,7 +1539,8 @@
     if (els) els.text.classList.remove("vn-glitch");
   }
 
-  // Full fx reset (title screen): also cancels a pending shake and dolly.
+  // Full fx reset (title screen): also cancels a pending shake, dolly, and
+  // any scene-level grade (the title runs its own ungraded starfield).
   function clearLineFx() {
     clearGlitch();
     clearTimeout(timers.shake);
@@ -1510,6 +1549,10 @@
       els.app.classList.remove("vn-shake");
       els.app.classList.remove("vn-dolly");
       els.app.classList.remove("vn-grade");
+      for (var i = els.app.classList.length - 1; i >= 0; i--) {
+        var cls = els.app.classList[i];
+        if (cls.indexOf("vn-g-") === 0) els.app.classList.remove(cls);
+      }
     }
   }
 

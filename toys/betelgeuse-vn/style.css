@@ -300,6 +300,37 @@ body {
   opacity: 0.09; /* grain reads heavier under the cooler grade */
 }
 
+/* scene-level color grades (backgrounds[id].grade): a persistent mood filter
+   that follows the background through fades and restores with saves. Only
+   .vn-bg and .vn-grain are graded — sprites keep their own palette. The
+   .vn-bg filter transition (0.3s) animates the swap between grades. */
+#vn-app.vn-g-warm .vn-bg {
+  filter: saturate(1.08) contrast(1.02) brightness(1.02) sepia(0.14)
+    hue-rotate(-8deg);
+}
+#vn-app.vn-g-cold .vn-bg {
+  filter: saturate(0.78) contrast(1.05) brightness(0.9) hue-rotate(12deg);
+}
+#vn-app.vn-g-dusk .vn-bg {
+  filter: saturate(0.95) contrast(1.06) brightness(0.85) hue-rotate(22deg);
+}
+#vn-app.vn-g-sepia .vn-bg {
+  filter: saturate(0.68) contrast(0.96) brightness(1.04) sepia(0.42);
+}
+#vn-app.vn-g-night .vn-bg {
+  filter: saturate(0.7) contrast(1.1) brightness(0.78) hue-rotate(6deg);
+}
+#vn-app.vn-g-ember .vn-bg {
+  filter: saturate(1.12) contrast(1.05) brightness(0.95) sepia(0.22)
+    hue-rotate(-18deg);
+}
+#vn-app.vn-g-sepia .vn-grain {
+  opacity: 0.11; /* old-film memory tone carries more grain */
+}
+#vn-app.vn-g-night .vn-grain {
+  opacity: 0.1;
+}
+
 /* --------------------------------------------------------------------------
    4. Sprite stage (large waist-up portraits, left + right of the dialog)
    -------------------------------------------------------------------------- */
