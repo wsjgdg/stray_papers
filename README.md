@@ -6,6 +6,11 @@
 > 这是**交互原型**：不调用任何 AI 接口、不保存你输入的内容、不标记正式打卡。
 > 页面上的对话与收益数字都是教学模拟，不是真实账户。
 
+> **仓库里有什么**：只有这套原型——`ai-exploration-base/prototype/` 七张页面、`docs/content/` 文字真源、
+> `scripts/` 构建脚本。**没有**早期的完整站（`pages/`、`assets/js/site.js`、`progress.js`、`先读我.txt`、
+> `scripts/test.js`、`scripts/smoke.js`、`build-zip.sh`），也没有打包 zip 的流程；它们已在 `0930842` 之后撤出。
+> `docs/DELIVERY.md`、`docs/REVIEW.md` 里提到这些文件的地方是历史记录，照做会找不到文件。
+
 ## 快速开始
 
 ```bash
@@ -18,6 +23,8 @@ python3 -m http.server 8000
 ```bash
 # 2) 改完真源 / 脚本后，重新构建页面（在仓库根目录执行）
 python3 ai-exploration-base/scripts/build-source-pages.py
+# 构建 + 七页自检（本地引用是否存在、锚点有没有落点、id 有没有重复、版本戳对不对）
+python3 ai-exploration-base/scripts/build-source-pages.py --check
 ```
 
 构建是**幂等**的：连跑两次，`prototype/*.html` 的 md5 应当完全一致。页面由脚本产出，手改会在下次构建时被覆盖。
@@ -27,7 +34,7 @@ python3 ai-exploration-base/scripts/build-source-pages.py
 ```
 ai-exploration-base/
 ├── prototype/            生成好的七张页面 + 交互脚本与样式
-│   ├── index.html        原型拨盘（六频道入口）
+│   ├── index.html        原型拨盘（六频道入口；它同时是自己的模板，改文案就在这）
 │   ├── chapter-0X.html   六关页面（构建产物，勿手改）
 │   ├── legacy/           各关的页面骨架快照，构建以它为底
 │   └── *.js / *.css      各关交互（含 route-fill.js 这类由真源生成的纯数据层）
@@ -61,21 +68,36 @@ docs/                     方案、评审、进度、交付说明
 
 1. 改文案 → 先改 `docs/content/*.md`（唯一真源），再构建。
 2. 改排版或交互 → 改 `scripts/` 或 `prototype/` 里的脚本与样式；`prototype/chapter-0X.html`、`prototype/route-fill.js` 是生成物，别手改。
-3. 跑构建，再跑一遍确认幂等。
+   （例外：`prototype/index.html` 是它自己的模板——构建会读它再写回它，页首拨盘的文案就住在里面。）
+3. 跑构建，再跑一遍确认幂等；`--check` 应当输出「七页自检全过」。
 4. 两个宽度各过一遍：1280 与 375，检查无横向溢出、无控制台报错、交互仍可用。
 
 ## 版本戳（改完就递增，避免浏览器拿旧缓存）
 
-| 文件 | 当前 |
-|---|---|
-| `prototype.js` | `switch-14`（首页）/ `case-15`（⑤ 关） |
-| `prototype-cards.js` | `cards-03`（① 关） |
-| `trend-desk.js` / `prototype-trends.js` | `desk-01` / `desk-08`（② 关） |
-| `prototype-lab.js` | `lab-05`（③ 关） |
-| `route-fill.js` / `prototype-routes.js` | `route-01` / `weave-06`（④ 关） |
-| `scam-acts.js` / `prototype-scam-tear.css` | `acts-02` / `tear-in-07`（⑤ 关） |
-| `prototype-academy.js` | `calibrate-07`（⑥ 关） |
-| `prototype-source.css` / 页尾导航 | `source-04` / `deck-01` |
+规则只有一条：**同一份文件在七张页面上只有一个戳**。
+
+- 戳记在 `scripts/build-source-pages.py` 的 `VERSIONS` 表里，构建时统一刷进七张页面；
+  页面骨架里写错、写旧都没关系，构建完就是表里的值。
+- 改了哪个 `.css` / `.js`，就把表里对应那一行加一（`source-05` → `source-06`）。
+- **页面之间互相跳转不带戳**（`chapter-0X.html`、`index.html` 都是裸链接）。HTML 不吃这套
+  缓存策略，带戳只会让同一条链接在不同页面上出现三四种写法。
+
+| 文件 | 当前 | 用在哪 |
+|---|---|---|
+| `prototype.js` | `switch-16` | 首页拨盘 + ⑤ 关共用 |
+| `prototype-home.css` | `switch-13` | 首页 |
+| `prototype-cards.js` | `cards-04` | ① 关 |
+| `prototype-forge.css` | `press-08` | ① 关（`.page-forge` 外用样式） |
+| `prototype-source.css` | `source-05` | 七页共用（正文、卡片台、焦点兜底） |
+| `prototype-dossier.css` | `dossier-08` | 七页共用（来源表） |
+| `trend-desk.js` / `prototype-trends.css` / `prototype-trends.js` | `desk-01` / `desk-09` / `desk-09` | ② 关 |
+| `prototype-lab.css` / `prototype-lab.js` | `lab-05` / `lab-05` | ③ 关 |
+| `route-fill.js` / `prototype-routes.css` / `prototype-routes.js` | `route-01` / `weave-07` / `weave-07` | ④ 关 |
+| `prototype-scam.css` / `prototype-scam-tear.css` / `scam-acts.js` | `case-10` / `tear-in-07` / `acts-02` | ⑤ 关 |
+| `motion-lab-v2.js` | `tear-in-07`（与撕纸样式同包） | ⑤ 关，由 `prototype.js` 懒加载 |
+| `prototype-academy.css` / `prototype-academy.js` | `calibrate-08` / `calibrate-08` | ⑥ 关 |
+
+标题、顶栏标签（`原型入口 · 00 / 06`、`可玩原型 · 0X / 06`）也在 `PAGES` 里一处定义，七页同源。
 
 ## 文档
 

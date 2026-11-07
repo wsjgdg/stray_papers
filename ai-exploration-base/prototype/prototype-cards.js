@@ -8,6 +8,16 @@
   const meter = floor.querySelector('[data-flip-count]');
   const fill = floor.querySelector('[data-meter-fill]');
   const done = floor.querySelector('[data-flip-done]');
+  /* 背面在没有翻面时对读屏和 Tab 键是关着的——否则按 Tab 会先跳进看不见的
+     提示词与链接里。inert 支持就用 inert，老浏览器退回 aria-hidden。 */
+  const setBackState = (card, open) => {
+    const back = card.querySelector('.fcard-back');
+    if (!back) return;
+    if ('inert' in back) back.inert = !open;
+    back.setAttribute('aria-hidden', String(!open));
+  };
+  cards.forEach(card => setBackState(card, false));
+
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const gsap = window.gsap;
   const motion = !!(gsap && !reduce);
@@ -86,6 +96,9 @@
     const back = card.querySelector('.fcard-back');
     const on = typeof force === 'boolean' ? force : !card.classList.contains('is-flipped');
     card.classList.toggle('is-flipped', on);
+    setBackState(card, on);
+    const scroller = card.querySelector('.back-scroll');
+    if (on && scroller) scroller.scrollTop = 0;
     if (btn) {
       btn.setAttribute('aria-expanded', String(on));
       const label = btn.querySelector('.fcard-flip-label');

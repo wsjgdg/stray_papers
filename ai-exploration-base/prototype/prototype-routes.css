@@ -49,7 +49,7 @@
 .page-routes .profile-panel>p,.page-routes .paths-head>p{color:#d0cdd4;font-size:12px;line-height:1.78;margin:0 0 17px}
 .page-routes .choice-group{display:flex;flex-wrap:wrap;gap:6px;border:0;border-top:1px solid #c3aeb179;margin:0 0 15px;padding:9px 0 0;min-width:0}
 .page-routes .choice-group legend{padding:0 0 3px;color:#f3e2ce;font-size:13px;font-weight:800}
-.page-routes .choice-group button{min-height:42px;border:1px solid #9e9baba8;background:#35384b;color:#e1dce3;padding:7px 11px;font-size:11px;font-weight:750;transition:background .25s,transform .25s,border-color .25s}
+.page-routes .choice-group button{min-height:44px;border:1px solid #9e9baba8;background:#35384b;color:#e1dce3;padding:7px 11px;font-size:11px;font-weight:750;transition:background .25s,transform .25s,border-color .25s}
 .page-routes .choice-group button:hover{transform:translateY(-2px);border-color:#f1d4a8}
 .page-routes .choice-group button[aria-pressed="true"]{background:#ead9ab;color:#323842;border-color:#ead9ab;box-shadow:0 4px 0 #9c746d}
 .page-routes .reset-conditions{border:1px solid #c5b0a2;background:transparent;color:#eddcc3;padding:9px 10px;font-size:10px;font-weight:750}

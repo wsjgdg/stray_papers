@@ -1,6 +1,12 @@
 # AI 探索基地：项目梳理与改进清单
 
-更新：2026-11-05。本轮以代码审查、零依赖回归测试、jsdom 交互模拟和离线压缩包自检为依据；**没有完成 Edge/Chrome 的真实 `file://` 浏览器验收**。
+更新：2026-11-05（历史记录）。
+
+> **状态：历史文档。** 本文审查的是早期的完整站（`pages/`、`assets/js/progress.js`、`site.js`、`scripts/smoke.js`、
+> `scripts/test.js`、`build-zip.sh`、`graduation.html`）。这些文件和打包流程已从仓库撤出，现在仓库里只有
+> `ai-exploration-base/prototype/` 的七页原型。要看当前状态与验证方式，读根目录 `README.md`。
+
+本轮以代码审查、零依赖回归测试、jsdom 交互模拟和离线压缩包自检为依据；**没有完成 Edge/Chrome 的真实 `file://` 浏览器验收**。
 
 ## 项目是怎样工作的
 
