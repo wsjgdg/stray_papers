@@ -113,7 +113,8 @@
         if (window.AudioContext) return window.AudioContext;
         if (window.webkitAudioContext) return window.webkitAudioContext;
       }
-      if (typeof AudioContext !== "undefined" && AudioContext) return AudioContext;
+      if (typeof AudioContext !== "undefined" && AudioContext)
+        return AudioContext;
     } catch (e) {}
     return null;
   }
@@ -272,7 +273,7 @@
     bed.events.push({
       nextTime: now() + SCHED_LEAD_S + (firstS > 0 ? firstS : 0),
       makeEvent: makeEvent,
-      nextGap: nextGap
+      nextGap: nextGap,
     });
     schedKick();
   }
@@ -280,14 +281,9 @@
   // Repeating one-shot events on the scheduler: fn(time) fires at an exact
   // ctx.currentTime-derived time, gaps random between minMs/maxMs.
   function loopEvents(bed, minMs, maxMs, fn, firstMs) {
-    addBedEvent(
-      bed,
-      firstMs == null ? 0 : firstMs / 1000,
-      fn,
-      function () {
-        return rnd(minMs, maxMs) / 1000;
-      }
-    );
+    addBedEvent(bed, firstMs == null ? 0 : firstMs / 1000, fn, function () {
+      return rnd(minMs, maxMs) / 1000;
+    });
   }
 
   // True while at least one live bed still has queued one-shot events.
@@ -446,7 +442,8 @@
 
   function noiseSrc(kind, loop) {
     if (!ctx || !ctx.createBufferSource) return null;
-    var buf = kind === "pink" ? noisePink : kind === "brown" ? noiseBrown : noiseWhite;
+    var buf =
+      kind === "pink" ? noisePink : kind === "brown" ? noiseBrown : noiseWhite;
     if (!buf) return null;
     try {
       var s = ctx.createBufferSource();
@@ -474,7 +471,7 @@
       stopped: false,
       done: false,
       teardownTimer: 0,
-      born: bornSeq++
+      born: bornSeq++,
     };
     try {
       bed.gain = ctx.createGain();
@@ -508,9 +505,12 @@
       } catch (e) {}
     }
     try {
-      bed.teardownTimer = setTimeout(function () {
-        finishTeardown(bed);
-      }, Math.max(80, (fadeSec + 0.4) * 1000));
+      bed.teardownTimer = setTimeout(
+        function () {
+          finishTeardown(bed);
+        },
+        Math.max(80, (fadeSec + 0.4) * 1000),
+      );
     } catch (e) {
       finishTeardown(bed);
     }
@@ -570,7 +570,10 @@
       if (live.length <= MAX_LIVE_BEDS) return;
       var victim = null;
       for (i = 0; i < live.length; i++) {
-        if (live[i] !== keep && (victim === null || live[i].born < victim.born)) {
+        if (
+          live[i] !== keep &&
+          (victim === null || live[i].born < victim.born)
+        ) {
           victim = live[i];
         }
       }
@@ -662,7 +665,7 @@
       function (t) {
         droplet(bed, t);
       },
-      rnd(50, 150)
+      rnd(50, 150),
     );
   }
 
@@ -722,7 +725,7 @@
       function (t) {
         cricketTrill(bed, t);
       },
-      rnd(1500, 4000)
+      rnd(1500, 4000),
     );
   }
 
@@ -765,7 +768,7 @@
       function (t) {
         dataBlip(bed, t);
       },
-      rnd(2500, 6000)
+      rnd(2500, 6000),
     );
   }
 
@@ -826,7 +829,7 @@
       function (t) {
         thunder(bed, t);
       },
-      rnd(12000, 25000)
+      rnd(12000, 25000),
     );
   }
 
@@ -877,7 +880,7 @@
         bedTone(bed, 880, t, 0.07, 0.028);
         bedTone(bed, 1174.66, t + 0.11, 0.09, 0.028);
       },
-      rnd(8000, 15000)
+      rnd(8000, 15000),
     );
   }
 
@@ -924,7 +927,7 @@
       [261.63, 0.02],
       [329.63, 0.016],
       [392, 0.014],
-      [523.25, 0.008]
+      [523.25, 0.008],
     ];
     for (var i = 0; i < notes.length; i++) {
       var o = mkOsc("sine", notes[i][0]);
@@ -962,7 +965,7 @@
       function (t) {
         birdsong(bed, t);
       },
-      rnd(3000, 7000)
+      rnd(3000, 7000),
     );
   }
 
@@ -970,7 +973,14 @@
     var n = 2 + Math.floor(Math.random() * 2); // 2-3 chirps
     for (var i = 0; i < n; i++) {
       var f = rnd(2600, 4000);
-      bedTone(bed, f, t + i * rnd(0.16, 0.24), rnd(0.1, 0.16), 0.022, f * rnd(0.55, 0.7));
+      bedTone(
+        bed,
+        f,
+        t + i * rnd(0.16, 0.24),
+        rnd(0.1, 0.16),
+        0.022,
+        f * rnd(0.55, 0.7),
+      );
     }
   }
 
@@ -988,7 +998,7 @@
     var padNotes = [
       [220 * 0.9995, 0.02], // A3 root
       [329.63 * 1.0005, 0.013], // E4 fifth
-      [440 * 0.9995, 0.009] // A4 octave
+      [440 * 0.9995, 0.009], // A4 octave
     ];
     for (var i = 0; i < padNotes.length; i++) {
       var po = mkOsc("sine", padNotes[i][0]);
@@ -1047,7 +1057,7 @@
         if (hbElapsedMs >= 45000) return 0; // evolution complete: retire
         hbBeatMs = Math.min(3000, hbBeatMs * 1.07);
         return hbBeatMs / 1000;
-      }
+      },
     );
     // starlight: tiny chime partials, 6-14 s apart, very quiet
     loopEvents(
@@ -1057,7 +1067,7 @@
       function (t) {
         starChime(bed, t);
       },
-      rnd(3000, 7000)
+      rnd(3000, 7000),
     );
     // air: highpassed pink noise, very low gain, 10-14 s swell
     var airy = noiseSrc("pink");
@@ -1113,7 +1123,7 @@
     email_screen: { level: 0.35, build: buildEmailScreen },
     memory_white: { level: 0.4, build: buildMemoryWhite },
     dawn_ending: { level: 0.45, build: buildDawnEnding },
-    finale_star: { level: 0.4, build: buildFinaleStar }
+    finale_star: { level: 0.4, build: buildFinaleStar },
   };
 
   /* ------------------------------------------------------------------ *
@@ -1168,7 +1178,7 @@
     var notes = [
       [261.63, 0.1],
       [329.63, 0.08],
-      [392, 0.07]
+      [392, 0.07],
     ];
     for (var i = 0; i < notes.length; i++) {
       var o = mkOsc("sine", notes[i][0]);
@@ -1553,8 +1563,9 @@
     if (!sampleBed) return;
     var a = sampleBed.audio;
     sampleBed = null;
+    // fade-out ~1s: scene switches cross against the incoming track
     try {
-      var step = a.volume / 8;
+      var step = a.volume / 10;
       var iv = setInterval(function () {
         a.volume = Math.max(0, a.volume - step);
         if (a.volume <= 0) {
@@ -1582,12 +1593,29 @@
     } catch (e) {
       return;
     }
-    a.loop = true;
-    a.volume = vol * 0.9;
+    a.loop = true; // tracks shorter than the scene simply repeat
+    var target = vol * 0.9;
+    a.volume = 0;
     lastSampleKey = key;
     sampleBed = { audio: a, key: key };
     var p = a.play();
     if (p && typeof p.catch === "function") p.catch(function () {});
+    // fade-in ~1s, symmetric with the outgoing track's fade-out
+    try {
+      var step = (target || 0.9) / 10;
+      var iv = setInterval(function () {
+        if (sampleBed && sampleBed.audio !== a) {
+          clearInterval(iv);
+          return;
+        }
+        a.volume = Math.min(target, a.volume + step);
+        if (a.volume >= target) clearInterval(iv);
+      }, 100);
+    } catch (e) {
+      try {
+        a.volume = target;
+      } catch (e2) {}
+    }
   }
 
   function apiScene(bgId) {
@@ -1651,7 +1679,7 @@
       enabled: apiEnabled,
       setEnabled: apiSetEnabled,
       setVolume: apiSetVolume,
-      volume: apiVolume
+      volume: apiVolume,
     };
   } catch (e) {}
 

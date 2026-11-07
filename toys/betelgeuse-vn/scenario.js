@@ -120,6 +120,7 @@ window.SCENARIO = {
     },
 
     email_first: {
+      bgm: "memory_white",
       bg: "email_screen",
       chapter: "第一章 · 三年前的邮件",
       lines: [
@@ -323,6 +324,7 @@ window.SCENARIO = {
     },
 
     log_last: {
+      bgm: "server_room",
       bg: "email_screen",
       enter: ["noticed_star"],
       lines: [
@@ -645,6 +647,7 @@ window.SCENARIO = {
     },
 
     finale_gate: {
+      bgm: "server_room",
       bg: "server_room",
       branch: [{ when: "chose_wake", goto: "wake_check" }],
       lines: [

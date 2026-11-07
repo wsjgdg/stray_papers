@@ -1164,7 +1164,7 @@
       syncBgFx(bg, bgId);
       syncGrade(bg); // grade follows the bg through the same fade window
       recordSeen(bgId); // gallery unlock: this scene has now been visited
-      audioHook("scene", bgId); // bg now active: switch the ambient loop
+      // ambient switch is the caller's job (scene.bgm may override the bg)
       els.bg.classList.remove("vn-fade");
     }, BG_FADE_MS);
   }
@@ -1184,7 +1184,6 @@
     syncBgFx(bg, bgId); // re-apply the restored bg's fx html + canvas scene
     syncGrade(bg); // instant path: grade comes back with the bg
     recordSeen(bgId);
-    audioHook("scene", bgId); // restored bg now active: ambient loop follows
   }
 
   /* ------------------------------------------------------ canvas scenes */
@@ -1582,6 +1581,14 @@
     return typeof img === "string" && img ? img : null;
   }
 
+  // CG-exclusive BGM: showing a CG switches the ambient to its own track;
+  // hiding reverts to the current scene's bgm. Keys are audio asset stems.
+  var CG_BGM = {
+    cg_memory: "memory_white",
+    cg_archive: "server_room",
+    cg_dawn: "dawn_ending",
+  };
+
   // line.cg semantics (VN convention: a CG plays over a stretch of dialogue):
   //   "id"   -> show that CG
   //   null   -> explicit clear
@@ -1596,6 +1603,7 @@
         state.cg = id;
       }
       els.cg.classList.remove("vn-hidden");
+      if (CG_BGM[id]) audioHook("scene", CG_BGM[id]); // CG owns the music
       return;
     }
     if (id !== null) {
@@ -1607,6 +1615,12 @@
   function hideCg() {
     state.cg = null;
     if (els && els.cg) els.cg.classList.add("vn-hidden");
+    // revert the ambient to the current scene's own track (null at title)
+    var sc =
+      S && S.scenes && state.scene && S.scenes[state.scene]
+        ? S.scenes[state.scene]
+        : null;
+    audioHook("scene", sc ? sc.bgm || sc.bg : null);
   }
 
   // rebuild the overlay from state (restore path)
@@ -1771,6 +1785,8 @@
       collectEndingNow(id); // entering an ending_* scene collects it (once)
       hideCg(); // CGs are scene-scoped unless the new scene re-asserts one
       applyBg(scene.bg);
+      // ambient key: a scene may override its background's default track
+      audioHook("scene", scene.bgm || scene.bg);
       setEnterFlags(scene);
       var to = evalBranch(scene);
       if (to != null) {
@@ -2288,9 +2304,12 @@
     renderSprites();
     els.title.classList.add("vn-hidden");
     restoreBg(typeof data.bg === "string" ? data.bg : null);
-    // CG state rides with the save; presentCurrent's own line syncs it too
+    var rScene = S.scenes[data.scene];
+    audioHook("scene", rScene ? rScene.bgm || rScene.bg : data.bg);
+    // CG state rides with the save; a restored CG re-asserts its own track
     state.cg =
       typeof data.cg === "string" && cgImageFor(data.cg) ? data.cg : null;
+    if (state.cg && CG_BGM[state.cg]) audioHook("scene", CG_BGM[state.cg]);
     syncCgDisplay();
     state.poses =
       data.poses && typeof data.poses === "object" && !Array.isArray(data.poses)
