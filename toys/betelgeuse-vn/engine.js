@@ -70,15 +70,15 @@
  *                          frame at t = 1.5 instead of looping.
  *
  * Optional parallel module (loaded before engine.js):
-   *   window.VN_AUDIO      — feedback audio: scene(bgId) switches the ambient
-   *                          loop when a background becomes active (null on the
-   *                          title screen silences it), type() is one
-   *                          typewriter tick, ui(kind) is a ui blip for
-   *                          "start" | "select" | "save" | "load", swell()
-   *                          is the cinematic swell fired with the dolly line
-   *                          fx, and enabled() / setEnabled(bool) read +
-   *                          write the on/off state shown on the topbar 音效
-   *                          button.
+ *   window.VN_AUDIO      — feedback audio: scene(bgId) switches the ambient
+ *                          loop when a background becomes active (null on the
+ *                          title screen silences it), type() is one
+ *                          typewriter tick, ui(kind) is a ui blip for
+ *                          "start" | "select" | "save" | "load", swell()
+ *                          is the cinematic swell fired with the dolly line
+ *                          fx, and enabled() / setEnabled(bool) read +
+ *                          write the on/off state shown on the topbar 音效
+ *                          button.
  *                          Every engine-side call goes through audioHook(),
  *                          which is fully guarded: a missing module, a
  *                          missing method or a throwing callback is silently
@@ -122,6 +122,8 @@
   var BACKLOG_LIMIT = 100; // keep only the last N displayed lines
   var SLOT_COUNT = 3; // vn-save-1 .. vn-save-3
   var SAVE_PREFIX = "vn-save-";
+  var QUICK_SAVE_KEY = SAVE_PREFIX + "quick"; // Ctrl+S target, outside the menu slots
+  var activeChoices = []; // choice objects shown by showChoices, for 1..9 hotkeys
   var THUMB_W = 160; // save-slot thumbnail box (16:9, cover-fit crop)
   var THUMB_H = 90;
   var THUMB_JPEG_Q = 0.5; // quality passed to offscreen toDataURL("image/jpeg")
@@ -938,10 +940,7 @@
       var slot;
       if (desired.length === 1) {
         slot = 0; // solo characters always stand left-of-center
-      } else if (
-        typeof sp._vnSlot === "number" &&
-        !used[sp._vnSlot]
-      ) {
+      } else if (typeof sp._vnSlot === "number" && !used[sp._vnSlot]) {
         slot = sp._vnSlot; // unchanged cast: keep the established slot
       } else {
         slot = used[0] ? 1 : 0;
@@ -989,7 +988,12 @@
     var list = bg && Array.isArray(bg.props) ? bg.props : [];
     var store = typeof window !== "undefined" ? window.VN_PROPS : null;
     list.forEach(function (p) {
-      if (!p || typeof p.id !== "string" || !store || typeof store[p.id] !== "string") {
+      if (
+        !p ||
+        typeof p.id !== "string" ||
+        !store ||
+        typeof store[p.id] !== "string"
+      ) {
         if (p && typeof p.id === "string") {
           console.warn("[VN] unknown prop: " + p.id);
         }
@@ -1661,8 +1665,7 @@
       showSprite(speakerId, line.feel);
       recordMet(speakerId); // gallery 立绘 unlock: this character has spoken
       pushBacklog(nameText, text);
-      if (els.srLive)
-        els.srLive.textContent = nameText + "：" + text; // full line, once
+      if (els.srLive) els.srLive.textContent = nameText + "：" + text; // full line, once
     } else {
       els.name.classList.add("vn-hidden");
       els.name.textContent = "";
@@ -1719,6 +1722,7 @@
   function showChoices(choices) {
     state.mode = "choices";
     clearGlitch();
+    activeChoices = choices.slice(); // 1..9 hotkeys read this snapshot
     var box = els.choices;
     box.textContent = "";
     choices.forEach(function (choice) {
@@ -1753,6 +1757,7 @@
   }
 
   function hideChoices() {
+    activeChoices = [];
     els.choices.textContent = "";
     els.choices.classList.add("vn-hidden");
   }
@@ -1896,6 +1901,66 @@
     } catch (err) {
       return null; // no canvas API / capture failed: save proceeds without a thumb
     }
+  }
+
+  // Quick save (Ctrl+S): same payload shape as a menu slot but stored under
+  // vn-save-quick, outside the visible 1..3 slots so it can never overwrite
+  // a player's manual save. No thumbnail — the payload stays tiny and quota
+  // failures are then effectively impossible.
+  function quickSave() {
+    if (!state.scene) {
+      toast("暂无进度");
+      return;
+    }
+    var data = {
+      scene: state.scene,
+      line: state.line,
+      flags: Array.from(state.flags),
+      ts: new Date().toISOString(),
+      title: S.meta && S.meta.title != null ? String(S.meta.title) : "",
+      bg: state.bg,
+    };
+    try {
+      localStorage.setItem(QUICK_SAVE_KEY, JSON.stringify(data));
+      toast("已快存");
+      audioHook("ui", "save");
+    } catch (err) {
+      console.warn("[VN] quick save failed: " + err);
+      toast("保存失败");
+    }
+  }
+
+  // Quick load (Ctrl+L): validates the quick payload with the same predicate
+  // as readSlot, then reuses the shared restoreFrom path (which also handles
+  // closing overlays and the load blip).
+  function quickLoad() {
+    var raw = null;
+    try {
+      raw = localStorage.getItem(QUICK_SAVE_KEY);
+    } catch (err) {
+      raw = null;
+    }
+    if (!raw) {
+      toast("无快存");
+      return;
+    }
+    var data = null;
+    try {
+      data = JSON.parse(raw);
+    } catch (err) {
+      data = null;
+    }
+    if (
+      !data ||
+      typeof data !== "object" ||
+      typeof data.scene !== "string" ||
+      !S.scenes[data.scene]
+    ) {
+      console.warn("[VN] quick save data is invalid for this scenario");
+      toast("快存已失效");
+      return;
+    }
+    restoreFrom(data);
   }
 
   function writeSlot(n) {
@@ -2285,8 +2350,16 @@
   var GALLERY_MUSIC = [
     { id: "apartment_night", name: "深夜·公寓", line: "屏幕冷光与远处闷雷" },
     { id: "email_screen", name: "屏幕·未读邮件", line: "光标闪烁，等待被打开" },
-    { id: "streets_rain", name: "雨夜·环山公路", line: "雨声、霓虹与湿漉漉的倒影" },
-    { id: "observatory_night", name: "旧天文台·圆顶", line: "风、虫鸣与缓缓转动的星" },
+    {
+      id: "streets_rain",
+      name: "雨夜·环山公路",
+      line: "雨声、霓虹与湿漉漉的倒影",
+    },
+    {
+      id: "observatory_night",
+      name: "旧天文台·圆顶",
+      line: "风、虫鸣与缓缓转动的星",
+    },
     { id: "server_room", name: "地下·机房", line: "低鸣的心跳与蓝绿色的灯" },
     { id: "memory_white", name: "过曝·那一夜", line: "白得发亮的失重感" },
     { id: "dawn_ending", name: "黎明·圆顶之外", line: "暖光里慢慢松开的手" },
@@ -2305,7 +2378,9 @@
       var arr = JSON.parse(raw);
       if (!Array.isArray(arr)) return [];
       return arr.filter(function (id) {
-        return typeof id === "string" && S && S.backgrounds && S.backgrounds[id];
+        return (
+          typeof id === "string" && S && S.backgrounds && S.backgrounds[id]
+        );
       });
     } catch (err) {
       return [];
@@ -2434,9 +2509,7 @@
       var arr = JSON.parse(raw);
       if (!Array.isArray(arr)) return [];
       return arr.filter(function (id) {
-        return (
-          typeof id === "string" && S && S.characters && S.characters[id]
-        );
+        return typeof id === "string" && S && S.characters && S.characters[id];
       });
     } catch (err) {
       return [];
@@ -2464,16 +2537,21 @@
       var ch = S.characters[id];
       var unlocked = met.indexOf(id) !== -1;
       var card = document.createElement("div");
-      card.className = "vn-gcard vn-gchar " + (unlocked ? "vn-gseen" : "vn-glocked");
+      card.className =
+        "vn-gcard vn-gchar " + (unlocked ? "vn-gseen" : "vn-glocked");
       var stage = document.createElement("div");
       stage.className = "vn-gchar-stage";
       var bust = document.createElement("div");
       bust.className = "vn-sprite-bust";
-      bust.style.setProperty("--vn-color", ch.color != null ? String(ch.color) : "#9bd4e8");
+      bust.style.setProperty(
+        "--vn-color",
+        ch.color != null ? String(ch.color) : "#9bd4e8",
+      );
       if (unlocked && art && art[id]) {
         bust.innerHTML = art[id].normal || "";
       } else {
-        bust.textContent = unlocked && ch.name ? String(ch.name).charAt(0) : "？";
+        bust.textContent =
+          unlocked && ch.name ? String(ch.name).charAt(0) : "？";
       }
       stage.appendChild(bust);
       card.appendChild(stage);
@@ -2491,20 +2569,31 @@
         FEELS.forEach(function (f) {
           var chip = document.createElement("button");
           chip.type = "button";
-          chip.className = "vn-feelchip" + (f === "normal" ? " vn-feel-on" : "");
-          chip.textContent = { normal: "平常", happy: "开心", sad: "低落", surprised: "惊讶", angry: "生气" }[f] || f;
-          chip.addEventListener("click", (function (feel) {
-            return function () {
-              bust.innerHTML = art[id][feel] || art[id].normal || "";
-              var all =
-                typeof chips.querySelectorAll === "function"
-                  ? chips.querySelectorAll(".vn-feelchip")
-                  : [];
-              for (var i = 0; i < all.length; i++)
-                all[i].classList.remove("vn-feel-on");
-              chip.classList.add("vn-feel-on");
-            };
-          })(f));
+          chip.className =
+            "vn-feelchip" + (f === "normal" ? " vn-feel-on" : "");
+          chip.textContent =
+            {
+              normal: "平常",
+              happy: "开心",
+              sad: "低落",
+              surprised: "惊讶",
+              angry: "生气",
+            }[f] || f;
+          chip.addEventListener(
+            "click",
+            (function (feel) {
+              return function () {
+                bust.innerHTML = art[id][feel] || art[id].normal || "";
+                var all =
+                  typeof chips.querySelectorAll === "function"
+                    ? chips.querySelectorAll(".vn-feelchip")
+                    : [];
+                for (var i = 0; i < all.length; i++)
+                  all[i].classList.remove("vn-feel-on");
+                chip.classList.add("vn-feel-on");
+              };
+            })(f),
+          );
           chips.appendChild(chip);
         });
         card.appendChild(chips);
@@ -2544,7 +2633,10 @@
   function setGalleryTab(tab) {
     var want = { scenes: false, music: false, sprites: false };
     if (want.hasOwnProperty(tab)) want[tab] = true;
-    els.gtabScenes.setAttribute("aria-selected", want.scenes ? "true" : "false");
+    els.gtabScenes.setAttribute(
+      "aria-selected",
+      want.scenes ? "true" : "false",
+    );
     els.gtabMusic.setAttribute("aria-selected", want.music ? "true" : "false");
     els.gtabSprites.setAttribute(
       "aria-selected",
@@ -3194,6 +3286,77 @@
       hideBacklog();
       hideSettings();
       if (galleryVisible()) closeGallery();
+      return;
+    }
+    // hotkeys are inert while a form control owns the keyboard (settings
+    // sliders), so arrow/number input there never double-fires
+    if (
+      e.target &&
+      typeof e.target.tagName === "string" &&
+      (e.target.tagName === "INPUT" ||
+        e.target.tagName === "SELECT" ||
+        e.target.tagName === "TEXTAREA")
+    ) {
+      return;
+    }
+    // Ctrl+S / Cmd+S quick save, Ctrl+L / Cmd+L quick load — a dedicated
+    // vn-save-quick payload that never touches the visible menu slots
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      !e.altKey &&
+      (e.key === "s" || e.key === "S")
+    ) {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      quickSave();
+      return;
+    }
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      !e.altKey &&
+      (e.key === "l" || e.key === "L")
+    ) {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      quickLoad();
+      return;
+    }
+    // number keys 1..9 pick the matching choice while choices are on screen
+    // (mode guard: showEnding builds its 返回标题 button outside showChoices)
+    if (
+      state.mode === "choices" &&
+      activeChoices.length > 0 &&
+      e.key >= "1" &&
+      e.key <= "9" &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey
+    ) {
+      if (
+        els.menu.classList.contains("vn-hidden") &&
+        els.backlog.classList.contains("vn-hidden") &&
+        els.settings.classList.contains("vn-hidden") &&
+        !galleryVisible()
+      ) {
+        var pick = Number(e.key) - 1;
+        if (pick >= 0 && pick < activeChoices.length) {
+          if (typeof e.preventDefault === "function") e.preventDefault();
+          pickChoice(activeChoices[pick]);
+        }
+      }
+      return;
+    }
+    // A toggles auto mode; ArrowUp toggles the backlog — line mode only
+    if (
+      (e.key === "a" || e.key === "A") &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey &&
+      !overlaysOpen()
+    ) {
+      toggleAuto();
+      return;
+    }
+    if (e.key === "ArrowUp" && !overlaysOpen()) {
+      toggleBacklog();
       return;
     }
     // hold S to fast-skip without latching the topbar button
