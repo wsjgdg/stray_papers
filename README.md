@@ -78,9 +78,21 @@ docs/                     方案、评审、进度、交付说明
 
 - 戳记在 `scripts/build-source-pages.py` 的 `VERSIONS` 表里，构建时统一刷进七张页面；
   页面骨架里写错、写旧都没关系，构建完就是表里的值。
-- 改了哪个 `.css` / `.js`，就把表里对应那一行加一（`source-11` → `source-12`）。
+- 改了哪个 `.css` / `.js`，就把表里对应那一行加一（`source-12` → `source-13`）。
 - **页面之间互相跳转不带戳**（`chapter-0X.html`、`index.html` 都是裸链接）。HTML 不吃这套
   缓存策略，带戳只会让同一条链接在不同页面上出现三四种写法。
+
+## 动效约定
+
+加动效时照着这三条走，缺一条就别合并：
+
+- **每条动效都要有 `prefers-reduced-motion: reduce` 的关闭分支**，而且是"整段不跑"，不是"跑快一点"。
+- **宽幅滤镜只在桌面跑**：`filter: blur()` / `brightness()` 作用在大块元素上是最贵的一档，
+  `≤720px` 一律换成只动 `transform` / `opacity` 的轻量版（见 ⑥ 的 `verdict-throw-lite`
+  与 ⑤ 的 `clue-kick-lite`）；瞬时类上可以挂 `will-change`，类消失即释放。
+- **装饰性伪元素挂在 `display: grid` 容器上时必须 `position: absolute`**，否则会多占一格把
+  内容挤歪；窄屏下若动画起手倍率会溢出容器（如 ② 的"已归档"章），用 `overflow: clip`
+  裁掉——不要用 `hidden`，那会建立滚动容器。
 
 | 文件 | 当前 | 用在哪 |
 |---|---|---|
@@ -88,14 +100,14 @@ docs/                     方案、评审、进度、交付说明
 | `prototype-home.css` | `switch-16` | 首页 |
 | `prototype-cards.js` | `cards-07` | ① 关 |
 | `prototype-forge.css` | `press-08` | ① 关（`.page-forge` 外用样式） |
-| `prototype-source.css` | `source-12` | 七页共用（正文、卡片台、焦点兜底） |
+| `prototype-source.css` | `source-13` | 七页共用（正文、卡片台、焦点兜底） |
 | `prototype-dossier.css` | `dossier-09` | 七页共用（来源表） |
-| `trend-desk.js` / `prototype-trends.css` / `prototype-trends.js` | `desk-01` / `desk-14` / `desk-11` | ② 关 |
+| `trend-desk.js` / `prototype-trends.css` / `prototype-trends.js` | `desk-01` / `desk-15` / `desk-11` | ② 关 |
 | `prototype-lab.css` / `prototype-lab.js` | `lab-09` / `lab-08` | ③ 关 |
-| `route-fill.js` / `prototype-routes.css` / `prototype-routes.js` | `route-01` / `weave-08` / `weave-07` | ④ 关 |
-| `prototype-scam.css` / `prototype-scam-tear.css` / `scam-acts.js` | `case-14` / `tear-in-08` / `acts-02` | ⑤ 关 |
+| `route-fill.js` / `prototype-routes.css` / `prototype-routes.js` | `route-01` / `weave-09` / `weave-08` | ④ 关 |
+| `prototype-scam.css` / `prototype-scam-tear.css` / `scam-acts.js` | `case-15` / `tear-in-08` / `acts-02` | ⑤ 关 |
 | `motion-lab-v2.js` | `tear-in-07`（与撕纸样式同包） | ⑤ 关，由 `prototype.js` 懒加载 |
-| `prototype-academy.css` / `prototype-academy.js` | `calibrate-10` / `calibrate-08` | ⑥ 关 |
+| `prototype-academy.css` / `prototype-academy.js` | `calibrate-11` / `calibrate-08` | ⑥ 关 |
 
 标题、顶栏标签（`原型入口 · 00 / 06`、`可玩原型 · 0X / 06`）也在 `PAGES` 里一处定义，七页同源。
 

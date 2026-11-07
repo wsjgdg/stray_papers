@@ -217,3 +217,16 @@
 @media (prefers-reduced-motion: reduce) {
   .page-scam .story-side.is-new-clue .evidence-meter { animation: none; }
 }
+
+/* ⑤ 线索撞击同理：桌面提层，窄屏去掉 brightness 滤镜只留位移 */
+.page-scam .story-side.is-new-clue .evidence-meter { will-change: transform, filter; }
+@media (max-width: 720px) {
+  .page-scam .story-side.is-new-clue .evidence-meter { animation-name: clue-kick-lite; will-change: auto; }
+}
+@keyframes clue-kick-lite {
+  0% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  32% { transform: translateX(5px); }
+  50% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}

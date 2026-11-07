@@ -484,3 +484,29 @@
   .page-trends .bins.is-settled,
   .page-trends .bins.is-settled::after { animation: none; content: none; }
 }
+
+/* ---- 窄屏复核：375 上每个档案格只有 ~105px，章按 300% 起会压到隔壁格 ----
+   ≤720 时把起手倍率收到 2、字号收到 16px；再给 .bins 加 overflow:clip
+   （不是 hidden：clip 不建立滚动容器，只是把溢出裁掉，不会冒出横向滚动条）。 */
+@media (max-width: 720px) {
+  .page-trends .bins { overflow: clip; }
+  .page-trends .bin.is-stamped::after {
+    font-size: 16px;
+    letter-spacing: .1em;
+    animation-name: bin-stamp-lite;
+  }
+  .page-trends .bin.is-stamped { animation-name: bin-hit-lite; }
+}
+@keyframes bin-stamp-lite {
+  0% { opacity: 0; transform: scale(2) rotate(-22deg); }
+  22% { opacity: .96; transform: scale(.9) rotate(-9deg); }
+  34% { transform: scale(1.04) rotate(-9deg); }
+  64% { opacity: .92; transform: scale(1) rotate(-9deg); }
+  100% { opacity: 0; transform: scale(1.02) rotate(-9deg); }
+}
+@keyframes bin-hit-lite {
+  0% { transform: scale(1); }
+  18% { transform: scale(1.05); }
+  42% { transform: scale(.985); }
+  100% { transform: scale(1); }
+}

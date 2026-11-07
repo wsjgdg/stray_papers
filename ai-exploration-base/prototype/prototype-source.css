@@ -1940,3 +1940,6 @@ a.back-go:hover { color: #ffb829; }
 @media (prefers-reduced-motion: reduce) {
   .fcard.is-turning::after { animation: none; content: none; }
 }
+
+/* ① 翻面的抬升阶段是整卡变换，临时提一层，结束后随类一起消失 */
+.fcard.is-turning { will-change: transform; }
