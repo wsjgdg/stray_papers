@@ -340,6 +340,18 @@
     bonusBtn.textContent = "星语 · 后日谈";
     bonusBtn.classList.add("vn-hidden");
     bonusBtn.addEventListener("click", startBonus);
+    // key art: the telescope as a title-screen poster element — a dark
+    // silhouette by default, fully lit with a warm halo at 100% completion
+    var keyArt = h("img", "vn-keyart vn-hidden", title);
+    keyArt.id = "vn-keyart"; // #vn-keyart CSS rule targets the id
+    if (
+      typeof window !== "undefined" &&
+      window.VN_PROPS &&
+      typeof window.VN_PROPS.telescope === "string"
+    ) {
+      keyArt.src = window.VN_PROPS.telescope;
+      keyArt.alt = "";
+    }
     // 继续游戏: loads the most recent of vn-save-1..3 through the exact
     // readSlot() path the in-game load menu uses. Visibility is driven by
     // syncContinueButton() from here and every showTitle; hidden by default
@@ -449,6 +461,7 @@
       endingMarks: endingMarks,
       bonusBtn: bonusBtn,
       continueBtn: continueBtn,
+      keyArt: keyArt,
       chapter: chapter,
       chapterText: chapterText,
       credits: credits,
@@ -2677,7 +2690,14 @@
   // and every return to the title. Pure class toggle: no timers, no loops.
   function syncBonusButton() {
     if (!els || !els.bonusBtn) return;
-    els.bonusBtn.classList.toggle("vn-hidden", !titleBonusActive());
+    var bonus = titleBonusActive();
+    els.bonusBtn.classList.toggle("vn-hidden", !bonus);
+    // key art reacts to completion: silhouette by default, fully lit
+    // with the warm finale halo once every ending has been recovered
+    if (els.keyArt && els.keyArt.src) {
+      els.keyArt.classList.toggle("vn-keyart-lit", bonus);
+      els.keyArt.classList.remove("vn-hidden");
+    }
   }
 
   // 继续游戏 gate: the continue button joins the title only while some

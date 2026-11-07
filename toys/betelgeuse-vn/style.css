@@ -1571,6 +1571,26 @@ input.vn-range {
 
 /* gallery button (鉴赏): third title entry, neutral blue-grey family —
    always present (music box works for new players too) */
+/* key art (title poster): the telescope webp composited into the starfield —
+   a near-silhouette that reads as scenery; at 100% completion it lights up
+   with the warm finale halo (class flipped by syncBonusButton) */
+#vn-keyart {
+  position: absolute;
+  left: 4%;
+  bottom: 0;
+  width: clamp(150px, 22vw, 320px);
+  pointer-events: none;
+  filter: brightness(0.22) saturate(0.55)
+    drop-shadow(0 0 26px rgba(255, 140, 90, 0.12));
+  transition: filter 1.6s ease;
+  z-index: 0;
+}
+
+#vn-keyart.vn-keyart-lit {
+  filter: brightness(0.92) saturate(1.05)
+    drop-shadow(0 0 42px rgba(255, 140, 90, 0.4));
+}
+
 #vn-gallery {
   margin-top: 12px;
   padding: 7px 24px;
