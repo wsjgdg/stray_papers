@@ -344,6 +344,24 @@ body {
   pointer-events: none;
 }
 
+/* CG overlay: full-screen event illustration above bg+sprites, below the
+   dialog. Vignette/grain (z -1) sit beneath; the dialog keeps reading over
+   the art. Fades in via the one-shot animation (restarts on display toggle). */
+.vn-cg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.vn-cg-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: vn-cg-in 0.9s ease-out;
+}
+
 /* Large waist-up portrait standing free on the stage (no card/clip), anchored
    to the strip's bottom edge. --vn-color survives only as the light-pool
    ::after beneath the character. The engine drives .vn-pos-left/right,
@@ -2072,6 +2090,15 @@ input.vn-range {
   }
   to {
     transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes vn-cg-in {
+  from {
+    opacity: 0;
+  }
+  to {
     opacity: 1;
   }
 }

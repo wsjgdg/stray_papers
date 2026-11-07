@@ -164,6 +164,7 @@
     line: 0, // index of the currently displayed line
     flags: new Set(), // story flags
     bg: null, // current background id
+    cg: null, // current full-screen CG id (VN_CG_IMG key), null when none
     recent: [], // [{ id, feel }] latest two speakers, most recent first
     backlog: [], // [{ name, text }] displayed lines, capped at BACKLOG_LIMIT
     typing: false,
@@ -221,6 +222,13 @@
     var vignette = h("div", "vn-vignette", app);
     var grain = h("div", "vn-grain", app);
     var sprites = h("div", "vn-sprites", app);
+    // CG overlay: full-screen event illustrations (window.VN_CG_IMG) shown
+    // over bg+sprites while dialogue continues; cleared on scene change
+    var cg = h("div", "vn-cg vn-hidden", app);
+    var cgImg = document.createElement("img");
+    cgImg.className = "vn-cg-img";
+    cgImg.alt = "";
+    cg.appendChild(cgImg);
 
     var dialog = h("div", "vn-dialog", app);
     var name = h("div", "vn-name", dialog);
@@ -447,6 +455,8 @@
       vignette: vignette,
       grain: grain,
       sprites: sprites,
+      cg: cg,
+      cgImg: cgImg,
       name: name,
       text: text,
       srLive: srLive,
@@ -1523,6 +1533,53 @@
   // Applies a line's optional fx. Glitch lasts while the line displays
   // (cleared by clearGlitch); shake is a fixed-duration screen effect that
   // removes itself.
+  // ---- CG overlay (full-screen event illustrations) --------------------------
+
+  // window.VN_CG_IMG: { cgId -> dataURI }, authored by the CG pipeline.
+  function cgImageFor(id) {
+    if (typeof window === "undefined" || !window.VN_CG_IMG) return null;
+    var img = window.VN_CG_IMG[id];
+    return typeof img === "string" && img ? img : null;
+  }
+
+  // line.cg semantics (VN convention: a CG plays over a stretch of dialogue):
+  //   "id"   -> show that CG
+  //   null   -> explicit clear
+  //   absent -> keep whatever is on screen
+  function syncCg(line) {
+    if (!els || !els.cg) return;
+    if (!line || !("cg" in line)) return;
+    var id = line.cg;
+    if (typeof id === "string" && cgImageFor(id)) {
+      if (state.cg !== id || els.cgImg.getAttribute("src") !== cgImageFor(id)) {
+        els.cgImg.setAttribute("src", cgImageFor(id));
+        state.cg = id;
+      }
+      els.cg.classList.remove("vn-hidden");
+      return;
+    }
+    if (id !== null) {
+      console.warn("[VN] unknown CG: " + id);
+    }
+    hideCg();
+  }
+
+  function hideCg() {
+    state.cg = null;
+    if (els && els.cg) els.cg.classList.add("vn-hidden");
+  }
+
+  // rebuild the overlay from state (restore path)
+  function syncCgDisplay() {
+    if (!els || !els.cg) return;
+    if (state.cg && cgImageFor(state.cg)) {
+      els.cgImg.setAttribute("src", cgImageFor(state.cg));
+      els.cg.classList.remove("vn-hidden");
+    } else {
+      els.cg.classList.add("vn-hidden");
+    }
+  }
+
   function applyLineFx(line) {
     var fx = line ? line.fx : null;
     if (fx == null || fx === "") return;
@@ -1650,6 +1707,7 @@
       }
       state.scene = id;
       collectEndingNow(id); // entering an ending_* scene collects it (once)
+      hideCg(); // CGs are scene-scoped unless the new scene re-asserts one
       applyBg(scene.bg);
       setEnterFlags(scene);
       var to = evalBranch(scene);
@@ -1760,6 +1818,7 @@
       if (els.srLive) els.srLive.textContent = text;
     }
 
+    syncCg(line);
     applyLineFx(line);
     startTyping(text);
   }
@@ -2017,6 +2076,7 @@
       ts: new Date().toISOString(),
       title: S.meta && S.meta.title != null ? String(S.meta.title) : "",
       bg: state.bg,
+      cg: state.cg || null,
     };
     try {
       localStorage.setItem(QUICK_SAVE_KEY, JSON.stringify(data));
@@ -2074,6 +2134,7 @@
       ts: new Date().toISOString(),
       title: S.meta && S.meta.title != null ? String(S.meta.title) : "",
       bg: state.bg,
+      cg: state.cg || null,
     };
     var thumb = captureThumb(); // display-only: omitted when no canvas / capture failed
     if (thumb) data.thumb = thumb;
@@ -2163,6 +2224,10 @@
     renderSprites();
     els.title.classList.add("vn-hidden");
     restoreBg(typeof data.bg === "string" ? data.bg : null);
+    // CG state rides with the save; presentCurrent's own line syncs it too
+    state.cg =
+      typeof data.cg === "string" && cgImageFor(data.cg) ? data.cg : null;
+    syncCgDisplay();
     audioHook("ui", "load"); // save-loaded blip
     presentCurrent(0);
   }
@@ -3363,6 +3428,7 @@
     state.line = 0;
     state.flags = new Set();
     state.bg = null;
+    hideCg(); // the title screen never shows a story CG
     state.recent = [];
     state.backlog = [];
     clearSpritesNow(); // title flow: the stage empties at once, no exit anim
