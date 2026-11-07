@@ -408,6 +408,22 @@ body {
     vn-sprite-in 0.3s ease-out;
 }
 
+/* raster sprites (CHAR_ART_IMG webp): the art is a tall 473:900 cutout, so
+   cap by height (not the stage width like the squat SVG viewBox) and let the
+   width follow; anchored bottom so the bust sits on the dialog bar */
+.vn-sprite > img {
+  display: block;
+  width: auto;
+  height: 58vh;
+  max-width: 100%;
+  transform-origin: 50% 100%;
+  animation:
+    vn-sprite-breathe 4s ease-in-out infinite alternate,
+    vn-sprite-in 0.3s ease-out;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 /* --- stage positions (engine assigns by slot; solo nudge) ---------------- */
 .vn-pos-left {
   left: 6vw;

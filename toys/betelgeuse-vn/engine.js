@@ -796,7 +796,20 @@
   // optional global window.CHAR_ART map (charId -> { normal, happy, sad,
   // surprised, angry }). Falls back from art[feel] to art.normal; returns
   // null when no usable art exists so callers keep the letter fallback.
+  // Raster art (window.CHAR_ART_IMG, AI-generated webp) wins when present —
+  // both maps store ready-to-inject markup strings, so callers are agnostic.
   function charArtFor(charId, feel) {
+    var raster =
+      typeof window !== "undefined" && window.CHAR_ART_IMG
+        ? window.CHAR_ART_IMG
+        : null;
+    if (raster && typeof raster === "object") {
+      var r = raster[charId];
+      if (r && typeof r === "object") {
+        if (typeof r[feel] === "string" && r[feel]) return r[feel];
+        if (typeof r.normal === "string" && r.normal) return r.normal;
+      }
+    }
     var map =
       typeof window !== "undefined" && window.CHAR_ART ? window.CHAR_ART : null;
     if (!map || typeof map !== "object") return null;
@@ -2679,7 +2692,6 @@
   function buildSpritePanel() {
     els.gpanelSprites.textContent = "";
     var met = readMet();
-    var art = typeof window !== "undefined" ? window.CHAR_ART : null;
     var ids = S.characters ? Object.keys(S.characters) : [];
     ids.forEach(function (id) {
       var ch = S.characters[id];
@@ -2695,8 +2707,8 @@
         "--vn-color",
         ch.color != null ? String(ch.color) : "#9bd4e8",
       );
-      if (unlocked && art && art[id]) {
-        bust.innerHTML = art[id].normal || "";
+      if (unlocked && charArtFor(id, "normal")) {
+        bust.innerHTML = charArtFor(id, "normal");
       } else {
         bust.textContent =
           unlocked && ch.name ? String(ch.name).charAt(0) : "？";
@@ -2711,7 +2723,7 @@
           : id
         : "？？？";
       card.appendChild(name);
-      if (unlocked && art && art[id]) {
+      if (unlocked && charArtFor(id, "normal")) {
         var chips = document.createElement("div");
         chips.className = "vn-feelchips";
         FEELS.forEach(function (f) {
@@ -2731,7 +2743,8 @@
             "click",
             (function (feel) {
               return function () {
-                bust.innerHTML = art[id][feel] || art[id].normal || "";
+                bust.innerHTML =
+                  charArtFor(id, feel) || charArtFor(id, "normal") || "";
                 var all =
                   typeof chips.querySelectorAll === "function"
                     ? chips.querySelectorAll(".vn-feelchip")

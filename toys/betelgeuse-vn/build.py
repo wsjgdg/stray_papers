@@ -14,6 +14,11 @@ def main() -> None:
     scenes_b = (DIR / "scenes_b.js").read_text(encoding="utf-8")
     audio = (DIR / "audio.js").read_text(encoding="utf-8")
     props_data = (DIR / "props" / "props-data.js").read_text(encoding="utf-8")
+    sprites_path = DIR / "props" / "sprites-data.js"
+    # optional raster sprites (AI-generated webp); absent = SVG-only build
+    sprites_data = (
+        sprites_path.read_text(encoding="utf-8") if sprites_path.exists() else ""
+    )
     engine = (DIR / "engine.js").read_text(encoding="utf-8")
     # Guard against '</script>' sequences inside inline JS.
     scenario = scenario.replace("</script>", "<\\/script>")
@@ -22,6 +27,7 @@ def main() -> None:
     scenes_b = scenes_b.replace("</script>", "<\\/script>")
     audio = audio.replace("</script>", "<\\/script>")
     props_data = props_data.replace("</script>", "<\\/script>")
+    sprites_data = sprites_data.replace("</script>", "<\\/script>")
     engine = engine.replace("</script>", "<\\/script>")
     favicon = (
         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
@@ -49,6 +55,7 @@ def main() -> None:
         f"<script>\n{scenes_a}\n</script>\n"
         f"<script>\n{scenes_b}\n</script>\n"
         f"<script>\n{props_data}\n</script>\n"
+        f"<script>\n{sprites_data}\n</script>\n"
         f"<script>\n{audio}\n</script>\n"
         f"<script>\n{engine}\n</script>\n"
         "<script>VN.start(window.SCENARIO);</script>\n</body>\n</html>\n"
