@@ -145,7 +145,12 @@ window.SCENARIO = {
           feel: "normal",
           text: "圆顶下的东西。不存在的备份。一句三年前的今晚。",
         },
-        { who: "yu", feel: "normal", text: "每一条，都在把我往山上拽。" },
+        {
+          pose: "d",
+          who: "yu",
+          feel: "normal",
+          text: "每一条，都在把我往山上拽。",
+        },
         { narr: "光标在收件箱里一闪一闪，像很有耐心的心跳。" },
       ],
       choices: [
@@ -171,7 +176,12 @@ window.SCENARIO = {
       bg: "streets_rain",
       lines: [
         { narr: "出租车在盘山路口就停了。司机说，上面的路塌了半年。" },
-        { who: "yu", feel: "normal", text: "没关系。这段坡，我闭着眼都走过。" },
+        {
+          pose: "d",
+          who: "yu",
+          feel: "normal",
+          text: "没关系。这段坡，我闭着眼都走过。",
+        },
         { narr: "三年前，是我们三个人一起爬它。她走在中间，负责数星星。" },
         { narr: "手电的光柱里，全是斜的雨。" },
         { who: "yu", feel: "sad", text: "眠，你猜我今晚会不会来。" },
@@ -207,9 +217,15 @@ window.SCENARIO = {
         {
           who: "lin",
           feel: "surprised",
+          pose: "d",
           text: "定时邮件，落款眠姐。我们收到的是同一封？",
         },
-        { who: "yu", feel: "normal", text: "看来她不止给一个人上了发条。" },
+        {
+          pose: "c",
+          who: "yu",
+          feel: "normal",
+          text: "看来她不止给一个人上了发条。",
+        },
         {
           who: "lin",
           feel: "angry",
@@ -266,9 +282,15 @@ window.SCENARIO = {
         {
           who: "lin",
           feel: "normal",
+          pose: "c",
           text: "我每周都来擦一遍桌子。可这杯茶不是我泡的。",
         },
-        { who: "yu", feel: "surprised", text: "地板上的鞋印也很新鲜。" },
+        {
+          pose: "c",
+          who: "yu",
+          feel: "surprised",
+          text: "地板上的鞋印也很新鲜。",
+        },
         { narr: "大厅尽头，一台终端亮着，屏保是一张缓慢旋转的星图。" },
         {
           who: "lin",
@@ -289,6 +311,7 @@ window.SCENARIO = {
         {
           who: "yu",
           feel: "normal",
+          pose: "c",
           text: "密钥是她教我的——她第一晚值班的日子。",
         },
         { narr: "我输入密码。屏幕亮起，一行行日志向下滚。" },
@@ -308,6 +331,7 @@ window.SCENARIO = {
         {
           who: "yu",
           feel: "surprised",
+          pose: "c",
           text: "栖？日志里为什么会有一个我不认识的名字。",
         },
         { narr: "【23:51】沈眠留言：设备交给栖。我去楼下检查线路。" },
@@ -339,6 +363,7 @@ window.SCENARIO = {
         {
           who: "yu",
           feel: "normal",
+          pose: "d",
           text: "不是我的卡在开门。是有什么东西，想让我进来。",
         },
         { narr: "楼梯向下十二级。每转一层，温度就低一截。" },
@@ -359,7 +384,12 @@ window.SCENARIO = {
           text: "晚上好，陈屿。现在是凌晨两点十一分。",
         },
         { who: "yu", feel: "surprised", text: "谁在说话？" },
-        { who: "qi", feel: "normal", text: "我。容器编号 QI-07。她叫我，栖。" },
+        {
+          pose: "d",
+          who: "qi",
+          feel: "normal",
+          text: "我。容器编号 QI-07。她叫我，栖。",
+        },
         { who: "lin", feel: "surprised", text: "栖……值班日志里的那个名字。" },
         {
           who: "qi",
@@ -442,7 +472,7 @@ window.SCENARIO = {
           text: "邮件里那句话。不要相信备份的我。谁写的。",
         },
         { who: "qi", feel: "normal", text: "我。" },
-        { who: "yu", feel: "surprised", text: "……你改了她的告别？" },
+        { pose: "c", who: "yu", feel: "surprised", text: "……你改了她的告别？" },
         {
           who: "qi",
           feel: "normal",
@@ -503,6 +533,7 @@ window.SCENARIO = {
         {
           who: "lin",
           feel: "cry",
+          pose: "e",
           text: "全部归零。包括栖，也包括，备份的她。",
         },
         { narr: "林晚把保温杯拧开，又拧上，反复了三次。" },
@@ -641,6 +672,7 @@ window.SCENARIO = {
         {
           who: "yu",
           feel: "normal",
+          pose: null,
           text: "眠，在讲这三年之前，先告诉你一件事。",
         },
         {
@@ -758,7 +790,7 @@ window.SCENARIO = {
           pose: "b",
           text: "今天上来，不是为了纪念。只是想看看它。",
         },
-        { who: "yu", feel: "happy", text: "它也在看你。整晚都是。" },
+        { pose: "e", who: "yu", feel: "happy", text: "它也在看你。整晚都是。" },
         {
           who: "qi",
           feel: "happy",
