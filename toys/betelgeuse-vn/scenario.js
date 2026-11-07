@@ -400,7 +400,7 @@ window.SCENARIO = {
         { narr: "「陈屿，看到这里，说明林晚也来了。很好，人齐了。」" },
         { narr: "「确诊那天我就想好了。我的时间不够，但存储够。」" },
         { narr: "「栖是我写的容器。今晚我把自己放进去。不可逆。别哭。」" },
-        { who: "lin", feel: "sad", text: "眠姐……你病了为什么不告诉我们……" },
+        { who: "lin", feel: "cry", text: "眠姐……你病了为什么不告诉我们……" },
         { narr: "画面里，她躺进扫描环，像躺进一场排练过的雪。" },
         { narr: "「参宿四今晚很亮。替我记住。往后的夜空，拜托你们了。」" },
         { narr: "扫描环合拢，白光熄灭。2023 年 11 月 2 日，23 点 59 分。" },
@@ -420,7 +420,7 @@ window.SCENARIO = {
       lines: [
         {
           who: "yu",
-          feel: "normal",
+          feel: "worried",
           text: "邮件里那句话。不要相信备份的我。谁写的。",
         },
         { who: "qi", feel: "normal", text: "我。" },
@@ -458,7 +458,7 @@ window.SCENARIO = {
         { who: "yu", feel: "sad", text: "……每次？" },
         {
           who: "qi",
-          feel: "normal",
+          feel: "worried",
           text: "三次。第三次，她问，陈屿是不是还在恨她。我答不上来。",
         },
         { narr: "冷气的声音忽然变得很大。没有一个人说话。" },
@@ -478,12 +478,12 @@ window.SCENARIO = {
         },
         {
           who: "yu",
-          feel: "surprised",
+          feel: "worried",
           text: "断电之后，机房里还在运行的东西——",
         },
         {
           who: "lin",
-          feel: "sad",
+          feel: "cry",
           text: "全部归零。包括栖，也包括，备份的她。",
         },
         { narr: "林晚把保温杯拧开，又拧上，反复了三次。" },
@@ -638,7 +638,7 @@ window.SCENARIO = {
         },
         {
           who: "yu",
-          feel: "sad",
+          feel: "cry",
           text: "栖把新闻读给你听，你却把一切都当成梦。你早就发现了吧。",
         },
         { narr: "「……嗯。每次醒来，参宿四都亮得一模一样。可梦会累积。」" },
@@ -677,13 +677,13 @@ window.SCENARIO = {
         { narr: "「参宿四，还是我记住的那个样子吗。」" },
         {
           who: "yu",
-          feel: "surprised",
+          feel: "shy",
           text: "……它没怎么变。跟你记得的一样亮。",
         },
         { narr: "我撒了一个谎。谎很轻，落在圆顶里，没有人拆穿。" },
         {
           who: "qi",
-          feel: "normal",
+          feel: "shy",
           text: "陈屿。谢谢你。这句话我练过很多种说法，都不如你说的。",
         },
         {

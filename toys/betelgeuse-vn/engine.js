@@ -2656,7 +2656,16 @@
   // 立绘 panel: one card per character (met in play = unlocked), each with
   // a feel-chip row that swaps the injected CHAR_ART bust live.
   var MET_KEY = "vn-met-chars";
-  var FEELS = ["normal", "happy", "sad", "surprised", "angry"];
+  var FEELS = [
+    "normal",
+    "happy",
+    "sad",
+    "surprised",
+    "angry",
+    "worried",
+    "shy",
+    "cry",
+  ];
 
   function readMet() {
     var raw = null;
@@ -2738,6 +2747,9 @@
               sad: "低落",
               surprised: "惊讶",
               angry: "生气",
+              worried: "担忧",
+              shy: "害羞",
+              cry: "泪目",
             }[f] || f;
           chip.addEventListener(
             "click",
