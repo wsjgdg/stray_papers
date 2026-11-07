@@ -437,7 +437,7 @@ VERSIONS = {
     "prototype-home.css": "switch-15",
     "prototype-forge.css": "press-08",      # ① 关的 .page-forge 外用样式
     "prototype-dossier.css": "dossier-09",
-    "prototype-source.css": "source-08",    # 七页共用的正文 / 卡片台样式
+    "prototype-source.css": "source-09",    # 七页共用的正文 / 卡片台样式
     "prototype-cards.js": "cards-06",
     "prototype-trends.css": "desk-11",
     "prototype-trends.js": "desk-09",
@@ -447,7 +447,7 @@ VERSIONS = {
     "prototype-routes.css": "weave-08",
     "prototype-routes.js": "weave-07",
     "route-fill.js": "route-01",
-    "prototype-scam.css": "case-11",
+    "prototype-scam.css": "case-12",
     "prototype-scam-tear.css": "tear-in-08",
     "motion-lab-v2.js": "tear-in-07",     # 撕纸动效，由 prototype.js 懒加载
     "scam-acts.js": "acts-02",
@@ -852,6 +852,8 @@ def build(spec: dict) -> str:
 
     # 真源样式表只留一份（历次构建在同一张页面上追加过很多份）
     head = re.sub(r'<link rel="stylesheet" href="prototype-source\.css[^"]*">', "", head)
+    # prototype-v2.css 那一层已整份删除（活的部分搬进了 scam.css），这里顺手把旧链接摘掉
+    head = re.sub(r'<link rel="stylesheet" href="prototype-v2\.css[^"]*">', "", head)
     head = head.replace(
         "</head>",
         f'<link rel="stylesheet" href="prototype-source.css?v={VERSIONS["prototype-source.css"]}"></head>',
