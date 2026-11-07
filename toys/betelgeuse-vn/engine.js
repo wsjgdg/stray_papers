@@ -2031,6 +2031,7 @@
       return;
     }
     restoreFrom(data);
+    toast("已读取快存"); // hotkey-only action: give it visible confirmation
   }
 
   function writeSlot(n) {
@@ -2247,12 +2248,20 @@
           data = null;
         }
         if (data && typeof data === "object") {
-          label =
-            n +
-            " · " +
-            (fmtTs(data.ts) || "?") +
-            " · " +
-            (data.scene != null ? String(data.scene) : "?");
+          // readable place name: the saved bg's scenario label (深夜·公寓…),
+          // falling back to the raw scene id for payloads that predate bg
+          var place = "?";
+          if (
+            typeof data.bg === "string" &&
+            S.backgrounds &&
+            S.backgrounds[data.bg] &&
+            typeof S.backgrounds[data.bg].name === "string"
+          ) {
+            place = S.backgrounds[data.bg].name;
+          } else if (data.scene != null) {
+            place = String(data.scene);
+          }
+          label = n + " · " + (fmtTs(data.ts) || "?") + " · " + place;
           // Load mode only: a saved payload may carry a jpeg data URL of the
           // scene canvas at save time. Save-mode and empty slots show no img.
           if (
