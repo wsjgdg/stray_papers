@@ -120,6 +120,11 @@
       if (!lives && wasAlive) died++;
     }
     cells = next; generation++;
+    // 世代徽章跳一下：让"又长了一代"这件事在眼角有动静（减弱动效时由 CSS 关掉）
+    var badge = document.getElementById('generation-badge');
+    if (badge && !reduced) {
+      badge.classList.remove('is-ticking'); void badge.offsetWidth; badge.classList.add('is-ticking');
+    }
     recent.push({ gen: generation, live: cells.size, born: born, died: died });
     document.getElementById('delta-count').textContent = '变化 ' + pad(born + died);
     renderGrid(goals[preset] && generation === goals[preset].gen);

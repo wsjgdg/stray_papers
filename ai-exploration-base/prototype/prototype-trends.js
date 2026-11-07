@@ -29,7 +29,7 @@
   var tracks = (DESK && DESK.tracks) || FALLBACK_TRACKS;
   var state = {};
   Object.keys(tracks).forEach(function (key) { state[key] = { choices: {}, plan: null }; });
-  var current = Object.keys(tracks)[0], selected = null, justFiled = null, lastDecision = null;
+  var current = Object.keys(tracks)[0], selected = null, justFiled = null, lastDecision = null, settledFor = null;
 
   var fieldSources = {
     finance: [
@@ -164,6 +164,21 @@
   function renderReport() {
     var counts = grades(), choices = state[current].choices;
     var n = total();
+    // 四条情报全部有去处时，档案区收一次章（每个领域只响一次；减弱动效时不动）
+    if (n > 0 && counts.sorted === n) {
+      if (settledFor !== current) {
+        settledFor = current;
+        var binsBox = document.querySelector('.bins');
+        if (binsBox && !reduced) {
+          binsBox.classList.remove('is-settled'); void binsBox.offsetWidth;
+          binsBox.classList.add('is-settled');
+          clearTimeout(binsBox.settleTimer);
+          binsBox.settleTimer = setTimeout(function () { binsBox.classList.remove('is-settled'); }, 1200);
+        }
+      }
+    } else {
+      settledFor = null;
+    }
     document.getElementById('progress-fill').style.width = counts.sorted / n * 100 + '%';
     document.getElementById('progress-label').textContent = '已分拣 ' + counts.sorted + ' / ' + n + ' · 已核对 ' + counts.right + ' / ' + n;
     var report = document.getElementById('report-content'), planStage = document.getElementById('plan-stage');
@@ -293,10 +308,23 @@
     clearTimeout(desk.replateTimer);
     desk.replateTimer = setTimeout(function () { desk.classList.remove('is-replating'); }, 1100);
   }
+  // 键盘：选中一张卡后按 1 / 2 / 3 直接归档，不用一路 Tab 到档案格。
+  // 只在焦点确实在分拣台里时生效，避免在页面别处按数字键被误判。
+  document.addEventListener('keydown', function (event) {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    var slot = ['1', '2', '3'].indexOf(event.key);
+    if (slot < 0 || !selected) return;
+    var desk = document.querySelector('.workbench');
+    if (!desk || !desk.contains(document.activeElement)) return;
+    var target = document.querySelectorAll('[data-bin]')[slot];
+    if (!target) return;
+    event.preventDefault();
+    assign(selected, target.dataset.bin);
+  });
   document.querySelectorAll('[data-bin]').forEach(function (button) {
     button.addEventListener('click', function () {
       if (selected) assign(selected, button.dataset.bin);
-      else { feedback.dataset.result = ''; feedback.textContent = '先点一张情报卡，再点这个档案格；或者把卡角手柄拖进来。'; stack.querySelector('.card-pick').focus(); }
+      else { feedback.dataset.result = ''; feedback.textContent = '先点一张情报卡，再点这个档案格；也可以把卡角手柄拖进来，或用 1 / 2 / 3 键。'; stack.querySelector('.card-pick').focus(); }
     });
   });
   document.querySelectorAll('[data-track]').forEach(function (button) {

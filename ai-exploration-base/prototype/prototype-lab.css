@@ -147,3 +147,14 @@
 .page-lab .audit p,
 .page-lab .lab-projects p,
 .page-lab .lab-history li { font-size: 12px; line-height: 1.65; }
+
+/* 世代徽章：每长一代轻轻跳一下（脚本加 .is-ticking，340ms 后自然结束） */
+@keyframes gen-tick {
+  0% { transform: scale(1); }
+  38% { transform: scale(1.09); background: #f2ffcf; }
+  100% { transform: scale(1); }
+}
+.page-lab .generation-badge.is-ticking { animation: gen-tick .34s cubic-bezier(.2, .8, .25, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .page-lab .generation-badge.is-ticking { animation: none; }
+}
