@@ -5,7 +5,7 @@
 
     python3 ai-exploration-base/scripts/package.py
 
-产物：仓库根目录下的 `AI探索基地.zip`（.gitignore 已忽略 *.zip，不会进版本库）。
+产物：仓库根目录下的 `AI探索基地.zip` 与 `先读我.txt`（两个都进版本库）。
 zip 里的顶层只有四项：
 
     AI探索基地/
@@ -14,7 +14,7 @@ zip 里的顶层只有四项：
       README.md
       先读我.txt              由 docs/先读我.md 生成
 
-`bak/`、`.git/`、`__pycache__/`、旧的 zip 都不进包。
+`.git/`、`__pycache__/` 不进包。产物 `AI探索基地.zip` 与 `先读我.txt` 都进版本库。
 """
 
 from __future__ import annotations
