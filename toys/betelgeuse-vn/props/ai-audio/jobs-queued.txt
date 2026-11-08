@@ -1,0 +1,12 @@
+title|d14604de-0c9b-4523-b85c-a9892dc14b8e
+bgm_apartment|e386d6a7-985d-4c54-ae69-2997c4dfdd64
+sfx_hum|e520bf0d-66b1-4b06-8288-1148b0dbcc85
+bgm_server|29b276d0-032f-4b72-85fb-db25e024ca5e
+sfx_keyboard|8a5c7a53-1d6d-4587-a59d-5d9754be6ad8
+bgm_star|0feba23e-26b3-4f7e-b861-ae2932047f60
+sfx_rain|30b6cba2-b926-4ea7-a53b-63fd2911aec0
+title|bd63d375-9dba-449d-b53a-79bc3782b00f
+sfx_keyboard|7cf5236d-a052-4626-8512-f04007c6c101
+bgm_star|b44a1c64-6bc3-4f98-9f41-5f13a89bf572
+bgm_apartment|a41e65e4-2429-4982-9cbb-ff9501295e32
+sfx_night|007ab4a3-7b58-489f-ad4f-8cd6d845ed6a

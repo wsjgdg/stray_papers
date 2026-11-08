@@ -1,0 +1,2687 @@
+/* ==========================================================================
+   Visual Novel — "deep night cinema" theme (pure CSS, no JS)
+   Palette: deep blue-black base, moonlit blue accents, soft glows.
+   All classes below follow the engine DOM contract; see the deviation
+   notes in the comment block at the end of this file.
+
+   Cinematic layer additions (v2):
+   - .vn-vignette / .vn-grain   fullscreen overlay layers (engine adds the
+     elements; CSS styles them wherever they are inserted)
+   - .vn-bg.vn-fading           background dip-to-black toggle (~650ms)
+   - .vn-text.vn-glitch         1.2s one-shot RGB-split glitch
+   - #vn-app.vn-shake           500ms camera shake
+   - .vn-dialog.vn-enter        dialog subtitle-bar entry animation
+   - art.js busts breathe via .vn-sprite > svg (inert until art is wired)
+
+   Stage additions (v3) — classic VN layout:
+   - .vn-sprites                full-width stage strip above the dialog;
+     .vn-sprite is a large free-standing portrait anchored bottom
+   - .vn-pos-left / .vn-pos-right / .vn-solo   slot positions (slot 0 left,
+     slot 1 right; solo drifts toward center)
+   - .vn-enter / .vn-leave      slide-up entrance / slide-down exit (engine
+     removes the classes/elements; re-entry inside the leave window reuses
+     the element)
+   - .vn-swap                   quick crossfade pulse over a feel-art swap
+   - .vn-name::before           1px colored left-notch on the name plate
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design tokens
+   -------------------------------------------------------------------------- */
+:root {
+  --vn-bg: #04070f;
+  --vn-bg-raise: #0a1120;
+  --vn-panel: rgba(10, 16, 30, 0.78);
+  --vn-panel-deep: rgba(6, 10, 20, 0.92);
+  --vn-border: rgba(255, 255, 255, 0.12);
+  --vn-border-soft: rgba(255, 255, 255, 0.08);
+  --vn-text: #e9f0fb;
+  --vn-text-dim: rgba(212, 224, 244, 0.62);
+  --vn-text-faint: rgba(196, 210, 234, 0.45);
+  --vn-accent: #8fb8ff;
+  --vn-accent-soft: rgba(143, 184, 255, 0.5);
+  --vn-accent-glow: rgba(110, 160, 255, 0.32);
+  --vn-warm: rgba(255, 124, 92, 0.38);
+  --vn-font:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+    "Source Han Sans SC", sans-serif;
+  --vn-font-title:
+    Georgia, "Times New Roman", "Songti SC", "STSong", "Noto Serif CJK SC",
+    "SimSun", serif;
+}
+
+/* --------------------------------------------------------------------------
+   2. Base / app root
+   -------------------------------------------------------------------------- */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--vn-bg);
+}
+
+#vn-app,
+#vn-app *,
+#vn-app *::before,
+#vn-app *::after {
+  box-sizing: border-box;
+}
+
+#vn-app {
+  /* palette lives here too, so overrides can be scoped per app */
+  --vn-sprite-lift: 190px; /* sprite stage bottom above the viewport bottom
+                              (dialog bar + margin + headroom for the pool) */
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  min-width: 320px;
+  background: var(--vn-bg);
+  color: var(--vn-text);
+  font-family: var(--vn-font);
+  font-size: 16px;
+  line-height: 1.6;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+#vn-app ::selection {
+  background: rgba(130, 175, 255, 0.3);
+}
+
+/* button reset — components below re-add chrome */
+#vn-app button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#vn-app button:focus-visible {
+  outline: 2px solid var(--vn-accent);
+  outline-offset: 2px;
+}
+
+/* engine-owned hidden state */
+.vn-hidden {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. Background layer
+   -------------------------------------------------------------------------- */
+.vn-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* opacity fade-back uses the longer base curve; the dip-to-black in
+     .vn-fading below tightens both curves to .3s while the class is on;
+     transform easing serves the .vn-dolly push-in (compositor-only) */
+  transition:
+    opacity 0.6s ease,
+    filter 0.3s ease,
+    transform 1.2s cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* best-effort framing if the engine sets backgroundImage only */
+  background-size: cover;
+  background-position: center;
+}
+
+/* fx layer inside .vn-bg: hosts animated css dioramas (innerHTML) and the
+   canvas scene renderer; must fill .vn-bg so canvas sizing reads real dims */
+.vn-bg-fx {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 3D-rendered prop sprite layer: sits above fx, below canvas — props are
+   pre-rendered webp stills positioned per-scene by the engine */
+.vn-props {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.vn-prop {
+  position: absolute;
+  height: auto;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5));
+  transition: opacity 0.8s ease;
+  transform-origin: 50% 100%; /* idle sway pivots at the ground contact */
+}
+
+/* idle life: each prop breathes subtly so stills never read as dead
+   stickers; all die under the reduced-motion kill list */
+.vn-prop-umbrella {
+  animation: vn-idle-sway 5.2s ease-in-out infinite;
+}
+
+.vn-prop-crt {
+  animation: vn-idle-glow 3.4s ease-in-out infinite;
+}
+
+.vn-prop-telescope {
+  animation: vn-idle-glint 7s ease-in-out infinite;
+}
+
+/* micro-narrative props: quieter life — the calendar page trembles when the
+   draft passes, the keys hang almost still, the mug never moves (she left it) */
+.vn-prop-calendar {
+  animation: vn-idle-tremble 6.5s ease-in-out infinite;
+}
+
+.vn-prop-keys {
+  animation: vn-idle-hang 8s ease-in-out infinite;
+  transform-origin: 50% 0%;
+}
+
+@keyframes vn-idle-tremble {
+  0%,
+  92%,
+  100% {
+    transform: rotate(0deg);
+  }
+  94% {
+    transform: rotate(0.6deg);
+  }
+  97% {
+    transform: rotate(-0.4deg);
+  }
+}
+
+@keyframes vn-idle-hang {
+  0%,
+  100% {
+    transform: rotate(-0.8deg);
+  }
+  50% {
+    transform: rotate(0.8deg);
+  }
+}
+
+@keyframes vn-idle-sway {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+
+@keyframes vn-idle-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1);
+  }
+  50% {
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1.14)
+      drop-shadow(0 0 22px rgba(111, 195, 255, 0.18));
+  }
+}
+
+@keyframes vn-idle-glint {
+  0%,
+  100% {
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5));
+  }
+  38%,
+  52% {
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5)) brightness(1.1)
+      drop-shadow(0 0 16px rgba(201, 161, 90, 0.2));
+  }
+}
+
+.vn-bg-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* cinematic letterbox scrim: darker top edge + fade into the dialog zone */
+.vn-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(2, 4, 9, 0.5) 0%,
+    rgba(2, 4, 9, 0) 20%,
+    rgba(2, 4, 9, 0) 58%,
+    rgba(2, 4, 9, 0.72) 100%
+  );
+}
+
+/* dip-to-black toggle (engine flips the class ~650ms on scene change):
+   bright to black in .3s; removing the class returns via the base .6s curve */
+.vn-bg.vn-fading {
+  filter: brightness(0);
+  opacity: 0.3;
+  transition:
+    opacity 0.3s ease,
+    filter 0.3s ease;
+}
+
+/* dolly zoom (fx:"dolly" line): camera pushes toward the emotional subject —
+   the background scales up around the upper-third origin and softens (a
+   single blur step per line, never an animated radius), while the focus
+   sprite leans in via its own transform transition below */
+#vn-app.vn-dolly .vn-bg {
+  transform: scale(1.06);
+  transform-origin: 50% 30%;
+  filter: blur(2px) brightness(0.92);
+}
+
+#vn-app.vn-dolly .vn-sprite.vn-focus {
+  transform: scale(1.15) translateY(-4px);
+}
+
+/* scene color grade (fx:"grade"): cools and deepens the frame — a mood
+   shift without changing scenes; cleared on advance like glitch/dolly */
+#vn-app.vn-grade .vn-bg {
+  filter: saturate(0.72) contrast(1.06) brightness(0.88) hue-rotate(-6deg);
+}
+
+#vn-app.vn-grade .vn-grain {
+  opacity: 0.09; /* grain reads heavier under the cooler grade */
+}
+
+/* scene-level color grades (backgrounds[id].grade): a persistent mood filter
+   that follows the background through fades and restores with saves. Only
+   .vn-bg and .vn-grain are graded — sprites keep their own palette. The
+   .vn-bg filter transition (0.3s) animates the swap between grades. */
+#vn-app.vn-g-warm .vn-bg {
+  filter: saturate(1.08) contrast(1.02) brightness(1.02) sepia(0.14)
+    hue-rotate(-8deg);
+}
+#vn-app.vn-g-cold .vn-bg {
+  filter: saturate(0.78) contrast(1.05) brightness(0.9) hue-rotate(12deg);
+}
+#vn-app.vn-g-dusk .vn-bg {
+  filter: saturate(0.95) contrast(1.06) brightness(0.85) hue-rotate(22deg);
+}
+#vn-app.vn-g-sepia .vn-bg {
+  filter: saturate(0.68) contrast(0.96) brightness(1.04) sepia(0.42);
+}
+#vn-app.vn-g-night .vn-bg {
+  filter: saturate(0.7) contrast(1.1) brightness(0.78) hue-rotate(6deg);
+}
+#vn-app.vn-g-ember .vn-bg {
+  filter: saturate(1.12) contrast(1.05) brightness(0.95) sepia(0.22)
+    hue-rotate(-18deg);
+}
+#vn-app.vn-g-sepia .vn-grain {
+  opacity: 0.11; /* old-film memory tone carries more grain */
+}
+#vn-app.vn-g-night .vn-grain {
+  opacity: 0.1;
+}
+
+/* --------------------------------------------------------------------------
+   4. Sprite stage (large waist-up portraits, left + right of the dialog)
+   -------------------------------------------------------------------------- */
+.vn-sprites {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--vn-sprite-lift); /* safe stage lift above the dialog bar */
+  z-index: 1;
+  height: 52vh;
+  pointer-events: none;
+}
+
+/* CG overlay: full-screen event illustration above bg+sprites, below the
+   dialog. Vignette/grain (z -1) sit beneath; the dialog keeps reading over
+   the art. Fades in via the one-shot animation (restarts on display toggle). */
+.vn-cg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.vn-cg-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: vn-cg-in 0.9s ease-out;
+}
+
+/* Large waist-up portrait standing free on the stage (no card/clip), anchored
+   to the strip's bottom edge. --vn-color survives only as the light-pool
+   ::after beneath the character. The engine drives .vn-pos-left/right,
+   .vn-solo, .vn-enter/.vn-leave/.vn-swap, .vn-focus/.vn-dim. */
+.vn-sprite {
+  position: absolute;
+  bottom: 0;
+  width: clamp(200px, 26vw, 340px);
+  height: auto;
+  border-radius: 0;
+  display: flex;
+  align-items: flex-end; /* initial-letter fallback sits on the stage floor */
+  justify-content: center;
+  font-size: 44px; /* text-initial fallback while art.js is not wired */
+  font-weight: 600;
+  color: rgba(240, 246, 255, 0.95);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45));
+  transition:
+    transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.45s ease,
+    filter 0.45s ease;
+}
+
+/* stage light pool: a soft ellipse of the character color under the feet */
+.vn-sprite::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -16px;
+  width: 76%;
+  height: 30px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(
+    closest-side,
+    rgba(143, 184, 255, 0.4),
+    rgba(143, 184, 255, 0) 74%
+  );
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--vn-color, #8fb8ff) 42%, transparent),
+    transparent 76%
+  );
+  filter: blur(3px);
+  opacity: 0.5;
+  transition: opacity 0.45s ease;
+}
+
+/* art.js waist-up portrait fills the sprite; anchored bottom, gently
+   breathing. The .3s fade-in re-runs whenever the engine swaps the innerHTML,
+   acting as the crossfade ease. Inert while the engine prints text. */
+.vn-sprite > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 50% 100%;
+  animation:
+    vn-sprite-breathe 4s ease-in-out infinite alternate,
+    vn-sprite-in 0.3s ease-out;
+}
+
+/* raster sprites (CHAR_ART_IMG webp): the art is a tall 473:900 cutout, so
+   cap by height (not the stage width like the squat SVG viewBox) and let the
+   width follow; anchored bottom so the bust sits on the dialog bar */
+.vn-sprite > img {
+  display: block;
+  width: auto;
+  height: 58vh;
+  max-width: 100%;
+  transform-origin: 50% 100%;
+  animation:
+    vn-sprite-breathe 4s ease-in-out infinite alternate,
+    vn-sprite-in 0.3s ease-out;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* --- stage positions (engine assigns by slot; solo nudge) ---------------- */
+.vn-pos-left {
+  left: 6vw;
+  --vn-enter-dx: -70px; /* slides in from (and exits toward) the left edge */
+}
+
+.vn-pos-right {
+  right: 6vw;
+  --vn-enter-dx: 70px;
+}
+
+.vn-solo {
+  left: 18vw; /* lone character drifts toward center; right stays auto */
+  right: auto;
+}
+
+/* --- mood variants (data-feel) ------------------------------------------ */
+.vn-sprite[data-feel="happy"] {
+  transform: scale(1.05);
+}
+
+/* sad keeps the base drop-shadow inside its filter chain (one filter property) */
+.vn-sprite[data-feel="sad"] {
+  filter: grayscale(0.75) brightness(0.85)
+    drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45));
+  transform: translateY(5px);
+}
+
+.vn-sprite[data-feel="sad"]::after {
+  opacity: 0.2; /* the light pool dims with the mood */
+}
+
+.vn-sprite[data-feel="surprised"] {
+  transform: scale(1.09);
+}
+
+/* angry: warm rim via an extra tinted drop-shadow (no box to glow around) */
+.vn-sprite[data-feel="angry"] {
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45))
+    drop-shadow(0 0 24px var(--vn-warm));
+}
+
+/* --- focus / dim states (declared after moods: focus transform wins) ----- */
+.vn-sprite.vn-focus {
+  opacity: 1;
+  transform: translateY(-8px) scale(1.02);
+}
+
+.vn-sprite.vn-focus::after {
+  opacity: 0.95; /* light pool brightens under the speaker */
+}
+
+.vn-sprite.vn-dim {
+  opacity: 0.55;
+  filter: saturate(0.85) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45));
+}
+
+/* dim + sad compose instead of clobbering (single filter property) */
+.vn-sprite[data-feel="sad"].vn-dim {
+  filter: grayscale(0.75) brightness(0.85) saturate(0.85)
+    drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45));
+}
+
+/* --- entrance / exit / feel-swap (engine-toggled, self-cleaning) --------- */
+.vn-sprite.vn-enter {
+  animation: vn-sprite-rise 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.vn-sprite.vn-leave {
+  animation: vn-sprite-drop 0.35s ease-in forwards;
+  pointer-events: none;
+}
+
+/* quick crossfade/scale pulse around a feel-art innerHTML swap; the full
+   animation list is restated so the pulse composes with breathe + in */
+.vn-sprite.vn-swap > svg {
+  animation:
+    vn-sprite-breathe 4s ease-in-out infinite alternate,
+    vn-sprite-in 0.3s ease-out,
+    vn-swap-pulse 0.18s ease-out;
+}
+
+/* --------------------------------------------------------------------------
+   5. Dialog box (cinematic subtitle bar)
+   -------------------------------------------------------------------------- */
+.vn-dialog {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: min(92%, 860px);
+  max-width: 860px;
+  margin-bottom: 24px;
+  padding: 18px 24px;
+  /* gradient glass: two stacked rgba layers + blur/saturate behind */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(18, 27, 48, 0.85) 0%,
+      rgba(9, 14, 27, 0.8) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.045) 0%,
+      rgba(255, 255, 255, 0) 42%
+    );
+  border: 1px solid var(--vn-border);
+  border-top-color: rgba(255, 255, 255, 0.2); /* 1px top highlight edge */
+  border-radius: 14px;
+  backdrop-filter: blur(16px) saturate(1.35);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
+  box-shadow:
+    0 -6px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* inner top-left corner accent line, drawn in currentColor: when the engine
+   (or a theme) sets color on .vn-dialog it picks up the character color;
+   otherwise it rests on the base text tone. */
+.vn-dialog::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 11px;
+  width: 26px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, currentColor, transparent);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* entry animation hook (engine may not add .vn-enter yet; CSS is ready).
+   The keyframes carry the translateX(-50%) centering so it survives. */
+.vn-dialog.vn-enter {
+  animation: vn-dialog-in 0.35s ease-out both;
+}
+
+.vn-name {
+  position: absolute;
+  top: 0;
+  left: 22px;
+  transform: translateY(-50%);
+  padding: 4px 20px 4px 13px;
+  /* angular plate with a clipped notch corner (top-right bevel) */
+  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
+  background: linear-gradient(135deg, #141e36 0%, #0a1120 100%);
+  border: 1px solid var(--vn-accent-soft);
+  color: var(--vn-accent);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  /* clip-path cuts box-shadow, so the lift + subtle glow ride on filter */
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45))
+    drop-shadow(0 0 7px rgba(120, 165, 255, 0.16));
+}
+
+/* 1px colored left-notch: a hairline spine in the speaker color, matching the
+   plate's angular language (the dialog's own ::before corner accent echoes it) */
+.vn-name::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  width: 1px;
+  background: currentColor;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* dim the name-plate border against the engine-set character color */
+@supports (border-color: color-mix(in srgb, currentColor 55%, transparent)) {
+  .vn-name {
+    border-color: color-mix(in srgb, currentColor 55%, transparent);
+  }
+
+  .vn-name {
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0 8px color-mix(in srgb, currentColor 30%, transparent));
+  }
+}
+
+.vn-text {
+  font-size: 16.5px;
+  line-height: 1.8;
+  min-height: 3.6em;
+  color: var(--vn-text);
+  letter-spacing: 0.02em;
+  /* literary serif for dialogue — the novel in visual novel */
+  font-family: var(--vn-font-title);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.75),
+    0 0 10px rgba(8, 14, 30, 0.5);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* typewriter caret: blinking block appended while characters reveal */
+.vn-text.vn-typing::after {
+  content: "▂";
+  color: var(--vn-accent, rgba(150, 190, 255, 0.9));
+  animation: vn-caret-blink 0.9s steps(1) infinite;
+}
+
+@keyframes vn-caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* advance indicator: breathing ▼ at the dialog's bottom-right corner —
+   the classic VN cue that the line is complete and a click awaits */
+.vn-next-ind {
+  position: absolute;
+  right: 20px;
+  bottom: 8px;
+  color: var(--vn-accent, rgba(150, 190, 255, 0.9));
+  font-size: 13px;
+  animation: vn-next-breathe 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes vn-next-breathe {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(3px);
+  }
+}
+
+/* narration mode: italic-ish, muted, nameless */
+.vn-dialog.vn-narr {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 15, 28, 0.72) 0%,
+      rgba(6, 10, 20, 0.62) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03) 0%,
+      rgba(255, 255, 255, 0) 42%
+    );
+}
+
+.vn-dialog.vn-narr .vn-text {
+  color: var(--vn-text-dim);
+  font-style: italic;
+}
+
+.vn-dialog.vn-narr .vn-name {
+  display: none;
+}
+
+.vn-dialog.vn-narr::before {
+  opacity: 0.3;
+}
+
+/* screen-reader live channel: full dialogue lines land here once per
+   display; visually hidden so it never disturbs the typewriter view */
+.vn-sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* decorative auto-mode progress line along the dialog's bottom edge; the
+   engine sets animation-duration inline (mirrors the auto-advance delay) */
+.vn-auto-bar {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 6px;
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.vn-auto-bar i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--vn-accent, rgba(150, 190, 255, 0.75));
+  opacity: 0.85;
+}
+
+.vn-auto-bar i.vn-auto-run {
+  animation: vn-auto-fill linear forwards;
+}
+
+@keyframes vn-auto-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Choices overlay
+   -------------------------------------------------------------------------- */
+.vn-choices {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  /* container is invisible; only the buttons take clicks */
+  pointer-events: none;
+}
+
+button.vn-choice {
+  pointer-events: auto;
+  min-width: 260px;
+  max-width: 100%;
+  padding: 12px 30px;
+  border-radius: 999px;
+  background: rgba(13, 20, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #dde8f9;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  /* staggered entrance: delays via nth-child below; `backwards` keeps the
+     button hidden during its delay window */
+  animation: vn-choice-in 0.38s ease-out backwards;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.2s ease;
+}
+
+.vn-choices button.vn-choice:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.vn-choices button.vn-choice:nth-child(2) {
+  animation-delay: 0.13s;
+}
+.vn-choices button.vn-choice:nth-child(3) {
+  animation-delay: 0.21s;
+}
+.vn-choices button.vn-choice:nth-child(4) {
+  animation-delay: 0.29s;
+}
+.vn-choices button.vn-choice:nth-child(5) {
+  animation-delay: 0.37s;
+}
+
+button.vn-choice:hover {
+  background: rgba(22, 33, 60, 0.82);
+  border-color: rgba(150, 190, 255, 0.7);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(150, 190, 255, 0.25),
+    0 0 26px var(--vn-accent-glow),
+    0 10px 26px rgba(0, 0, 0, 0.38);
+}
+
+button.vn-choice:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* hotkey badge: the 1..9 pick key shown inside each choice button */
+.vn-choice-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55em;
+  height: 1.55em;
+  margin-right: 0.65em;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-variant-numeric: tabular-nums;
+  color: var(--vn-text-faint);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  vertical-align: -0.25em;
+}
+
+button.vn-choice:hover .vn-choice-num {
+  color: #ffffff;
+  border-color: rgba(150, 190, 255, 0.6);
+  background: rgba(150, 190, 255, 0.14);
+}
+
+/* --------------------------------------------------------------------------
+   7. Top bar buttons (glass chips)
+   -------------------------------------------------------------------------- */
+.vn-topbar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 4;
+  display: flex;
+  gap: 8px;
+}
+
+button.vn-btn {
+  height: 32px;
+  padding: 0 15px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 29, 50, 0.6) 0%,
+    rgba(10, 16, 30, 0.55) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(222, 232, 250, 0.8);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.16s ease;
+}
+
+button.vn-btn:hover {
+  background: rgba(24, 34, 58, 0.75);
+  border-color: rgba(150, 190, 255, 0.45);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 14px var(--vn-accent-glow),
+    0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+button.vn-btn:active {
+  transform: translateY(0) scale(0.94);
+  transition-duration: 0.08s;
+}
+
+button.vn-btn.vn-active {
+  background: rgba(22, 34, 62, 0.8);
+  border-color: var(--vn-accent-soft);
+  color: #ffffff;
+  box-shadow:
+    0 0 12px var(--vn-accent-glow),
+    inset 0 0 8px rgba(130, 175, 255, 0.1);
+}
+
+/* --------------------------------------------------------------------------
+   8. Backlog overlay (fullscreen dim + centered scrollable card)
+   -------------------------------------------------------------------------- */
+.vn-backlog {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  width: min(90%, 640px);
+  max-height: 70vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 24px;
+  background: var(--vn-panel-deep);
+  border: 1px solid var(--vn-border);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* the "fullscreen rgba backdrop": shadow spreads the dim across the screen */
+  box-shadow:
+    0 0 0 100vmax rgba(3, 6, 12, 0.68),
+    0 30px 70px rgba(0, 0, 0, 0.55);
+  user-select: text;
+  -webkit-user-select: text;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.vn-backlog::-webkit-scrollbar {
+  width: 8px;
+}
+
+.vn-backlog::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.vn-backlog::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vn-backlog-line {
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.vn-backlog-line:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+b.vn-backlog-name {
+  color: var(--vn-accent); /* engine may override per character */
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+span.vn-backlog-text {
+  color: var(--vn-text-dim);
+}
+
+/* --------------------------------------------------------------------------
+   9. Menu overlay (fullscreen dim + centered card: save/load slots)
+   -------------------------------------------------------------------------- */
+.vn-menu {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  width: min(90%, 420px);
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 26px 24px;
+  background: var(--vn-panel-deep);
+  border: 1px solid var(--vn-border);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 100vmax rgba(3, 6, 12, 0.72),
+    0 30px 70px rgba(0, 0, 0, 0.55);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.vn-menu-title {
+  margin: 0 0 18px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-align: center;
+  color: var(--vn-text);
+  text-shadow: 0 0 16px rgba(130, 170, 255, 0.25);
+}
+
+button.vn-slot {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--vn-border-soft);
+  color: var(--vn-text);
+  font-size: 14px;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.16s ease;
+}
+
+button.vn-slot:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--vn-accent-soft);
+  box-shadow: 0 0 16px rgba(110, 160, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+button.vn-slot:active {
+  transform: translateY(0) scale(0.99);
+}
+
+button.vn-slot:last-of-type {
+  margin-bottom: 0;
+}
+
+.vn-slot-info {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--vn-text-faint);
+}
+
+/* Save-slot scene thumbnail (load mode only): fixed 16:9 box, cover-cropped.
+   Slot rows grow naturally; 96px still fits the 320px .vn-menu (92% + padding).
+   Hover zooms the thumb slightly — the row feels alive under the cursor. */
+.vn-slot-thumb {
+  display: block;
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--vn-border);
+  margin-bottom: 6px;
+  transition: transform 0.25s ease;
+}
+
+button.vn-slot:hover .vn-slot-thumb {
+  transform: scale(1.04);
+}
+
+button.vn-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--vn-border);
+  color: var(--vn-text-dim);
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+button.vn-close:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   9b. Settings overlay (same card language as .vn-menu: volume + auto delay)
+   -------------------------------------------------------------------------- */
+.vn-settings {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  width: min(90%, 420px);
+  padding: 26px 24px;
+  background: var(--vn-panel-deep);
+  border: 1px solid var(--vn-border);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 100vmax rgba(3, 6, 12, 0.72),
+    0 30px 70px rgba(0, 0, 0, 0.55);
+}
+
+.vn-settings-title {
+  margin: 0 0 18px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-align: center;
+  color: var(--vn-text);
+  text-shadow: 0 0 16px rgba(130, 170, 255, 0.25);
+}
+
+.vn-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--vn-border-soft);
+}
+
+.vn-setting-row:last-of-type {
+  margin-bottom: 0;
+}
+
+.vn-setting-row label {
+  flex: 0 0 4.5em; /* fixed width: 自动推进 stays on one line */
+  font-size: 14px;
+  color: var(--vn-text);
+  white-space: nowrap;
+}
+
+/* native range styling only: accent color, no custom track drawing */
+input.vn-range {
+  flex: 1 1 auto;
+  min-width: 0; /* shrink instead of overflowing on narrow cards */
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--vn-accent);
+  cursor: pointer;
+}
+
+.vn-range-val {
+  flex: 0 0 3.2em;
+  text-align: right;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--vn-text-faint);
+}
+
+/* fullscreen row button (settings) */
+.vn-fs-btn {
+  margin-left: auto;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--vn-text-dim, #cfd6e4);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--vn-border-soft);
+  border-radius: 9px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.vn-fs-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: var(--vn-accent);
+}
+
+/* keyboard shortcut legend (settings footer, non-interactive) */
+.vn-keys {
+  margin: 4px 0 12px;
+  padding: 0 14px;
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--vn-text-faint);
+}
+
+/* --------------------------------------------------------------------------
+   9c. Gallery / music box (鉴赏: seen-scene thumbnails + ambient preview)
+   -------------------------------------------------------------------------- */
+.vn-gallery {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  width: min(92%, 720px);
+  max-height: 86%;
+  overflow-y: auto;
+  padding: 24px 22px;
+  background: var(--vn-panel-deep);
+  border: 1px solid var(--vn-border);
+  border-radius: 18px;
+}
+
+.vn-gallery-title {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--vn-text, rgba(238, 244, 255, 0.95));
+  margin-bottom: 14px;
+}
+
+.vn-gtabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.vn-gtab {
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--vn-border);
+  background: transparent;
+  color: var(--vn-text-dim);
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.vn-gtab[aria-selected="true"] {
+  background: var(--vn-accent, rgba(96, 165, 250, 0.28));
+  border-color: transparent;
+  color: #fff;
+}
+
+.vn-gtab:hover {
+  border-color: rgba(180, 210, 255, 0.6);
+  color: #fff;
+}
+
+.vn-gscenes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.vn-gcard {
+  padding: 8px;
+  border: 1px solid var(--vn-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.vn-gcard.vn-gseen:hover {
+  transform: translateY(-2px);
+  border-color: rgba(180, 210, 255, 0.55);
+}
+
+.vn-gthumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(8, 12, 24, 0.6);
+}
+
+.vn-gthumb .vn-gthumb-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.vn-gcard.vn-glocked .vn-gthumb {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.03) 0 6px,
+      transparent 6px 12px
+    ),
+    rgba(8, 12, 24, 0.6);
+  filter: saturate(0.3);
+}
+
+.vn-gname {
+  margin-top: 7px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--vn-text, rgba(238, 244, 255, 0.95));
+}
+
+.vn-gcard.vn-glocked .vn-gname {
+  color: var(--vn-text-faint);
+  text-shadow: 0 0 10px rgba(150, 190, 255, 0.18);
+}
+
+.vn-gmusic {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 立绘 panel: character cards with a feel-chip row */
+.vn-gsprites {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.vn-gchar-stage {
+  height: 170px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(120, 160, 230, 0.14),
+    rgba(8, 12, 24, 0.55) 70%
+  );
+}
+
+.vn-sprite-bust {
+  width: 120px;
+  height: auto;
+  line-height: 0;
+}
+
+.vn-sprite-bust svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.vn-feelchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.vn-feelchip {
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vn-border);
+  background: transparent;
+  color: var(--vn-text-dim);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.vn-feelchip:hover {
+  border-color: rgba(180, 210, 255, 0.55);
+  color: #fff;
+}
+
+.vn-feelchip.vn-feel-on {
+  background: var(--vn-accent, rgba(96, 165, 250, 0.28));
+  border-color: transparent;
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .vn-gsprites {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.vn-mrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--vn-border);
+  border-radius: 10px;
+  transition: border-color 0.25s ease;
+}
+
+.vn-mrow:hover {
+  border-color: rgba(180, 210, 255, 0.5);
+}
+
+.vn-mrow.vn-playing {
+  border-color: rgba(255, 140, 90, 0.6);
+}
+
+.vn-mname {
+  font-size: 15px;
+  color: var(--vn-text, rgba(238, 244, 255, 0.95));
+}
+
+.vn-mline {
+  font-size: 12px;
+  color: var(--vn-text-faint);
+  margin-top: 2px;
+}
+
+.vn-mplay {
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--vn-border);
+  background: transparent;
+  color: var(--vn-text-dim);
+  cursor: pointer;
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.vn-mplay:hover {
+  border-color: rgba(180, 210, 255, 0.6);
+  color: #fff;
+}
+
+.vn-mrow.vn-playing .vn-mplay {
+  border-color: rgba(255, 140, 90, 0.65);
+  color: #ffb08c;
+}
+
+@media (max-width: 480px) {
+  .vn-gscenes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   10. Title screen (star drift + sheen + start ring)
+   -------------------------------------------------------------------------- */
+.vn-title {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 20px;
+  background: radial-gradient(
+    120% 90% at 50% 30%,
+    #101a30 0%,
+    #0a1122 40%,
+    #05080f 78%,
+    #02040a 100%
+  );
+}
+
+/* pure-CSS star field hint: a tiled field of 1-2px radial-gradient dots that
+   drifts diagonally. .vn-title has a z-index, so z-index:-1 keeps the dots
+   behind the text but above the title's own background. */
+.vn-title::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.8;
+  background-image:
+    radial-gradient(
+      1px 1px at 18% 26%,
+      rgba(255, 255, 255, 0.85) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1.4px 1.4px at 64% 18%,
+      rgba(214, 230, 255, 0.8) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 82% 44%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 38% 12%,
+      rgba(200, 220, 255, 0.7) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 8% 62%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1.6px 1.6px at 48% 34%,
+      rgba(235, 244, 255, 0.9) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 72% 68%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 26% 48%,
+      rgba(210, 228, 255, 0.65) 50%,
+      transparent 51%
+    );
+  background-size: 340px 300px;
+  background-repeat: repeat;
+  animation: vn-star-drift 90s linear infinite;
+}
+
+/* engine-driven canvas starfield (stars + nebula + shooting stars); sits
+   above the CSS dot hint, below the title text and start button */
+.vn-title-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.vn-title > *:not(.vn-title-canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+/* chapter card: translucent scrim + centered rules and text, shown once per
+   distinct chapter string; fades via .vn-show, self-dismisses (engine) */
+.vn-chapter {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: radial-gradient(
+    90% 70% at 50% 46%,
+    rgba(4, 8, 18, 0.72) 0%,
+    rgba(3, 6, 14, 0.55) 55%,
+    rgba(2, 4, 10, 0.25) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.vn-chapter.vn-show {
+  opacity: 1;
+}
+
+.vn-chapter-text {
+  font-size: clamp(22px, 4.4vw, 40px);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em; /* balance the trailing letter-spacing */
+  color: rgba(238, 244, 255, 0.94);
+  text-shadow: 0 0 26px rgba(140, 180, 255, 0.35);
+  padding: 22px 46px;
+  border-top: 1px solid rgba(190, 214, 255, 0.4);
+  border-bottom: 1px solid rgba(190, 214, 255, 0.4);
+}
+
+/* end credits: dark scrim over the ending scene; the roll column drifts
+   upward once (18s, engine-timed) and any click/space skips to the title */
+.vn-credits {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  overflow: hidden;
+  background: rgba(4, 7, 15, 0.82);
+  transition: opacity 0.8s ease;
+}
+
+.vn-credits-roll {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: min(88%, 620px);
+}
+
+.vn-credits-roll.vn-roll {
+  animation: vn-credits-roll 18s linear forwards;
+}
+
+@keyframes vn-credits-roll {
+  from {
+    transform: translate(-50%, 0);
+  }
+  to {
+    transform: translate(-50%, calc(-100% - 100vh));
+  }
+}
+
+.vn-credits-role {
+  margin-top: 34px;
+  font-size: 12px;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: var(--vn-text-dim, rgba(200, 212, 232, 0.62));
+}
+
+.vn-credits-name {
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(238, 244, 255, 0.95);
+}
+
+.vn-credits-role.vn-credits-title {
+  margin-top: 0;
+}
+
+.vn-credits-name.vn-credits-logo {
+  font-size: clamp(26px, 5.4vw, 44px);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-shadow: 0 0 30px rgba(150, 190, 255, 0.4);
+}
+
+.vn-title-name {
+  margin: 0;
+  font-family: var(--vn-font-title);
+  font-size: clamp(34px, 8vw, 64px);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em; /* re-center: offsets the trailing letter-space */
+  color: #f3f7ff; /* fallback for engines without background-clip: text */
+  /* shimmering sheen: the gradient sweeps across the clipped text every 6s */
+  background: linear-gradient(
+    105deg,
+    #f3f7ff 42%,
+    #d9e9ff 49%,
+    #ffffff 52%,
+    #eaf2ff 55%,
+    #f3f7ff 62%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: vn-sheen 6s ease-in-out infinite;
+  /* text-shadow would bleed through the transparent fill; the glow rides on
+     drop-shadow instead, which applies to the rendered gradient glyphs */
+  filter: drop-shadow(0 0 18px rgba(140, 180, 255, 0.35))
+    drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
+}
+
+.vn-title-sub {
+  margin-top: 14px;
+  font-size: 13px;
+  letter-spacing: 0.55em;
+  text-indent: 0.55em;
+  color: var(--vn-text-faint);
+}
+
+/* ending collector (结局收集): title-screen footnote — "结局回收 N/3" plus
+   one pill per ending. Uncollected: dim outline + "？". Collected: the pill
+   lights in the ending's own mood — bad = cold ash blue, good = dawn gold,
+   true = the Betelgeuse warm red with a breathing glow. Deliberately quiet:
+   a footnote between the subtitle and the start button, not a hero element. */
+.vn-endings {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  user-select: none;
+}
+
+.vn-endings-count {
+  font-size: 12px;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em; /* trailing letter-space compensation, like .vn-title-sub */
+  color: var(--vn-text-faint);
+}
+
+.vn-endings-marks {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.vn-ending-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--vn-text-faint);
+  border: 1px solid rgba(196, 210, 234, 0.22);
+  background: rgba(8, 13, 26, 0.5);
+  transition:
+    color 0.5s ease,
+    border-color 0.5s ease,
+    box-shadow 0.5s ease;
+}
+
+/* collected pills pick up the scenario palette by ending mood */
+.vn-ending-mark.vn-collected[data-ending="ending_bad"] {
+  color: #c6d4ea;
+  border-color: rgba(148, 174, 214, 0.5);
+  box-shadow: 0 0 10px rgba(116, 148, 198, 0.3);
+}
+
+.vn-ending-mark.vn-collected[data-ending="ending_good"] {
+  color: #ffe9c2;
+  border-color: rgba(255, 210, 132, 0.5);
+  box-shadow: 0 0 12px rgba(255, 196, 110, 0.32);
+}
+
+/* the true ending is the star itself: Betelgeuse warm red, breathing */
+.vn-ending-mark.vn-collected[data-ending="ending_true"] {
+  color: #ffd9c2;
+  border-color: rgba(255, 140, 90, 0.62); /* #ff8c5a family */
+  box-shadow: 0 0 13px rgba(255, 124, 92, 0.42);
+  animation: vn-ending-breathe 3.2s ease-in-out infinite;
+}
+
+#vn-start {
+  position: relative; /* anchors the ring pulse ::after */
+  margin-top: 56px;
+  padding: 17px 62px;
+  border-radius: 999px;
+  font-size: 17px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  background: rgba(18, 28, 50, 0.55);
+  border: 1px solid rgba(150, 190, 255, 0.45);
+  color: #eaf1ff;
+  animation: vn-breathe 3.4s ease-in-out infinite;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+/* expanding ring pulse around the start button */
+#vn-start::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 1px solid rgba(150, 190, 255, 0.55);
+  pointer-events: none;
+  animation: vn-ring 2.8s ease-out infinite;
+}
+
+#vn-start:hover {
+  background: rgba(26, 38, 66, 0.7);
+  border-color: rgba(180, 210, 255, 0.8);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(130, 175, 255, 0.45);
+}
+
+#vn-start:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* bonus episode button (星语 · 后日谈): secondary entry under #vn-start,
+   present in the layout only at 100% completion (engine toggles .vn-hidden).
+   The warm-red border is the finale_star accent — a quiet hint at the
+   afterglow epilogue. Deliberately quieter than the start button: smaller,
+   translucent, no ring pulse and no breathe animation — transitions only,
+   so no reduced-motion kill-list entry is needed. */
+#vn-bonus {
+  margin-top: 14px;
+  padding: 8px 26px;
+  border-radius: 999px;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em; /* trailing letter-space compensation, like #vn-start */
+  background: rgba(18, 28, 50, 0.35);
+  border: 1px solid rgba(255, 140, 90, 0.55);
+  color: var(--vn-text-dim);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+#vn-bonus:hover {
+  background: rgba(42, 32, 34, 0.55);
+  border-color: rgba(255, 170, 120, 0.8);
+  color: #ffe9dd;
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(255, 140, 90, 0.28);
+}
+
+#vn-bonus:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* gallery button (鉴赏): third title entry, neutral blue-grey family —
+   always present (music box works for new players too) */
+/* key art (title poster): the telescope webp composited into the starfield —
+   a near-silhouette that reads as scenery; at 100% completion it lights up
+   with the warm finale halo (class flipped by syncBonusButton) */
+#vn-keyart {
+  position: absolute;
+  left: 4%;
+  bottom: 0;
+  width: clamp(150px, 22vw, 320px);
+  pointer-events: none;
+  filter: brightness(0.22) saturate(0.55)
+    drop-shadow(0 0 26px rgba(255, 140, 90, 0.12));
+  transition: filter 1.6s ease;
+  z-index: 0;
+}
+
+#vn-keyart.vn-keyart-lit {
+  filter: brightness(0.92) saturate(1.05)
+    drop-shadow(0 0 42px rgba(255, 140, 90, 0.4));
+}
+
+#vn-gallery {
+  margin-top: 12px;
+  padding: 7px 24px;
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  background: rgba(18, 28, 50, 0.3);
+  border: 1px solid rgba(150, 180, 230, 0.45);
+  color: var(--vn-text-dim);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+#vn-gallery:hover {
+  background: rgba(24, 34, 58, 0.55);
+  border-color: rgba(180, 210, 255, 0.75);
+  color: #eef4ff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(130, 175, 255, 0.22);
+}
+
+#vn-gallery:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* continue button (继续游戏): secondary entry between #vn-start and
+   #vn-bonus, present in the layout only while a vn-save-* slot holds data
+   (engine toggles .vn-hidden). Like #vn-bonus — smaller, translucent, no
+   ring pulse and no breathe animation — but in the neutral blue-grey border
+   family of #vn-start at reduced strength: no warm-red accent, this is the
+   regular way back in, not an episode unlock. Transitions only, so no
+   reduced-motion kill-list entry is needed. */
+#vn-continue {
+  margin-top: 12px;
+  padding: 10px 32px;
+  border-radius: 999px;
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em; /* trailing letter-space compensation, like #vn-start */
+  background: rgba(18, 28, 50, 0.35);
+  border: 1px solid rgba(150, 190, 255, 0.32);
+  color: var(--vn-text-dim);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+#vn-continue:hover {
+  background: rgba(24, 34, 58, 0.55);
+  border-color: rgba(180, 210, 255, 0.6);
+  color: #eaf1ff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(130, 175, 255, 0.22);
+}
+
+#vn-continue:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* --------------------------------------------------------------------------
+   11. Toast
+   -------------------------------------------------------------------------- */
+.vn-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 140px;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 7px 18px;
+  border-radius: 999px;
+  max-width: 82vw;
+  background: rgba(10, 16, 30, 0.88);
+  border: 1px solid var(--vn-border);
+  color: var(--vn-text-dim);
+  font-size: 12.5px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  opacity: 0; /* engine fades in by setting inline opacity */
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+/* --------------------------------------------------------------------------
+   12. Cinematic overlays (vignette + film grain)
+   Both are non-interactive fullscreen layers; the engine adds the elements
+   and may place them anywhere — they stack above the stage (z 8 / 9) but
+   never intercept input.
+   -------------------------------------------------------------------------- */
+.vn-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 52%,
+    rgba(0, 0, 0, 0.32) 78%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
+/* film grain: three offset layers of sub-pixel radial-gradient dots produce
+   a repeating noise pattern; the layer jitters a few px on a steps() curve.
+   inset is -10px (not 0) so the translate jitter never exposes empty edges —
+   see deviation notes. Static under prefers-reduced-motion. */
+.vn-grain {
+  position: absolute;
+  inset: -10px;
+  z-index: 9;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.9) 0.5px, transparent 0.7px),
+    radial-gradient(rgba(255, 255, 255, 0.55) 0.5px, transparent 0.7px),
+    radial-gradient(rgba(0, 0, 0, 0.9) 0.5px, transparent 0.7px);
+  background-size:
+    3px 3px,
+    4px 4px,
+    5px 5px;
+  background-position:
+    0 0,
+    1.2px 1.8px,
+    2.4px 0.8px;
+  animation: vn-grain-jitter 8s steps(1, end) infinite;
+}
+
+/* --------------------------------------------------------------------------
+   13. Engine-toggle FX (glitch + shake)
+   One-shot classes the engine can add and remove; CSS plays them once.
+   -------------------------------------------------------------------------- */
+.vn-text.vn-glitch {
+  animation: vn-glitch 1.2s steps(1, end) 1;
+}
+
+/* whisper (fx:"whisper"): a hushed line — recorded voice, machine speech,
+   memory quotations. Smaller, fainter, wider-tracked; the typing caret and
+   name plate stay untouched so it reads as the same voice, further away. */
+.vn-text.vn-whisper {
+  font-size: 0.92em;
+  letter-spacing: 0.14em;
+  color: rgba(206, 218, 240, 0.62);
+  text-shadow: 0 0 10px rgba(150, 190, 255, 0.12);
+}
+
+/* flash (fx:"flash"): one-shot white blink over everything below the topbar
+   (z 6), self-removing — used for white-outs and archive cuts */
+#vn-app.vn-flash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: #f3f7ff;
+  animation: vn-flashout 0.7s ease-out forwards;
+}
+
+@keyframes vn-flashout {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+#vn-app.vn-shake {
+  animation: vn-shake 0.5s ease-in-out 1;
+}
+
+/* --------------------------------------------------------------------------
+   14. Keyframes
+   -------------------------------------------------------------------------- */
+@keyframes vn-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 16px rgba(120, 168, 255, 0.22),
+      0 0 46px rgba(100, 150, 255, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(130, 178, 255, 0.45),
+      0 0 70px rgba(100, 150, 255, 0.22);
+  }
+}
+
+@keyframes vn-ring {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.96);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.22);
+  }
+}
+
+@keyframes vn-sheen {
+  0%,
+  100% {
+    background-position: 110% 0;
+  }
+  50% {
+    background-position: -10% 0;
+  }
+}
+
+@keyframes vn-star-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -340px 300px;
+  }
+}
+
+@keyframes vn-sprite-breathe {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(1.015);
+  }
+}
+
+@keyframes vn-sprite-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* entrance: slide in from the character's own side of the screen (each
+   .vn-pos-* sets --vn-enter-dx) while rising to the stage floor; no `to`
+   frame — the sprite settles into its computed state (focus lift included).
+   Solo nudges/focus transforms resume after the animation ends. */
+@keyframes vn-sprite-rise {
+  from {
+    opacity: 0;
+    transform: translate(var(--vn-enter-dx, 0px), 30px);
+  }
+}
+
+/* exit: mirror the entrance (leave back the way they came) + fade;
+   forwards fill holds it hidden until the engine drops the element
+   (400ms window that allows a fast re-entry to reuse it) */
+@keyframes vn-sprite-drop {
+  to {
+    opacity: 0;
+    transform: translate(var(--vn-enter-dx, 0px), 34px);
+  }
+}
+
+/* feel-swap pulse: quick dip-and-recover over the freshly swapped art */
+@keyframes vn-swap-pulse {
+  from {
+    opacity: 0.25;
+    transform: scale(0.985);
+  }
+}
+
+@keyframes vn-dialog-in {
+  from {
+    transform: translateX(-50%) translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes vn-cg-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vn-choice-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vn-grain-jitter {
+  0% {
+    transform: translate(0, 0);
+  }
+  6% {
+    transform: translate(-3px, 2px);
+  }
+  12% {
+    transform: translate(2px, -3px);
+  }
+  18% {
+    transform: translate(-2px, -2px);
+  }
+  24% {
+    transform: translate(3px, 1px);
+  }
+  30% {
+    transform: translate(-1px, 3px);
+  }
+  36% {
+    transform: translate(3px, -2px);
+  }
+  42% {
+    transform: translate(-3px, -1px);
+  }
+  48% {
+    transform: translate(1px, 2px);
+  }
+  54% {
+    transform: translate(-2px, 3px);
+  }
+  60% {
+    transform: translate(2px, -1px);
+  }
+  66% {
+    transform: translate(-3px, 1px);
+  }
+  72% {
+    transform: translate(1px, -3px);
+  }
+  78% {
+    transform: translate(3px, 2px);
+  }
+  84% {
+    transform: translate(-2px, -3px);
+  }
+  90% {
+    transform: translate(2px, 3px);
+  }
+  96%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* RGB-split glitch: red/cyan shadows split ±2px with tiny translate jitters;
+   steps(1, end) makes every segment snap instead of tween. One-shot 1.2s. */
+@keyframes vn-glitch {
+  0% {
+    text-shadow: none;
+    transform: none;
+  }
+  6% {
+    text-shadow:
+      2px 0 rgba(255, 64, 84, 0.8),
+      -2px 0 rgba(64, 224, 255, 0.8);
+    transform: translate(1px, -1px);
+  }
+  12% {
+    text-shadow:
+      -2px 0 rgba(255, 64, 84, 0.8),
+      2px 0 rgba(64, 224, 255, 0.8);
+    transform: translate(-2px, 1px);
+  }
+  18% {
+    text-shadow:
+      1px 0 rgba(255, 64, 84, 0.7),
+      -1px 0 rgba(64, 224, 255, 0.7);
+    transform: translate(2px, 0);
+  }
+  24% {
+    text-shadow: none;
+    transform: translate(-1px, 0);
+  }
+  30%,
+  52% {
+    text-shadow: none;
+    transform: none;
+  }
+  56% {
+    text-shadow:
+      2px 0 rgba(255, 64, 84, 0.8),
+      -2px 0 rgba(64, 224, 255, 0.8);
+    transform: translate(-1px, 1px);
+  }
+  62% {
+    text-shadow:
+      -2px 1px rgba(255, 64, 84, 0.8),
+      2px -1px rgba(64, 224, 255, 0.8);
+    transform: translate(2px, -1px);
+  }
+  68% {
+    text-shadow:
+      1px 0 rgba(255, 64, 84, 0.6),
+      -1px 0 rgba(64, 224, 255, 0.6);
+    transform: translate(-1px, 0);
+  }
+  74%,
+  100% {
+    text-shadow: none;
+    transform: none;
+  }
+}
+
+@keyframes vn-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(-6px, 2px) rotate(-0.3deg);
+  }
+  20% {
+    transform: translate(5px, -3px) rotate(0.3deg);
+  }
+  30% {
+    transform: translate(-6px, -2px) rotate(-0.3deg);
+  }
+  40% {
+    transform: translate(6px, 2px) rotate(-0.3deg);
+  }
+  50% {
+    transform: translate(-5px, 3px) rotate(-0.2deg);
+  }
+  60% {
+    transform: translate(4px, -2px) rotate(0.2deg);
+  }
+  70% {
+    transform: translate(-3px, 1px) rotate(-0.2deg);
+  }
+  80% {
+    transform: translate(3px, -1px) rotate(0.15deg);
+  }
+  90% {
+    transform: translate(-1px, 1px) rotate(0deg);
+  }
+}
+
+/* collected true-ending pill: slow warm glow pulse (Betelgeuse breathing) */
+@keyframes vn-ending-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(255, 124, 92, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(255, 140, 90, 0.58);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   15. Responsive (down to 320px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .vn-sprites {
+    height: 44vh;
+  }
+
+  .vn-sprite {
+    width: clamp(150px, 40vw, 240px);
+  }
+
+  .vn-pos-left {
+    left: 2vw;
+  }
+
+  .vn-pos-right {
+    right: 2vw;
+  }
+
+  .vn-solo {
+    left: 14vw;
+  }
+}
+
+@media (max-width: 480px) {
+  #vn-app {
+    --vn-sprite-lift: 160px;
+  }
+
+  .vn-dialog {
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+
+  .vn-name {
+    left: 16px;
+    font-size: 12px;
+    padding: 3px 16px 3px 11px;
+  }
+
+  .vn-text {
+    font-size: 16px;
+  }
+
+  .vn-sprite {
+    font-size: 38px;
+  }
+
+  .vn-toast {
+    bottom: 122px;
+    max-width: 90vw;
+  }
+
+  .vn-topbar {
+    top: 10px;
+    right: 10px;
+  }
+
+  button.vn-btn {
+    padding: 0 10px;
+  }
+
+  .vn-title-name {
+    letter-spacing: 0.18em;
+    text-indent: 0.18em;
+  }
+
+  .vn-title-sub {
+    letter-spacing: 0.4em;
+    text-indent: 0.4em;
+  }
+
+  #vn-start {
+    margin-top: 40px;
+    padding: 15px 44px;
+  }
+
+  .vn-backlog {
+    width: 92%;
+    padding: 16px 18px;
+  }
+
+  .vn-menu {
+    width: 92%;
+    padding: 22px 18px;
+  }
+
+  .vn-settings {
+    width: 92%;
+    padding: 22px 18px;
+  }
+
+  .vn-setting-row {
+    gap: 10px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 320px) {
+  .vn-setting-row {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .vn-setting-row label {
+    flex-basis: 4em;
+    font-size: 13px;
+  }
+
+  .vn-range-val {
+    flex-basis: 2.8em;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   ---- mobile pass ---- (touch usability, additive + scoped)
+
+   Everything here targets touch phones only; pointer: fine desktop rendering
+   is unchanged (coarse-pointer rules never match a mouse, and max() with
+   env() falls back to the existing offsets wherever the inset resolves to 0).
+   Rules are ordered after section 15 so the small-screen restatements below
+   win the cascade where both blocks apply. Safe-area insets additionally
+   require viewport-fit=cover in the HTML viewport meta to report non-zero
+   on iOS — CSS is ready either way.
+   -------------------------------------------------------------------------- */
+
+/* tap behavior: no grey tap flash on the app surface, no double-tap zoom
+   while playing. touch-action: manipulation keeps pan + pinch-zoom working
+   (backlog scrolling, accessibility zoom) and only kills the double-tap
+   delay/zoom; the button reset above already carried the tap highlight. */
+#vn-app {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+#vn-app button {
+  touch-action: manipulation;
+}
+
+/* safe areas: lift the dialog off the home indicator and the topbar chips
+   out from under the notch. max() keeps the existing offsets as the floor,
+   so desktop (env = 0) is pixel-identical; the 0px fallback degrades
+   gracefully where env() is unknown. The 480px restatements preserve
+   section 15's tighter offsets as the floor on small screens. */
+#vn-app .vn-dialog {
+  margin-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+}
+
+#vn-app .vn-topbar {
+  top: max(14px, env(safe-area-inset-top, 0px));
+  right: max(14px, env(safe-area-inset-right, 0px));
+}
+
+@media (max-width: 480px) {
+  #vn-app .vn-dialog {
+    margin-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  }
+
+  #vn-app .vn-topbar {
+    top: max(10px, env(safe-area-inset-top, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+  }
+}
+
+/* hit targets: 40px+ chips and close button, 44px+ slot/choice rows on
+   touch devices. height: auto + min-height lets the fixed 32px chip grow;
+   padding restores the pill shape at the larger size. */
+@media (pointer: coarse) {
+  button.vn-btn {
+    height: auto;
+    min-height: 40px;
+    min-width: 40px;
+    padding: 10px 14px;
+  }
+
+  button.vn-close {
+    width: 40px;
+    height: 40px;
+  }
+
+  button.vn-slot {
+    min-height: 44px;
+  }
+
+  button.vn-choice {
+    min-height: 44px;
+  }
+}
+
+/* legibility at small widths: .vn-text already renders 16px here (>= the
+   15px floor), so only the chapter title tracking needs relief — 0.42em
+   spacing overflows ~10-character titles on a 360px screen. text-indent
+   moves with it to keep the centered CJK compensation in step. */
+@media (max-width: 480px) {
+  .vn-chapter-text {
+    letter-spacing: 0.2em;
+    text-indent: 0.2em;
+  }
+}
+
+/* landscape phones (short viewports): slimmer sprites (height scales with
+   width, so heads clear the top too) and a narrower dialog so the portraits
+   clear the name plate. Declared after section 15 so this width also wins
+   where the <=640px sprite clamp would apply. */
+@media (max-height: 480px) {
+  .vn-sprite {
+    width: clamp(140px, 22vw, 220px);
+  }
+
+  #vn-app .vn-dialog {
+    width: min(92%, 560px);
+    max-width: 560px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   16. Reduced motion — kills every new animation; grain and star field
+   freeze in place (static texture is fine), transitions collapse.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  #vn-app.vn-shake,
+  #vn-app .vn-text.vn-glitch,
+  #vn-app .vn-grain,
+  #vn-app .vn-sprite > svg,
+  #vn-app .vn-sprite.vn-enter,
+  #vn-app .vn-sprite.vn-leave,
+  #vn-app .vn-sprite.vn-swap > svg,
+  #vn-app .vn-dialog.vn-enter,
+  #vn-app .vn-choices button.vn-choice,
+  #vn-app .vn-title::before,
+  #vn-app .vn-title-name,
+  #vn-app #vn-start,
+  #vn-app #vn-start::after,
+  #vn-app .vn-auto-bar i.vn-auto-run,
+  #vn-app .vn-prop.vn-prop-umbrella,
+  #vn-app .vn-prop.vn-prop-crt,
+  #vn-app .vn-prop.vn-prop-telescope,
+  #vn-app .vn-prop.vn-prop-calendar,
+  #vn-app .vn-prop.vn-prop-keys,
+  #vn-app .vn-text.vn-typing::after,
+  #vn-app .vn-next-ind,
+  #vn-app .vn-ending-mark.vn-collected[data-ending="ending_true"] {
+    animation: none !important;
+  }
+
+  #vn-app,
+  #vn-app *,
+  #vn-app *::before,
+  #vn-app *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* overlay entrance: re-runs on each display:none -> block toggle */
+@keyframes vn-overlay-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#vn-app .vn-menu:not(.vn-hidden),
+#vn-app .vn-settings:not(.vn-hidden),
+#vn-app .vn-backlog:not(.vn-hidden),
+#vn-app .vn-gallery:not(.vn-hidden) {
+  animation: vn-overlay-in 0.28s ease-out;
+}
+
+/* ==========================================================================
+   DEVIATION NOTES — contract classes styled differently on purpose
+   --------------------------------------------------------------------------
+   - .vn-backlog / .vn-menu: the contract describes a "fullscreen rgba backdrop
+     + centered card" but the DOM has no separate card element. Each class is
+     therefore styled as the centered card itself (min(90%, 640px) / 420px),
+     and the fullscreen dim is produced with box-shadow: 0 0 0 100vmax
+     rgba(3,6,12,.68/.72). Trade-off: no backdrop blur behind the card, only
+     behind the card area itself.
+   - .vn-sprites: pure CSS cannot measure the dialog height, so "above dialog"
+     is a fixed lift (--vn-sprite-lift: 190px, 160px on small screens). The
+     strip has no overflow clip, so a tall portrait may rise above its 52vh
+     box — intended, waist-up figures keep their heads. Portraits are wide
+     (clamp 200-340px, 150-240px under 640px) and absolutely positioned by
+     slot: .vn-pos-left / .vn-pos-right at 6vw (2vw small), .vn-solo at 18vw
+     for a lone character (the engine always slots a solo sprite at 0, and
+     right:auto, so left/right never both apply).
+   - .vn-sprite light pool: --vn-color survives only as the ::after ellipse
+     beneath the character (rgba fallback then color-mix in one rule, so no
+     @supports wrapper is needed). The z-index:-1 pseudo stays behind the
+     portrait but inside .vn-sprites' stacking context, never under .vn-bg.
+   - .vn-sprite filters share one property: the base drop-shadow is restated
+     inside the sad grayscale chain and the dim saturate chain, and a combined
+     [data-feel="sad"].vn-dim rule keeps both treatments composing instead of
+     clobbering. Angry's warm rim is a second drop-shadow (no box to glow).
+   - .vn-sprite breathing + crossfade: both ride on .vn-sprite > svg, so they
+     are inert while the engine still renders plain text initials. The .3s
+     vn-sprite-in fade re-runs on each innerHTML swap of the portrait
+     (animation restarts on insertion); .vn-swap adds a shorter 0.18s
+     vn-swap-pulse on top by restating the whole animation list (a bare later
+     shorthand would otherwise drop breathe + in). CSS cannot otherwise
+     transition a content swap.
+   - .vn-sprite enter/leave: animations, not transitions, so they compose with
+     the transitioned focus/dim transform. vn-sprite-rise has no `to` frame —
+     the sprite settles into its current computed state (focus lift included).
+     vn-sprite-drop uses forwards fill to stay hidden through the engine's
+     400ms reuse window; .vn-leave also strips focus/dim/solo so the leaving
+     figure exits the focus hierarchy. Title reset wipes the stage instantly
+     (engine clearSpritesNow) — no exit animation on the title flow.
+   - .vn-sprite feel vs focus: mood variants are declared before .vn-focus, so
+     on a focused sprite the focus transform overrides the mood transform
+     (sad's grayscale filter persists, its droop does not).
+   - .vn-grain inset: -10px instead of 0 — the steps() translate jitter would
+     expose 3px empty slivers at the edges at inset 0; the bleed layer drifts
+     under the viewport edge instead. Static under prefers-reduced-motion.
+   - .vn-bg.vn-fading: dip-to-black uses .3s while the class is on; removing
+     it returns through the base .6s opacity curve (the "then back" half).
+   - .vn-dialog.vn-enter / .vn-text.vn-glitch / #vn-app.vn-shake /
+     .vn-bg.vn-fading: engine-toggle classes; the current engine does not emit
+     them yet — CSS is ready and harmless if unused. vn-dialog-in keyframes
+     carry translateX(-50%) so the entry animation never drops the centering.
+   - .vn-dialog::before corner accent uses currentColor; until the engine sets
+     a per-character color on .vn-dialog it rests on the base text tone (the
+     name plate itself already carries the character color).
+   - .vn-name: clip-path clips box-shadow, so its lift/glow uses filter:
+     drop-shadow; the top-right bevel also leaves the border open on the cut
+     diagonal, which reads as part of the angular plate look.
+   - .vn-title-name sheen: text-shadow was replaced by drop-shadow filters —
+     with background-clip:text + transparent fill, text-shadow bleeds through
+     the glyphs and muddies the gradient. color is kept as a fallback.
+   - .vn-title::before star field: needs the parent stacking context, which
+     .vn-title already has (positioned + z-index). Dots are a repeating tile
+     (340x300px) so the 90s drift loops seamlessly.
+   - .vn-choice stagger: delays defined for up to 5 buttons; a 6th+ simply
+     plays at the base 0s delay. `backwards` fill keeps them invisible during
+     their delay window.
+   - .vn-toast: "fade in/out via transition" implies the engine sets inline
+     opacity; default is opacity: 0 with a 0.35s opacity transition. Toggling
+     only .vn-hidden would appear instantly (display:none cannot transition).
+     Positioned absolute (inside the fixed app root) rather than fixed.
+   - .vn-name border: contract says "currentColor-ish"; uses color-mix to dim
+     currentColor to 55% alpha when supported, falls back to a fixed accent
+     rgba. Also hides itself under .vn-dialog.vn-narr defensively ("no name").
+   - .vn-backlog-line: adds a faint bottom hairline between rows beyond the
+     specified margin, for readability of long logs.
+   - #vn-start / .vn-menu-title / .vn-title-sub: use text-indent equal to the
+     letter-spacing so heavily tracked centered CJK text stays optically
+     centered (trailing letter-space compensation).
+   - html/body get a minimal reset (margin 0, dark background) since this is a
+     standalone stylesheet; everything else is scoped to #vn-app.
+   - .vn-settings reuses the .vn-menu card pattern verbatim (centered card +
+     100vmax box-shadow dim + shared button.vn-close), so the same "no separate
+     backdrop element" trade-off applies; .vn-range is styled natively
+     (accent-color only, no track drawing) and rows are plain flex.
+   ========================================================================== */

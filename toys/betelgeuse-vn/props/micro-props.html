@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>micro prop render harness</title>
+<style>
+  body { margin: 0; background: #202020; color: #ddd; font: 13px monospace; }
+  #log { white-space: pre-wrap; padding: 8px; }
+  img.out { display: block; width: 256px; border: 1px solid #555; margin: 4px; }
+</style>
+</head>
+<body>
+<div id="log">booting…</div>
+<div id="out"></div>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const log = (s) => { document.getElementById('log').textContent += s + '\n'; };
+const out = document.getElementById('out');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(640, 640);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+renderer.domElement.style.display = 'none';
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+function makeScene() {
+  const scene = new THREE.Scene();
+  scene.environment = envTex;
+  const key = new THREE.DirectionalLight(0xdfe8ff, 2.4);
+  key.position.set(3, 5, 4);
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0x8fb4ff, 1.1);
+  rim.position.set(-4, 2, -3);
+  scene.add(rim);
+  return scene;
+}
+
+function fitCamera(camera, box, dir) {
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const dist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360)) * 1.15;
+  camera.position.copy(center).add(dir.clone().normalize().multiplyScalar(dist));
+  camera.lookAt(center);
+}
+
+const M = {
+  brass: new THREE.MeshStandardMaterial({ color: 0xc9a15a, metalness: 0.85, roughness: 0.35 }),
+  darkMetal: new THREE.MeshStandardMaterial({ color: 0x2a2e38, metalness: 0.7, roughness: 0.45 }),
+  agedBrass: new THREE.MeshStandardMaterial({ color: 0xb08d4f, metalness: 0.8, roughness: 0.55 }),
+  creamCeramic: new THREE.MeshStandardMaterial({ color: 0xe7dfcc, metalness: 0.02, roughness: 0.7, side: THREE.DoubleSide }),
+  paper: new THREE.MeshStandardMaterial({ color: 0xe9e3d3, roughness: 0.85 }),
+  paperBack: new THREE.MeshStandardMaterial({ color: 0xdfd8c4, roughness: 0.85 }),
+  paperCurl: new THREE.MeshStandardMaterial({ color: 0xded6c1, roughness: 0.88 }),
+  string: new THREE.MeshStandardMaterial({ color: 0xcfc4a8, roughness: 0.9 }),
+};
+
+const HAND_FONT = 'KaiTi, "Kaiti SC", STKaiti, "Noto Serif SC", serif';
+
+/* shared: small hand-painted 5-point star (the story motif) */
+function paintStar(g, cx, cy, r, color, rot) {
+  g.save();
+  g.translate(cx, cy);
+  g.rotate(rot);
+  g.fillStyle = color;
+  g.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const rr = i % 2 === 0 ? r : r * 0.42;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const x = Math.cos(a) * rr;
+    const y = Math.sin(a) * rr;
+    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+  }
+  g.closePath();
+  g.fill();
+  g.restore();
+}
+
+/* ---------- prop 1: mug ---------- */
+/* canvas 256x128, transparent bg: 「沈眠」 in casual blue handwriting, -4° tilt,
+   slightly uneven per character, tiny painted star underneath */
+function makeMugDecal() {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 128;
+  const g = c.getContext('2d');
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.save();
+  g.translate(128, 46);
+  g.rotate(-4 * Math.PI / 180);
+  g.fillStyle = '#33589e';
+  g.font = '46px ' + HAND_FONT;
+  g.save(); g.translate(-33, 0); g.rotate(-0.025); g.fillText('沈', 0, 0); g.restore();
+  g.save(); g.translate(31, 5); g.rotate(0.05); g.fillText('眠', 0, 0); g.restore();
+  paintStar(g, 8, 36, 7, '#33589e', 0.45);
+  g.restore();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+function buildMug() {
+  const g = new THREE.Group();
+  // body: full cross-section profile (inner bottom -> rim -> outer wall -> base)
+  const prof = [
+    new THREE.Vector2(0.0, 0.04), new THREE.Vector2(0.22, 0.04),
+    new THREE.Vector2(0.262, 0.07), new THREE.Vector2(0.272, 0.34),
+    new THREE.Vector2(0.298, 0.394), new THREE.Vector2(0.32, 0.4),
+    new THREE.Vector2(0.326, 0.36), new THREE.Vector2(0.326, 0.09),
+    new THREE.Vector2(0.314, 0.018), new THREE.Vector2(0.26, 0.0),
+    new THREE.Vector2(0.0, 0.0),
+  ];
+  const body = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), M.creamCeramic);
+  g.add(body);
+  // C-handle: half torus, open ends buried inside the wall
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.135, 0.036, 12, 32, Math.PI), M.creamCeramic);
+  handle.position.set(0.315, 0.2, 0);
+  handle.rotation.z = -Math.PI / 2;
+  g.add(handle);
+  // painted name: thin open band hovering just off the outer wall
+  const decal = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.331, 0.331, 0.22, 48, 1, true),
+    new THREE.MeshStandardMaterial({ map: makeMugDecal(), roughness: 0.6, metalness: 0, alphaTest: 0.1 })
+  );
+  decal.position.y = 0.17;
+  decal.rotation.y = Math.PI; // seam to the back, painted band faces the camera side
+  g.add(decal);
+  return g;
+}
+
+/* ---------- prop 2: calendar ---------- */
+/* canvas 480x640: aged off-white, faint grid, 「12月」 header,
+   red hand-drawn circle around the 6th cell + 「今晚」 scribble under it */
+function makeCalendarTexture() {
+  const c = document.createElement('canvas');
+  c.width = 480; c.height = 640;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f1ecdf';
+  g.fillRect(0, 0, 480, 640);
+  for (let i = 0; i < 14; i++) {
+    g.fillStyle = 'rgba(176, 158, 120, ' + (0.03 + (i % 3) * 0.02).toFixed(2) + ')';
+    g.beginPath();
+    g.ellipse((i * 97 + 40) % 480, (i * 211 + 80) % 640, 30 + ((i * 13) % 50), 18 + ((i * 7) % 30), i * 0.7, 0, Math.PI * 2);
+    g.fill();
+  }
+  const gx = (i) => 24 + (i + 0.5) * (432 / 7);
+  const gy = (r) => 204 + r * 88;
+  g.textAlign = 'center';
+  g.textBaseline = 'alphabetic';
+  g.fillStyle = '#3a3a3a';
+  g.font = '64px ' + HAND_FONT;
+  g.fillText('12月', 240, 84);
+  g.strokeStyle = 'rgba(180, 80, 60, 0.55)';
+  g.lineWidth = 2;
+  g.beginPath(); g.moveTo(60, 100); g.lineTo(420, 100); g.stroke();
+  const wd = ['日', '一', '二', '三', '四', '五', '六'];
+  g.textBaseline = 'middle';
+  g.font = '24px ' + HAND_FONT;
+  g.fillStyle = '#95896f';
+  wd.forEach((w, i) => g.fillText(w, gx(i), 140));
+  // faint grid lines
+  g.strokeStyle = '#d8d0be';
+  g.lineWidth = 1;
+  for (let i = 0; i <= 7; i++) {
+    g.beginPath(); g.moveTo(24 + i * (432 / 7), 108); g.lineTo(24 + i * (432 / 7), 600); g.stroke();
+  }
+  for (let r = 0; r <= 5; r++) {
+    g.beginPath(); g.moveTo(24, 160 + r * 88); g.lineTo(456, 160 + r * 88); g.stroke();
+  }
+  // day numbers: the 1st sits at col 4, 31 days fit in 5 rows
+  g.font = '32px ' + HAND_FONT;
+  for (let d = 1; d <= 31; d++) {
+    const idx = 4 + (d - 1);
+    const col = idx % 7;
+    const row = Math.floor(idx / 7);
+    g.fillStyle = (col === 0 || col === 6) ? '#a05a4a' : '#4a4740';
+    g.fillText(String(d), gx(col), gy(row));
+  }
+  // red hand-drawn circle around the 6th (row 1, col 2): two wobbly marker passes
+  const cx = gx(2);
+  const cy = gy(1);
+  g.strokeStyle = 'rgba(194, 59, 42, 0.85)';
+  g.lineWidth = 4.5;
+  g.beginPath(); g.ellipse(cx, cy, 36, 30, 0.08, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = 'rgba(194, 59, 42, 0.5)';
+  g.lineWidth = 3;
+  g.beginPath(); g.ellipse(cx + 3, cy - 2, 38, 28, -0.12, 0.4, Math.PI * 2 + 0.2); g.stroke();
+  // 「今晚」 scribble under the circle
+  g.save();
+  g.translate(cx - 2, cy + 50);
+  g.rotate(-0.07);
+  g.fillStyle = 'rgba(194, 59, 42, 0.9)';
+  g.font = '28px ' + HAND_FONT;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText('今晚', 0, 0);
+  g.restore();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+function buildCalendar() {
+  const g = new THREE.Group();
+  const face = new THREE.MeshStandardMaterial({ map: makeCalendarTexture(), roughness: 0.85 });
+  const mats = [M.paper, M.paper, M.paper, M.paper, face, M.paperBack];
+  const page = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.2, 0.03), mats);
+  g.add(page);
+  // brass eyelets punched through the top edge
+  for (const x of [-0.32, 0.32]) {
+    const eye = new THREE.Mesh(new THREE.TorusGeometry(0.028, 0.009, 8, 18), M.brass);
+    eye.position.set(x, 0.585, 0);
+    g.add(eye);
+  }
+  // nail + linen V-string it hangs from
+  const nail = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.035, 10), M.darkMetal);
+  nail.rotation.x = Math.PI / 2;
+  nail.position.set(0, 0.75, 0.02);
+  g.add(nail);
+  for (const s of [-1, 1]) {
+    const str = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0.745, 0.038),
+      new THREE.Vector3(s * 0.17, 0.7, 0.028),
+      new THREE.Vector3(s * 0.32, 0.61, 0.005),
+    ]), 10, 0.005, 6), M.string);
+    g.add(str);
+  }
+  // bottom corner page curl: second, thinner box slightly rotated/lifted
+  const curl = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 0.012), M.paperCurl);
+  curl.position.set(0.34, -0.5, 0.02);
+  curl.rotation.set(0.26, 0.1, -0.14);
+  g.add(curl);
+  return g;
+}
+
+/* ---------- prop 3: keys ---------- */
+/* flat key silhouette: round head with hole + shaft with two teeth on one side */
+function makeKeyShape() {
+  const R = 0.088, SW = 0.042, TIP = -0.4;
+  const s = new THREE.Shape();
+  const ay = Math.sqrt(R * R - SW * SW);
+  const aA = Math.atan2(-ay, SW);
+  const aB = Math.atan2(-ay, -SW);
+  s.moveTo(SW, -ay);
+  s.lineTo(SW, -0.26);
+  s.lineTo(SW + 0.038, -0.285);
+  s.lineTo(SW, -0.315);
+  s.lineTo(SW + 0.03, -0.345);
+  s.lineTo(SW, -0.372);
+  s.lineTo(SW, TIP);
+  s.lineTo(-SW, TIP);
+  s.lineTo(-SW, -ay);
+  // head arc runs the long way over the top, back to the start point
+  s.absarc(0, 0, R, aB, aB + Math.PI * 2 - (aA - aB), true);
+  s.closePath();
+  const hole = new THREE.Path();
+  hole.absarc(0, 0, 0.032, 0, Math.PI * 2, true);
+  s.holes.push(hole);
+  return s;
+}
+
+/* manila tag canvas: handwritten 「天文台」 + tiny star */
+function makeTagTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 160;
+  const g = c.getContext('2d');
+  g.fillStyle = '#e7d9b4';
+  g.fillRect(0, 0, 256, 160);
+  g.strokeStyle = 'rgba(122, 98, 58, 0.4)';
+  g.lineWidth = 5;
+  g.strokeRect(3, 3, 250, 154);
+  // reinforced hole where the loop ties through
+  g.fillStyle = '#d6c49a';
+  g.beginPath(); g.arc(128, 24, 7, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = 'rgba(122, 98, 58, 0.55)';
+  g.lineWidth = 2;
+  g.beginPath(); g.arc(128, 24, 7, 0, Math.PI * 2); g.stroke();
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillStyle = '#2c2c30';
+  g.font = '38px ' + HAND_FONT;
+  ['天', '文', '台'].forEach((ch, i) => {
+    g.save();
+    g.translate(78 + i * 50, 92 + (i - 1) * 3);
+    g.rotate(-0.04 + i * 0.02);
+    g.fillText(ch, 0, 0);
+    g.restore();
+  });
+  paintStar(g, 196, 128, 8, '#33589e', 0.35);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+function buildKeys() {
+  const g = new THREE.Group();
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.024, 12, 40), M.darkMetal);
+  ring.position.y = 0.3;
+  g.add(ring);
+  // two keys threaded through the ring, head hole centered on the wire
+  const keyGeo = new THREE.ExtrudeGeometry(makeKeyShape(), {
+    depth: 0.02, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 1, curveSegments: 24,
+  });
+  keyGeo.translate(0, 0, -0.01);
+  const k1 = new THREE.Mesh(keyGeo, M.agedBrass);
+  k1.position.set(Math.cos(Math.PI * 1.14) * 0.22, 0.3 + Math.sin(Math.PI * 1.14) * 0.22, 0.035);
+  k1.rotation.set(0.06, 0, 0.1);
+  const k2 = new THREE.Mesh(keyGeo, M.darkMetal);
+  k2.position.set(Math.cos(-Math.PI * 0.07) * 0.22, 0.3 + Math.sin(-Math.PI * 0.07) * 0.22, -0.035);
+  k2.rotation.set(-0.05, 0.04, -0.14);
+  g.add(k1, k2);
+  // small brass carabiner clipped through the top of the ring (open oval + gate)
+  const carab = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.015, 10, 28, Math.PI * 1.84), M.brass);
+  carab.scale.set(1, 1.5, 1);
+  carab.position.set(0, 0.63, 0);
+  carab.rotation.z = Math.PI * 0.08; // gap centered on +X
+  g.add(carab);
+  const gate = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.2, 0.014), M.brass);
+  gate.position.set(0.09, 0.63, 0);
+  gate.rotation.z = 0.06;
+  g.add(gate);
+  // paper tag on a short linen loop
+  const tagFace = new THREE.MeshStandardMaterial({ map: makeTagTexture(), roughness: 0.85 });
+  const tagMats = [M.paper, M.paper, M.paper, M.paper, tagFace, M.paperBack];
+  const tag = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.17, 0.012), tagMats);
+  tag.position.set(0.05, -0.34, 0.02);
+  tag.rotation.set(0.05, 0.12, -0.18);
+  g.add(tag);
+  const loop = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.085, 0),
+    new THREE.Vector3(0.055, -0.1, 0.03),
+    new THREE.Vector3(0.05, -0.25, 0.025),
+  ]), 12, 0.006, 6), M.string);
+  g.add(loop);
+  return g;
+}
+
+/* ---------- render all ---------- */
+const PROPS = [
+  { id: 'mug', build: buildMug, dir: new THREE.Vector3(2.6, 1.3, 3.4) },
+  { id: 'calendar', build: buildCalendar, dir: new THREE.Vector3(1.5, 0.8, 4.4) },
+  { id: 'keys', build: buildKeys, dir: new THREE.Vector3(2.2, 1.1, 3.8) },
+];
+
+const results = {};
+let idx = 0;
+function renderNext() {
+  if (idx >= PROPS.length) {
+    log('ALL DONE');
+    window.__PROPS_READY = JSON.stringify(results);
+    return;
+  }
+  const p = PROPS[idx];
+  try {
+    const scene = makeScene();
+    const group = p.build();
+    scene.add(group);
+    const box = new THREE.Box3().setFromObject(group);
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+    fitCamera(camera, box, p.dir);
+    renderer.render(scene, camera);
+    const url = renderer.domElement.toDataURL('image/webp', 0.85);
+    results[p.id] = url;
+    const img = document.createElement('img');
+    img.className = 'out';
+    img.src = url;
+    out.appendChild(img);
+    log(p.id + ' rendered, ' + Math.round(url.length / 1024) + 'KB');
+  } catch (e) {
+    results[p.id] = 'ERR ' + e.message;
+    log(p.id + ' ERR ' + e.message);
+  }
+  idx += 1;
+  setTimeout(renderNext, 120);
+}
+log('renderer ready, rendering ' + PROPS.length + ' micro props…');
+renderNext();
+</script>
+</body>
+</html>
