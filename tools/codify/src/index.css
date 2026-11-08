@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100%;
+  /* React 挂载前先按 <html> 上的 .dark class 保持正确首帧；
+     class 由 index.html 里的同步脚本在首帧绘制前设置（读用户选择/系统偏好）。 */
+  background-color: #ffffff;
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #1a1917;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* shadcn 基础层兜底: 没写显式 text-x / bg-x 的文字和表面 (textarea 输入文字、
+     placeholder、气泡正文) 从这里继承主题色, 不依赖 UA 默认色.
+     烧主题前 token 未定义时这两行按无效值优雅回退, 无副作用. */
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* 中英混排对齐:一行里英文(尤其 ds 的 display/像素字体如 Press Start 2P)和中文(系统黑体)
+   混在一起时,英文会偏小、偏上,跟中文对不齐。把纯英文/数字那一截用 <span className="cjk-latin">
+   包起来即可统一对齐:font-size-adjust 拉平字号,vertical-align 把英文下移到与中文同基线。
+   --cjk-latin-shift 由 design_picker 按 ds 烧进 :root(默认 -0.15em);极个别字体偏差大改这一个值。 */
+.cjk-latin {
+  font-size-adjust: 0.56;
+  vertical-align: var(--cjk-latin-shift, -0.15em);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 5%;
+    --card-foreground: 0 0% 5%;
+    --popover-foreground: 0 0% 5%;
+    --card: 30 10% 96%;
+    --popover: 30 10% 96%;
+    --muted: 30 10% 96%;
+    --secondary: 30 10% 96%;
+    --accent: 208 100% 96%;
+    --secondary-foreground: 40 3% 19%;
+    --accent-foreground: 40 3% 19%;
+    --muted-foreground: 30 4% 36%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --primary: 208 100% 44%;
+    --ring: 208 100% 44%;
+    --primary-foreground: 0 0% 100%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --radius: var(--radius-md);
+
+    --space-1: 4px;
+    --space-12: 48px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --radius-pill: 9999px;
+    --radius-sm: 4px;
+    --elev-flat: none;
+    --focus-ring: 0 0 0 3px rgba(9, 127, 232, 0.3);
+    --elev-ring: 0 0 0 1px var(--border);
+    --text-2xl: 40px;
+    --text-3xl: 48px;
+    --text-4xl: 64px;
+    --text-base: 16px;
+    --text-lg: 20px;
+    --text-sm: 14px;
+    --text-xl: 26px;
+    --text-xs: 12px;
+    --leading-body: 1.5;
+    --leading-tight: 1.00;
+    --font-display: "NotionInter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Inter", -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-body: "NotionInter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Inter", -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+    --cjk-latin-shift: -0.15em;
+  }
+
+  /* 深色主题：沿用 Notion 暖调（warm dark）家族——灰里带黄棕底、蓝色提亮保证深底可读。
+     非颜色 token（间距/圆角/字体）与浅色一致。 */
+  .dark {
+    color-scheme: dark;
+    --background: 30 4% 10%;
+    --foreground: 40 14% 91%;
+    --card-foreground: 40 14% 91%;
+    --popover-foreground: 40 14% 91%;
+    --card: 30 4% 13%;
+    --popover: 30 4% 13%;
+    --secondary-foreground: 40 12% 90%;
+    --accent-foreground: 40 12% 90%;
+    --muted: 30 4% 17%;
+    --secondary: 30 4% 17%;
+    --accent: 208 45% 22%;
+    --muted-foreground: 32 6% 63%;
+    --border: 30 4% 22%;
+    --input: 30 4% 24%;
+    --primary: 208 90% 56%;
+    --ring: 208 90% 56%;
+    --primary-foreground: 0 0% 100%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 68% 58%;
+    --radius: var(--radius-md);
+
+    --space-1: 4px;
+    --space-12: 48px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --radius-pill: 9999px;
+    --radius-sm: 4px;
+    --elev-flat: none;
+    --focus-ring: 0 0 0 3px rgba(98, 174, 240, 0.35);
+    --elev-ring: 0 0 0 1px var(--border);
+    --text-2xl: 40px;
+    --text-3xl: 48px;
+    --text-4xl: 64px;
+    --text-base: 16px;
+    --text-lg: 20px;
+    --text-sm: 14px;
+    --text-xl: 26px;
+    --text-xs: 12px;
+    --leading-body: 1.5;
+    --leading-tight: 1.00;
+    --font-display: "NotionInter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Inter", -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-body: "NotionInter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Inter", -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+    --cjk-latin-shift: -0.15em;
+  }
+
+  body { font-family: var(--font-body); }
+
+  /* 锚点跳转与列表滚动平滑；细滚动条让多栏工具的滚动面板更精致（颜色走 token） */
+  html { scroll-behavior: smooth; }
+  * { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
+
+  /* 中英混排: 把英文/数字那一截用 <span class="cjk-latin"> 包起来, 字号 + 基线对齐中文 (font-size-adjust 0.56 实测最贴中文字高) */
+  .cjk-latin { font-size-adjust: 0.56; vertical-align: var(--cjk-latin-shift, -0.15em); }
+}
