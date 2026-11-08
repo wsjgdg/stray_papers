@@ -1,0 +1,1 @@
+# kept so the /app/db volume mount has a directory to create the DB in

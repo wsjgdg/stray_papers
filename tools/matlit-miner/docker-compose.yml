@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/app/db/custom.db
+      - NODE_ENV=production
+      # Internal base URL for the Next.js app to reach the realtime
+      # mini-service's HTTP /emit + /health endpoints. In docker-compose the
+      # service name resolves to the container's IP on the shared network.
+      - REALTIME_HTTP_URL=http://realtime-service:3005
+    volumes:
+      - db-data:/app/db
+    restart: unless-stopped
+    depends_on:
+      - realtime-service
+
+  progress-service:
+    build:
+      context: ./mini-services/progress-service
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    restart: unless-stopped
+
+  realtime-service:
+    build:
+      context: ./mini-services/realtime-service
+      dockerfile: Dockerfile
+    ports:
+      - "3004:3004"
+      - "3005:3005"
+    restart: unless-stopped
+
+volumes:
+  db-data:
