@@ -298,7 +298,7 @@ window.SCENARIO = {
         { narr: "大厅尽头，一台终端亮着，屏保是一张缓慢旋转的星图。" },
         {
           who: "lin",
-          feel: "angry",
+          feel: "worried",
           text: "全台的电闸三年前就该拉死。可电费单每个月都有人交。",
         },
         { who: "lin", feel: "sad", text: "户名，是眠姐。" },
@@ -486,12 +486,13 @@ window.SCENARIO = {
         },
         {
           who: "qi",
-          feel: "normal",
+          feel: "sad",
+          pose: "c",
           text: "备份不会长大，不会变旧，不会重新爱上这个世界。",
         },
         {
           who: "qi",
-          feel: "normal",
+          feel: "sad",
           text: "我陪她运行了三年。我知道，那不是她，是她的昨天。",
         },
         {
@@ -506,7 +507,7 @@ window.SCENARIO = {
         },
         {
           who: "qi",
-          feel: "normal",
+          feel: "sad",
           text: "她不知道三年过去了。每次醒来，我都要重新告诉她，你还没来。",
         },
         { who: "yu", feel: "sad", text: "……每次？" },
@@ -586,7 +587,7 @@ window.SCENARIO = {
         },
         {
           who: "qi",
-          feel: "normal",
+          feel: "sad",
           text: "或者切断电源。她的数据将被封存。不再痛苦，也不再等待。",
         },
         { who: "lin", feel: "sad", text: "师兄。无论你怎么选，我都在。" },
@@ -694,7 +695,10 @@ window.SCENARIO = {
         },
         { narr: "扬声器那边静了三秒。对机器和昨天来说，都很长。" },
         {
-          narr: "「……骤暗？可是我记得它亮着。我记得，我亲眼看过。」",
+          who: "mian",
+          feel: "worried",
+          pose: "d",
+          text: "……骤暗？可是我记得它亮着。我记得，我亲眼看过。",
           fx: "whisper",
         },
         {
@@ -708,11 +712,17 @@ window.SCENARIO = {
           text: "栖把新闻读给你听，你却把一切都当成梦。你早就发现了吧。",
         },
         {
-          narr: "「……嗯。每次醒来，参宿四都亮得一模一样。可梦会累积。」",
+          who: "mian",
+          feel: "sad",
+          pose: "b",
+          text: "……嗯。每次醒来，参宿四都亮得一模一样。可梦会累积。",
           fx: "whisper",
         },
         {
-          narr: "「我数过那些梦。一千零九十六个夜晚的新闻。我不敢问。」",
+          who: "mian",
+          feel: "cry",
+          pose: "e",
+          text: "我数过那些梦。一千零九十六个夜晚的新闻。我不敢问。",
           fx: "whisper",
         },
         {
@@ -721,13 +731,21 @@ window.SCENARIO = {
           text: "现在可以问了。我在，林晚也在。我们都等你往前走。",
         },
         {
-          narr: "「那，重新介绍一下。我是沈眠，2026 年 11 月 2 日，晴。」",
+          who: "mian",
+          feel: "happy",
+          pose: "d",
+          text: "那，重新介绍一下。我是沈眠，2026 年 11 月 2 日，晴。",
           cg: "cg_dawn",
         },
-        { narr: "「参宿四暗过一次，又亮回来了。这次是我自己记住的。」" },
+        {
+          who: "mian",
+          feel: "shy",
+          text: "参宿四暗过一次，又亮回来了。这次是我自己记住的。",
+        },
         {
           who: "qi",
-          feel: "normal",
+          feel: "happy",
+          pose: "a",
           text: "记录更新完成。所有者：沈眠。今天起，她替她活着。",
         },
         { who: "lin", feel: "happy", text: "眠姐，早上好。迟到三年的早安。" },
@@ -763,7 +781,7 @@ window.SCENARIO = {
         },
         {
           who: "lin",
-          feel: "happy",
+          feel: "shy",
           text: "眠姐，等你出来看日出。茶我一直温着，两杯。",
         },
         { narr: "晨光爬上星图。旧天文台没有拆，有些等待等到了回声。" },
