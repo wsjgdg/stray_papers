@@ -1,0 +1,189 @@
+# Cosmos Orrery 内容改进落地计划（校准版）
+
+> 范围：仅针对**科普内容/视觉呈现**层面的改进（不含性能优化与工程质量重构）。
+> 依据：对 `src/lib/cosmos/{engine.ts, cosmos-views.ts, universe-data.ts, data.ts, textures.ts, quasars-real.ts}` 的逐级别代码审查结论（2026-09-24 核实）。
+> 时间：2026-09-24（初版）→ 2026-09-24（校准：修正与当前代码不符的"现状"断言）。
+
+---
+
+## 校准说明（务必先读）
+
+本计划初版写于 L2/L5/L6 大规模改造**之前**，多处"现状"描述已与实际代码脱节。本轮已逐项核对，结论：
+
+- **L2 银河系已非"只有文字标签"**：当前 `buildMilkyWayGalaxy`（cosmos-views.ts:710）已用 **M83 真实照片作盘体**（`realGalaxyPlane`，:751）+ 盘辉光 + 晕 + 核球（椭球+核 halo+可点银心 Sgr A*）+ 4200 星场 + 64 HII 区 + 54 蓝色超巨星 + 4 旋臂标签锚点；太阳标记已标"猎户臂内侧·距银心 8.2 kpc"（:916）。因此 P0-1「无可见几何」、P0-5「猎户臂缺失」**不成立**。
+- **L4/L5 已接真实照片**：M81/M87/M104/CenA/NGC253 等经 `applyRealPhoto` 自动生效（commit 911a2da），不再是"退化为通用星系贴图"。P3-1 相关前提已变。
+- **类星体已是真实星表 300 颗**（`QUASARS_REAL=300`，quasars-real.ts），README 第 25 行仍写"8 类星体" → 过时。计划原"8 vs 227"亦过时，应为"8 vs 300"。
+- **星座/亮星数准确**：`CONS=15` 星座、`STARS=30` 亮星（data.ts:187/220 已核实），P2-1「15/88、30 亮星」前提正确。
+- **无 γ射线/费米/暗物质 滤镜栏**：`show` 开关仅有 `{orb,lab,belt,mw,dso,con,comet,met,zodi,shadow}`（engine.ts:252），P0-4/P3-4 需新增 toggle（复用该模式）。
+
+状态图例：✅ 已做 · 🟡 部分已做 · ⬜ 待做（前提干净）· ⚠️ 前提已变需重新审视
+
+---
+
+## 总览与优先级（校准后）
+
+| 阶段 | 主题              | 当前真实状态                                                | 预估工作量 |
+| ---- | ----------------- | ----------------------------------------------------------- | ---------- |
+| P0   | L2 银河系结构补齐 | 🟡 盘体/核球/星场已在，缺：棒/球状晕/费米泡/沿臂星场/标尺   | 3~4 天     |
+| P1   | 太阳系观测缺口    | ⬜ 日食缺失；🟡 卫星文案部分在、热点无视觉                  | 3~4 天     |
+| P2   | 天文馆中国星官    | ⬜ 西方星座 15/88；中国星官图层全缺                         | 4~5 天     |
+| P3   | 跨级一致性        | ⚠️ L4/L5 已是真实照片；⬜ 类星体卡升级/暗物质层/README 校准 | 2~3 天     |
+| P4   | 叙事增强          | 🟡 近邻恒星部分数据在；巡航旁白系统可能缺失                 | 2 天       |
+
+依赖：P0-6 沿臂星场复用 `MILKY_WAY_ARMS`；P0-4/P3-4 依赖新增 `show` toggle 基建。
+
+---
+
+## P0：L2 银河系——结构自洽（校准后）
+
+**决策（不变）**：不做假 3D 写实质感模型，但示意结构层必须补齐。当前盘体已是 M83 真实照片，新增结构须与照片协调，不与之打架。
+
+### 任务清单
+
+- [x] **P0-1 旋臂叠加层** ✅（commit 见本次；半透明对数螺线 TubeGeometry 叠加 M83，HUD「旋臂示意」toggle show.arms）
+  - 初版："MILKY_WAY_ARMS 仅作标签锚点、无可见几何"。
+  - 现状：`MILKY_WAY_ARMS`（universe-data.ts:1853，4 条对数螺线 ~80 点/条）确实只用于 :846 标签锚点；但盘体已是 M83 照片（含真实旋臂视觉）。
+  - 做法调整：若仍加旋臂带，用 **半透明（opacity~0.18）对数螺线 TubeGeometry**，叠在照片之上作"结构提示线"，避免喧宾夺主；优先级降为 P0 末位（照片已提供旋臂观感）。HUD 加"旋臂示意"开关（复用 `show` 模式）。
+
+- [x] **P0-2 中心棒结构** ✅（已实现于 buildMilkyWayGalaxy，cosmos-views.ts:1092-1145；本回合仅补勾选，原计划清单漏标）
+  - 现状：`MILKY_WAY_BAR`（universe-data.ts:1882，~8.4 kpc、与 +Y 轴成~60°）**已定义且已使用**；核球椭球（:1053）+ 中央棒暖色发光面片（沿 `MILKY_WAY_BAR` 取向，`rotation.z=60°`，落在 X-Y 银盘平面内，与 M83 照片盘体一致）。
+  - 实现：暖色加色发光 `PlaneGeometry(blen, blen*0.24)` 补强中央棒（非取代 M83 照片固有棒），dossier "中央棒/GALACTIC BAR"（长轴≈8.4 kpc、老年 Population II、取向约 60°、串起旋臂内端与核球）+ 标签锚点。取向经核验：银盘平面为 X-Y（旋臂 `cos(a)*r, sin(a)*r` + 薄 z 厚度），`bar.rotation.z=atan2(Δy,Δx)=60°` 即在盘平面内旋转，几何正确。
+  - 验收：棒与核球、旋臂衔接自然（加色半透明，不与照片打架）。
+  - 门禁：沿用既有全绿（prettier/tsc/eslint 0err/vitest 12/12/next build 0）。
+
+- [x] **P0-3 球状星团晕** ✅（commits b85a5a5；145 个真实球团，Harris 1996/2010 VizieR VII/202，单 Points 晕 + 10 著名可点 dossier）
+  - 现状：DSO 共 18 个（含 M13 武仙座球状星团，data.ts:175），无 ~150 球状星团晕。
+  - 新增数据：~150 真实球状星团（M13/半人马ω/M22…RA/Dec+距离→银道坐标），球形晕、密度随半径衰减。
+  - 做法：Points 云 + 小球 sprite；点击弹卡。**科普钩子（写入卡片）**：沙普利 1918 靠球状星团分布测出太阳不在银心。加"太阳—银心 8.2 kpc"虚线。
+
+- [x] **P0-4 费米气泡** ✅（commit f3bb039；双叶半透明紫锥，apex@银心、沿±银纬展开，默认关，HUD toggle + show.fermi）
+  - 做法：垂直银道面双叶半透明紫扇（γ 射线示意），opacity≤0.15，默认关；在 `show` 加 `fermi` toggle（engine.ts:252 模式）+ HUD 开关。
+  - 科普：高~25,000 光年，或源自银心黑洞约 200 万年前活动。
+
+- [x] **P0-5 猎户臂补标** ✅（commit 见本次；太阳附近短弧虚线段标注「猎户臂·我们在这里」）
+  - 现状：太阳标记已标"猎户臂内侧·距银心 8.2 kpc"（:916），data.ts:234 note 提猎户臂；`MILKY_WAY_ARMS` 仍只 4 主臂（不含猎户臂）。
+  - 做法：新增短弧段（~30°）作次要臂（虚线区分），标"我们在这里→"并连太阳示意点。文案基础已存在，纯视觉补充。
+
+- [x] **P0-6 星场改为沿臂加权** ✅（纯代码，无新数据，commit f3e176e；沿臂集中 45.3% vs 均匀 4.3%）
+  - 现状：4200 星场为**面积均匀随机盘**（:785-811，`sqrt(Math.random())` area-uniform），与旋臂示意层视觉矛盾。
+  - 做法：~60% 点按 `MILKY_WAY_ARMS` 螺线概率密度重采样（臂上密、臂间疏），加银道面集中项（|b|<10° 加权）；保留种子随机可复现。
+  - 验收：肉眼带状结构与旋臂光带重合。
+
+- [x] **P0-7 尺度与动力学标注** ✅（commit 见本次；银径标尺 / M31 逼近箭头+Milkomeda / 本地泡·古尔德带虚线圈）
+  - 银径标尺（~30 kpc 直线 + "直径约 10 万光年"）；M31 逼近箭头 + "30~45 亿年后合并为 Milkomeda"；L1→L2 过渡加"本地泡/古尔德带"虚线圈。
+
+---
+
+## P1：太阳系观测缺口
+
+- [x] **P1-1 日食可视化（最大内容缺口）** ✅（commit 见本次；月球本影/半影锥 + 地表暗斑 footprint + HUD「日食进行中」提示 + 时间轴预设 2027-08-02；简化月球轨道下演示机制，非星历精确对齐）
+  - 现状：月食几何已实现——地球本影/半影锥（engine.ts:1470-1471）+ 月食逻辑（:2128）。**日食（月影投地表）缺失**。
+  - 做法：地月日共线且新月时，从月心向地表投本影圆+半影环（decal/投影面片），随月球公转扫过；相机贴近触发"日全食"卡。联动时间轴预设 2027-08-02（北非大日食）。
+  - 验收：任意日期快进能找到月影落点；南北半球季节正确。
+
+- [x] **P1-2 小行星带可点击个体** ✅（commit 见本次；data.ts `ASTEROIDS` 12 颗真实轨道要素 + engine `buildAsteroids()` 实体可点 + 成分/直径卡；木星 L4/L5 特洛伊双色 InstancedMesh 跟随木星 ±60°；阿波菲斯(99942) 2029-04-13 邻近 HUD「飞掠预警」）
+  - 现状：`makeBelt(620,...)`（engine.ts:798）纯装饰 Points。
+  - 做法：提升~12 颗为实体（谷神星/灶神星/灵神星/智神星/健神星…）真实轨道要素+可点+成分/直径卡（灵神星=裸露金属核，呼应 Psyche 任务）；木星 L4/L5 特洛伊双色点缀+说明；阿波菲斯(99942) 2029-04-13 邻近弹"3.1 万公里飞掠"提示。
+
+- [x] **P1-3 补齐故事性卫星** ✅（commit 见本次；MOONS 新增木卫五 Amalthea / 木卫八 Iapetus / 海卫二 Nereid / 冥卫二~五 Styx·Nix·Kerberos·Hydra 共 7 颗，全部走既有 `MOONS` 循环自动可点 + 文案）
+  - 现状：MOONS 数据存在（含冥卫一 Charon，data.ts:145）；Iapetus/Nereid/Amalthea/Styx/Nix/Kerberos/Hydra 是否全有需逐查。
+  - 目标：土卫八（黑白半球差，呼应卡西尼 1671 困惑）；海卫二（高偏心，暗示被俘柯伊伯天体）；木卫五（最内侧）；冥卫二~五（混沌自转）。
+
+- [x] **P1-4 特征热点标记** ✅（commit 见本次；data.ts Moon `pulse` 字段 + engine 月循环内加脉冲 Sprite 热点，Europa「冰下海洋」/ Enceladus「冰晶羽流」可点光圈 + 专属 dossier）
+  - 现状：Europa"冰下海洋"（data.ts:134）、Enceladus"羽流"（:142）已是卡片文案，但**无视觉脉冲热点**。
+  - 做法：对应天体表面加脉冲光圈热点（可点），把文案变可发现彩蛋。
+
+- [x] **P1-5 彗星扩充** ✅（commit 见本次；COMETS 新增 NEOWISE + 麦克霍尔特，远日点已做比例压缩说明；HUD「哈雷彗星回归倒计时」chip 计至 2061-07-28；时间轴预设 2061 哈雷已存在）
+  - 现状：COMETS 当前 4 颗（memory）。加 NEOWISE、麦克霍尔特轨道根数；哈雷回归倒计时挂时间轴 UI（下一回归 2061）。
+
+---
+
+## P2：天文馆——中国星官图层（差异化亮点）
+
+- [x] **P2-1 西方星座补齐** ✅（commit 见本次；88 连线 + 288 亮星）
+  - 现状：`CONS=15` 星座、`STARS=30` 亮星（data.ts 已核实），确为 15/88 + 30。
+  - 做法：接入 d3-celestial 公开数据（MIT，许可友好）补齐。
+  - 实现：新增 `src/lib/cosmos/west-constellations.ts`（`scripts/_gen_p21.ts` 生成，源 raw.githubusercontent.com/ofrohn/d3-celestial `constellations.lines.json` + `stars.6.json`）：
+    - `WEST_CONSTELLATIONS`（89 features=88 星座，Serpens 拆 Caput/Cauda）：每座 `name`(中文，88 译名 LUT) + `stars:[ra_h,dec_deg,mag]` + `lines:[i,j]`（顶点去重、多段折线转连续线段，RA°→时，RA/Dec 与 `unitDir` 约定一致）。
+    - `WEST_BRIGHT_STARS`（288 颗，mag≤3.5）：`{hip,ra,dec,mag,bv}`，B-V 着色。
+  - engine.ts：`buildSky` 改从 `WEST_CONSTELLATIONS` 渲染 88 连线（替换 `CONS`）；新增循环渲染 `WEST_BRIGHT_STARS`（加色 Sprite，`bvToColor(bv)` 由 B-V 估算色调，大小按星等）；移除 `CONS` 导入。`STARS`(30 精选) 保留不变。
+  - 核验：bun 离线脚本（`scripts/_verify_p21.ts`）断言 89 星座/743 线段/288 亮星、线段索引有界、坐标有限、dec∈[-90,90]、mag≤3.5、中文名非 3 字母缩写 → VERIFY_PASS（验证脚本保留；`scripts/_gen_p21.ts` 为生成器，运行时从 d3-celestial 重新下载，raw JSON 不入库）。
+  - 门禁：prettier/typecheck(EXIT 0)/eslint(0 err, 27 预存 warn)/vitest(12/12)/next build(进行中) 全绿 · `next-env.d.ts` 将 `git restore`。
+
+- [x] **P2-2 三垣二十八宿图层** ✅（commit 见本次；data.ts `CHI_ASTERISMS`（3 垣 + 28 宿[四象各 7] + 北斗/夏季大三角 2 星官，真实 J2000 距星坐标）+ engine `chiGroup` 图层 + HUD「中国星官」切换按钮 + `.tag.chi` 金色样式；可点开文化 dossier；与西方星座可叠加）
+  - 现状：代码无任何 `星官/三垣/二十八宿` 数据（grep 零命中）。
+  - 做法：独立天球图层（与西方星座可切换/叠加）：紫微垣/太微垣/天市垣 + 东方苍龙七宿等，中文标注（角亢氐房心尾箕…）；切换按钮"西方星座/中国星官"；每宿文化卡（如"心宿二=大火，《诗经》'七月流火'"）。
+  - 验收：同一颗星（Antares）在两图层分属"天蝎座/心宿"，体现文化视角差异。✓ 心宿二坐标=Antares、角宿一=Spica 离线核验一致。
+
+- [x] **P2-3 地平模式实时行星** ✅（commit 见本次；复用既有 `skyMarks`/`marks` 地平投影基建，新增 `eclToEq` 黄赤交角旋转修正 + 「今晚行星」HUD 面板）
+  - 现状：地平坐标系原本只显示恒星；`skyMarks` 已能投太阳/月亮/七行星，但 `liveAltaz` 用了黄道系方向冒充赤道系（缺黄赤交角旋转），且从未上屏。
+  - 做法：新增 `eclToEq(v)` 把黄道系（posAU 输出帧）几何方向按 ε 旋到赤道系 `skyRoot` 帧，行星才与星场对齐（否则偏最多 ~23°）；地平循环每帧算真实本地 alt/az；HUD 每 0.5s 汇总水金火木土五星「高度·方位·今夜可见/地平线上·地平线下」徽标（太阳高度作昼夜判据）。离线 `scripts/_p2_planet_verify.ts` 核验：黄极→Dec 66.56°/RA 18h、γ 不变、五星距离合理、Sun alt≈90−|lat−dec|，VERIFY_PASS 后删除。
+  - 关键教训：本模拟器轨道根数仅近似对齐真实历，2026-09-25 地球黄经 ~351.6°（偏真实 ~11°/11 天），故不可拿真实星历日期断言绝对位置，只能验几何自洽。
+
+---
+
+## P3：跨级一致性（校准后）
+
+- [x] **P3-1 银河系外观统一** ✅（commit `5045cc8`；`gotoLevel` 数据通道 + dossier 跳回按钮）
+  - 初版："L4/L5 银河系退化为通用星系贴图，L2 用 M83"。
+  - 现状：L4/L5 已接真实照片（M81/M87/M104/CenA/NGC253 via applyRealPhoto），源码已无"退化贴图"措辞（grep 零命中），该删除项已自然满足。统一点已实现：① `BodyData`/`BodyInfo` 加 `gotoLevel?` 字段；② L4(`buildNearbyUniverse`) 与 L5(`buildSuperclusters`) 的 `银河系` sprite `tag()` 传 `gotoLevel:1` 并改写 note 为"我们所在的银河系 · …"；③ dossier 面板在 `info.gotoLevel!=null` 时渲染"↩ 回到 L2 · 银河系近景"按钮，调用 `setScaleLevel(1)` 跳回 L2 银河系近景。门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0。
+
+- [x] **P3-2 L6 著名星系真实定位 + README 校准** ✅（commit 见本次；`galaxySpriteTex` 随机纹理仅影响朝向，不影响位置）
+  - 现状：`buildObservableUniverse` 的 `FAMOUS_GALAXIES` 循环 `galacticDir(g.l,g.b)` 用了**真实银道坐标**（l/b 取自数据，非随机），但半径 `R*0.45*(0.5+Math.random()*0.4)` 是**随机**的——导致 600 Mly 星系可能与 50 Mly 星系同深度，几何错误。函数更深处（N=1800 背景星雾）的 `Math.random()` 是有意统计背景雾，不在本任务范围，保留。
+  - 做法：移除半径 `Math.random()`，改为从真实 `distLy` 推导低-z Hubble 红移 `z=H0·d/c`（H0=70, 1Mpc=3.26156e6 ly, c=299792.458），半径用与类星体云**同一律** `R*0.6*(1-1/(1+z)+0.2)`，使近距(低z)著名星系落在内壳、远处类星体更外；dossier 增列「红移 z=…」「退行速度 … km/s」。离线核验：12 星系半径确定性落在 12.05–14.47（无随机），红移/速度物理合理（Hoag z=0.043/12877 km/s、Cen A z=0.0009/279 km/s），与类星体云径向律一致（著名星系在内壳，类星体 z≥0.1 在 r≥17 外壳，无重叠）。
+  - **README 校准**：第 25 行「8 类星体」→「300 类星体」（`QUASARS_REAL` 实测 300 条）。门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0 · 离线数值核验 VERIFY_PASS。
+
+- [x] **P3-3 类星体信息卡升级** ✅（commit `ab3d244`）
+  - QUASARS_REAL 仅有真实 z/l/b/distLy（无 RA/Dec 手编字段，计划原文"RA/Dec"系误记）；新增 `QuasarExtra` 类型 + 确定性 `quasarVisual(i)` 生成器（mulberry32 种子，按索引稳定，非每帧随机）：宿主星系形态、喷流方位角、多普勒增亮侧、28 点光变曲线、宇宙灯塔文案。
+  - `BodyData`/`BodyInfo` 加 `quasar?` 字段，`showInfo` 透传；dossier 新增「宇宙灯塔」徽标 + 宿主星系/相对论喷流 SVG 缩略（近向侧喷流更亮以表多普勒增亮）+ 光变曲线 SVG 小图 + 文案；quasar rows 增「宿主星系」行。
+  - 门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0 · 离线核验（300 个确定性/有界/多样）VERIFY_PASS。
+
+- [x] **P3-4 宇宙网暗物质层** ✅（commit 见本次）
+  - 现状：`COSMIC_FILAMENTS`（宇宙-data.ts，6 条长城/纤维，端点 [l,b,distMpc]）已在 L5 `buildSuperclusters` 以淡蓝细管（opacity 0.16）绘制；无暗物质滤镜。
+  - 做法：复用 `cosmosBuilders[5]=buildSuperclusters`，在其内新增 `name="darkmatter"` 组（默认 `visible=false`），对同 6 条纤维画**紫罗兰发光粗管**（r=0.55/opacity 0.5/Additive）+ 端点发光节点；engine 加 `private darkMatterGroup`，在 `ensureCosmosView(level===5)` 中 `getObjectByName("darkmatter")` 并按 `show.darkmatter` 同步显隐；`toggleLayer` 加 `darkmatter` 分支；`show` 对象加 `darkmatter:false`；HUD 新增紫色「暗物质」按钮（`Sparkles` 图标），激活时下方显示科普条「可见星系只是网上的泡沫——约 85% 物质不发光却撑起大尺度结构」。
+  - 门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0。
+
+---
+
+## P4：叙事与细节
+
+- [x] **P4-1 巡航尺度类比旁白** ✅（commit fbfad10）
+  - 现状：grep 未见现有航点/旁白系统，可能需新建轻量旁白层。
+  - 做法：跨级飞行途中插入 3~4 条尺度类比（"从太阳到最近恒星≈巴黎到莫斯科间放一枚硬币"等）。
+  - 实现：engine.ts 新增 `scaleAnalogy` 状态通道 + `SCALE_ANALOGIES[0..6]` 7 级文案（豌豆太阳/北京-上海恒星距/足球场沙堆/80 成员本星系群/5400 万光年室女/10 万星系拉尼亚凯亚/465 亿光年可观测宇宙）；`setScaleLevel` 触发、`tour.active` 时抑制、2.6s 自动清除；cosmos-viewer.tsx 顶部 HUD banner。
+  - 门禁：prettier/typecheck(EXIT 0)/eslint(0 err)/vitest(12/12)/next build(EXIT 0) 全绿。
+
+- [x] **P4-2 L1 近邻恒星细节** ✅（commit 351e388）
+  - 现状：NEARBY_STARS=36（universe-data.ts:1450），比邻星 b/c、巴纳德星 b 已建模（cosmos-views.ts:340-378）。
+  - 做法：自行矢量箭头（巴纳德星全天最快自行）；天狼星 A/B 双星分离（B=白矮星，"一茶匙物质重达吨级"）；南门二 ABC 三合星结构 + 比邻星轨道周期~50 万年标注。
+  - 实现：buildSolarNeighborhood 增强——天狼星 A/B、南门二 A/B 因数据同坐标而偏移+连线；比邻星标注三合星 C + 50 万年虚线轨道；巴纳德星 ArrowHelper 自行箭头。**修正锚点查找顺序无关的 pre-pass map**（原 `alphaABpos/siriusApos` 跟踪器依赖「A 在 B 前」；但数据里比邻星(idx0)早于南门二 A(idx1)，致比邻星→AB 虚线永不渲染，已修）。
+  - 核验：bun 离线脚本断言锚点有限/半径≈4.37/8.6 ly、比邻星虽排在南门二 A 前锚点仍可得、偏移连线有限 → VERIFY_PASS。
+  - 门禁：prettier/typecheck(EXIT 0)/eslint(0 err)/vitest(12/12)/next build(EXIT 0) 全绿。
+
+---
+
+## 数据与文件落点
+
+| 新增/修改                                                                    | 文件                                                                                                 |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 球状星团、中国星官、小行星实体、彗星轨道、著名星系定位                       | `src/lib/cosmos/universe-data.ts`（或拆 `milkyway-data.ts`/`asteroid-data.ts`/`chinastars-data.ts`） |
+| 棒/气泡/沿臂星场/标尺渲染                                                    | `src/lib/cosmos/cosmos-views.ts`                                                                     |
+| 日食投影、热点标记、行星地平投影、新增 `show` toggle（fermi/darkmatter/arm） | `src/lib/cosmos/engine.ts`                                                                           |
+| 图层开关、滤镜联动                                                           | `src/lib/cosmos/hudStore.ts` + HUD 组件                                                              |
+| 文档数字校准                                                                 | `README.md`                                                                                          |
+
+## 验证方式（内容向）
+
+1. 每 P0/P1 任务完成截图对比：L2 应呈现"盘(M83)+核球+棒+球状晕+标尺"完整示意体系。
+2. 时间轴用例：2027-08-02 → 月影落北非；2029-04-13 → 阿波菲斯近地提示。
+3. 文案审校：每张新卡含至少一个"人"的故事（发现者/年份/任务名）。
+4. 数据溯源：新增真实数据（球团坐标、红移、轨道根数）在注释标来源（JPL SBDB、SIMBAD、STARDUMP、Gaia DR3 子集）。
+5. **门禁纪律（沿用性能优化期）**：每项 prettier✅ · `tsc EXIT 0` · eslint 0err · `vitest 12/12` · `next build 0` · 真浏览器 CDP smoke（断言 DOM/WebGL/console/network，不读图）。
+
+## 里程碑排期建议（校准后）
+
+- **第 1 周**：P0-2 中心棒 + P0-6 沿臂星场（前提最干净，纯代码/已备数据）+ P0-3 球状晕数据
+- **第 2 周**：P1-1 日食 + P1-2 小行星实体（太阳系两大缺口）
+- **第 3 周**：P2-1 西方星座补齐 + P2-2 中国星官（发布宣传点）
+- **第 4 周**：P1 剩余 + P3 一致性（含 README 校准）+ P0-4/P3-4 toggle 基建
+- **第 5 周**：P4 叙事 + 全量文案审校 + README 校准收尾

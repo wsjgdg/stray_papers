@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>轨道工具 · ORBIT TOOLS</title>
+<style>
+:root{
+  --paper:#f2ecdf; --card:#f7f2e6; --card2:#efe8d7;
+  --ink:#23201a; --ink2:#6d6455; --ink3:#9b9280;
+  --rule:#c6bba3; --rule2:#ded5c2; --red:#b3372c;
+  --serif:"Songti SC","STSong","Source Han Serif SC","Noto Serif CJK SC","SimSun",Georgia,"Times New Roman",serif;
+  --mono:"SF Mono","JetBrains Mono","Cascadia Mono",Consolas,Menlo,"DejaVu Sans Mono","Courier New",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:repeating-linear-gradient(0deg,rgba(35,32,26,.015) 0 1px,transparent 1px 4px),var(--paper);color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.55}
+.wrap{max-width:1160px;margin:0 auto;padding:24px 20px 64px}
+.mono{font-family:var(--mono)}
+.u{font-family:var(--serif);font-style:italic;font-size:.86em;color:var(--ink2);padding:0 .1em}
+.mast{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;border-bottom:3px solid var(--ink);padding-bottom:9px}
+h1{margin:0;font-size:44px;line-height:1;letter-spacing:.22em;font-weight:700}
+.en{font-family:var(--mono);font-size:9.5px;letter-spacing:.42em;color:var(--ink2);margin-top:8px}
+.mast-r{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink2);letter-spacing:.05em;white-space:nowrap}
+.edition{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--rule);padding:6px 0 7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--ink2)}
+.tabs{display:flex;gap:26px;margin:16px 0 4px;border-bottom:1px solid var(--rule2);flex-wrap:wrap}
+.tab{font-family:var(--serif);font-size:15px;letter-spacing:.32em;padding:8px 2px 9px;border:0;background:none;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--ink);border-bottom-color:var(--red)}
+.page{display:none;animation:fade .18s ease}
+.page.on{display:block}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.grid{display:grid;grid-template-columns:298px 1fr;gap:26px;margin-top:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:18px}
+.rail{border-right:1px solid var(--rule2);padding-right:22px}
+.blk{margin-bottom:20px}
+h2{font-size:14px;letter-spacing:.34em;margin:26px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline}
+h2 .sub{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--ink2);font-weight:400}
+.lab{font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--ink2);border-bottom:1px solid var(--rule2);padding-bottom:4px;margin-bottom:8px}
+.fld{display:flex;align-items:center;gap:8px;margin:5px 0}
+.fld label{font-size:12px;letter-spacing:.14em;color:var(--ink2);width:74px;flex:none}
+.fld input,.fld select{flex:1;min-width:0;font-family:var(--mono);font-size:12.5px;padding:5px 7px;border:1px solid var(--rule);background:#faf7ef;color:var(--ink);border-radius:0}
+.fld input:focus,.fld select:focus{outline:1px solid var(--red);border-color:var(--red)}
+.row{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:5px 10px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.red{border-color:var(--red);color:var(--red)}
+.btn.red:hover{background:var(--red);color:#f7f2e6}
+.btn.on{background:var(--ink);color:var(--paper)}
+.note{font-size:11.5px;color:var(--ink2);line-height:1.6}
+.plate{position:relative;border:1px solid var(--ink);background:var(--card);padding:12px;margin:0}
+.plate::before,.plate::after{content:'';position:absolute;width:10px;height:10px;border:1px solid var(--red)}
+.plate::before{left:-5px;top:-5px;border-right:0;border-bottom:0}
+.plate::after{right:-5px;bottom:-5px;border-left:0;border-top:0}
+canvas{width:100%;display:block}
+#cvOrrery{aspect-ratio:1/1}
+#cvOrbit{aspect-ratio:16/9}
+figcaption{font-size:11px;color:var(--ink2);letter-spacing:.12em;margin-top:8px;display:flex;justify-content:space-between;gap:12px}
+figcaption em{font-style:italic}
+.tw{overflow-x:auto}
+table.al{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+table.al th{font-family:var(--serif);font-size:10.5px;font-weight:600;letter-spacing:.16em;color:var(--ink2);border-top:1.5px solid var(--ink);border-bottom:1px solid var(--ink);padding:6px 7px;text-align:right;white-space:nowrap}
+table.al td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--rule2);white-space:nowrap}
+table.al th:first-child,table.al td:first-child{text-align:left}
+table.al tbody tr:nth-child(even) td{background:rgba(35,32,26,.028)}
+table.al tr.hl td{background:rgba(179,55,44,.07);color:var(--red)}
+td.name{font-family:var(--serif);font-size:13px;letter-spacing:.18em}
+.kv{font-family:var(--mono);font-size:12px}
+.kv div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dotted var(--rule);padding:4px 0}
+.kv span:last-child{color:var(--ink)}
+.kv span:first-child{color:var(--ink2);letter-spacing:.08em}
+.strip{border-top:1px solid var(--rule2);border-bottom:1px solid var(--rule2);padding:7px 0;margin:12px 0;font-family:var(--mono);font-size:11.5px;color:var(--ink2);display:flex;gap:22px;flex-wrap:wrap}
+.doc h3{font-size:13.5px;letter-spacing:.24em;margin:24px 0 6px}
+.doc p,.doc li{font-size:13.5px;line-height:1.85;color:#332e25}
+.doc ol,.doc ul{padding-left:1.4em;margin:.4em 0}
+.doc .fr{font-family:var(--mono);font-size:12px;background:var(--card2);border-left:2px solid var(--red);padding:6px 10px;margin:8px 0;display:block}
+.warn{color:var(--red)}
+@media(max-width:940px){.grid,.grid2{grid-template-columns:1fr}.rail{border-right:0;border-bottom:1px solid var(--rule2);padding-right:0;padding-bottom:14px}h1{font-size:32px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <div>
+    <h1>轨道工具</h1>
+    <div class="en">ORBIT TOOLS · EPHEMERIS &amp; MECHANICS</div>
+  </div>
+  <div class="mast-r">
+    <div id="mastClock">—</div>
+    <div id="mastJD" style="color:var(--red)">—</div>
+  </div>
+</header>
+<div class="edition">
+  <span>自包含单文件 · 历表核心内联 · 离线可用</span>
+  <span id="mastSub">低精度解析历表 v1.0</span>
+</div>
+
+<nav class="tabs">
+  <button class="tab on" data-tab="eph">历表</button>
+  <button class="tab" data-tab="orb">轨道要素</button>
+  <button class="tab" data-tab="mnv">机动 · 时间</button>
+  <button class="tab" data-tab="doc">说明</button>
+</nav>
+
+<!-- ============ 历表 ============ -->
+<section class="page on" id="page-eph">
+<div class="grid">
+  <aside class="rail">
+    <div class="blk">
+      <div class="lab">时刻（本地墙钟）</div>
+      <div class="fld"><label>日期时间</label><input id="inDT" type="datetime-local" step="1"></div>
+      <div class="fld"><label>时区 UTC</label><input id="inTZ" type="number" step="0.5" value="8"></div>
+      <div class="row">
+        <button class="btn" id="btnPrev">− 1 日</button>
+        <button class="btn" id="btnNext">+ 1 日</button>
+        <button class="btn" id="btnNow">现在</button>
+      </div>
+      <div class="row">
+        <button class="btn red" id="btnPlay">▸ 时间流动</button>
+      </div>
+      <div class="note">时区为固定偏移（小时），不自动处理夏令时。</div>
+    </div>
+    <div class="blk">
+      <div class="lab">观测地</div>
+      <div class="fld"><label>纬度 °</label><input id="inLat" type="number" step="0.0001" value="39.9042"></div>
+      <div class="fld"><label>经度 °</label><input id="inLon" type="number" step="0.0001" value="116.4074"></div>
+      <div class="fld"><label>常用站点</label>
+        <select id="siteSel">
+          <option value="39.9042,116.4074,8">北京</option>
+          <option value="31.2304,121.4737,8">上海</option>
+          <option value="23.1291,113.2644,8">广州</option>
+          <option value="29.6520,91.1721,8">拉萨</option>
+          <option value="43.8250,87.6160,8">乌鲁木齐</option>
+          <option value="35.6895,139.6917,9">东京</option>
+          <option value="51.5072,-0.1276,0">格林尼治</option>
+        </select>
+      </div>
+      <div class="note">经度东经为正、西经为负。</div>
+    </div>
+    <div class="blk">
+      <div class="lab">七日历表对象</div>
+      <div class="fld"><label>天体</label><select id="inWeek"></select></div>
+      <div class="note">七日表位置历元为 0h UT，出没中天为当地时间。</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <figure class="plate">
+      <canvas id="cvOrrery"></canvas>
+      <figcaption><em>图版 I · 黄道俯视 · 对数径向标度</em><span class="mono" id="capOrrery">—</span></figcaption>
+    </figure>
+
+    <h2>视位置<span class="sub" id="ephSub">—</span></h2>
+    <div class="tw"><table class="al" id="tbPos"></table></div>
+    <div class="strip" id="ephDetail"></div>
+
+    <h2>出没与中天<span class="sub">本地日 0h–24h · h₀ 见说明</span></h2>
+    <div class="tw"><table class="al" id="tbEvt"></table></div>
+
+    <h2 id="weekTitle">七日历表<span class="sub">位置 0h UT · 出没中天当地时</span></h2>
+    <div class="tw"><table class="al" id="tbWeek"></table></div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 轨道要素 ============ -->
+<section class="page" id="page-orb">
+<div class="grid2">
+  <div>
+    <div class="blk">
+      <div class="lab">中心天体与要素</div>
+      <div class="fld"><label>中心天体</label>
+        <select id="muSel">
+          <option value="132712440018">太阳</option>
+          <option value="398600.4418" selected>地球</option>
+          <option value="4902.800066">月球</option>
+          <option value="324858.592">金星</option>
+          <option value="42828.375214">火星</option>
+          <option value="126686534">木星</option>
+          <option value="37931187">土星</option>
+          <option value="5793939">天王星</option>
+          <option value="6835099.5">海王星</option>
+          <option value="custom">自定义</option>
+        </select>
+      </div>
+      <div class="fld"><label>μ  km³/s²</label><input id="inMu" type="number" step="any" value="398600.4418"></div>
+      <div class="fld"><label>a  km</label><input id="inA" type="number" step="any" value="7178"></div>
+      <div class="fld"><label>e</label><input id="inE" type="number" step="any" value="0.001"></div>
+      <div class="fld"><label>i  °</label><input id="inI" type="number" step="any" value="98.6"></div>
+      <div class="fld"><label>Ω  °</label><input id="inOm" type="number" step="any" value="0"></div>
+      <div class="fld"><label>ω  °</label><input id="inW" type="number" step="any" value="0"></div>
+      <div class="fld"><label>给定角</label>
+        <select id="inAngType"><option value="M">平近点角 M</option><option value="nu">真近点角 ν</option></select>
+      </div>
+      <div class="fld"><label>角度 °</label><input id="inAng" type="number" step="any" value="0"></div>
+      <div class="fld"><label>Δt  天</label><input id="inDt" type="number" step="any" value="0"></div>
+      <div class="row">
+        <button class="btn" data-orb="leo">低轨 400 km</button>
+        <button class="btn" data-orb="geo">地球同步</button>
+        <button class="btn" data-orb="molniya">闪电轨道</button>
+        <button class="btn" data-orb="au1">日心 1 AU</button>
+      </div>
+    </div>
+  </div>
+  <div>
+    <figure class="plate">
+      <canvas id="cvOrbit"></canvas>
+      <figcaption><em>图版 II · 轨道平面 · 近星点向右</em><span class="mono" id="capOrbit">—</span></figcaption>
+    </figure>
+    <h2>轨道解算<span class="sub">开普勒方程牛顿迭代 · PQW→IJK</span></h2>
+    <div class="tw"><table class="al"><tbody id="outOrb"></tbody></table></div>
+    <div class="note" id="orbNote"></div>
+  </div>
+</div>
+
+<div style="margin-top:26px">
+  <h2>逆变换：位置速度 → 轨道要素<span class="sub">r⃗, v⃗ → a, e, i, Ω, ω, ν</span></h2>
+  <div class="grid2" style="margin-top:6px">
+    <div>
+      <div class="fld"><label>r⃗ x km</label><input id="rvX" type="number" step="any" value="7000"></div>
+      <div class="fld"><label>r⃗ y km</label><input id="rvY" type="number" step="any" value="0"></div>
+      <div class="fld"><label>r⃗ z km</label><input id="rvZ" type="number" step="any" value="0"></div>
+      <div class="fld"><label>v⃗ x km/s</label><input id="rvVx" type="number" step="any" value="0"></div>
+      <div class="fld"><label>v⃗ y km/s</label><input id="rvVy" type="number" step="any" value="7.5"></div>
+      <div class="fld"><label>v⃗ z km/s</label><input id="rvVz" type="number" step="any" value="1"></div>
+      <div class="fld"><label>μ  km³/s²</label><input id="rvMu" type="number" step="any" value="398600.4418"></div>
+    </div>
+    <div class="kv" id="outRv"></div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 机动 · 时间 ============ -->
+<section class="page" id="page-mnv">
+<div class="grid2">
+  <div>
+    <h2>活力公式与特征速度</h2>
+    <div class="fld"><label>μ  km³/s²</label><input id="vvMu" type="number" step="any" value="398600.4418"></div>
+    <div class="fld"><label>r  km</label><input id="vvR" type="number" step="any" value="6778"></div>
+    <div class="fld"><label>a  km</label><input id="vvA" type="number" step="any" value="6778"></div>
+    <div class="kv" id="outVV"></div>
+  </div>
+  <div>
+    <h2>霍曼转移（共面圆轨道）</h2>
+    <div class="fld"><label>μ  km³/s²</label><input id="hoMu" type="number" step="any" value="398600.4418"></div>
+    <div class="fld"><label>r₁  km</label><input id="hoR1" type="number" step="any" value="6778"></div>
+    <div class="fld"><label>r₂  km</label><input id="hoR2" type="number" step="any" value="42164"></div>
+    <div class="kv" id="outHo"></div>
+  </div>
+</div>
+<div style="margin-top:26px">
+  <h2>时间换算<span class="sub">儒略日 · 儒略世纪 · 恒星时</span></h2>
+  <div class="grid2" style="margin-top:6px">
+    <div>
+      <div class="fld"><label>本地日期</label><input id="tmDT" type="datetime-local" step="1"></div>
+      <div class="fld"><label>时区 UTC</label><input id="tmTZ" type="number" step="0.5" value="8"></div>
+      <div class="fld"><label>经度 °</label><input id="tmLon" type="number" step="any" value="116.4074"></div>
+      <div class="kv" id="outTm"></div>
+    </div>
+    <div>
+      <div class="fld"><label>儒略日</label><input id="jdIn" type="number" step="any" value="2451545"></div>
+      <div class="fld"><label>时区 UTC</label><input id="jdTZ" type="number" step="0.5" value="8"></div>
+      <div class="kv" id="outJd"></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ 说明 ============ -->
+<section class="page" id="page-doc">
+<div class="doc">
+<h3>一 · 这是什么</h3>
+<p>本页是一个自包含的单文件工具箱：太阳系天体的地心视位置历表、出没与中天预报、二体轨道正逆变换与机动估算。全部代码与数据内联，不发起任何网络请求，断网可用。文档即本页，无需另附说明文件。</p>
+
+<h3>二 · 历表方法</h3>
+<ul>
+<li><b>时间</b>：儒略日 JD，儒略世纪 T =（JD − 2451545）/ 36525；以世界时 UT 为引数（ΔT 的差异远小于本表精度）。</li>
+<li><b>太阳与行星</b>：采用 JPL（Standish）平均轨道要素 a、e、I、L、ϖ、Ω 及其百年变率，牛顿迭代解开普勒方程求日心黄道直角坐标（J2000 黄道与春分点）；对木星、土星、天王星加入主要长期摄动项（木土大合不等式等七项 / 五项 / 三项）。</li>
+<li><b>月球</b>：截断月球运动理论主项——12 项黄经摄动（evection、variation、annual equation 等）、5 项黄纬摄动、2 项距离摄动，另加 A₁ / A₂ / A₃ 长周期附加项。</li>
+<li><b>视位置</b>：几何地心坐标 → 光行时迭代（行星）→ 岁差 J2000→当日 → 章动 Δψ、Δε → 周年光行差 → 赤道坐标（赤经、赤纬）。</li>
+<li><b>视直径</b>：θ = 2 arcsin(D / 2Δ)，D 为天体直径。</li>
+<li><b>距角与相位</b>：由「地球—天体—太阳」空间几何直接求得，相位 k = (1 + cos F) / 2。</li>
+</ul>
+
+<h3>三 · 出没与中天</h3>
+<p>在本地日 0h–24h 内对高度角方程数值求根（对分法），中天取高度极大时刻（黄金分割求精）。阈值取常用气象 / 天文约定：</p>
+<span class="fr">太阳 h₀ = −0.8333°（上边缘触地平）　月球 h₀ = 0.7275π − 0.5667°（π 为地平视差）　其余 h₀ = −0.5667°（含标准蒙气差）</span>
+<p>表中「高度」为地平坐标系下的视高度（月球已加一阶视差改正）。高纬地区可能出现整日不升或不落，表中以文字标出。</p>
+
+<h3>四 · 轨道力学约定</h3>
+<ul>
+<li><b>单位</b>：长度 km（太阳系尺度并用 AU，1 AU = 149 597 870.7 km）、速度 km/s、角度为度；μ 为中心天体引力常数 GM（km³/s²）。</li>
+<li><b>要素</b>：a 半长轴、e 偏心率、i 倾角、Ω 升交点经度、ω 近星点幅角、M 平近点角、ν 真近点角、E 偏近点角。</li>
+<li><b>正算</b>：开普勒方程 M = E − e·sin E 以牛顿法求解（收敛判据 1×10⁻¹³，高偏心率带阻尼）；由 E 求 ν 与 r，PQW→IJK 用经典旋转矩阵。界面正算暂限椭圆轨道（0 ≤ e &lt; 1）。</li>
+<li><b>逆算</b>：h⃗ = r⃗ × v⃗，e⃗ = [(v² − μ/r)r⃗ − (r⃗·v⃗)v⃗]/μ，由 n⃗ = k̂ × h⃗ 定 Ω；可输出任意圆锥曲线（含双曲线，a 为负）。</li>
+<li><b>机动</b>：活力公式 v² = μ(2/r − 1/a)；霍曼转移 Δv₁、Δv₂ 及转移时间 t = π√(aₜ³/μ)。</li>
+</ul>
+
+<h3>五 · 精度与适用范围</h3>
+<ul>
+<li>太阳 ±0.01°；月球 ±0.03°（距角 ±1′ 量级，距离 ±0.3%）；水星 / 金星 / 火星 ±0.05°；木星 / 土星 / 天王星 / 海王星 ±0.1°。</li>
+<li>出没中天时刻误差通常在 ±2 分钟量级，月球略差。</li>
+<li>行星要素为平均轨道要素，适用范围约公元 1800–2050 年，越接近 J2000.0 越精确。</li>
+<li class="warn">本工具为科普 / 教学级历表，不适用于导航、测绘或航天任务设计。关键用途请改用 JPL DE 系列精密星历与专业测控软件。</li>
+</ul>
+
+<h3>六 · 使用提示</h3>
+<ul>
+<li>「时间流动」以约每日 2 天 / 帧推进历元，随时暂停；出没表在流动中以低频率刷新。</li>
+<li>行星轨道要素为日心平均要素，图版 I 中的椭圆为平均轨道投影；径向取对数标度以便内外行星同框显示。</li>
+<li>所有计算在本机完成：不联网、不采集、不外传任何数据。</li>
+</ul>
+</div>
+</section>
+
+</div>
+
+<script>
+'use strict';
+/* ===================================================================
+   轨道工具 ORBIT TOOLS · 单文件实现
+   历表核心：JPL/Standish 平均要素 + 截断月球运动理论 + 光行时/岁差/章动/光行差
+   =================================================================== */
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+const sind = x => Math.sin(x*D2R), cosd = x => Math.cos(x*D2R), tand = x => Math.tan(x*D2R);
+const asind = x => Math.asin(Math.max(-1, Math.min(1, x)))*R2D;
+const acosd = x => Math.acos(Math.max(-1, Math.min(1, x)))*R2D;
+const atan2d = (y, x) => Math.atan2(y, x)*R2D;
+const norm360 = x => ((x % 360) + 360) % 360;
+const norm180 = x => { const v = norm360(x); return v > 180 ? v - 360 : v; };
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const pad = (n, w = 2) => String(Math.floor(Math.abs(n))).padStart(w, '0');
+const $ = id => document.getElementById(id);
+const AU_KM = 149597870.7, ER_KM = 6378.137, ER_AU = ER_KM/AU_KM;
+const K_ABERR = 20.49552/3600;          /* 周年光行差常数 κ（度） */
+
+function keplerE(M, e) {                 /* 开普勒方程：平近点角(弧度) → 偏近点角 */
+  M = Math.atan2(Math.sin(M), Math.cos(M));
+  let E = e > 0.8 ? (M >= 0 ? Math.PI : -Math.PI) : M + 0.9*e*Math.sin(M);
+  for (let i = 0; i < 100; i++) {
+    const f = E - e*Math.sin(E) - M;
+    let d = f/(1 - e*Math.cos(E));
+    if (Math.abs(d) > 0.5) d = 0.5*Math.sign(d);
+    E -= d;
+    if (Math.abs(d) < 1e-13) break;
+  }
+  return E;
+}
+
+/* ---------------- 时间系统 ---------------- */
+function jdFromYMD(y, m, d, fd) {
+  if (m <= 2) { y -= 1; m += 12; }
+  const A = Math.floor(y/100), B = 2 - A + Math.floor(A/4);
+  return Math.floor(365.25*(y + 4716)) + Math.floor(30.6001*(m + 1)) + d + B - 1524.5 + (fd || 0);
+}
+function calFromJD(jd) {
+  const z = Math.floor(jd + 0.5), F = jd + 0.5 - z;
+  let A = z;
+  if (z >= 2299161) { const al = Math.floor((z - 1867216.25)/36524.25); A = z + 1 + al - Math.floor(al/4); }
+  const B = A + 1524, C = Math.floor((B - 122.1)/365.25), D = Math.floor(365.25*C), E = Math.floor((B - D)/30.6001);
+  const day = B - D - Math.floor(30.6001*E) + F;
+  const m = E < 14 ? E - 1 : E - 13;
+  return { y: m > 2 ? C - 4716 : C - 4715, m, d: Math.floor(day), fd: day - Math.floor(day) };
+}
+function jdFromLocal(y, m, d, hh, mm, ss, tz) { return jdFromYMD(y, m, d, (hh + mm/60 + ss/3600 - tz)/24); }
+function jdFromDateObj(dt) {
+  return jdFromYMD(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate(),
+    (dt.getUTCHours() + dt.getUTCMinutes()/60 + dt.getUTCSeconds()/3600 + dt.getUTCMilliseconds()/3.6e6)/24);
+}
+function localParts(jd, tz) {
+  let c = calFromJD(jd + tz/24);
+  let sec = Math.round(c.fd*86400), sh = 0;
+  if (sec >= 86400) { sec -= 86400; sh = 1; }
+  if (sh) c = calFromJD(jd + tz/24 + 1);
+  return { y: c.y, m: c.m, d: c.d, h: Math.floor(sec/3600), mi: Math.floor(sec % 3600/60), s: sec % 60 };
+}
+const fmtDateP = p => p.y + '-' + pad(p.m) + '-' + pad(p.d);
+const fmtTimeP = p => pad(p.h) + ':' + pad(p.mi) + ':' + pad(p.s);
+function fmtClockT(t) {                   /* 日内时刻分数 → HH:MM:SS */
+  let sec = Math.round(t*86400);
+  if (sec >= 86400) sec = 86399;
+  return pad(sec/3600) + ':' + pad(sec % 3600/60) + ':' + pad(sec % 60);
+}
+function gmstDeg(jd) {                    /* 格林尼治平恒星时（度） */
+  const T = (jd - 2451545)/36525, Dd = jd - 2451545;
+  return norm360(280.46061837 + 360.98564736629*Dd + 0.000387933*T*T - T*T*T/38710000);
+}
+function obliquity(jd) { const T = (jd - 2451545)/36525; return 23.4392911 - 0.0130042*T - 1.64e-7*T*T; }
+function nutation(jd) { const T = (jd - 2451545)/36525; const om = 125.04452 - 1934.136261*T; return { dpsi: -0.00478*sind(om), deps: 0.00256*cosd(om) }; }
+function precessLon(jd) { const T = (jd - 2451545)/36525; return 1.39697128*T + 0.0003086*T*T; }  /* 黄经总岁差 */
+
+/* ---------------- 行星：JPL/Standish 平均要素（J2000 黄道/春分点） ---------------- */
+const PLANET = {
+  mercury:{nm:'水星', a:0.38709927, ad:0.00000037, e:0.20563593, ed:0.00001906, i:7.00497902, id:-0.00594749, L:252.25032350, Ld:149472.67411175, wb:77.45779628, wbd:0.16047689, om:48.33076593, omd:-0.12534081, D:4879},
+  venus:  {nm:'金星', a:0.72333566, ad:0.00000390, e:0.00677672, ed:-0.00004107, i:3.39467605, id:-0.00078890, L:181.97909950, Ld:58517.81538729, wb:131.60246718, wbd:0.00268329, om:76.67984255, omd:-0.27769418, D:12104},
+  earth:  {nm:'地月系', a:1.00000261, ad:0.00000562, e:0.01671123, ed:-0.00004392, i:-0.00001531, id:-0.01294668, L:100.46457166, Ld:35999.37244981, wb:102.93768193, wbd:0.32327364, om:0, omd:0, D:12756},
+  mars:   {nm:'火星', a:1.52371034, ad:0.00001847, e:0.09339410, ed:0.00007882, i:1.84969142, id:-0.00813131, L:-4.55343205, Ld:19140.30268499, wb:-23.94362959, wbd:0.44441088, om:49.55953891, omd:-0.29257343, D:6792},
+  jupiter:{nm:'木星', a:5.20288700, ad:-0.00011607, e:0.04838624, ed:-0.00013253, i:1.30439695, id:-0.00183714, L:34.39644051, Ld:3034.74612775, wb:14.72847983, wbd:0.21252668, om:100.47390909, omd:0.20469106, D:142984},
+  saturn: {nm:'土星', a:9.53667594, ad:-0.00125060, e:0.05386179, ed:-0.00050991, i:2.48599187, id:0.00193609, L:49.95424423, Ld:1222.49362201, wb:92.59887831, wbd:-0.41897216, om:113.66242448, omd:-0.28867794, D:120536},
+  uranus: {nm:'天王星', a:19.18916464, ad:-0.00196176, e:0.04725744, ed:-0.00004397, i:0.77263783, id:-0.00242939, L:313.23810451, Ld:428.48202785, wb:170.95427630, wbd:0.40805281, om:74.01692503, omd:0.04240589, D:51118},
+  neptune:{nm:'海王星', a:30.06992276, ad:0.00026291, e:0.00859048, ed:0.00005105, i:1.77004347, id:0.00035372, L:-55.12002969, Ld:218.45945325, wb:44.96476227, wbd:-0.32241464, om:131.78422574, omd:-0.00508664, D:49528}
+};
+const ORR_KEYS = ['mercury','venus','earth','mars','jupiter','saturn','uranus','neptune'];
+
+function elemsAt(key, jd) {
+  const p = PLANET[key], T = (jd - 2451545)/36525;
+  const a = p.a + p.ad*T, e = p.e + p.ed*T, i = p.i + p.id*T;
+  const L = p.L + p.Ld*T, wb = p.wb + p.wbd*T, om = p.om + p.omd*T;
+  return { key, a, e, i, L, wb, om, w: wb - om, M: norm180(L - wb), T };
+}
+function rotPQW(xp, yp, w, om, i) {       /* 轨道面(PQW) → 参考系(IJK) */
+  const cw = cosd(w), sw = sind(w), co = cosd(om), so = sind(om), ci = cosd(i), si = sind(i);
+  return {
+    x: (cw*co - sw*so*ci)*xp + (-sw*co - cw*so*ci)*yp,
+    y: (cw*so + sw*co*ci)*xp + (-sw*so + cw*co*ci)*yp,
+    z: (sw*si)*xp + (cw*si)*yp
+  };
+}
+function helioFromElems(el) {
+  const E = keplerE(el.M*D2R, el.e)*R2D;
+  return rotPQW(el.a*(cosd(E) - el.e), el.a*Math.sqrt(1 - el.e*el.e)*sind(E), el.w, el.om, el.i);
+}
+function applyPerturb(key, jd, v) {       /* 木星/土星/天王星主要长期摄动 */
+  const Mj = elemsAt('jupiter', jd).M, Ms = elemsAt('saturn', jd).M, Mu = elemsAt('uranus', jd).M;
+  let dl = 0, db = 0;
+  if (key === 'jupiter') {
+    dl = -0.332*sind(2*Mj - 5*Ms - 67.6) - 0.056*sind(2*Mj - 2*Ms + 21) + 0.042*sind(3*Mj - 5*Ms + 21)
+       - 0.036*sind(Mj - 2*Ms) + 0.022*cosd(Mj - Ms) + 0.023*sind(2*Mj - 3*Ms + 52) - 0.016*sind(Mj - 5*Ms + 63);
+  } else if (key === 'saturn') {
+    dl = 0.812*sind(2*Mj - 5*Ms - 67.6) - 0.229*cosd(2*Mj - 4*Ms - 2) + 0.119*sind(Mj - 2*Ms - 3)
+       + 0.046*sind(2*Mj - 6*Ms - 69) + 0.014*sind(Mj - 3*Ms + 32);
+    db = -0.020*cosd(2*Mj - 4*Ms - 2) + 0.018*sind(2*Mj - 6*Ms - 49);
+  } else if (key === 'uranus') {
+    dl = 0.040*sind(Ms - 2*Mu + 6) + 0.035*sind(Ms - 3*Mu + 33) - 0.015*sind(Mj - Mu + 20);
+  } else return v;
+  const r = Math.hypot(v.x, v.y, v.z);
+  const lon = atan2d(v.y, v.x) + dl, lat = asind(v.z/r) + db;
+  return { x: r*cosd(lat)*cosd(lon), y: r*cosd(lat)*sind(lon), z: r*sind(lat) };
+}
+const planetJ2000 = (jd, key) => applyPerturb(key, jd, helioFromElems(elemsAt(key, jd)));
+const earthJ2000 = jd => helioFromElems(elemsAt('earth', jd));
+
+function precessVec(v, jd) {             /* J2000 黄道 → 当日平均黄道（黄经总岁差） */
+  const r = Math.hypot(v.x, v.y, v.z);
+  const lon = atan2d(v.y, v.x) + precessLon(jd), lat = asind(v.z/r);
+  return { x: r*cosd(lat)*cosd(lon), y: r*cosd(lat)*sind(lon), z: r*sind(lat) };
+}
+
+/* ---------------- 月球：截断运动理论（当日黄道） ---------------- */
+function moonArgs(jd) {
+  const T = (jd - 2451545)/36525, T2 = T*T, T3 = T2*T, T4 = T3*T;
+  return {
+    T,
+    Lp: 218.3164477 + 481267.88123421*T - 0.0015786*T2 + T3/538841 - T4/65194000,
+    D:  297.8501921 + 445267.1114034*T - 0.0018819*T2 + T3/545868 - T4/113065000,
+    M:  357.5291092 + 35999.0502909*T - 0.0001536*T2 + T3/24490000,
+    Mp: 134.9633964 + 477198.8675055*T + 0.0087414*T2 + T3/69699 - T4/14712000,
+    F:  93.2720950 + 483202.0175233*T - 0.0036539*T2 - T3/3526000 + T4/863310000
+  };
+}
+function moonVec(jd) {                    /* 地心黄道直角坐标（AU，当日春分点） */
+  const A = moonArgs(jd), T = A.T;
+  const N = norm360(A.Lp - A.F), w = norm360(A.F - A.Mp), inc = 5.1454, ae = 60.2666, e = 0.054900;
+  const E = keplerE(norm360(A.Mp)*D2R, e)*R2D;
+  const v3 = rotPQW(ae*(cosd(E) - e), ae*Math.sqrt(1 - e*e)*sind(E), w, N, inc);
+  const r0 = Math.hypot(v3.x, v3.y, v3.z);
+  let lon = atan2d(v3.y, v3.x), lat = asind(v3.z/r0), rad = r0;
+  const D = A.D, M = A.M, Mp = norm360(A.Mp), F = A.F, Lp = A.Lp;
+  const Ee = 1 - 0.002516*T - 0.0000074*T*T;
+  lon += -1.274*sind(Mp - 2*D) + 0.658*sind(2*D) - 0.186*Ee*sind(M)
+        - 0.059*sind(2*Mp - 2*D) - 0.057*Ee*sind(Mp - 2*D + M) + 0.053*sind(Mp + 2*D)
+        + 0.046*Ee*sind(2*D - M) + 0.041*Ee*sind(Mp - M) - 0.035*sind(D) - 0.031*Ee*sind(Mp + M)
+        - 0.015*sind(2*F - 2*D) + 0.011*sind(Mp - 4*D);
+  const A1 = 119.75 + 131.849*T, A2 = 53.09 + 479264.290*T, A3 = 313.45 + 481266.484*T;
+  lon += 0.003958*sind(A1) + 0.001962*sind(Lp - F) + 0.000318*sind(A2);
+  lat += -0.173*sind(F - 2*D) - 0.055*sind(Mp - F - 2*D) - 0.046*sind(Mp + F - 2*D)
+        + 0.033*sind(F + 2*D) + 0.017*sind(2*Mp + F);
+  lat += -0.002235*sind(Lp) + 0.000382*sind(A3) + 0.000175*sind(A1 - F) + 0.000175*sind(A1 + F)
+        + 0.000127*sind(Lp - Mp) - 0.000115*sind(Lp + Mp);
+  rad += -0.58*cosd(Mp - 2*D) - 0.46*cosd(2*D);
+  const au = rad*ER_AU;
+  return { x: au*cosd(lat)*cosd(lon), y: au*cosd(lat)*sind(lon), z: au*sind(lat), rER: rad };
+}
+function sunVecDate(jd) {                 /* 太阳地心黄道（AU，当日春分点） */
+  const e = earthJ2000(jd);
+  return precessVec({ x: -e.x, y: -e.y, z: -e.z }, jd);
+}
+function geoVec(jd, key) {                /* 地心黄道直角坐标（AU，当日，光行时已改） */
+  if (key === 'moon') return moonVec(jd);
+  if (key === 'sun') return sunVecDate(jd);
+  const e = earthJ2000(jd);
+  let p = planetJ2000(jd, key);
+  for (let i = 0; i < 3; i++) {
+    const g = { x: p.x - e.x, y: p.y - e.y, z: p.z - e.z };
+    const tau = Math.hypot(g.x, g.y, g.z)/173.144632674;    /* 光行时（天） */
+    p = planetJ2000(jd - tau, key);
+  }
+  return precessVec({ x: p.x - e.x, y: p.y - e.y, z: p.z - e.z }, jd);
+}
+function eclToEq(lbd, beta, eps) {
+  return {
+    ra: norm360(atan2d(sind(lbd)*cosd(eps) - tand(beta)*sind(eps), cosd(lbd))),
+    dec: asind(sind(beta)*cosd(eps) + cosd(beta)*sind(eps)*sind(lbd))
+  };
+}
+function apparentEq(jd, key, g) {         /* 视赤经赤纬（度） */
+  const dist = Math.hypot(g.x, g.y, g.z);
+  let lbd = atan2d(g.y, g.x), beta = asind(g.z/dist);
+  const T = (jd - 2451545)/36525, om = 125.04452 - 1934.136261*T;
+  const dpsi = -0.00478*sind(om), deps = 0.00256*cosd(om), eps0 = obliquity(jd);
+  if (key === 'sun') {
+    lbd += dpsi - 0.00569;
+    const eq = eclToEq(lbd, 0, eps0);
+    return { ra: eq.ra, dec: eq.dec, lbd: norm360(lbd), beta: 0, dist };
+  }
+  lbd += dpsi;
+  const eq = eclToEq(lbd, beta, eps0 + deps);
+  if (key !== 'moon') {                   /* 周年光行差 */
+    const s = sunVecDate(jd), th = atan2d(s.y, s.x) + 0.00569, eps = eps0 + deps, k = K_ABERR;
+    eq.ra += -k*(cosd(eq.ra)*cosd(th)*cosd(eps) + sind(eq.ra)*sind(th))/cosd(eq.dec);
+    eq.dec += -k*(cosd(th)*cosd(eps)*(tand(eps)*cosd(eq.dec) - sind(eq.ra)*sind(eq.dec)) + cosd(eq.ra)*sind(eq.dec)*sind(th));
+    eq.ra = norm360(eq.ra);
+  }
+  return { ra: eq.ra, dec: eq.dec, lbd: norm360(lbd), beta, dist };
+}
+function altAzOf(jd, eq, lat, lon) {
+  const H = norm180(gmstDeg(jd) + lon - eq.ra);
+  const alt = asind(sind(lat)*sind(eq.dec) + cosd(lat)*cosd(eq.dec)*cosd(H));
+  const az = norm360(atan2d(sind(H), cosd(H)*sind(lat) - tand(eq.dec)*cosd(lat)) + 180);
+  return { alt, az, H };
+}
+function bodyRow(jd, key, lat, lon) {
+  const g = geoVec(jd, key);
+  const eq = apparentEq(jd, key, g);
+  const aa = altAzOf(jd, eq, lat, lon);
+  const s = sunVecDate(jd);
+  const dist = Math.hypot(g.x, g.y, g.z), sd = Math.hypot(s.x, s.y, s.z);
+  const rh = Math.hypot(g.x - s.x, g.y - s.y, g.z - s.z);
+  const cosF = clamp((-g.x*(s.x - g.x) - g.y*(s.y - g.y) - g.z*(s.z - g.z))/(dist*rh), -1, 1);
+  const F = acosd(cosF);
+  const k = (1 + cosd(F))/2;
+  const psi = key === 'sun' ? 180 : acosd(clamp((g.x*s.x + g.y*s.y + g.z*s.z)/(dist*sd), -1, 1));
+  const pxDist = asind(ER_AU/dist);
+  return { key, ...eq, az: aa.az, alt: aa.alt - pxDist*cosd(aa.alt), altGeo: aa.alt,
+           dist, distKm: dist*AU_KM, rh, F, k, psi, pxDist,
+           diam: 2*asind((PLANET[key] ? PLANET[key].D : key === 'sun' ? 1392700 : 3474.8)/(2*dist*AU_KM))*60 };
+}
+function bisect(f, a, b) {
+  let fa = f(a);
+  for (let i = 0; i < 50; i++) {
+    const m = (a + b)/2, fm = f(m);
+    if ((fa < 0) === (fm < 0)) { a = m; fa = fm; } else b = m;
+    if (b - a < 1e-7) break;
+  }
+  return (a + b)/2;
+}
+function maximize(g, a, b) {
+  const gr = (Math.sqrt(5) - 1)/2;
+  let c = b - gr*(b - a), d = a + gr*(b - a), gc = g(c), gd = g(d);
+  for (let i = 0; i < 40; i++) {
+    if (gc > gd) { b = d; d = c; gd = gc; c = b - gr*(b - a); gc = g(c); }
+    else { a = c; c = d; gc = gd; d = a + gr*(b - a); gd = g(d); }
+  }
+  return (a + b)/2;
+}
+function dayEvents(key, lat, lon, jd0) { /* jd0 = 本地日 0h 的儒略日 */
+  const dm = geoVec(jd0 + 0.5, key);
+  let h0 = -0.5667;
+  if (key === 'sun') h0 = -0.8333;
+  else if (key === 'moon') h0 = 0.7275*asind(ER_AU/Math.hypot(dm.x, dm.y, dm.z)) - 0.5667;
+  const f = t => altAzOf(jd0 + t, apparentEq(jd0 + t, key, geoVec(jd0 + t, key)), lat, lon).alt - h0;
+  const N = 96, rise = [], set = [];
+  let prev = f(0), tp = 0, best = 0, bestAlt = -999;
+  for (let i = 1; i <= N; i++) {
+    const t = i/N, cur = f(t);
+    if (prev < 0 && cur >= 0) rise.push(bisect(f, tp, t));
+    if (prev >= 0 && cur < 0) set.push(bisect(f, tp, t));
+    prev = cur; tp = t;
+  }
+  const g = t => altAzOf(jd0 + t, apparentEq(jd0 + t, key, geoVec(jd0 + t, key)), lat, lon).alt;
+  for (let i = 0; i <= N; i++) { const a = g(i/N); if (a > bestAlt) { bestAlt = a; best = i/N; } }
+  const tt = maximize(g, Math.max(0, best - 2/N), Math.min(1, best + 2/N));
+  const hasRise = rise.length > 0, hasSet = set.length > 0;
+  let status = '';
+  if (!hasRise && !hasSet) status = f(0.5) > 0 ? '整日不落' : '整日不升';
+  return { rise, set, transit: tt, transitAlt: g(tt) - asind(ER_AU/Math.hypot(...[1])) * 0,
+           transitAltTopo: g(tt) - (asind(ER_AU/Math.hypot(geoVec(jd0 + tt, key).x, geoVec(jd0 + tt, key).y, geoVec(jd0 + tt, key).z))*cosd(g(tt))), status };
+}
+
+/* ---------------- 格式化 ---------------- */
+function fmtRA(ra) {
+  let h = ra/15, hh = Math.floor(h), mn = (h - hh)*60, mm = Math.floor(mn), ss = (mn - mm)*60;
+  if (ss > 59.9995) { ss = 0; mm++; }
+  if (mm === 60) { mm = 0; hh = (hh + 1) % 24; }
+  return pad(hh) + '<span class="u">h</span>' + pad(mm) + '<span class="u">m</span>' + ss.toFixed(2).padStart(5, '0') + '<span class="u">s</span>';
+}
+function fmtDec(dec) {
+  const sg = dec < 0 ? '−' : '+', a = Math.abs(dec), d = Math.floor(a), m = (a - d)*60;
+  let mm = Math.floor(m), ss = (m - mm)*60;
+  if (ss > 59.95) { ss = 0; mm++; }
+  if (mm === 60) { mm = 0; d += 1; }
+  return sg + pad(d, 2) + '<span class="u">°</span>' + pad(mm) + '<span class="u">′</span>' + ss.toFixed(1).padStart(4, '0') + '<span class="u">″</span>';
+}
+const fmtDeg = (x, n = 2) => x.toFixed(n) + '<span class="u">°</span>';
+function fmtDist(d, key) { return key === 'moon' ? Math.round(d*AU_KM).toLocaleString('en-US') + ' km' : d.toFixed(4) + ' AU'; }
+function fmtDiam(am) { return am >= 1 ? am.toFixed(2) + '<span class="u">′</span>' : (am*60).toFixed(1) + '<span class="u">″</span>'; }
+const fmtSec = s => s.toFixed(3) + ' s';
+function fmtDur(sec) {
+  if (sec < 3600) return sec.toFixed(1) + ' s';
+  if (sec < 86400) return (sec/3600).toFixed(3) + ' h';
+  return (sec/86400).toFixed(4) + ' d';
+}
+
+/* ---------------- 界面：历表 ---------------- */
+const BODIES = [
+  { k: 'sun', n: '太阳' }, { k: 'moon', n: '月球' }, { k: 'mercury', n: '水星' },
+  { k: 'venus', n: '金星' }, { k: 'mars', n: '火星' }, { k: 'jupiter', n: '木星' },
+  { k: 'saturn', n: '土星' }, { k: 'uranus', n: '天王星' }, { k: 'neptune', n: '海王星' }
+];
+const NAME = k => (BODIES.find(b => b.k === k) || {}).n || k;
+
+function readDT(inputId, tzId) {
+  const v = $(inputId).value, tz = parseFloat($(tzId).value) || 0;
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/.exec(v);
+  if (!m) return jdFromDateObj(new Date()) + tz/24;
+  return jdFromLocal(+m[1], +m[2], +m[3], +m[4], +m[5], +(m[6] || 0), tz);
+}
+function writeDT(inputId, jd, tz) {
+  const p = localParts(jd, tz);
+  $(inputId).value = fmtDateP(p) + 'T' + fmtTimeP(p);
+}
+const tzVal = () => parseFloat($('inTZ').value) || 0;
+const siteVal = () => ({ lat: parseFloat($('inLat').value) || 0, lon: parseFloat($('inLon').value) || 0 });
+
+function renderMast(jd, tz) {
+  const p = localParts(jd, tz);
+  $('mastClock').innerHTML = fmtDateP(p) + '  ' + fmtTimeP(p) + '  UTC' + (tz >= 0 ? '+' : '') + tz;
+  $('mastJD').textContent = 'JD ' + jd.toFixed(5) + '   T ' + ((jd - 2451545)/36525).toFixed(6);
+  $('mastSub').textContent = 'GMST ' + (gmstDeg(jd)/15).toFixed(4) + ' h · 低精度解析历表 v1.0';
+}
+function renderPos(jd, lat, lon, tz) {
+  let h = '<thead><tr><th>天体</th><th>赤经</th><th>赤纬</th><th>黄经</th><th>地心距</th><th>距角</th><th>相位</th><th>视直径</th><th>高度</th><th>方位</th></tr></thead><tbody>';
+  const rows = BODIES.map(b => bodyRow(jd, b.k, lat, lon));
+  rows.forEach(r => {
+    h += '<tr' + (r.alt >= 0 ? '' : ' style="color:var(--ink3)"') + '><td class="name">' + NAME(r.key) + '</td>'
+      + '<td>' + fmtRA(r.ra) + '</td><td>' + fmtDec(r.dec) + '</td><td>' + fmtDeg(r.lbd) + '</td>'
+      + '<td>' + fmtDist(r.dist, r.key) + '</td>'
+      + '<td>' + (r.key === 'sun' ? '—' : fmtDeg(r.psi, 1)) + '</td>'
+      + '<td>' + (r.key === 'sun' ? '—' : (r.k*100).toFixed(0) + '<span class="u">%</span>') + '</td>'
+      + '<td>' + fmtDiam(r.diam) + '</td><td>' + fmtDeg(r.alt, 1) + '</td><td>' + fmtDeg(r.az, 1) + '</td></tr>';
+  });
+  $('tbPos').innerHTML = h + '</tbody>';
+  $('ephSub').textContent = '地心视位置 · ' + fmtDateP(localParts(jd, tz)) + ' ' + fmtTimeP(localParts(jd, tz)) + ' UTC' + (tz >= 0 ? '+' : '') + tz;
+  const gm = rows.find(r => r.key === 'moon'), gs = rows.find(r => r.key === 'sun');
+  const age = norm360(gm.lbd - gs.lbd)/360*29.530588;
+  $('ephDetail').innerHTML =
+    '<span>观测地　纬 ' + lat.toFixed(3) + '°　经 ' + lon.toFixed(3) + '°</span>' +
+    '<span>月球地心距　' + Math.round(gm.distKm).toLocaleString('en-US') + ' km（' + gm.distKm/ER_KM + ' 地球半径）</span>' +
+    '<span>月龄　' + age.toFixed(2) + ' 天</span>' +
+    '<span>月球地平视差　' + gm.pxDist.toFixed(3) + '°</span>' +
+    '<span>太阳日心距　' + rows.find(r => r.key === 'sun').dist.toFixed(6) + ' AU</span>';
+}
+function renderEvt(jd, lat, lon, tz) {
+  const p = localParts(jd, tz);
+  const jd0 = jdFromYMD(p.y, p.m, p.d, 0) - tz/24;
+  let h = '<thead><tr><th>天体</th><th>升</th><th>中天</th><th>中天高度</th><th>降</th><th>状态</th></tr></thead><tbody>';
+  BODIES.forEach(b => {
+    const ev = dayEvents(b.k, lat, lon, jd0);
+    h += '<tr><td class="name">' + b.n + '</td>'
+      + '<td>' + (ev.rise.length ? ev.rise.map(fmtClockT).join(' / ') : '—') + '</td>'
+      + '<td>' + fmtClockT(ev.transit) + '</td><td>' + ev.transitAltTopo.toFixed(2) + '<span class="u">°</span></td>'
+      + '<td>' + (ev.set.length ? ev.set.map(fmtClockT).join(' / ') : '—') + '</td>'
+      + '<td style="text-align:left">' + ev.status + '</td></tr>';
+  });
+  $('tbEvt').innerHTML = h + '</tbody>';
+}
+function renderWeek(jd, lat, lon, tz) {
+  const key = $('inWeek').value, p = localParts(jd, tz);
+  const jdCenter = jdFromYMD(p.y, p.m, p.d, 0);
+  $('weekTitle').firstChild.nodeValue = '七日历表 · ' + NAME(key);
+  let h = '<thead><tr><th>日期</th><th>赤经 0h UT</th><th>赤纬</th><th>地心距</th><th>距角</th><th>相位</th><th>升</th><th>中天</th><th>降</th></tr></thead><tbody>';
+  for (let d = -3; d <= 3; d++) {
+    const jdDay = jdCenter + d, jd0 = jdDay - tz/24;
+    const c = calFromJD(jdDay), r = bodyRow(jdDay, key, lat, lon), ev = dayEvents(key, lat, lon, jd0);
+    h += '<tr' + (d === 0 ? ' class="hl"' : '') + '><td class="name">' + c.y + '-' + pad(c.m) + '-' + pad(c.d) + '</td>'
+      + '<td>' + fmtRA(r.ra) + '</td><td>' + fmtDec(r.dec) + '</td><td>' + fmtDist(r.dist, key) + '</td>'
+      + '<td>' + (key === 'sun' ? '—' : fmtDeg(r.psi, 1)) + '</td>'
+      + '<td>' + (key === 'sun' ? '—' : (r.k*100).toFixed(0) + '<span class="u">%</span>') + '</td>'
+      + '<td>' + (ev.rise.length ? ev.rise.map(fmtClockT).join('/') : '—') + '</td>'
+      + '<td>' + fmtClockT(ev.transit) + '</td>'
+      + '<td>' + (ev.set.length ? ev.set.map(fmtClockT).join('/') : '—') + '</td></tr>';
+  }
+  $('tbWeek').innerHTML = h + '</tbody>';
+}
+
+/* ---------------- 图版 I：黄道俯视星盘 ---------------- */
+function setupCanvas(cv) {
+  const rect = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(rect.width*dpr); cv.height = Math.round(rect.height*dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  return { ctx, W: rect.width, H: rect.height };
+}
+function drawOrrery(jd) {
+  const { ctx, W, H } = setupCanvas(cvOrrery);
+  ctx.fillStyle = '#f7f2e6'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#23201a'; ctx.lineWidth = 1; ctx.strokeRect(7.5, 7.5, W - 15, H - 15);
+  const cx = W/2, cy = H/2, R = Math.min(W, H)/2 - 24;
+  const rm = rho => R*Math.log(1 + rho/0.28)/Math.log(1 + 31/0.28);
+  ctx.font = '9px "SF Mono",Consolas,monospace'; ctx.fillStyle = '#9b9280';
+  [0.39, 0.72, 1, 1.52, 5.2, 9.55, 19.19, 30.07].forEach(rho => {
+    ctx.beginPath(); ctx.setLineDash([1, 4]); ctx.strokeStyle = '#d3c9b3';
+    ctx.arc(cx, cy, rm(rho), 0, 2*Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillText(rho < 10 ? rho.toFixed(2) : rho.toFixed(1) + ' AU', cx + rm(rho)*0.707 + 3, cy - rm(rho)*0.707 - 3);
+  });
+  ORR_KEYS.forEach(k => {
+    const el = elemsAt(k, jd);
+    ctx.beginPath(); ctx.strokeStyle = 'rgba(35,32,26,.5)'; ctx.lineWidth = 0.8;
+    for (let i = 0; i <= 140; i++) {
+      const E = i/140*2*Math.PI;
+      const v = rotPQW(el.a*(Math.cos(E) - el.e), el.a*Math.sqrt(1 - el.e*el.e)*Math.sin(E), el.w, el.om, el.i);
+      const rho = Math.hypot(v.x, v.y) || 1e-9, px = cx + rm(rho)*v.x/rho, py = cy - rm(rho)*v.y/rho;
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.closePath(); ctx.stroke();
+  });
+  const earthV = planetJ2000(jd, 'earth');
+  const draw = (v, nm, big, isEarth) => {
+    const rho = Math.hypot(v.x, v.y) || 1e-9, px = cx + rm(rho)*v.x/rho, py = cy - rm(rho)*v.y/rho;
+    ctx.beginPath(); ctx.fillStyle = isEarth ? '#b3372c' : '#23201a';
+    ctx.arc(px, py, big ? 3.6 : 2.6, 0, 2*Math.PI); ctx.fill();
+    if (isEarth) { ctx.beginPath(); ctx.strokeStyle = '#b3372c'; ctx.lineWidth = 1; ctx.arc(px, py, 7, 0, 2*Math.PI); ctx.stroke(); }
+    ctx.fillStyle = isEarth ? '#b3372c' : '#23201a';
+    ctx.font = '11px "Songti SC","SimSun",serif';
+    ctx.fillText(nm, px + 8, py - 6);
+    return { px, py };
+  };
+  ctx.beginPath(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#b3372c'; ctx.lineWidth = 1;
+  const er = Math.hypot(earthV.x, earthV.y) || 1e-9;
+  const ex = cx + rm(er)*earthV.x/er, ey = cy - rm(er)*earthV.y/er;
+  ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
+  ORR_KEYS.forEach(k => {
+    const v = k === 'earth' ? earthV : planetJ2000(jd, k);
+    draw(v, PLANET[k].nm, 'jupiter,saturn,uranus,neptune'.includes(k), k === 'earth');
+  });
+  ctx.fillStyle = '#b3372c';
+  ctx.beginPath(); ctx.arc(cx, cy, 5, 0, 2*Math.PI); ctx.fill();
+  for (let i = 0; i < 8; i++) {
+    const a = i*Math.PI/4;
+    ctx.beginPath(); ctx.moveTo(cx + 8*Math.cos(a), cy + 8*Math.sin(a));
+    ctx.lineTo(cx + 12*Math.cos(a), cy + 12*Math.sin(a)); ctx.stroke();
+  }
+  ctx.strokeStyle = '#b3372c'; ctx.setLineDash([4, 3]); ctx.beginPath();
+  ctx.moveTo(cx, cy); ctx.lineTo(cx + R + 14, cy); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#b3372c'; ctx.font = '10px "Songti SC","SimSun",serif';
+  ctx.fillText('黄经 0° 春分点 →', cx + R - 74, cy - 6);
+  ctx.fillStyle = '#6d6455'; ctx.font = 'italic 10.5px "Songti SC","SimSun",serif';
+  ctx.fillText('北极 ↑ · 行星日心平黄经', 15, H - 14);
+  ctx.font = '9.5px "SF Mono",Consolas,monospace';
+  ctx.textAlign = 'right'; ctx.fillText('JD ' + jd.toFixed(3), W - 15, 22); ctx.textAlign = 'left';
+  $('capOrrery').textContent = '历元 JD ' + jd.toFixed(4);
+}
+
+/* ---------------- 图版 II：轨道平面 ---------------- */
+function drawOrbitShape(o) {
+  const { ctx, W, H } = setupCanvas(cvOrbit);
+  ctx.fillStyle = '#f7f2e6'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#23201a'; ctx.lineWidth = 1; ctx.strokeRect(7.5, 7.5, W - 15, H - 15);
+  if (!o) { ctx.fillStyle = '#9b9280'; ctx.font = '13px "Songti SC","SimSun",serif'; ctx.fillText('要素无效（需 0 ≤ e < 1，a > 0）', 28, 36); return; }
+  const A = o.a, e = o.e, b = A*Math.sqrt(1 - e*e), q = A*(1 - e), Q = A*(1 + e);
+  const sc = Math.min((W - 90)/(2*A), (H - 70)/(2*b));
+  const cx = W/2, cy = H/2;
+  const P = (x, y) => [cx + (x + A*e)*sc, cy - y*sc];
+  ctx.strokeStyle = '#c6bba3'; ctx.lineWidth = 0.8; ctx.setLineDash([2, 4]);
+  let p = P(-Q, 0); ctx.beginPath(); ctx.moveTo(p[0], p[1]);
+  p = P(q, 0); ctx.lineTo(p[0], p[1]); ctx.stroke();
+  p = P(-A*e, -b); ctx.beginPath(); ctx.moveTo(p[0], p[1]);
+  p = P(-A*e, b); ctx.lineTo(p[0], p[1]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.strokeStyle = '#23201a'; ctx.lineWidth = 1.2;
+  for (let i = 0; i <= 160; i++) {
+    const E = i/160*2*Math.PI, [px, py] = P(A*(Math.cos(E) - e), b*Math.sin(E));
+    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+  }
+  ctx.closePath(); ctx.stroke();
+  const nu = o.nu, r = A*(1 - e*e)/(1 + e*cosd(nu));
+  const [bx, by] = P(r*cosd(nu), r*sind(nu));
+  const [fx, fy] = P(0, 0);
+  ctx.beginPath(); ctx.strokeStyle = '#b3372c'; ctx.lineWidth = 1.3;
+  ctx.moveTo(fx, fy); ctx.lineTo(bx, by); ctx.stroke();
+  const vm = 42, vlen = Math.hypot(-sind(nu), e + cosd(nu));
+  const vx = -sind(nu)/vlen, vy = (e + cosd(nu))/vlen;
+  ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + vx*vm, by - vy*vm); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx + vx*vm, by - vy*vm);
+  ctx.lineTo(bx + vx*vm - 5*Math.cos(Math.atan2(-vy, vx) - 0.5), by - vy*vm - 5*Math.sin(Math.atan2(-vy, vx) - 0.5));
+  ctx.lineTo(bx + vx*vm - 5*Math.cos(Math.atan2(-vy, vx) + 0.5), by - vy*vm - 5*Math.sin(Math.atan2(-vy, vx) + 0.5));
+  ctx.closePath(); ctx.fillStyle = '#b3372c'; ctx.fill();
+  ctx.strokeStyle = 'rgba(179,55,44,.6)'; ctx.lineWidth = 0.9;
+  ctx.beginPath(); ctx.arc(fx, fy, 26, 0, -nu*D2R, true); ctx.stroke();
+  ctx.beginPath(); ctx.arc(fx, fy, 5.5, 0, 2*Math.PI); ctx.fillStyle = '#b3372c'; ctx.fill();
+  ctx.beginPath(); ctx.arc(fx, fy, 9, 0, 2*Math.PI); ctx.strokeStyle = '#23201a'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); ctx.fillStyle = '#23201a'; ctx.arc(bx, by, 3.4, 0, 2*Math.PI); ctx.fill();
+  ctx.font = '10.5px "SF Mono",Consolas,monospace'; ctx.fillStyle = '#6d6455';
+  ctx.fillText('ν = ' + nu.toFixed(3) + '°', fx + 32, fy - 8);
+  ctx.fillText('r = ' + r.toLocaleString('en-US', { maximumFractionDigits: 1 }), bx + 8, by + 16);
+  ctx.fillStyle = '#23201a'; ctx.font = '11px "Songti SC","SimSun",serif';
+  const [qx, qy] = P(q, 0), [Qx, Qy] = P(-Q, 0);
+  ctx.fillText('近星点 q', qx + 4, qy + 16); ctx.fillText('远星点 Q', Qx - 52, Qy + 16);
+  ctx.fillStyle = '#9b9280'; ctx.font = 'italic 10.5px "Songti SC","SimSun",serif';
+  ctx.fillText('a = ' + A.toLocaleString('en-US', { maximumFractionDigits: 1 }) + ' km　e = ' + e.toFixed(5), 16, H - 14);
+  $('capOrbit').textContent = 'i = ' + o.i.toFixed(3) + '°  Ω = ' + o.om.toFixed(3) + '°  ω = ' + o.w.toFixed(3) + '°';
+}
+
+/* ---------------- 轨道力学 ---------------- */
+function keplerToRV(p) {
+  const { a, e, i, om, w, nu, mu } = p;
+  const rr = a*(1 - e*e)/(1 + e*cosd(nu)), pp = a*(1 - e*e), vp = Math.sqrt(mu/pp);
+  const R = rotPQW(rr*cosd(nu), rr*sind(nu), w, om, i);
+  const V = rotPQW(-vp*sind(nu), vp*(e + cosd(nu)), w, om, i);
+  return { R, V, r: rr, v: Math.hypot(V.x, V.y, V.z), p: pp };
+}
+function rvToKepler(s, mu) {
+  const r = Math.hypot(s.x, s.y, s.z), v = Math.hypot(s.vx, s.vy, s.vz);
+  const h = { x: s.y*s.vz - s.z*s.vy, y: s.z*s.vx - s.x*s.vz, z: s.x*s.vy - s.y*s.vx };
+  const hm = Math.hypot(h.x, h.y, h.z);
+  const n = { x: -h.y, y: h.x, z: 0 }, nm = Math.hypot(n.x, n.y);
+  const vr = s.x*s.vx + s.y*s.vy + s.z*s.vz;
+  const ev = { x: ((v*v - mu/r)*s.x - vr*s.vx)/mu, y: ((v*v - mu/r)*s.y - vr*s.vy)/mu, z: ((v*v - mu/r)*s.z - vr*s.vz)/mu };
+  const e = Math.hypot(ev.x, ev.y, ev.z);
+  const a = -mu/(2*(v*v/2 - mu/r));
+  const inc = acosd(h.z/hm);
+  const crossN = { x: n.y*ev.z - n.z*ev.y, y: n.z*ev.x - n.x*ev.z, z: n.x*ev.y - n.y*ev.x };
+  const crossR = { x: ev.y*s.z - ev.z*s.y, y: ev.z*s.x - ev.x*s.z, z: ev.x*s.y - ev.y*s.x };
+  const dotHN = (crossN.x*h.x + crossN.y*h.y + crossN.z*h.z)/(nm*e*hm || 1);
+  const dotHR = (crossR.x*h.x + crossR.y*h.y + crossR.z*h.z)/(e*r*hm || 1);
+  const Om = nm > 1e-12 ? norm360(atan2d(n.y, n.x)) : 0;
+  const w = (nm > 1e-12 && e > 1e-12) ? norm360(atan2d(dotHN, (n.x*ev.x + n.y*ev.y + n.z*ev.z)/(nm*e))) : 0;
+  const nu = e > 1e-12 ? norm360(atan2d(dotHR, (ev.x*s.x + ev.y*s.y + ev.z*s.z)/(e*r))) : norm360(atan2d(s.y, s.x) - Om);
+  return { a, e, inc, Om, w, nu, r, v, hm };
+}
+
+/* ---------------- 界面：轨道要素页 ---------------- */
+function readNum(id) { return parseFloat($(id).value) || 0; }
+function renderOrb() {
+  const mu = readNum('inMu'), a = readNum('inA'), e = readNum('inE'), i = readNum('inI');
+  const om = readNum('inOm'), w = readNum('inW'), dt = readNum('inDt');
+  const out = $('outOrb'), note = $('orbNote');
+  if (!(a > 0) || e < 0 || e >= 1) {
+    out.innerHTML = '<tr><td class="name">—</td><td>请令 a &gt; 0 且 0 ≤ e &lt; 1</td></tr>';
+    note.textContent = '正算界面限椭圆轨道；任意圆锥曲线请用下方逆变换。';
+    drawOrbitShape(null); return;
+  }
+  const T = 2*Math.PI*Math.sqrt(a*a*a/mu), n = 360/T;
+  let M0, nu;
+  if ($('inAngType').value === 'nu') {
+    nu = readNum('inAng');
+    const nuR = nu*D2R, E = 2*Math.atan2(Math.sqrt(1 - e)*Math.sin(nuR/2), Math.sqrt(1 + e)*Math.cos(nuR/2));
+    M0 = (E*R2D - e*sind(E*R2D));
+    nu = norm360(nu + n*dt);
+  } else {
+    M0 = readNum('inAng');
+    const E = keplerE((M0 + n*dt)*D2R, e)*R2D;
+    nu = norm360(2*atan2d(Math.sqrt(1 + e)*sind(E/2), Math.sqrt(1 - e)*cosd(E/2)));
+  }
+  const M = norm360(M0 + n*dt);
+  const E2 = keplerE(M*D2R, e)*R2D;
+  const sol = keplerToRV({ a, e, i, om, w, nu, mu });
+  const q = a*(1 - e), Q = a*(1 + e), r = sol.r, v = sol.v;
+  const vsq = mu*(2/r - 1/a);
+  const rows = [
+    ['半长轴 a', a.toLocaleString('en-US', { maximumFractionDigits: 3 }) + ' km（' + (a/AU_KM).toFixed(6) + ' AU）'],
+    ['偏心率 e', e.toFixed(6)],
+    ['倾角 i', fmtDeg(i, 4)],
+    ['升交点 Ω', fmtDeg(om, 4)],
+    ['近星点幅角 ω', fmtDeg(w, 4)],
+    ['平近点角 M', fmtDeg(norm360(M), 4)],
+    ['偏近点角 E', fmtDeg(norm360(E2), 4)],
+    ['真近点角 ν', fmtDeg(norm360(nu), 4)],
+    ['近星点距 q', q.toLocaleString('en-US', { maximumFractionDigits: 3 }) + ' km'],
+    ['远星点距 Q', Q.toLocaleString('en-US', { maximumFractionDigits: 3 }) + ' km'],
+    ['轨道周期 T', fmtDur(T) + '（' + T.toFixed(3) + ' s）'],
+    ['平均运动 n', n.toFixed(6) + ' °/d'],
+    ['向径 r', r.toLocaleString('en-US', { maximumFractionDigits: 3 }) + ' km'],
+    ['速度 |v|', v.toFixed(5) + ' km/s（活力公式 ' + Math.sqrt(vsq).toFixed(5) + '）'],
+    ['比角动量 h', (sol.p*Math.sqrt(mu/sol.p)).toLocaleString('en-US', { maximumFractionDigits: 1 }) + ' km²/s'],
+    ['比能量 ε', (-mu/(2*a)).toFixed(3) + ' km²/s²'],
+    ['r⃗ (IJK)', '(' + sol.R.x.toFixed(2) + ', ' + sol.R.y.toFixed(2) + ', ' + sol.R.z.toFixed(2) + ') km'],
+    ['v⃗ (IJK)', '(' + sol.V.x.toFixed(5) + ', ' + sol.V.y.toFixed(5) + ', ' + sol.V.z.toFixed(5) + ') km/s']
+  ];
+  out.innerHTML = rows.map(r2 => '<tr><td class="name">' + r2[0] + '</td><td>' + r2[1] + '</td></tr>').join('');
+  note.textContent = 'Δt = ' + dt.toFixed(4) + ' 天；' + (dt ? 'M、ν 为预报时刻（历元 + Δt）之值。' : '当前为要素历元时刻。');
+  drawOrbitShape({ a, e, i, om, w, nu });
+}
+function renderRv() {
+  const mu = readNum('rvMu');
+  const s = { x: readNum('rvX'), y: readNum('rvY'), z: readNum('rvZ'), vx: readNum('rvVx'), vy: readNum('rvVy'), vz: readNum('rvVz') };
+  const o = rvToKepler(s, mu);
+  const type = o.e < 1e-6 ? '圆轨道' : (o.e < 1 ? '椭圆轨道' : (Math.abs(o.e - 1) < 1e-6 ? '抛物线轨道' : '双曲线轨道'));
+  const T = o.a > 0 ? fmtDur(2*Math.PI*Math.sqrt(o.a*o.a*o.a/mu)) : '—（非闭合轨道）';
+  $('outRv').innerHTML =
+    kv('轨道类型', type) + kv('半长轴 a', o.a.toLocaleString('en-US', { maximumFractionDigits: 3 }) + ' km') +
+    kv('偏心率 e', o.e.toFixed(7)) + kv('倾角 i', fmtDeg(o.inc, 4)) +
+    kv('升交点 Ω', fmtDeg(o.Om, 4)) + kv('近星点幅角 ω', fmtDeg(o.w, 4)) +
+    kv('真近点角 ν', fmtDeg(o.nu, 4)) + kv('向径 r', o.r.toLocaleString('en-US', { maximumFractionDigits: 3 }) + ' km') +
+    kv('速度 |v|', o.v.toFixed(5) + ' km/s') + kv('轨道周期 T', T) +
+    kv('比角动量 |h|', o.hm.toLocaleString('en-US', { maximumFractionDigits: 1 }) + ' km²/s');
+}
+const kv = (k, v) => '<div><span>' + k + '</span><span>' + v + '</span></div>';
+
+function renderVV() {
+  const mu = readNum('vvMu'), r = readNum('vvR'), a = readNum('vvA');
+  const vc = Math.sqrt(mu/r), ve = Math.sqrt(2*mu/r);
+  const vv = a > 0 ? Math.sqrt(Math.abs(mu*(2/r - 1/a))) : NaN;
+  $('outVV').innerHTML =
+    kv('圆轨道速度 √(μ/r)', vc.toFixed(5) + ' km/s') +
+    kv('逃逸速度 √(2μ/r)', ve.toFixed(5) + ' km/s') +
+    kv('活力公式 v(a,r)', isFinite(vv) ? vv.toFixed(5) + ' km/s' : '—') +
+    kv('对应周期 T(a)', a > 0 && a > 0 && mu*(2/r - 1/a) > 0 ? fmtDur(2*Math.PI*Math.sqrt(a*a*a/mu)) : '—') +
+    kv('此处轨道能量 ε', (-mu/(2*a)).toFixed(3) + ' km²/s²');
+}
+function renderHo() {
+  const mu = readNum('hoMu'), r1 = readNum('hoR1'), r2 = readNum('hoR2');
+  if (!(r1 > 0) || !(r2 > 0)) return;
+  const at = (r1 + r2)/2, va = Math.sqrt(mu/r1), vb = Math.sqrt(mu/r2);
+  const v1 = Math.sqrt(mu*(2/r1 - 1/at)), v2 = Math.sqrt(mu*(2/r2 - 1/at));
+  const dv1 = Math.abs(v1 - va), dv2 = Math.abs(vb - v2), tof = Math.PI*Math.sqrt(at*at*at/mu);
+  $('outHo').innerHTML =
+    kv('初始圆速度 vₐ', va.toFixed(5) + ' km/s') + kv('目标圆速度 v_b', vb.toFixed(5) + ' km/s') +
+    kv('转移椭圆半长轴 aₜ', at.toLocaleString('en-US', { maximumFractionDigits: 1 }) + ' km') +
+    kv('第一次点火 Δv₁', dv1.toFixed(5) + ' km/s') + kv('第二次点火 Δv₂', dv2.toFixed(5) + ' km/s') +
+    kv('合计 Δv', (dv1 + dv2).toFixed(5) + ' km/s') + kv('转移时间 t', fmtDur(tof));
+}
+function renderTm() {
+  const tz = readNum('tmTZ'), lon = readNum('tmLon');
+  const jd = readDT('tmDT', 'tmTZ'), p = localParts(jd, tz);
+  const jdJan = jdFromYMD(p.y, 1, 1, 0), doy = Math.floor(jd - jdJan + 1);
+  const gst = gmstDeg(jd), lst = norm360(gst + lon);
+  $('outTm').innerHTML =
+    kv('儒略日 JD', jd.toFixed(6)) + kv('儒略世纪 T', ((jd - 2451545)/36525).toFixed(8)) +
+    kv('世界时 UT', fmtTimeP(localParts(jd, 0)) + '  ' + fmtDateP(localParts(jd, 0))) +
+    kv('格林尼治恒星时', (gst/15).toFixed(5) + ' h（' + gst.toFixed(4) + '°）') +
+    kv('地方恒星时', (lst/15).toFixed(5) + ' h（' + lst.toFixed(4) + '°）') +
+    kv('年积日', doy + ' / ' + (isLeap(p.y) ? 366 : 365)) +
+    kv('儒略年 J', (2000 + (jd - 2451545)/365.25).toFixed(5));
+  const jd2 = parseFloat($('jdIn').value) || 0, tz2 = readNum('jdTZ');
+  const q = localParts(jd2, tz2), u = localParts(jd2, 0);
+  $('outJd').innerHTML =
+    kv('当地日期', fmtDateP(q) + '  ' + fmtTimeP(q)) +
+    kv('世界时 UT', fmtDateP(u) + '  ' + fmtTimeP(u)) +
+    kv('格里历', q.y + ' 年 ' + q.m + ' 月 ' + q.d + ' 日') +
+    kv('星期', '日一二三四五六'[new Date(Date.UTC(q.y, q.m - 1, q.d)).getUTCDay()]) +
+    kv('儒略世纪 T', ((jd2 - 2451545)/36525).toFixed(8));
+}
+const isLeap = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+
+/* ---------------- 渲染调度 ---------------- */
+let playing = 0, playTick = 0;
+function render(light) {
+  const jd = readDT('inDT', 'inTZ'), tz = tzVal(), { lat, lon } = siteVal();
+  renderMast(jd, tz);
+  drawOrrery(jd);
+  renderPos(jd, lat, lon, tz);
+  if (!light) { renderEvt(jd, lat, lon, tz); renderWeek(jd, lat, lon, tz); }
+}
+function renderAll() { render(false); renderOrb(); renderRv(); renderVV(); renderHo(); renderTm(); }
+
+function init() {
+  $('inWeek').innerHTML = BODIES.map(b => '<option value="' + b.k + '">' + b.n + '</option>').join('');
+  $('inWeek').value = 'moon';
+  const d = new Date(), tz = -d.getTimezoneOffset()/60;
+  $('inTZ').value = tz; $('tmTZ').value = tz; $('jdTZ').value = tz;
+  writeDT('inDT', jdFromDateObj(d), tz); writeDT('tmDT', jdFromDateObj(d), tz);
+  $('jdIn').value = jdFromDateObj(d).toFixed(5);
+
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    const pg = $('page-' + t.dataset.tab); pg.classList.add('on');
+    if (t.dataset.tab === 'eph') render(true);
+  }));
+  ['inDT','inTZ','inLat','inLon','inWeek'].forEach(id => $(id).addEventListener('input', () => render(false)));
+  $('siteSel').addEventListener('change', e => {
+    const [la, lo, tz] = e.target.value.split(',');
+    $('inLat').value = la; $('inLon').value = lo; $('inTZ').value = tz; render(false);
+  });
+  $('btnNow').addEventListener('click', () => {
+    const dt = new Date(), tz = -dt.getTimezoneOffset()/60;
+    $('inTZ').value = tz; writeDT('inDT', jdFromDateObj(dt), tz); render(false);
+  });
+  $('btnPrev').addEventListener('click', () => { writeDT('inDT', readDT('inDT','inTZ') - 1, tzVal()); render(false); });
+  $('btnNext').addEventListener('click', () => { writeDT('inDT', readDT('inDT','inTZ') + 1, tzVal()); render(false); });
+  $('btnPlay').addEventListener('click', () => {
+    playing = !playing;
+    $('btnPlay').textContent = playing ? '⏸ 暂停' : '▸ 时间流动';
+    $('btnPlay').classList.toggle('on', playing);
+  });
+  setInterval(() => {
+    if (!playing) return;
+    writeDT('inDT', readDT('inDT','inTZ') + 2, tzVal());
+    render((playTick++ % 8) !== 0);
+  }, 70);
+
+  ['inMu','inA','inE','inI','inOm','inW','inAng','inDt','inAngType'].forEach(id => $(id).addEventListener('input', renderOrb));
+  $('muSel').addEventListener('change', e => { if (e.target.value !== 'custom') $('inMu').value = e.target.value; renderOrb(); renderRv(); renderVV(); renderHo(); });
+  document.querySelectorAll('[data-orb]').forEach(b => b.addEventListener('click', () => {
+    const p = {
+      leo:      { mu: 398600.4418, a: 6778, e: 0.0005, i: 51.6, om: 0, w: 0 },
+      geo:      { mu: 398600.4418, a: 42164, e: 0.0001, i: 0.05, om: 0, w: 0 },
+      molniya:  { mu: 398600.4418, a: 26600, e: 0.74, i: 63.4, om: 0, w: 270 },
+      au1:      { mu: 132712440018, a: 149597870.7, e: 0.0167, i: 0, om: 0, w: 102.9 }
+    }[b.dataset.orb];
+    $('muSel').value = String(p.mu); $('inMu').value = p.mu; $('inA').value = p.a;
+    $('inE').value = p.e; $('inI').value = p.i; $('inOm').value = p.om; $('inW').value = p.w;
+    $('inAng').value = 0; $('inDt').value = 0; renderOrb();
+  }));
+  ['rvX','rvY','rvZ','rvVx','rvVy','rvVz','rvMu'].forEach(id => $(id).addEventListener('input', renderRv));
+  ['vvMu','vvR','vvA'].forEach(id => $(id).addEventListener('input', renderVV));
+  ['hoMu','hoR1','hoR2'].forEach(id => $(id).addEventListener('input', renderHo));
+  ['tmDT','tmTZ','tmLon','jdIn','jdTZ'].forEach(id => $(id).addEventListener('input', renderTm));
+
+  window.addEventListener('resize', () => {
+    clearTimeout(window.__rz);
+    window.__rz = setTimeout(() => { drawOrrery(readDT('inDT','inTZ')); renderOrb(); }, 160);
+  });
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>
