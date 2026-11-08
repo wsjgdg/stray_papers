@@ -1584,9 +1584,9 @@
   // CG-exclusive BGM: showing a CG switches the ambient to its own track;
   // hiding reverts to the current scene's bgm. Keys are audio asset stems.
   var CG_BGM = {
-    cg_memory: "memory_white",
-    cg_archive: "server_room",
-    cg_dawn: "dawn_ending",
+    cg_memory: "bgm_cg_memory",
+    cg_archive: "bgm_cg_archive",
+    cg_dawn: "bgm_cg_dawn",
   };
 
   // line.cg semantics (VN convention: a CG plays over a stretch of dialogue):

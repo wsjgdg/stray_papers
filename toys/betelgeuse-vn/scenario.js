@@ -120,7 +120,7 @@ window.SCENARIO = {
     },
 
     email_first: {
-      bgm: "memory_white",
+      bgm: "bgm_email",
       bg: "email_screen",
       chapter: "第一章 · 三年前的邮件",
       lines: [
@@ -202,6 +202,7 @@ window.SCENARIO = {
     },
 
     call_lin: {
+      bgm: "bgm_call",
       bg: "streets_rain",
       lines: [
         {
@@ -250,6 +251,7 @@ window.SCENARIO = {
     },
 
     reply_email: {
+      bgm: "bgm_epiphany",
       bg: "email_screen",
       lines: [
         { narr: "我把问题敲进回复框：你到底是谁。" },
@@ -271,6 +273,7 @@ window.SCENARIO = {
     },
 
     obsv_night: {
+      bgm: "bgm_discovery",
       bg: "observatory_night",
       lines: [
         { narr: "圆顶的铁门虚掩着，锈味里混着旧纸和冷茶的气味。" },
@@ -466,6 +469,7 @@ window.SCENARIO = {
     },
 
     liar_reveal: {
+      bgm: "bgm_reveal",
       bg: "server_room",
       lines: [
         {
@@ -517,6 +521,7 @@ window.SCENARIO = {
     },
 
     converge_talk: {
+      bgm: "bgm_choice",
       bg: "observatory_night",
       chapter: "第三章 · 黎明前的选择",
       lines: [
@@ -570,6 +575,7 @@ window.SCENARIO = {
     },
 
     diverge: {
+      bgm: "bgm_choice",
       bg: "observatory_night",
       lines: [
         { narr: "五点四十分。终端上，唤醒窗口的倒计时开始跳动。" },
@@ -594,6 +600,7 @@ window.SCENARIO = {
     },
 
     wake_path: {
+      bgm: "bgm_wake",
       bg: "memory_white",
       enter: ["chose_wake"],
       lines: [
@@ -620,6 +627,7 @@ window.SCENARIO = {
     },
 
     cut_path: {
+      bgm: "bgm_epiphany",
       bg: "server_room",
       enter: ["chose_cut"],
       lines: [
@@ -647,7 +655,7 @@ window.SCENARIO = {
     },
 
     finale_gate: {
-      bgm: "server_room",
+      bgm: "bgm_gate",
       bg: "server_room",
       branch: [{ when: "chose_wake", goto: "wake_check" }],
       lines: [
@@ -659,6 +667,7 @@ window.SCENARIO = {
     },
 
     wake_check: {
+      bgm: "bgm_wake",
       bg: "observatory_night",
       branch: [{ when: "noticed_star", goto: "ending_true" }],
       lines: [
@@ -762,6 +771,7 @@ window.SCENARIO = {
     },
 
     ending_bad: {
+      bgm: "bgm_ash",
       bg: "streets_rain",
       lines: [
         { narr: "雨重新落下来的时候，我和林晚走在下山的路上。" },
@@ -784,6 +794,7 @@ window.SCENARIO = {
     },
 
     extras_1: {
+      bgm: "bgm_afterglow",
       bg: "finale_star",
       lines: [
         { narr: "一年后。同一座天文台。" },
@@ -817,6 +828,7 @@ window.SCENARIO = {
     },
 
     extras_2: {
+      bgm: "bgm_afterglow",
       bg: "finale_star",
       lines: [
         {
