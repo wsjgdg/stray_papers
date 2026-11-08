@@ -1,0 +1,1945 @@
+/* ============================================================
+   内容真源正文层（prototype-source.css）
+   把 docs/content 的文字真源直接排成页面正文，不再挂在页尾折叠。
+   叠在 prototype.css / prototype-<章节>.css 之后、只加不改。
+   ============================================================ */
+
+.src-main {
+  /* 大屏撑满：和 ⑤ 关的 .case-opening 用同一个上限（1580），窄屏仍是满宽。
+     以前钉在 1180，1920 的屏上两边各空 370px，页首怎么调都撑不开。 */
+  max-width: min(100%, 1580px);
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 44px) clamp(56px, 8vw, 104px);
+}
+
+/* ---------------- 页首：标题 + 导语（跟随页面本来的明暗） ---------------- */
+
+.src-hero {
+  margin: clamp(16px, 2.4vw, 28px) 0 0;
+  padding: clamp(28px, 4.4vw, 64px) clamp(20px, 3.2vw, 52px);
+  background: #0f1a19;
+  color: #f3eee2;
+  border-radius: 3px;
+}
+.src-kicker {
+  margin: 0 0 18px;
+  font: 600 11px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  opacity: .72;
+}
+.src-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(34px, 5.4vw, 68px);
+  line-height: 1.12;
+  letter-spacing: -.015em;
+  font-weight: 500;
+}
+.src-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  margin: 18px 0 0;
+  font-size: 12.5px;
+  line-height: 1.8;
+  opacity: .6;
+}
+.src-meta b { font-weight: 600; margin-right: 6px; opacity: .8; }
+.src-lead {
+  margin: 0;
+  max-width: 62ch;
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.85;
+  opacity: .86;
+}
+
+/* ---------------- 正文：一张纸，压在页面背景上 ---------------- */
+
+.src-article {
+  margin: clamp(28px, 4vw, 48px) 0 clamp(40px, 6vw, 72px);
+  padding: clamp(24px, 3.4vw, 56px) clamp(20px, 3.4vw, 60px);
+  background: #f7f4ea;
+  color: #1b2625;
+  border-radius: 3px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .28);
+  font-size: 16.5px;
+  line-height: 1.9;
+}
+.src-article a {
+  overflow-wrap: anywhere;
+  color: #8c4a1f;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.src-article a:hover { color: #b95435; }
+.src-article :focus-visible { outline: 2px solid #b95435; outline-offset: 3px; }
+.src-article p,
+.src-article li,
+.src-article td,
+.src-article th { margin: 0 0 14px; overflow-wrap: anywhere; word-break: break-word; }
+.src-article p { max-width: 74ch; }
+.src-article li { margin-bottom: 7px; }
+.src-article strong { font-weight: 700; }
+
+.src-section {
+  padding: clamp(20px, 2.6vw, 34px) 0;
+  border-top: 1px solid rgba(27, 38, 37, .14);
+}
+.src-section:first-child { border-top: 0; padding-top: 6px; }
+
+.src-h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0 0 18px;
+  font-size: clamp(20px, 2.2vw, 27px);
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -.005em;
+}
+.src-no {
+  flex: none;
+  font: 500 12px/1 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .12em;
+  color: #b95435;
+}
+.src-body > h3,
+.src-body > h4,
+.src-body > h5 {
+  margin: 22px 0 10px;
+  font-size: 17.5px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #14312c;
+}
+.src-body > h3:first-child,
+.src-body > h4:first-child { margin-top: 0; }
+
+.src-body ul,
+.src-body ol { margin: 0 0 14px; padding-left: 1.35em; }
+.src-body li { margin: 0 0 7px; }
+.src-body li > ul,
+.src-body li > ol { margin-top: 7px; }
+
+/* 引用：文档里的原文句子、提示词、演示文案 */
+.src-article blockquote {
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  background: #efeade;
+  border-left: 3px solid #b95435;
+  border-radius: 2px;
+  color: #22302e;
+  font-size: 16px;
+  line-height: 1.85;
+}
+.src-article blockquote p:last-child { margin-bottom: 0; }
+.src-article blockquote ul,
+.src-article blockquote ol { margin-bottom: 0; }
+
+.src-article code {
+  padding: .1em .38em;
+  background: rgba(27, 38, 37, .08);
+  border-radius: 2px;
+  font: 500 .9em/1.5 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  overflow-wrap: anywhere;
+}
+.src-article pre {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: #16211f;
+  color: #e8e4d6;
+  border-radius: 3px;
+  font: 400 13px/1.7 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+}
+.src-article pre code { background: none; padding: 0; color: inherit; }
+
+.src-article .src-tablewrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 0 0 16px;
+}
+.src-article .src-tablewrap table { margin: 0; min-width: 420px; }
+.src-article table {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 16px;
+  border-collapse: collapse;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.src-article th,
+.src-article td {
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(27, 38, 37, .16);
+  text-align: left;
+  vertical-align: top;
+}
+.src-article th { font-weight: 600; background: rgba(27, 38, 37, .05); }
+.src-article .dossier-table { margin: 0 0 16px; max-width: 100%; overflow-x: auto; }
+
+.src-colophon {
+  margin: clamp(16px, 2.4vw, 26px) 0 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(27, 38, 37, .14);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: #5c6a66;
+}
+
+/* ---------------- 交互台：正文之后的一块独立区域 ---------------- */
+
+/* 交互台嵌在正文里：讲它的那一节下面，直接就能动手 */
+.src-embed {
+  margin: clamp(16px, 2.4vw, 26px) 0 clamp(20px, 3vw, 32px);
+  padding: clamp(14px, 2vw, 24px);
+  border-radius: 3px;
+  background: #0f1a19;
+  color: #f3eee2;
+  overflow-x: auto;
+}
+.src-embed-head { margin-bottom: clamp(14px, 2vw, 22px); }
+.src-embed-kicker {
+  display: block;
+  margin-bottom: 10px;
+  font: 600 10.5px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+.src-embed-head p {
+  margin: 0;
+  max-width: 64ch;
+  font-size: 14.5px;
+  line-height: 1.85;
+  opacity: .78;
+}
+.src-play-body > * + * { margin-top: clamp(18px, 2.4vw, 30px); }
+
+/* 交互台内部原本依赖的版心不再受 main 影响，这里给它自己的宽度 */
+.src-play-body section,
+.src-play-body details { max-width: none; }
+.src-play-body .nojs-fallback { display: none; }
+
+@media (max-width: 640px) {
+  .src-article { font-size: 16px; line-height: 1.85; padding: 22px 18px; }
+  .src-h2 { gap: 10px; }
+  /* 交互台在窄屏上向两侧顶出去一点，把纸面的内边距还给内部横条 */
+  .src-embed { margin-left: -12px; margin-right: -12px; padding: 14px 8px; }
+  .src-embed-head { padding: 0 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .src-article,
+  .src-embed { scroll-behavior: auto; }
+}
+
+/* ============================================================
+   ① 卡片铸造台（.castfloor）：五张翻面卡各自长成一件真东西
+   正面＝真源原文的实物排版，背面＝时间对比/可照抄的提示词/出处
+   动效全在 prototype-cards.js（GSAP：进场、翻面、压印、打字机）
+   ============================================================ */
+
+.castfloor {
+  position: relative;
+  margin: clamp(24px, 3.4vw, 44px) 0 0;
+  padding: clamp(26px, 3.6vw, 52px) clamp(16px, 3.4vw, 46px) clamp(22px, 3vw, 40px);
+  background: #0f1a19;
+  color: #f3eee2;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.castfloor::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .5;
+  background:
+    radial-gradient(ellipse 60% 48% at 82% 6%, rgba(185, 84, 53, .2), transparent 70%),
+    radial-gradient(ellipse 46% 40% at 6% 92%, rgba(169, 248, 229, .1), transparent 70%);
+}
+
+.castfloor-head {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  max-width: 74ch;
+  margin-bottom: clamp(20px, 3vw, 34px);
+}
+.castfloor-kicker {
+  font: 600 10.5px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: #a9f8e5;
+  opacity: .8;
+}
+.castfloor-ask {
+  margin: 0;
+  max-width: 26ch;
+  font-size: clamp(24px, 3.2vw, 40px);
+  line-height: 1.28;
+  letter-spacing: -.015em;
+  font-weight: 600;
+}
+.castfloor-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.castfloor-chips li {
+  padding: 6px 11px;
+  border: 1px dashed rgba(255, 184, 41, .45);
+  background: rgba(255, 184, 41, .07);
+  color: #f7e6c4;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.castfloor-note {
+  margin: 0;
+  max-width: 62ch;
+  font-size: clamp(12.5px, 1.05vw, 14px);
+  line-height: 1.85;
+  color: #a9b8b1;
+}
+.castfloor-lead {
+  margin: 0;
+  max-width: 62ch;
+  font-size: clamp(13.5px, 1.15vw, 15.5px);
+  line-height: 1.9;
+  color: #cfd8d2;
+}
+
+.castfloor-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font: 600 11.5px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .1em;
+  color: #cfd8d2;
+}
+.castfloor-meter .meter-num b { font-size: 20px; color: #ffb829; font-variant-numeric: tabular-nums; }
+.castfloor-meter .meter-word { opacity: .62; }
+.meter-track {
+  flex: 1 1 120px;
+  max-width: 240px;
+  height: 3px;
+  background: rgba(243, 238, 226, .18);
+  overflow: hidden;
+}
+.meter-track i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #ffb829;
+}
+.castfloor-done {
+  position: relative;
+  margin: clamp(16px, 2.4vw, 24px) 0 0;
+  padding: 12px 16px;
+  border-left: 3px solid #a9f8e5;
+  background: rgba(169, 248, 229, .08);
+  font-size: 13.5px;
+  line-height: 1.8;
+}
+.castfloor-done[hidden] { display: none; }
+
+/* ---------- 台面：分组（✋ 会动手的 / 💬 会动嘴的） ---------- */
+
+.floor-group { margin: 0 0 clamp(18px, 2.6vw, 30px); }
+.floor-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin: 0 0 clamp(10px, 1.4vw, 14px);
+  padding: 0 0 9px;
+  border-bottom: 1px solid rgba(243, 238, 226, .16);
+}
+.floor-group-title {
+  margin: 0;
+  font-size: clamp(19px, 1.9vw, 25px);
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.floor-group-sub {
+  margin: 0;
+  font-size: 12.5px;
+  color: #9fb3ab;
+  letter-spacing: .02em;
+}
+
+/* ---------- 台面：卡片摆位 ---------- */
+
+.cardrail {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(14px, 1.8vw, 26px);
+  align-items: start;
+}
+.fcard--poster { grid-column: span 2; }
+.fcard--photo { grid-column: span 4; }
+.fcard--moments { grid-column: span 3; }
+.fcard--ledger { grid-column: span 3; }
+.fcard--chat { grid-column: span 4; }
+.honest-tile { grid-column: span 2; }
+
+/* ---------- 卡片骨架：3D 翻面 ---------- */
+
+.fcard {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  block-size: clamp(450px, 40vw, 560px);
+  perspective: 1800px;
+}
+.fcard--photo { block-size: clamp(450px, 40vw, 560px); }
+.fcard--chat { block-size: clamp(450px, 40vw, 540px); }
+
+.fcard-inner {
+  position: relative;
+  min-block-size: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.fcard-front,
+.fcard-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+.fcard-front {
+  background: #f7f4ea;
+  color: #1b2625;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, .34), 0 1px 0 rgba(255, 255, 255, .5) inset;
+}
+/* 翻面：有 GSAP 时由脚本逐帧驱动 rotationY（见 prototype-cards.js），CSS 别抢——
+   否则类一加上就把终态写死了，GSAP 读到 180° 再缓动到 180°，转面会变成硬切。
+   没有 GSAP / 减弱动效时（html 上没有 .gsap-motion），才用 CSS 直接翻。 */
+html:not(.gsap-motion) .fcard.is-flipped .fcard-inner { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.gsap-motion) .fcard-inner {
+    transition: transform .7s cubic-bezier(.18, .85, .22, 1);
+  }
+}
+.fcard-back {
+  transform: rotateY(180deg);
+}
+.fcard:hover .fcard-front { box-shadow: 0 26px 44px rgba(0, 0, 0, .42); }
+.fcard:focus-within .fcard-front { outline: 2px solid #ffb829; outline-offset: 2px; }
+
+.fcard-tag {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  left: 10px;
+  padding: 4px 9px;
+  background: #0f1a19;
+  color: #f3eee2;
+  border-radius: 2px;
+  font: 600 10px/1.5 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.fcard-flip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-block-size: 44px;
+  margin-top: 8px;
+  padding: 10px 13px;
+  border: 1px solid rgba(243, 238, 226, .3);
+  border-radius: 3px;
+  background: rgba(9, 16, 15, .55);
+  color: #f3eee2;
+  font: 600 12px/1.5 inherit;
+  letter-spacing: .04em;
+  text-align: left;
+  cursor: pointer;
+  transition: background .25s ease, border-color .25s ease, color .25s ease;
+}
+.fcard-flip:hover { background: #ffb829; border-color: #ffb829; color: #101a19; }
+.fcard-flip:focus-visible { outline: 2px solid #a9f8e5; outline-offset: 2px; }
+.fcard-flip-mark {
+  flex: none;
+  font: 600 10.5px/1 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .12em;
+  opacity: .75;
+}
+
+/* ---------- 诚实声明（与卡 5 并排） ---------- */
+
+.honest-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(14px, 1.6vw, 20px);
+  border: 1px solid rgba(169, 248, 229, .26);
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(0deg, rgba(243, 238, 226, .04) 0 1px, transparent 1px 5px),
+    rgba(9, 22, 20, .72);
+  color: #dfe8e2;
+}
+.honest-tag {
+  align-self: flex-start;
+  padding: 3px 9px;
+  border: 1px solid rgba(169, 248, 229, .5);
+  border-radius: 2px;
+  color: #a9f8e5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 9.5px;
+  letter-spacing: .16em;
+}
+.honest-body { display: flex; flex-direction: column; gap: 9px; margin-block: auto; }
+.honest-body p {
+  margin: 0;
+  font-size: clamp(12px, 1.05vw, 13.5px);
+  line-height: 1.9;
+  color: #cfd8d2;
+}
+.honest-body strong { color: #f7e6c4; font-weight: 600; }
+
+/* ---------- 小结卡：台面收尾 ---------- */
+
+.floor-summary {
+  margin: clamp(16px, 2.4vw, 26px) 0 0;
+  padding: clamp(18px, 2.4vw, 30px) clamp(18px, 2.6vw, 34px);
+  background: #f7f4ea;
+  color: #1b2625;
+  border-radius: 3px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .32);
+}
+.floor-summary-k {
+  margin: 0 0 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #8c4a1f;
+}
+.floor-summary-body p {
+  margin: 0;
+  max-width: 56ch;
+  font-size: clamp(16px, 1.7vw, 21px);
+  line-height: 1.8;
+  letter-spacing: -.005em;
+}
+.floor-summary-body strong { font-weight: 700; color: #0f2a25; }
+
+/* ============================================================
+   ②–⑥ 的台面物件（.tile）：与 ① 的翻面卡同一套台面语言
+   ============================================================ */
+
+.tile {
+  position: relative;
+  grid-column: span var(--span, 2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(14px, 1.7vw, 22px);
+  border-radius: 3px;
+  background: #f7f4ea;
+  color: #1b2625;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, .32);
+}
+.tile-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #8c4a1f;
+}
+.tile p { margin: 0; max-width: 62ch; }
+.tile strong { font-weight: 700; color: #0f2a25; }
+
+/* 时间线 */
+.tl { margin: 0; padding: 0 0 0 4px; list-style: none; display: grid; gap: 12px; }
+.tl-item {
+  position: relative;
+  padding-left: 18px;
+  border-left: 1px solid rgba(27, 38, 37, .22);
+  padding-bottom: 2px;
+}
+.tl-item::before {
+  content: "";
+  position: absolute;
+  left: -4.5px;
+  top: 6px;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: #b95435;
+}
+.tl-when {
+  display: block;
+  margin-bottom: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  color: #8c4a1f;
+}
+.tl-item p { font-size: clamp(12.5px, 1.08vw, 14px); line-height: 1.85; }
+
+/* 人口示意 */
+.pp-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.pp-figure {
+  inline-size: 26px;
+  block-size: 34px;
+  border-radius: 13px 13px 4px 4px;
+  background: rgba(27, 38, 37, .1);
+  position: relative;
+}
+.pp-figure::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  margin-bottom: -3px;
+  translate: -50% 0;
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: 50%;
+  background: rgba(27, 38, 37, .1);
+}
+.pp-figure[style*="--fill:1"] { background: #b95435; }
+.pp-figure[style*="--fill:1"]::before { background: #b95435; }
+.pp-figure[style*="--fill:0.6"] { background: linear-gradient(to top, #b95435 60%, rgba(27, 38, 37, .12) 60%); }
+.pp-figure[style*="--fill:0.6"]::before { background: #b95435; }
+.pp-label { font-size: clamp(15px, 1.5vw, 19px); line-height: 1.6; font-weight: 600; }
+.pp-source {
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: #7a6a52;
+}
+
+/* 数字卡 */
+.tile--stat { justify-content: center; gap: 4px; }
+.st-big {
+  font-size: clamp(34px, 4.2vw, 58px);
+  line-height: 1;
+  letter-spacing: -.02em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0f2a25;
+}
+.st-small {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #4a5a56;
+  white-space: pre-line;
+}
+
+/* 柱状图 */
+.ch-legend {
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  color: #8c4a1f;
+}
+.ch-plot { flex: 1 1 auto; display: flex; align-items: stretch; gap: clamp(20px, 4vw, 54px); block-size: clamp(150px, 15vw, 200px); padding-top: 8px; }
+.ch-col { flex: 1 1 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; min-block-size: 0; }
+.ch-track { flex: 1 1 auto; display: flex; align-items: flex-end; justify-content: center; inline-size: 100%; min-block-size: 0; border-block-end: 1px solid rgba(22,33,29,.22); }
+.ch-val { font: 600 12px/1.3 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace; color: #245b4d; }
+.ch-bar {
+  display: block;
+  inline-size: min(96px, 100%);
+  block-size: var(--h, 20%);
+  background: linear-gradient(180deg, #c9613c, #8c4a1f);
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+}
+.ch-col:nth-child(2) .ch-bar { background: linear-gradient(180deg, #2f7a63, #17493c); }
+.ch-lab { font-size: 11px; color: #4a5a56; }
+.ch-source { font-size: 10.5px; line-height: 1.7; color: #7a6a52; }
+
+/* “怎么读这个数” */
+.tile--note { background: #10302a; color: #f1ece1; }
+.tile--note .tile-tag { color: #a9f8e5; }
+.nt-body { display: flex; flex-direction: column; gap: 8px; }
+.nt-body p {
+  font-size: clamp(13.5px, 1.25vw, 16px);
+  line-height: 1.95;
+  padding-left: 12px;
+  border-left: 2px solid #ffb829;
+  color: #ede6d8;
+}
+.nt-body strong { color: #ffd489; }
+
+/* 行业卡 */
+.in-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.in-emoji { font-size: 20px; line-height: 1; }
+.in-name { margin: 0; font-size: clamp(16px, 1.5vw, 20px); font-weight: 600; }
+.in-no {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 10px;
+  letter-spacing: .14em;
+  color: #b95435;
+}
+.in-body { font-size: clamp(12.5px, 1.08vw, 14px); line-height: 1.9; }
+.in-fact {
+  padding: 8px 10px;
+  border-left: 2px solid #245b4d;
+  background: rgba(36, 91, 77, .06);
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: #3f5d55;
+}
+
+@media (max-width: 980px) {
+  .tile { grid-column: span var(--span, 2); }
+  .ch-plot { block-size: clamp(130px, 26vw, 170px); }
+}
+@media (max-width: 700px) {
+  .tile { grid-column: span 1; }
+  .st-big { font-size: 40px; }
+  .ch-plot { gap: 26px; }
+}
+
+.tile--lead {
+  background: rgba(255, 184, 41, .06);
+  box-shadow: none;
+  border-left: 2px solid #ffb829;
+  padding: 14px clamp(14px, 1.6vw, 20px);
+}
+.tile--lead .tile-tag { color: #ffb829; }
+.tile p.ld-text { font-size: clamp(13px, 1.2vw, 15.5px); line-height: 1.95; color: #f0ebdd; max-width: 78ch; }
+.tile--lead strong { color: #ffe0a0; }
+
+/* 台面：一件真东西（内嵌程序） */
+.tile--frame { background: #f7f4ea; }
+.fr-lead { font-size: clamp(12.5px, 1.12vw, 14px); line-height: 1.9; color: #2d3a37; }
+.fr-embed {
+  position: relative;
+  inline-size: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(27, 38, 37, .28);
+  background: #e9e5d8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+.fr-embed iframe { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; border: 0; }
+.fr-cap, .fr-alt, .fr-src { font-size: 11.5px; line-height: 1.8; color: #6d766f; }
+.fr-alt a, .fr-src a { color: #8c4a1f; text-decoration: underline; text-underline-offset: 2px; }
+
+/* 真实截图 */
+.tile--figure { padding: clamp(10px, 1.2vw, 14px); }
+.fg-img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: 3px;
+  border: 1px solid rgba(27, 38, 37, .18);
+}
+.fg-cap { font-size: 11.5px; line-height: 1.8; color: #3c4a45; }
+.fg-note { font-size: 10.5px; line-height: 1.7; color: #7b8580; }
+
+/* 三步上手 */
+.sp { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; counter-reset: sp; }
+.sp-item {
+  position: relative;
+  padding-left: 30px;
+  counter-increment: sp;
+}
+.sp-item::before {
+  content: counter(sp, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: #b95435;
+}
+.sp-emoji { margin-right: 4px; }
+.sp-name { font-size: 13px; font-weight: 700; color: #0f2a25; }
+.sp-item p { font-size: 12px; line-height: 1.85; color: #35423e; }
+
+/* 作品卡 / 路线卡共用的头 */
+.in-head { display: flex; align-items: baseline; gap: 8px; }
+.in-emoji { font-size: clamp(17px, 1.8vw, 21px); line-height: 1; }
+
+/* 作品卡 */
+.tile--project .pj-skill { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pj-skill li {
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 10px;
+  letter-spacing: .04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(27, 38, 37, .07);
+  color: #3c4a45;
+}
+.pj-link {
+  margin-top: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 11px;
+  color: #8c4a1f;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(140, 74, 31, .4);
+  align-self: flex-start;
+  padding-bottom: 2px;
+}
+.pj-link:hover { color: #b95435; }
+
+/* 路线卡（④） */
+.tile--route { gap: 9px; }
+.rt-body { font-size: clamp(12px, 1.05vw, 13.5px); line-height: 1.9; color: #2f3a37; }
+.rt-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; counter-reset: rt; }
+.rt-steps li {
+  position: relative;
+  padding-left: 22px;
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: #3a4744;
+  counter-increment: rt;
+}
+.rt-steps li::before {
+  content: counter(rt);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  inline-size: 15px;
+  block-size: 15px;
+  border-radius: 50%;
+  background: rgba(27, 38, 37, .08);
+  font: 600 9.5px/15px ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  text-align: center;
+  color: #8c4a1f;
+}
+.rt-steps b { font-weight: 700; color: #0f2a25; margin-right: 5px; }
+.rt-tools {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #45534f;
+  padding: 7px 9px;
+  border-radius: 3px;
+  background: rgba(27, 38, 37, .05);
+}
+.rt-risk {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #8c4a1f;
+  border-left: 2px solid #c9613c;
+  padding-left: 9px;
+}
+.rt-note { font-size: 10.5px; line-height: 1.7; color: #7b8580; }
+
+/* 避坑警示 */
+.tile--warn {
+  background: #2a1712;
+  border: 1px solid rgba(201, 97, 60, .45);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, .32);
+}
+.tile--warn .wn-text { font-size: clamp(12.5px, 1.1vw, 14px); line-height: 1.95; color: #ffd8c0; max-width: 92ch; }
+.tile--warn .wn-text strong { color: #ffb829; }
+
+/* 交互台（⑤）：DOM 原样摆在台面正中 */
+.bay-chain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  counter-reset: bay;
+}
+.bay-chain li {
+  counter-increment: bay;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: #9db3aa;
+  padding: 4px 10px 4px 8px;
+  border: 1px solid rgba(169, 248, 229, .2);
+  border-radius: 999px;
+}
+.bay-chain li::before {
+  content: counter(bay);
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  font-size: 9px;
+  color: #ffb829;
+}
+.bay {
+  /* 整台机器横贯到底：里面的幕、撕页、话术滚筒都是按整屏排的 */
+  inline-size: calc(100% + 2 * var(--bay-bleed, 0px));
+  margin-inline: calc(-1 * var(--bay-bleed, 0px));
+  background: #0d1a1d;
+  color: #e8e3d6;
+  overflow: hidden;
+}
+.bay .tear-interlude { padding: 0; }
+.bay .phrases { margin-top: 0; padding-top: clamp(28px, 4vw, 46px); border-top: 0; }
+.bay .phrase-copy h3, .bay .phrase-copy h2 { font-size: clamp(38px, 4.6vw, 62px); }
+.bay .scene { height: max(560px, 78svh); }
+.bay .reading { padding-block: clamp(56px, 7vw, 92px); }
+.bay .src-play-body { padding: 0; }
+.bay .decision-section { padding-block: clamp(40px, 5vw, 70px); }
+.bay-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.9;
+  color: #a9c0b7;
+  max-width: 80ch;
+}
+.bay-note strong { color: #ffe0a0; }
+.floor-group--bay .floor-group-head { margin-bottom: 12px; }
+.castfloor { --bay-bleed: clamp(0px, 3vw, 40px); }
+
+/* 心理开关（⑤） */
+.tile--mech .mc-name { font-size: clamp(14px, 1.3vw, 16px); font-weight: 700; color: #0f2a25; }
+.tile--mech .mc-says {
+  font-size: 12px;
+  line-height: 1.85;
+  color: #8c4a1f;
+  padding-left: 9px;
+  border-left: 2px solid rgba(140, 74, 31, .45);
+}
+.tile--mech .mc-why { font-size: 12px; line-height: 1.9; color: #35423e; }
+
+/* 话术词典（⑤） */
+.tile--phrase .ph-says {
+  font-size: clamp(14px, 1.35vw, 17px);
+  font-weight: 700;
+  line-height: 1.6;
+  color: #b95435;
+  letter-spacing: .01em;
+}
+.tile--phrase .ph-why { font-size: 12px; line-height: 1.9; color: #3c4a45; }
+
+/* 工具包（⑤） */
+.tile--tool .tk-name { font-size: 14px; font-weight: 700; color: #0f2a25; }
+.tile--tool .tk-use { font-size: 12px; line-height: 1.9; color: #35423e; }
+.tile--tool .tk-link a {
+  font-size: 11px;
+  color: #8c4a1f;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(140, 74, 31, .4);
+}
+.st-unit { font-size: .5em; margin-left: 4px; }
+.st-src { font-size: 10.5px; line-height: 1.7; color: #7b8580; }
+
+/* 台面页的页尾导航（没继承到各关自己的 nav 样式时） */
+.deck-onward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 28px;
+  margin-top: clamp(30px, 4vw, 54px);
+  padding-top: clamp(18px, 2.2vw, 28px);
+  border-top: 1px solid rgba(169, 248, 229, .18);
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  font-size: 11.5px;
+  letter-spacing: .04em;
+  color: #c4d8cf;
+}
+.deck-onward-main {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.deck-onward-k {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #8fa9a0;
+}
+.deck-onward-next {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+  font-size: clamp(23px, 2.9vw, 34px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -.01em;
+  color: #f3ede0 !important;
+  border-bottom: 0 !important;
+}
+.deck-onward-next b {
+  font-size: .68em;
+  font-weight: 400;
+  color: #a9f8e5;
+  transform: translateY(-.18em);
+}
+.deck-onward-next:hover { color: #a9f8e5 !important; }
+.deck-onward-prev, .deck-onward-home { margin-left: auto; }
+.deck-onward-prev + .deck-onward-home { margin-left: 0; }
+.deck-onward a {
+  color: #e6efe9;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(169, 248, 229, .35);
+  padding-bottom: 3px;
+}
+.deck-onward a:hover { color: #a9f8e5; border-bottom-color: #a9f8e5; }
+
+@media (max-width: 640px) {
+  .deck-onward { gap: 12px 14px; }
+  .deck-onward-main { flex: 1 0 100%; }
+  .deck-onward-prev { margin-left: 0; margin-right: auto; }
+  .deck-onward-home { margin-left: 0; }
+}
+
+/* ⑤ 模拟器：一台摆在台面正中的机器 */
+.sim {
+  background: #0b1518;
+  border: 1px solid rgba(169, 248, 229, .18);
+  border-radius: 3px;
+  padding: clamp(14px, 2vw, 24px);
+  color: #e9e4d7;
+}
+.sim-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(169, 248, 229, .16);
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  color: #9fb8ae;
+}
+.sim-act { color: #ffb829; }
+.sim-feed { display: flex; flex-direction: column; gap: 10px; padding-block: 14px; }
+.sim-bubble {
+  max-width: 78%;
+  align-self: flex-start;
+  background: #17282a;
+  border-radius: 3px 10px 10px 10px;
+  padding: 9px 13px;
+}
+.sim-bubble--me {
+  align-self: flex-end;
+  background: #234a40;
+  border-radius: 10px 3px 10px 10px;
+}
+.sim-who {
+  display: block;
+  margin-bottom: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  color: #8fb2a6;
+}
+.sim-line { margin: 0; font-size: clamp(13px, 1.15vw, 15px); line-height: 1.85; color: #f2ecdd; }
+.sim-anatomy { padding-bottom: 6px; }
+.sim-card {
+  display: grid;
+  gap: 7px;
+  padding: 12px 14px;
+  background: rgba(255, 184, 41, .07);
+  border-left: 2px solid #ffb829;
+}
+.sim-card-k { margin: 0; font-size: 11px; letter-spacing: .08em; color: #ffb829; }
+.sim-card-p { margin: 0; font-size: 12.5px; line-height: 1.9; color: #e4ddcd; }
+.sim-right { margin: 0; font-size: 12.5px; line-height: 1.9; color: #a9f8e5; }
+.sim-right::before { content: "✓ "; }
+.sim-report {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #c9a37a;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(201, 163, 122, .4);
+  justify-self: start;
+}
+.sim-report:hover { color: #ffb829; }
+.sim-banner {
+  display: grid;
+  gap: 5px;
+  padding: 11px 13px;
+  border-radius: 3px;
+  background: #17282a;
+}
+.sim-banner--good { background: #14322a; border-left: 2px solid #a9f8e5; }
+.sim-banner-k { margin: 0; font-size: 12.5px; font-weight: 700; color: #a9f8e5; }
+.sim-banner-p { margin: 0; font-size: 12px; line-height: 1.85; color: #dfe8e2; }
+.sim-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.sim-actions button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 9px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid rgba(169, 248, 229, .45);
+  background: transparent;
+  color: #d8efe7;
+}
+.sim-actions .sim-next, .sim-actions .sim-go {
+  background: #a9f8e5;
+  border-color: #a9f8e5;
+  color: #0b1518;
+  font-weight: 700;
+}
+.sim-actions .sim-stop:hover, .sim-actions .sim-side:hover { background: rgba(169, 248, 229, .12); }
+.sim-actions .sim-side { color: #c9a37a; border-color: rgba(201, 163, 122, .45); }
+.sim-actions button[disabled] { opacity: .45; cursor: default; }
+.sim-finish {
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: #ffb829;
+  padding: 10px 0;
+}
+.sim-nojs { font-size: 12px; line-height: 1.9; color: #c9d6cf; }
+.bay-chain li.is-on { color: #ffb829; border-color: rgba(255, 184, 41, .5); }
+@media (max-width: 700px) {
+  .sim-bubble { max-width: 92%; }
+  .sim-actions button { font-size: 12px; padding: 8px 12px; }
+}
+
+/* ⑥ 三要素芯片 / 示例提示词 */
+.tile--chip { gap: 7px; background: #f2eee0; }
+.cp-mark {
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  font-size: 15px;
+  color: #b95435;
+}
+.cp-name { font-size: clamp(14px, 1.3vw, 16px); font-weight: 700; color: #0f2a25; }
+.cp-why { font-size: 12px; line-height: 1.85; color: #35423e; }
+
+.tile--prompt { background: #10302a; gap: 9px; }
+.tile--prompt .tile-tag { color: #a9f8e5; }
+.pr-lead { font-size: 11.5px; letter-spacing: .06em; color: #ffb829; }
+.pr-body {
+  font-size: clamp(13.5px, 1.3vw, 16px);
+  line-height: 1.95;
+  color: #f3eee1;
+  padding-left: 13px;
+  border-left: 2px solid rgba(169, 248, 229, .5);
+}
+.pr-body strong { color: #a9f8e5; font-weight: 600; }
+.pr-foot { font-size: 11.5px; line-height: 1.8; color: #9fbcb2; }
+
+/* ⑥ 测验 */
+.qz-lead { font-size: 13px; line-height: 1.9; color: #2f3a37; }
+.qz-opts { display: grid; gap: 8px; }
+.qz-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: start;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.75;
+  padding: 11px 13px;
+  border: 1px solid rgba(27, 38, 37, .22);
+  border-radius: 3px;
+  background: #fdfbf3;
+  color: #253330;
+  cursor: pointer;
+}
+.qz-opt:hover { border-color: #8c4a1f; background: #fbf6ea; }
+.qz-opt.is-on { border-color: #b95435; box-shadow: inset 3px 0 0 #b95435; }
+.qz-key {
+  flex: none;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  background: rgba(27, 38, 37, .08);
+  color: #8c4a1f;
+}
+.qz-opt.is-on .qz-key { background: #b95435; color: #fff; }
+.qz-reply { display: grid; gap: 7px; padding: 13px 15px; background: #edf0e6; border-radius: 3px; }
+.qz-reply[hidden] { display: none; }
+.qz-who {
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: #5d6b63;
+}
+.qz-demo { color: #8c4a1f; margin-left: 8px; letter-spacing: .04em; }
+.qz-text { font-size: 13px; line-height: 1.95; color: #1f2b28; min-block-size: 3.2em; }
+.qz-note { font-size: 12px; line-height: 1.85; color: #55635c; font-weight: 600; }
+.qz-reply[data-grade="grade-a"] { background: #f4ece4; }
+.qz-reply[data-grade="grade-c"] { background: #e5f1e6; }
+.qz-reply[data-grade="grade-c"] .qz-note { color: #2c6b45; }
+.qz-nojs { font-size: 12px; line-height: 1.9; color: #4a5751; }
+
+/* ⑥ Agent */
+.ag-compare, .ag-flow { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.ag-line {
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: #33413c;
+  padding-left: 11px;
+  border-left: 2px solid rgba(27, 38, 37, .16);
+}
+.ag-line strong { color: #0f2a25; }
+.ag-step {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 2px 10px;
+  align-items: baseline;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #3a4744;
+}
+.ag-mark {
+  grid-row: span 2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: #b95435;
+}
+.ag-head { font-weight: 700; color: #0f2a25; font-size: 12.5px; }
+.ag-tail { color: #4a5a56; }
+
+/* ⑥ 毕业任务 */
+.tk-code {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: #b95435;
+}
+.tk-body { font-size: 12px; line-height: 1.9; color: #35423e; }
+.tile--task.task--accent { border-left: 2px solid #7b5ea7; }
+
+/* ---------- 01 海报 ---------- */
+
+.artifact { position: relative; flex: 1 1 auto; min-block-size: 0; display: flex; flex-direction: column; }
+.art-poster {
+  padding: 40px clamp(14px, 1.6vw, 20px) 10px;
+  background:
+    repeating-linear-gradient(0deg, rgba(58, 42, 24, .045) 0 1px, transparent 1px 4px),
+    linear-gradient(158deg, #f4e6c7, #e3caa0 62%, #d8bb8d);
+  color: #332514;
+}
+.poster-sheet::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  inline-size: min(58%, 210px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(185, 84, 53, .16), rgba(185, 84, 53, .04) 62%, transparent 70%);
+  pointer-events: none;
+}
+.poster-sheet {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(9px, 1.8vw, 20px);
+  padding: 16px 16px 0;
+  border: 1.5px solid rgba(51, 37, 20, .55);
+  outline: 1px solid rgba(51, 37, 20, .3);
+  outline-offset: 5px;
+  text-align: center;
+  transform: rotate(-1.1deg);
+}
+.poster-eyebrow {
+  margin: 0;
+  font: 600 9.5px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: #6d4f2b;
+}
+.poster-rule { display: block; width: 38px; height: 1.5px; background: #6d4f2b; opacity: .7; }
+.poster-title {
+  margin: 0;
+  font-size: clamp(27px, 3.2vw, 43px);
+  line-height: 1.1;
+  letter-spacing: .1em;
+  font-weight: 700;
+  color: #2a1d0e;
+}
+.poster-line {
+  margin: 0;
+  max-width: 26ch;
+  font-size: clamp(11.5px, 1.05vw, 14px);
+  line-height: 1.85;
+  letter-spacing: .02em;
+  color: #4a3620;
+}
+.poster-logos { margin-top: 2px; font-size: 7px; letter-spacing: .5em; color: #6d4f2b; opacity: .7; }
+.poster-stub {
+  position: relative;
+  width: calc(100% + 32px);
+  margin: 8px -16px 0;
+  padding: 9px 16px;
+  border-top: 1.5px dashed rgba(51, 37, 20, .45);
+  font: 600 10px/1.5 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .08em;
+  color: #4a3620;
+  text-align: center;
+}
+.poster-stub-text { margin: 0; }
+.poster-notch {
+  position: absolute;
+  top: -7px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #e6cfa4;
+}
+.poster-notch:first-of-type { left: -7px; }
+.poster-notch:last-of-type { right: -7px; }
+
+/* ---------- 02 朋友圈 ---------- */
+
+.art-moments {
+  padding: 44px clamp(12px, 1.4vw, 16px) 0;
+  background: #fbfaf7;
+  color: #1f2422;
+}
+.mom-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(31, 36, 34, .1);
+}
+.mom-avatar {
+  display: grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: 4px;
+  background: #1b3c34;
+  color: #c8f5e6;
+  font: 700 11px/1 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .02em;
+}
+.mom-name { font-size: 13px; font-weight: 600; letter-spacing: .01em; }
+.mom-dots { margin-left: auto; font-size: 12px; color: #7d8b86; letter-spacing: .1em; }
+.mom-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 14px), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 14px), transparent);
+  padding: 10px 1px 6px;
+  font-size: clamp(12.5px, 1.06vw, 14px);
+  line-height: 1.95;
+  color: #26302c;
+}
+.mom-body p { margin: 0 0 5px; }
+.mom-body p:last-child { color: #176b8a; }
+.mom-input {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0 calc(-1 * clamp(12px, 1.4vw, 16px)) 0;
+  padding: 9px clamp(12px, 1.4vw, 16px);
+  border-top: 1px solid rgba(31, 36, 34, .12);
+  background: #f1efe9;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #3d4a45;
+}
+.mom-input-who {
+  flex: none;
+  font: 700 10px/1 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  color: #176b8a;
+  background: rgba(23, 107, 138, .12);
+  padding: 4px 6px;
+  border-radius: 2px;
+}
+.mom-input-text { min-inline-size: 0; color: #3d4a45; text-align: left; }
+.mom-caret {
+  flex: none;
+  inline-size: 1.5px;
+  block-size: 13px;
+  margin-left: -3px;
+  background: #176b8a;
+  animation: caret-blink 1.1s step-end infinite;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+
+/* ---------- 03 账本对话（小票） ---------- */
+
+.art-ledger {
+  padding: 42px 0 0;
+  background: #fffdf4;
+  color: #23201a;
+}
+.ledger-top {
+  padding: 8px clamp(12px, 1.4vw, 16px);
+  border-bottom: 1px dashed rgba(35, 32, 26, .3);
+  font: 600 9.5px/1.5 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #7a6a52;
+}
+.ledger-roll {
+  position: relative;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 22px), transparent);
+  padding: 11px clamp(12px, 1.4vw, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-image: repeating-linear-gradient(180deg, transparent 0 26px, rgba(35, 32, 26, .05) 26px 27px);
+}
+.ledger-tear {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  block-size: 9px;
+  background-image: radial-gradient(circle at 5px 9px, #fffdf4 5px, transparent 5.5px);
+  background-size: 10px 9px;
+  background-repeat: repeat-x;
+}
+.art-badge {
+  align-self: flex-start;
+  padding: 3px 8px;
+  border: 1px dashed #b95435;
+  border-radius: 2px;
+  color: #a03f27;
+  font: 600 9.5px/1.5 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .06em;
+}
+
+/* ---------- 04 修老照片（通栏） ---------- */
+
+.art-photo {
+  padding: 37px clamp(14px, 1.8vw, 22px) clamp(10px, 1.2vw, 14px);
+  background: #f4f1e6;
+  color: #1b2625;
+  gap: 7px;
+}
+.art-photo .art-lead {
+  margin: 0;
+  max-width: 96ch;
+  font-size: clamp(12.5px, 1.05vw, 14px);
+  line-height: 1.85;
+  color: #33403c;
+}
+.ph-strip {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  grid-auto-rows: minmax(0, 1fr);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: clamp(8px, 1vw, 16px);
+}
+.ph-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  margin: 0;
+  padding: 6px;
+  background: #fffdf7;
+  border: 1px solid rgba(27, 38, 37, .16);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .08);
+}
+.ph-frame { display: block; flex: 1 1 auto; min-block-size: 0; overflow: hidden; color: #6f6a5a; }
+.ph-frame svg { display: block; inline-size: 100%; block-size: 100%; }
+.ph-pane { --ph-sun: #d8c49c; --ph-hill: #b6ac97; --ph-house: #9b9180; --ph-roof: #8b8170;
+  --ph-tree: #88806f; --ph-figure: #7e7666; --ph-line: #a89d88; --ph-light: #f2eee4; }
+.ph-frame { background: linear-gradient(#e6ecf0, #f6f4ec); }
+.ph-before .ph-frame {
+  background: linear-gradient(#e3dfd2, #efeade);
+  filter: contrast(.9) saturate(.55) brightness(1.01) blur(.35px);
+}
+.ph-after .ph-frame {
+  --ph-sun: #f2b53d; --ph-hill: #5ba36e; --ph-house: #cb8a5c; --ph-roof: #a95a3c;
+  --ph-tree: #3c7650; --ph-figure: #2f6b48; --ph-line: #7cb98c; --ph-light: #fffdf7;
+  filter: saturate(1.08) contrast(1.05);
+}
+.ph-before::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  background:
+    linear-gradient(112deg, transparent 46%, rgba(255, 255, 255, .55) 46.4%, transparent 47%),
+    linear-gradient(74deg, transparent 62%, rgba(120, 110, 90, .35) 62.3%, transparent 62.8%);
+}
+.ph-label {
+  flex: none;
+  font: 600 10px/1.4 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #4a5a56;
+}
+.ph-arrow { align-self: center; font-size: 18px; color: #b95435; }
+.ph-cap { margin: 0; font-size: 11px; line-height: 1.55; color: #7a6a52; }
+.ph-report { margin: 0; font-size: 11px; line-height: 1.55; color: #5c6b66; }
+.ph-report a { color: #8c4a1f; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- 05 微信问答 ---------- */
+
+.art-wechat {
+  padding: 40px 0 0;
+  background: #ededed;
+  color: #1a1a1a;
+}
+.wx-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px clamp(10px, 1.2vw, 14px);
+  background: #f7f7f7;
+  border-bottom: 1px solid rgba(0, 0, 0, .1);
+  font-size: 12px;
+}
+.wx-back { color: #4a4a4a; font-size: 16px; line-height: 1; }
+.wx-name { font-weight: 600; }
+.wx-more { margin-left: auto; color: #7a7a7a; letter-spacing: .1em; font-size: 11px; }
+.wx-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 20px), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 20px), transparent);
+  padding: clamp(10px, 1.3vw, 14px);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.bubble-row { display: flex; align-items: flex-start; gap: 7px; }
+.bubble-row--me { flex-direction: row-reverse; }
+.bubble-face {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 26px;
+  border-radius: 3px;
+  background: #d9d9d9;
+  color: #2b3a35;
+  font: 700 10px/1 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+}
+.bubble-row--me .bubble-face { background: #95ec69; color: #13602f; }
+.bubble {
+  position: relative;
+  max-inline-size: 82%;
+  padding: 7px 10px;
+  border-radius: 4px;
+  background: #fff;
+  font-size: clamp(11.5px, 1.02vw, 13.5px);
+  line-height: 1.78;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .06);
+}
+.bubble--me { background: #95ec69; }
+.bubble p { margin: 0 0 4px; }
+.bubble p:last-child { margin-bottom: 0; }
+.bubble-who {
+  display: block;
+  margin-bottom: 2px;
+  font: 600 9.5px/1.4 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .1em;
+  color: #6b7a75;
+}
+.bubble--me .bubble-who { color: #2f6b45; }
+.art-ledger .bubble { font-size: clamp(10.5px, .95vw, 12.5px); }
+
+/* ---------- 背面：时间对比 / 提示词 / 老实话 / 出处 ---------- */
+
+.fcard-back {
+  padding: clamp(12px, 1.5vw, 16px);
+  background: linear-gradient(168deg, #12352e, #0b2420);
+  color: #f1ece1;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, .4);
+}
+.back-scroll {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0 4px 5px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 248, 229, .45) transparent;
+}
+.back-scroll::-webkit-scrollbar { width: 5px; }
+.back-scroll::-webkit-scrollbar-thumb { background: rgba(169, 248, 229, .4); border-radius: 3px; }
+
+.back-compare {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 8px;
+  padding: 7px 66px 7px 9px;
+  border: 1px dashed rgba(255, 184, 41, .55);
+  background: rgba(255, 184, 41, .1);
+  transform: rotate(-.5deg);
+  font: 600 10.5px/1.6 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+}
+.stamp b { letter-spacing: .04em; }
+.back-compare-k { color: #ffb829; letter-spacing: .16em; text-transform: uppercase; }
+.back-compare-v { color: #f7e6c4; }
+.back-compare--real { border-style: solid; border-color: rgba(169, 248, 229, .45); background: rgba(169, 248, 229, .08); }
+.back-compare--real .back-compare-k { color: #a9f8e5; }
+.back-compare--real .back-compare-v { color: #d9f5ea; }
+
+.back-prompt {
+  border: 1px solid rgba(169, 248, 229, .4);
+  border-radius: 3px;
+  background: rgba(4, 18, 15, .55);
+}
+.back-prompt-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 9px;
+  border-bottom: 1px solid rgba(169, 248, 229, .25);
+}
+.back-label {
+  font: 600 9.5px/1.5 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #a9f8e5;
+}
+.back-copy {
+  flex: none;
+  min-block-size: 26px;
+  padding: 3px 9px;
+  border: 1px solid rgba(169, 248, 229, .5);
+  border-radius: 2px;
+  background: transparent;
+  color: #a9f8e5;
+  font: 600 10px/1.3 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .1em;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+.back-copy:hover, .back-copy.is-done { background: #a9f8e5; color: #06251f; }
+.back-copy:focus-visible { outline: 2px solid #ffb829; outline-offset: 2px; }
+.back-text {
+  margin: 0;
+  padding: 9px;
+  min-block-size: 4.6em;
+  font: 400 13px/1.85 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  color: #fdf6e7;
+  overflow-wrap: anywhere;
+}
+.back-plain { display: none; }
+
+.back-steps {
+  margin: 0;
+  padding: 0 0 0 4px;
+  list-style: none;
+  counter-reset: step;
+  font-size: 12px;
+  line-height: 1.75;
+  color: #dfe8e2;
+}
+.back-steps li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 6px;
+  counter-increment: step;
+}
+.back-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  inline-size: 15px;
+  block-size: 15px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 184, 41, .6);
+  border-radius: 50%;
+  font: 600 9px/1 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  color: #ffb829;
+}
+
+.back-note {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 2px solid #b95435;
+  background: rgba(255, 255, 255, .05);
+  font-size: 12.5px;
+  line-height: 1.85;
+  color: #e9e3d7;
+}
+.back-note b {
+  display: block;
+  margin-bottom: 3px;
+  font: 600 9.5px/1.5 ui-monospace, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  letter-spacing: .18em;
+  color: #ff9a77;
+}
+.back-remind { margin: 0; font-size: 11.5px; line-height: 1.75; color: #c3d2ca; }
+
+.back-links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.back-links a { color: #ffcf8a; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.back-links a:hover { color: #ffb829; }
+.back-go { color: #a9f8e5; }
+a.back-go { text-decoration: underline; text-underline-offset: 2px; }
+a.back-go:hover { color: #ffb829; }
+.back-links li::before { content: "→ "; color: rgba(169, 248, 229, .6); }
+.back-demo { margin: 0; font-size: 10.5px; line-height: 1.62; color: #9fb3ab; }
+
+.stamp {
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  display: grid;
+  place-items: center;
+  inline-size: 58px;
+  block-size: 58px;
+  border: 2px solid rgba(255, 184, 41, .75);
+  border-radius: 50%;
+  color: #ffb829;
+  opacity: 0;
+  transform: rotate(-16deg) scale(1.5);
+  pointer-events: none;
+  font: 700 9.5px/1.2 ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", monospace;
+  letter-spacing: .12em;
+  text-align: center;
+}
+.stamp b { font-weight: 700; }
+.stamp i {
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(255, 184, 41, .4);
+  border-radius: 50%;
+  font-size: 0;
+}
+
+/* ---------- 页尾：本页来源与演示验证渠道（一张链接表） ---------- */
+
+.ktable-sec {
+  margin: clamp(24px, 3.4vw, 40px) 0 0;
+  padding: clamp(20px, 3vw, 40px) clamp(18px, 3vw, 44px) clamp(18px, 2.4vw, 32px);
+  background: #f7f4ea;
+  color: #1b2625;
+  border-radius: 3px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .28);
+}
+.ktable-title {
+  margin: 0 0 10px;
+  font-size: clamp(19px, 2.1vw, 27px);
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+.ktable-note {
+  margin: 0 0 clamp(14px, 2vw, 22px);
+  max-width: 72ch;
+  font-size: 12.5px;
+  line-height: 1.85;
+  color: #5c6b66;
+}
+.ktable-wrap { overflow-x: auto; }
+.ktable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+.ktable th,
+.ktable td {
+  padding: 10px 12px;
+  border-top: 1px solid rgba(27, 38, 37, .14);
+  text-align: left;
+  vertical-align: top;
+}
+.ktable thead th {
+  white-space: nowrap;
+  padding-top: 0;
+  border-top: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #8c4a1f;
+}
+.ktable tbody tr:hover { background: rgba(185, 84, 53, .05); }
+.kt-card {
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #245b4d;
+}
+.kt-title { display: block; font-weight: 600; color: #1b2625; }
+.kt-abstract { display: block; margin-top: 3px; color: #5c6b66; font-size: 12px; }
+.kt-status { 
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid rgba(36, 91, 77, .4);
+  border-radius: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, "Noto Sans CJK SC", "Noto Sans SC", monospace;
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  color: #245b4d;
+  white-space: nowrap;
+}
+.kt-link { white-space: nowrap; }
+.kt-link a {
+  color: #8c4a1f;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.kt-link a:hover { color: #b95435; }
+.ktable a:focus-visible { outline: 2px solid #b95435; outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  .ktable thead { display: none; }
+  .ktable, .ktable tbody, .ktable tr, .ktable td, .ktable th { display: block; }
+  .ktable tr {
+    padding: 12px 0;
+    border-top: 1px solid rgba(27, 38, 37, .16);
+  }
+  .ktable th, .ktable td { border: 0; padding: 0 0 4px; }
+  .kt-card { color: #8c4a1f; }
+  .kt-status-cell { padding-top: 2px; }
+}
+
+/* ---------- 窄屏：一列摊开 ---------- */
+
+@media (max-width: 980px) {
+  .cardrail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fcard, .fcard--chat, .fcard--moments, .fcard--ledger { grid-column: span 1; }
+  .fcard--photo, .honest-tile { grid-column: span 2; }
+  .fcard { block-size: clamp(400px, 62vw, 470px); }
+  .fcard--photo { block-size: 470px; }
+  .honest-tile { block-size: auto; }
+}
+@media (max-width: 700px) {
+  .cardrail { grid-template-columns: minmax(0, 1fr); }
+  .fcard, .fcard--chat, .fcard--photo, .fcard--moments, .fcard--ledger,
+  .honest-tile { grid-column: span 1; }
+  .fcard { block-size: 496px; }
+  .fcard--poster { block-size: 506px; }
+  .fcard--moments { block-size: 470px; }
+  .fcard--ledger { block-size: 500px; }
+  .fcard--photo { block-size: 580px; }
+  .honest-tile { block-size: auto; }
+  .ph-strip { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .ph-arrow { transform: rotate(90deg); justify-self: center; }
+  .castfloor { padding-inline: 14px; }
+  .fcard-back { padding: 11px; }
+  .stamp { inline-size: 52px; block-size: 52px; font-size: 9.5px; }
+}
+@media (max-width: 420px) {
+  .fcard { block-size: 502px; }
+  .fcard--poster { block-size: 512px; }
+  .fcard--moments { block-size: 478px; }
+  .fcard--ledger { block-size: 506px; }
+  .fcard--photo { block-size: 590px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mom-caret { animation: none; }
+  .fcard-inner, .fcard-front, .back-copy { transition: none; }
+}
+
+/* ============================================================
+   全站收尾：键盘焦点 / 点按尺寸 / 长文本不越界
+   这一份是七张页面最后加载的样式，所以兜底规则放这儿。
+   ============================================================ */
+
+/* 焦点环：用 currentColor，深色台面与浅色纸面各自都看得清；
+   :where() 的优先级是 0，各页自己写过的 focus-visible 仍然优先。 */
+:where(a, button, summary, [tabindex], input, textarea, select):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* 背面是窄栏里的长句：中文不断词，但英文提示词与链接不能顶破卡片 */
+.back-scroll :where(p, li, span, b, em, ol, ul) { overflow-wrap: anywhere; }
+
+/* 「复制」是这一页最常点的按钮，24px 的头像级尺寸对妈妈太小了 */
+.back-copy {
+  min-block-size: 34px;
+  padding: 6px 11px;
+  font-size: 10.5px;
+}
+
+/* ① 台面：五张都翻完时，计数条由琥珀转薄荷绿，和「已翻完」那张提示纸同一个颜色语言 */
+.castfloor-meter .meter-num b,
+.castfloor-meter .meter-track i { transition: color .4s ease, background .4s ease; }
+.castfloor[data-complete="true"] .castfloor-meter .meter-num b { color: #a9f8e5; }
+.castfloor[data-complete="true"] .meter-track i { background: #a9f8e5; }
+@media (prefers-reduced-motion: reduce) {
+  .castfloor-meter .meter-num b,
+  .castfloor-meter .meter-track i { transition: none; }
+}
+
+/* 整站按压反馈：手指按下去的那一下都有一点下沉。
+   :where() 优先级为 0，任何页面自己写的 transform 仍然优先，不会顶掉排版。 */
+:where(button, summary, [role="button"]):active { transform: translateY(1px); }
+@media (prefers-reduced-motion: reduce) {
+  :where(button, summary, [role="button"]):active { transform: none; }
+}
+
+/* ① 翻面时的扫光：卡片抬起的那一下有一道高光横掠过去（脚本只在 GSAP 动效可用时加 .is-turning） */
+.fcard.is-turning::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(104deg,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(255, 255, 255, .42) 45%,
+    rgba(255, 246, 208, .72) 50%,
+    rgba(255, 255, 255, .42) 55%,
+    rgba(255, 255, 255, 0) 66%);
+  background-size: 260% 100%;
+  animation: card-sheen 1.05s cubic-bezier(.3, 0, .2, 1) both;
+}
+@keyframes card-sheen {
+  from { background-position: 185% 0; }
+  to { background-position: -55% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fcard.is-turning::after { animation: none; content: none; }
+}
+
+/* ① 翻面的抬升阶段是整卡变换，临时提一层，结束后随类一起消失 */
+.fcard.is-turning { will-change: transform; }
