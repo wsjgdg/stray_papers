@@ -1,0 +1,16 @@
+{
+  "name": "标签地牢",
+  "short_name": "标签地牢",
+  "description": "浏览器标签就是地牢层，每层只做一个选择，自动战斗加一个手动技能，8 层打完或倒下重开。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#201d1d",
+  "theme_color": "#201d1d",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

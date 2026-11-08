@@ -1,0 +1,27 @@
+{
+  "name": "aetheris-sims",
+  "private": true,
+  "type": "module",
+  "description": "The bench: the page's own world, built headlessly, walked and measured.",
+  "scripts": {
+    "test": "node run.mjs",
+    "lint": "node lint.mjs"
+  },
+  "dependencies": {
+    "three": "0.174.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.14.0"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "overrides": {
+    "eslint": {
+      "minimatch": "11.0.4"
+    },
+    "@eslint/config-array": {
+      "minimatch": "11.0.4"
+    }
+  }
+}
