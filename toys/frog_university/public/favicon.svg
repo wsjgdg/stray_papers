@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="奶蛙大学">
+  <!--
+    奶蛙大学 · 站点图标
+    奶白档案纸底 + 奶蛙正脸。配色对齐 index.css 里的奶白/奶霜/腮红三个变量与主题底色。
+    造型刻意简化：favicon 在 16x16 下只有约 4px 宽的眼睛和嘴必须可辨，
+    所以只留「两个大眼 + 腮红 + 一条嘴」，去掉四肢等细节。
+
+    注意：注释里不能出现连续的英文双连字符（XML 规范禁止，SVG 按 XML 解析）。
+    早先这里写了变量名（两个减号相连），导致整个文件解析失败、图标渲染为空白。
+  -->
+  <defs>
+    <clipPath id="head">
+      <circle cx="32" cy="33" r="19.5" />
+    </clipPath>
+  </defs>
+
+  <!-- 底：奶白档案纸 -->
+  <rect width="64" height="64" rx="14" fill="#fff8d7" />
+  <!-- 蛙身体：奶白偏暖，与纸底同色系但更饱和一点，边缘只留很窄一圈，视觉上像「纸上趴着一只蛙」 -->
+  <circle cx="32" cy="33" r="19.5" fill="#ffeeb8" />
+  <!-- 肚皮浅一档 -->
+  <ellipse cx="32" cy="40" rx="13" ry="10" fill="#fffaf0" clip-path="url(#head)" />
+
+  <!-- 眼睛：白底 + 深瞳，16px 下这是唯一能传神的部分，所以给足对比 -->
+  <circle cx="24.5" cy="28.5" r="7" fill="#ffffff" />
+  <circle cx="39.5" cy="28.5" r="7" fill="#ffffff" />
+  <circle cx="25.1" cy="29.1" r="3.9" fill="#2b2440" />
+  <circle cx="40.1" cy="29.1" r="3.9" fill="#2b2440" />
+  <!-- 高光 -->
+  <circle cx="26.7" cy="27.1" r="1.5" fill="#ffffff" />
+  <circle cx="41.7" cy="27.1" r="1.5" fill="#ffffff" />
+
+  <!-- 腮红 -->
+  <ellipse cx="18.5" cy="37" rx="4.4" ry="2.9" fill="#f8a8b8" opacity="0.85" />
+  <ellipse cx="45.5" cy="37" rx="4.4" ry="2.9" fill="#f8a8b8" opacity="0.85" />
+
+  <!-- 嘴：一条平线，嘴角微微下压（沉默值满分的那种表情） -->
+  <path d="M26.5 43 Q32 46.4 37.5 43" fill="none" stroke="#2b2440" stroke-width="2.3" stroke-linecap="round" />
+</svg>
