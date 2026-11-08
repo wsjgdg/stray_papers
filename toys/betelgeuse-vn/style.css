@@ -1341,6 +1341,133 @@ input.vn-range {
   gap: 12px;
 }
 
+/* 剧情树 panel: BFS-column flow map with pannable canvas, jumpable nodes */
+.vn-gtree {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* the hidden attribute must win over every panel's own display value —
+   without this, per-panel display:grid/flex defeats visibility toggling */
+.vn-gpanel[hidden] {
+  display: none !important;
+}
+
+.vn-gtree-note {
+  font-size: 12px;
+  color: var(--vn-text-faint);
+}
+
+.vn-tree-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--vn-border-soft);
+  border-radius: 10px;
+  background: rgba(4, 8, 18, 0.55);
+}
+
+.vn-tree-inner {
+  position: relative;
+}
+
+.vn-tree-edges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vn-tree-edges path {
+  fill: none;
+  stroke: rgba(150, 190, 255, 0.28);
+  stroke-width: 1.6;
+}
+
+.vn-tree-node {
+  position: absolute;
+  width: 128px;
+  height: 64px;
+  padding: 7px 9px;
+  border-radius: 9px;
+  text-align: left;
+  background: rgba(8, 12, 24, 0.9);
+  border: 1px solid var(--vn-border);
+  color: var(--vn-text-faint);
+  cursor: not-allowed;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.vn-tree-node.vn-tree-seen {
+  background: rgba(16, 26, 48, 0.92);
+  border-color: rgba(150, 190, 255, 0.4);
+  color: var(--vn-text);
+  cursor: pointer;
+}
+
+.vn-tree-node.vn-tree-seen:hover {
+  border-color: var(--vn-accent);
+  box-shadow: 0 0 14px var(--vn-accent-glow);
+  background: rgba(24, 38, 70, 0.95);
+}
+
+.vn-tree-id {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vn-tree-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--vn-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* CG thumbnail pinned to the card's top-right corner; black with ？ until
+   the CG has been seen in play */
+.vn-tree-cg {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 46px;
+  height: 26px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--vn-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--vn-text-faint);
+}
+
+.vn-tree-cg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vn-tree-star {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: var(--vn-accent);
+}
+
 .vn-gchar-stage {
   height: 170px;
   border-radius: 6px;

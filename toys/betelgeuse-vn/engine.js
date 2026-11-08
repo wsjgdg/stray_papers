@@ -138,11 +138,27 @@
   var SETTINGS_VOLUME_MAX = 1;
   var SETTINGS_DELAY_MIN = 800; // auto-delay slider range, matches the input
   var SETTINGS_DELAY_MAX = 3000;
-  var ENDING_IDS = ["ending_bad", "ending_good", "ending_true"];
+  var ENDING_IDS = [
+    "ending_true",
+    "ending_good",
+    "ending_qi",
+    "ending_turnback",
+    "ending_silence",
+    "ending_clearance",
+    "ending_unplug",
+    "ending_substitute",
+    "ending_bad",
+  ];
   var ENDING_LABELS = {
-    ending_bad: "熄灭",
-    ending_good: "迟到三年的早安",
     ending_true: "还亮着",
+    ending_good: "迟到三年的早安",
+    ending_qi: "守灯人",
+    ending_turnback: "折返",
+    ending_silence: "已读不回",
+    ending_clearance: "清场",
+    ending_unplug: "断线",
+    ending_substitute: "替身",
+    ending_bad: "熄灭",
   };
   var ENDING_UNSEEN = "？"; // spoiler-safe label while an ending is uncollected
   var ENDING_TEXT = "「THE END」";
@@ -423,11 +439,18 @@
     gtabSprites.textContent = "立绘";
     gtabSprites.setAttribute("data-tab", "sprites");
     gtabSprites.setAttribute("aria-selected", "false");
+    var gtabTree = h("button", "vn-gtab", gtabs);
+    gtabTree.type = "button";
+    gtabTree.textContent = "剧情树";
+    gtabTree.setAttribute("data-tab", "tree");
+    gtabTree.setAttribute("aria-selected", "false");
     var gpanelScenes = h("div", "vn-gpanel vn-gscenes", gallery);
     var gpanelMusic = h("div", "vn-gpanel vn-gmusic", gallery);
     gpanelMusic.setAttribute("hidden", "");
     var gpanelSprites = h("div", "vn-gpanel vn-gsprites", gallery);
     gpanelSprites.setAttribute("hidden", "");
+    var gpanelTree = h("div", "vn-gpanel vn-gtree", gallery);
+    gpanelTree.setAttribute("hidden", "");
     var galleryClose = h("button", "vn-close", gallery);
     galleryClose.type = "button";
     galleryClose.textContent = "关闭";
@@ -440,6 +463,9 @@
     });
     gtabSprites.addEventListener("click", function () {
       setGalleryTab("sprites");
+    });
+    gtabTree.addEventListener("click", function () {
+      setGalleryTab("tree");
     });
 
     var chapter = h("div", "vn-chapter vn-hidden", app);
@@ -486,9 +512,11 @@
       gtabScenes: gtabScenes,
       gtabMusic: gtabMusic,
       gtabSprites: gtabSprites,
+      gtabTree: gtabTree,
       gpanelScenes: gpanelScenes,
       gpanelMusic: gpanelMusic,
       gpanelSprites: gpanelSprites,
+      gpanelTree: gpanelTree,
       title: title,
       titleCanvas: titleCanvas,
       titleName: titleName,
@@ -1603,6 +1631,7 @@
         state.cg = id;
       }
       els.cg.classList.remove("vn-hidden");
+      recordCgSeen(id); // story-tree CG unlock
       if (CG_BGM[id]) audioHook("scene", CG_BGM[id]); // CG owns the music
       return;
     }
@@ -1782,6 +1811,7 @@
         return;
       }
       state.scene = id;
+      recordNodeSeen(id); // story-tree unlock: this node is now reachable
       collectEndingNow(id); // entering an ending_* scene collects it (once)
       hideCg(); // CGs are scene-scoped unless the new scene re-asserts one
       applyBg(scene.bg);
@@ -2761,6 +2791,7 @@
   }
 
   function buildGalleryPanels() {
+    buildTreePanel();
     // scenes panel: one card per background, in declaration order
     els.gpanelScenes.textContent = "";
     var seen = readSeen();
@@ -2863,6 +2894,282 @@
     } catch (err) {
       /* cosmetic tracking: skip silently */
     }
+  }
+
+  // --- 剧情树 (story tree) -------------------------------------------------
+  // Derives the scene graph from the scenario (next/branch/choices edges),
+  // lays it out in BFS-depth columns, and renders one card per scene:
+  // visited scenes are lit and clickable (jump), unvisited ones are black.
+  // Scenes whose lines show a CG embed the CG thumbnail (black until seen).
+  var NODE_SEEN_KEY = "vn-seen-nodes";
+  var CG_SEEN_KEY = "vn-seen-cg";
+
+  function readIdSet(key) {
+    var raw = null;
+    try {
+      raw = localStorage.getItem(key);
+    } catch (err) {
+      return [];
+    }
+    if (typeof raw !== "string" || !raw) return [];
+    try {
+      var data = JSON.parse(raw);
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function recordIdSet(key, id) {
+    var ids = readIdSet(key);
+    if (ids.indexOf(id) !== -1) return;
+    ids.push(id);
+    try {
+      localStorage.setItem(key, JSON.stringify(ids));
+    } catch (err) {}
+  }
+
+  function recordNodeSeen(id) {
+    recordIdSet(NODE_SEEN_KEY, id);
+  }
+
+  function recordCgSeen(id) {
+    recordIdSet(CG_SEEN_KEY, id);
+  }
+
+  function sceneTargets(scene) {
+    var out = [];
+    function push(id) {
+      if (
+        typeof id === "string" &&
+        id &&
+        S.scenes[id] &&
+        out.indexOf(id) === -1
+      )
+        out.push(id);
+    }
+    if (!scene || typeof scene !== "object") return out;
+    push(scene.next);
+    if (Array.isArray(scene.branch))
+      scene.branch.forEach(function (b) {
+        if (b) push(b.goto);
+      });
+    if (Array.isArray(scene.choices))
+      scene.choices.forEach(function (c) {
+        if (c) push(c.goto);
+      });
+    return out;
+  }
+
+  // scene id -> cg id, derived from the scenario lines (first cg wins)
+  function sceneCgMap() {
+    var map = {};
+    Object.keys(S.scenes).forEach(function (id) {
+      var scene = S.scenes[id];
+      if (!scene || !Array.isArray(scene.lines)) return;
+      for (var i = 0; i < scene.lines.length; i++) {
+        var line = scene.lines[i];
+        if (line && typeof line.cg === "string" && line.cg) {
+          map[id] = line.cg;
+          return;
+        }
+      }
+    });
+    return map;
+  }
+
+  function buildTreePanel() {
+    if (!S || !S.scenes) return;
+    els.gpanelTree.textContent = "";
+    var note = document.createElement("div");
+    note.className = "vn-gtree-note";
+    note.textContent =
+      "点击已解锁的节点可跳转；黑色节点尚未抵达。☆ 标记含 CG。";
+    els.gpanelTree.appendChild(note);
+    var wrap = document.createElement("div");
+    wrap.className = "vn-tree-wrap";
+    els.gpanelTree.appendChild(wrap);
+
+    var ids = Object.keys(S.scenes);
+    var cgMap = sceneCgMap();
+    var nodeSeen = readIdSet(NODE_SEEN_KEY);
+    var cgSeen = readIdSet(CG_SEEN_KEY);
+
+    // BFS depth layout from the start scene
+    var depth = {};
+    var queue = [];
+    var start = typeof S.start === "string" ? S.start : ids[0];
+    if (S.scenes[start]) {
+      depth[start] = 0;
+      queue.push(start);
+    }
+    var order = [];
+    while (queue.length) {
+      var cur = queue.shift();
+      order.push(cur);
+      sceneTargets(S.scenes[cur]).forEach(function (t) {
+        if (depth[t] == null) {
+          depth[t] = depth[cur] + 1;
+          queue.push(t);
+        }
+      });
+    }
+    var maxDepth = 0;
+    ids.forEach(function (id) {
+      if (depth[id] == null)
+        depth[id] = null; // unreachable from start
+      else if (depth[id] > maxDepth) maxDepth = depth[id];
+    });
+    // unreachable scenes get their own trailing column
+    var extraDepth = maxDepth + 1;
+    ids.forEach(function (id) {
+      if (depth[id] == null) depth[id] = extraDepth;
+    });
+
+    // column buckets in BFS order (stable within a column)
+    var cols = [];
+    order.forEach(function (id) {
+      var d = depth[id];
+      (cols[d] = cols[d] || []).push(id);
+    });
+    ids.forEach(function (id) {
+      if (order.indexOf(id) === -1) {
+        var d = depth[id];
+        (cols[d] = cols[d] || []).push(id);
+      }
+    });
+
+    var COL_W = 168;
+    var ROW_H = 92;
+    var NODE_W = 128;
+    var NODE_H = 64;
+    var maxRows = 1;
+    cols.forEach(function (col) {
+      if (col && col.length > maxRows) maxRows = col.length;
+    });
+    var innerW = cols.length * COL_W + 40;
+    var innerH = maxRows * ROW_H + 40;
+
+    var inner = document.createElement("div");
+    inner.className = "vn-tree-inner";
+    inner.style.width = innerW + "px";
+    inner.style.height = innerH + "px";
+    wrap.appendChild(inner);
+
+    var svg =
+      '<svg class="vn-tree-edges" width="' +
+      innerW +
+      '" height="' +
+      innerH +
+      '">';
+    var nodes = {};
+    var positions = {};
+    cols.forEach(function (col, d) {
+      col.forEach(function (id, r) {
+        positions[id] = {
+          x: 20 + d * COL_W,
+          y: 20 + r * ROW_H,
+        };
+      });
+    });
+    // edges first (under the nodes)
+    ids.forEach(function (id) {
+      var from = positions[id];
+      if (!from) return;
+      sceneTargets(S.scenes[id]).forEach(function (t) {
+        var to = positions[t];
+        if (!to) return;
+        var x1 = from.x + NODE_W;
+        var y1 = from.y + NODE_H / 2;
+        var x2 = to.x;
+        var y2 = to.y + NODE_H / 2;
+        var mid = (x1 + x2) / 2;
+        svg +=
+          '<path d="M' +
+          x1 +
+          " " +
+          y1 +
+          " C" +
+          mid +
+          " " +
+          y1 +
+          " " +
+          mid +
+          " " +
+          y2 +
+          " " +
+          x2 +
+          " " +
+          y2 +
+          '"/>';
+      });
+    });
+    svg += "</svg>";
+    inner.insertAdjacentHTML("beforeend", svg);
+
+    // node cards on top
+    ids.forEach(function (id) {
+      var pos = positions[id];
+      if (!pos) return;
+      var seen = nodeSeen.indexOf(id) !== -1;
+      var bgName =
+        S.scenes[id] &&
+        S.backgrounds &&
+        S.backgrounds[S.scenes[id].bg] &&
+        typeof S.backgrounds[S.scenes[id].bg].name === "string"
+          ? S.backgrounds[S.scenes[id].bg].name
+          : "";
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "vn-tree-node" + (seen ? " vn-tree-seen" : "");
+      btn.style.left = pos.x + "px";
+      btn.style.top = pos.y + "px";
+      btn.setAttribute("data-node", id);
+      var label = document.createElement("span");
+      label.className = "vn-tree-id";
+      label.textContent = id;
+      btn.appendChild(label);
+      var sub = document.createElement("span");
+      sub.className = "vn-tree-sub";
+      sub.textContent = bgName || "·";
+      btn.appendChild(sub);
+      var cgId = cgMap[id];
+      if (cgId) {
+        var thumb = document.createElement("span");
+        thumb.className = "vn-tree-cg";
+        var cgGot = cgSeen.indexOf(cgId) !== -1;
+        if (cgGot) {
+          var img = document.createElement("img");
+          var src =
+            typeof window !== "undefined" &&
+            window.VN_CG_IMG &&
+            window.VN_CG_IMG[cgId];
+          if (typeof src === "string") img.src = src;
+          img.alt = "";
+          thumb.appendChild(img);
+        } else {
+          thumb.textContent = "？";
+          thumb.classList.add("vn-tree-cg-locked");
+        }
+        btn.appendChild(thumb);
+        if (cgGot) {
+          var star = document.createElement("span");
+          star.className = "vn-tree-star";
+          star.textContent = "☆";
+          btn.appendChild(star);
+        }
+      }
+      if (seen) {
+        btn.addEventListener("click", function () {
+          closeGallery();
+          enterScene(id, 0);
+          toast("跳转 → " + id);
+        });
+      } else {
+        btn.disabled = true;
+      }
+      inner.appendChild(btn);
+    });
   }
 
   function buildSpritePanel() {
@@ -2971,7 +3278,7 @@
   }
 
   function setGalleryTab(tab) {
-    var want = { scenes: false, music: false, sprites: false };
+    var want = { scenes: false, music: false, sprites: false, tree: false };
     if (want.hasOwnProperty(tab)) want[tab] = true;
     els.gtabScenes.setAttribute(
       "aria-selected",
@@ -2982,19 +3289,15 @@
       "aria-selected",
       want.sprites ? "true" : "false",
     );
-    if (want.scenes) {
-      els.gpanelScenes.removeAttribute("hidden");
-      els.gpanelMusic.setAttribute("hidden", "");
-      els.gpanelSprites.setAttribute("hidden", "");
-    } else if (want.music) {
-      els.gpanelScenes.setAttribute("hidden", "");
-      els.gpanelMusic.removeAttribute("hidden");
-      els.gpanelSprites.setAttribute("hidden", "");
-    } else {
-      els.gpanelScenes.setAttribute("hidden", "");
-      els.gpanelMusic.setAttribute("hidden", "");
-      els.gpanelSprites.removeAttribute("hidden");
-    }
+    els.gtabTree.setAttribute("aria-selected", want.tree ? "true" : "false");
+    els.gpanelScenes.setAttribute("hidden", "");
+    els.gpanelMusic.setAttribute("hidden", "");
+    els.gpanelSprites.setAttribute("hidden", "");
+    els.gpanelTree.setAttribute("hidden", "");
+    if (want.scenes) els.gpanelScenes.removeAttribute("hidden");
+    else if (want.music) els.gpanelMusic.removeAttribute("hidden");
+    else if (want.sprites) els.gpanelSprites.removeAttribute("hidden");
+    else if (want.tree) els.gpanelTree.removeAttribute("hidden");
   }
 
   function toggleMusicPreview(bedId, row, playBtn) {
@@ -3528,7 +3831,7 @@
     els.bg.style.background = "";
     els.bgFx.innerHTML = "";
     deactivateCanvasScene(); // stop the loop, drop the canvas + .vn-has-canvas
-    audioHook("scene", null); // title screen: the module silences the ambient
+    audioHook("scene", "title"); // title screen plays its own theme
     els.name.classList.add("vn-hidden");
     els.name.textContent = "";
     els.text.textContent = "";
