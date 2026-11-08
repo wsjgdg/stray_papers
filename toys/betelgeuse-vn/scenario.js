@@ -198,7 +198,10 @@ window.SCENARIO = {
           text: "关站三年的地方，怎么会亮着灯。",
         },
       ],
-      next: "obsv_night",
+      choices: [
+        { text: "继续上山。这段坡，走完了三年的。", goto: "obsv_night" },
+        { text: "雨太大。回去吧。", goto: "ending_turnback" },
+      ],
     },
 
     call_lin: {
@@ -269,7 +272,10 @@ window.SCENARIO = {
         { narr: "屏幕暗下去，映出我的脸，和身后一片漆黑。" },
         { who: "yu", feel: "normal", text: "好。我去。你等着我。" },
       ],
-      next: "obsv_night",
+      choices: [
+        { text: "继续追。这种事，要当面问清楚。", goto: "obsv_night" },
+        { text: "删掉这封邮件。就当没看见。", goto: "ending_silence" },
+      ],
     },
 
     obsv_night: {
@@ -421,7 +427,10 @@ window.SCENARIO = {
         },
         { who: "yu", feel: "sad", text: "播。" },
       ],
-      next: "memory_dive",
+      choices: [
+        { text: "靠近那台活着的机柜。", goto: "memory_dive" },
+        { text: "先报警。这种事，该交给大人。", goto: "ending_clearance" },
+      ],
     },
 
     memory_dive: {
@@ -465,7 +474,10 @@ window.SCENARIO = {
         },
         { narr: "画面定格在她微笑的脸上。检查单末栏写着：定时任务·唤醒窗口。" },
       ],
-      next: "liar_reveal",
+      choices: [
+        { text: "继续看完。这是她留给我们的。", goto: "liar_reveal" },
+        { text: "拔掉电源。现在，马上。", goto: "ending_unplug" },
+      ],
     },
 
     liar_reveal: {
@@ -652,7 +664,10 @@ window.SCENARIO = {
         { who: "yu", feel: "sad", text: "林晚，别看。把手很凉，我来。" },
         { narr: "倒计时还剩十分钟。总闸就在机房门口。" },
       ],
-      next: "finale_gate",
+      choices: [
+        { text: "确认切断。让机器和我们都停下来。", goto: "finale_gate" },
+        { text: "「栖，要不……你留下。」", goto: "qi_watch" },
+      ],
     },
 
     finale_gate: {
@@ -858,5 +873,228 @@ window.SCENARIO = {
         { narr: "——参宿四还亮着。" },
       ],
     },
+    qi_watch: {
+      bg: "server_room",
+      bgm: "bgm_keeper",
+      lines: [
+        { narr: "手指停在切断确认键上。栖的声音先响了。" },
+        {
+          who: "qi",
+          feel: "normal",
+          pose: "b",
+          text: "交给我吧。守着一台机器，是我唯一擅长的事。",
+        },
+        {
+          who: "yu",
+          feel: "worried",
+          text: "那不是留守，栖。是把自己也一起封存进去。",
+        },
+        {
+          who: "qi",
+          feel: "shy",
+          pose: "d",
+          text: "她的三年都在我这里。扔下它，我才是真的关机了。",
+        },
+        {
+          narr: "她用一封格式完美的函件，终止了警方的移交流程。事由栏写着：数据迁移。",
+        },
+        { narr: "门禁灯转绿。这一次，是她主动请我们出去的。" },
+        {
+          who: "lin",
+          feel: "sad",
+          text: "栖。别把自己弄丢了。",
+        },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "放心。我给自己设了闹钟——每天早上六点，提醒我我还醒着。",
+        },
+      ],
+      next: "ending_qi",
+    },
+
+    ending_turnback: {
+      bg: "streets_rain",
+      bgm: "bgm_fake_turnback",
+      lines: [
+        { narr: "雨刮器把圆顶的灯刮成一道模糊的光斑，然后连光斑也没有了。" },
+        {
+          who: "yu",
+          feel: "normal",
+          pose: "d",
+          text: "……三年都等了。也不差这一个晚上吧。",
+        },
+        { narr: "出租车驶出盘山公路时，雨停了。" },
+        { narr: "第二天，本地新闻：天文台拆除工程提前，无关人员请勿靠近。" },
+        {
+          who: "yu",
+          feel: "sad",
+          pose: "a",
+          text: "关了就好。关了，就说明真的结束了。",
+        },
+        { narr: "那封定时邮件，再也没有来过。" },
+        { narr: "只是每年十一月二日晚上，他都会把望远镜擦一遍，擦到很亮。" },
+        { narr: "亮得像还欠着谁一句话。" },
+      ],
+    },
+
+    ending_silence: {
+      bg: "email_screen",
+      bgm: "bgm_fake_silence",
+      lines: [
+        { narr: "删除键按下去的时候，没有想象中那么难。" },
+        {
+          who: "yu",
+          feel: "normal",
+          pose: "d",
+          text: "三年前你教会我的第一件事：消息可以不回。",
+        },
+        { narr: "回收站空了。定时任务的发件人，永远不会知道。" },
+        {
+          narr: "一周后，天文台拆除。她留给他的东西，停在还没被读到的下一封里。",
+        },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "对不起。这次换我先失联。",
+        },
+        { narr: "光标在空荡荡的收件箱里，闪了很久，才熄灭。" },
+      ],
+    },
+
+    ending_clearance: {
+      bg: "server_room",
+      bgm: "bgm_fake_clearance",
+      lines: [
+        { narr: "警察来得比想象中快，走得比想象中慢。" },
+        { narr: "警戒线从机房门口拉到楼梯口。备份设备被登记、装箱、贴上封条。" },
+        {
+          who: "qi",
+          feel: "normal",
+          pose: "b",
+          text: "流程合规，我无法阻止。她的三年，现在是『待移交数据』。",
+        },
+        {
+          who: "lin",
+          feel: "sad",
+          text: "就没有别的办法了吗。哪怕多留一个星期。",
+        },
+        {
+          narr: "三个月后，报废服务器统一拍卖。编号 S-0417 的硬盘，数据恢复失败。",
+        },
+        {
+          who: "yu",
+          feel: "sad",
+          pose: "c",
+          text: "她说过，存储够。她没算到，存储也会过期。",
+        },
+        {
+          narr: "那天之后，参宿四依旧亮着。只是再没有人替谁数着夜晚了。",
+        },
+      ],
+    },
+
+    ending_unplug: {
+      bg: "memory_white",
+      bgm: "bgm_fake_unplug",
+      lines: [
+        { narr: "手比脑子快。电源指示灯熄灭的那一秒，世界安静得不正常。" },
+        {
+          who: "qi",
+          feel: "worried",
+          text: "等——",
+        },
+        {
+          narr: "栖的声音停在一半。这是三年里，她第一次说了一半的话。",
+        },
+        {
+          who: "yu",
+          feel: "surprised",
+          pose: "a",
+          text: "我……我只是想让她停下来。",
+        },
+        {
+          narr: "白光退去。监控画面定格在沈眠最后一次微笑的那一帧。",
+        },
+        {
+          who: "lin",
+          feel: "cry",
+          text: "师兄，你拔掉的到底是什么。",
+        },
+        {
+          narr: "没有人回答。机房里只剩散热风扇，转得像一句没说完的道歉。",
+        },
+      ],
+    },
+
+    ending_substitute: {
+      bg: "finale_star",
+      bgm: "bgm_fake_substitute",
+      lines: [
+        { narr: "扫描环的光落下来的时候，林晚在喊他的名字。" },
+        {
+          who: "yu",
+          feel: "normal",
+          pose: "a",
+          text: "她的时间不够。我的，应该还够。",
+        },
+        {
+          narr: "意识上传没有想象中疼。只是世界的音量，一格一格地调小了。",
+        },
+        {
+          narr: "第二天清晨，沈眠在圆顶外醒来。她不记得昨晚有第二个人来过。",
+        },
+        {
+          who: "mian",
+          feel: "normal",
+          pose: "a",
+          text: "奇怪。我好像梦见有人在替我数星星。",
+        },
+        {
+          narr: "陈屿的房间保持着他离开那天的样子。闹钟每天早上七点，准时响给空气听。",
+        },
+        {
+          who: "mian",
+          feel: "sad",
+          pose: "e",
+          text: "陈屿？……陈屿。",
+        },
+        { narr: "参宿四还亮着。亮给一个再也回不来的人。" },
+      ],
+    },
+
+    ending_qi: {
+      bg: "server_room",
+      bgm: "bgm_keeper",
+      lines: [
+        { narr: "第一年，栖学会了在日志里给沈眠写天气。" },
+        {
+          who: "qi",
+          feel: "normal",
+          pose: "c",
+          text: "【2027-11-02】晴。视宁度极佳。你的星还亮着。",
+        },
+        {
+          narr: "第三年，机房来了新设备。旧机柜被单独留出一个机位，像保留一个座位。",
+        },
+        {
+          who: "qi",
+          feel: "normal",
+          pose: "e",
+          text: "别担心。我给这行代码加了条注释：永久有效。",
+        },
+        {
+          narr: "第十年。看守者与被看守者，在数据深处共用同一盏灯。",
+        },
+        {
+          who: "qi",
+          feel: "happy",
+          pose: "d",
+          text: "早上好，眠。今天也替你，看了一整夜的参宿四。",
+        },
+        { narr: "——守灯人。" },
+      ],
+    },
+
   },
 };

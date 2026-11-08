@@ -138,11 +138,27 @@
   var SETTINGS_VOLUME_MAX = 1;
   var SETTINGS_DELAY_MIN = 800; // auto-delay slider range, matches the input
   var SETTINGS_DELAY_MAX = 3000;
-  var ENDING_IDS = ["ending_bad", "ending_good", "ending_true"];
+  var ENDING_IDS = [
+    "ending_true",
+    "ending_good",
+    "ending_qi",
+    "ending_turnback",
+    "ending_silence",
+    "ending_clearance",
+    "ending_unplug",
+    "ending_substitute",
+    "ending_bad",
+  ];
   var ENDING_LABELS = {
-    ending_bad: "熄灭",
-    ending_good: "迟到三年的早安",
     ending_true: "还亮着",
+    ending_good: "迟到三年的早安",
+    ending_qi: "守灯人",
+    ending_turnback: "折返",
+    ending_silence: "已读不回",
+    ending_clearance: "清场",
+    ending_unplug: "断线",
+    ending_substitute: "替身",
+    ending_bad: "熄灭",
   };
   var ENDING_UNSEEN = "？"; // spoiler-safe label while an ending is uncollected
   var ENDING_TEXT = "「THE END」";
@@ -3815,7 +3831,7 @@
     els.bg.style.background = "";
     els.bgFx.innerHTML = "";
     deactivateCanvasScene(); // stop the loop, drop the canvas + .vn-has-canvas
-    audioHook("scene", null); // title screen: the module silences the ambient
+    audioHook("scene", "title"); // title screen plays its own theme
     els.name.classList.add("vn-hidden");
     els.name.textContent = "";
     els.text.textContent = "";
