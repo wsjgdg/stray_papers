@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文件占用诊断器</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">🔒</div>
+    <div>
+      <h1>文件占用诊断器</h1>
+      <p>查明文件为什么被占用 · 直接给出解决办法</p>
+    </div>
+  </div>
+  <div class="head-right-top">
+    <button class="badge theme-toggle" id="themeToggle" aria-label="切换深色 / 浅色模式" title="切换深色 / 浅色">🌙</button>
+    <div class="badge platform" id="platform">检测中…</div>
+  </div>
+</header>
+
+<main>
+
+  <section class="card">
+    <div class="tabs">
+      <button class="tab active" data-tab="scan">📁 文件 / 文件夹检测</button>
+      <button class="tab" data-tab="paste">📋 报错提示分析</button>
+    </div>
+
+    <div class="panel active" id="panel-scan">
+      <div class="row">
+        <input id="pathInput" type="text" spellcheck="false"
+               placeholder="输入或粘贴文件 / 文件夹路径，例如 C:\Users\me\Desktop\报表.xlsx">
+      </div>
+      <div class="row btns">
+        <button class="btn ghost" id="browseFile" aria-label="选择文件">🗂 选择文件</button>
+        <button class="btn ghost" id="browseDir" aria-label="选择文件夹">📂 选择文件夹</button>
+        <button class="btn primary" id="scanBtn">🔍 开始检测</button>
+      </div>
+      <div class="drop-hint">💡 也可以直接把文件 / 文件夹拖进页面</div>
+      <label class="check">
+        <input type="checkbox" id="deepScan">
+        递归扫描目录里被打开的文件（更彻底，速度较慢）
+      </label>
+    </div>
+
+    <div class="panel" id="panel-paste">
+      <textarea id="pasteInput" rows="6" spellcheck="false"
+        placeholder="把系统弹出的报错提示粘贴到这里，例如：&#10;“操作无法完成，因为文件已在另一程序中打开。”&#10;“另一个程序正在使用此文件，进程无法访问。”"></textarea>
+      <div class="chips">
+        <span class="chip-label">试试示例：</span>
+        <button class="chip" data-demo="操作无法完成，因为文件已在另一程序中打开。">文件被占用</button>
+        <button class="chip" data-demo="拒绝访问。你需要权限才能执行此操作。">拒绝访问</button>
+        <button class="chip" data-demo="操作无法完成，因为其中的文件夹或文件已在另一程序中打开。请关闭该文件或文件夹，然后重试。">文件夹被占用</button>
+        <button class="chip" data-demo="无法删除文件：磁盘被写保护。">写保护</button>
+      </div>
+      <div class="row btns">
+        <button class="btn primary" id="analyzeBtn">✨ 分析并给出对策</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card guide" id="guideCard">
+    <h3>👋 欢迎，先挑一种方式开始</h3>
+    <ul class="guide-list">
+      <li><b>📁 文件 / 文件夹检测</b>：粘贴路径或拖入文件，立刻列出是谁占用了它、能否读 / 写 / 删，并给出解决办法。</li>
+      <li><b>📋 报错提示分析</b>：把系统弹出的报错整段粘贴进来，自动匹配原因与对策（支持中英文、OCR / 复制粘来的错乱文本）。</li>
+      <li><b>⚡ 一键处置</b>：释放占用句柄、强力清除、直接删除，都在结果卡片里。</li>
+      <li><b>🔒 完全本地</b>：服务只监听本机 <code>127.0.0.1</code>，不上传任何数据。</li>
+    </ul>
+    <div class="guide-actions">
+      <button class="btn primary" id="guideScan">📁 去检测文件</button>
+      <button class="btn ghost" id="guidePaste">📋 去分析报错</button>
+    </div>
+  </section>
+
+  <section class="card hidden" id="resultCard">
+    <div class="result-head">
+      <h2 id="resultTitle">诊断结果</h2>
+      <div class="conclusion" id="conclusion"></div>
+    </div>
+
+    <div class="action-bar">
+      <div class="action-group">
+        <button class="btn ghost" id="copyReport" aria-label="复制报告">📋 复制报告</button>
+        <button class="btn ghost" id="exportMd" aria-label="导出报告">📥 导出报告</button>
+      </div>
+      <div class="action-group">
+        <button class="btn ghost" id="waitBtn" aria-label="等待释放">⏳ 等待释放</button>
+        <button class="btn ghost" id="unlockBtn" aria-label="释放占用">🔓 释放占用</button>
+      </div>
+      <div class="action-group danger-group">
+        <button class="btn danger" id="forceCleanBtn" aria-label="强力清除">⚡ 强力清除</button>
+        <button class="btn danger" id="deleteBtn" aria-label="删除">🗑 删除</button>
+      </div>
+    </div>
+
+    <div class="status-row" id="statusRow"></div>
+
+    <div class="compare hidden" id="compareBlock"></div>
+
+    <div class="block hidden" id="batchBlock">
+      <h3>📋 批量检测结果</h3>
+      <table class="locker-table">
+        <thead>
+          <tr><th>路径</th><th>类型</th><th>占用</th><th>结论</th><th></th></tr>
+        </thead>
+        <tbody id="batchBody"></tbody>
+      </table>
+    </div>
+
+    <div class="block hidden" id="lockerBlock">
+      <h3>🧩 占用进程</h3>
+      <table class="locker-table">
+        <thead>
+          <tr><th>PID</th><th>进程名</th><th>路径 / 说明</th><th></th></tr>
+        </thead>
+        <tbody id="lockerBody"></tbody>
+      </table>
+    </div>
+
+    <div class="block hidden" id="reasonBlock">
+      <h3>🔎 原因分析</h3>
+      <ol class="items" id="reasonList"></ol>
+    </div>
+
+    <div class="block hidden" id="fixBlock">
+      <h3>🛠 解决办法</h3>
+      <ol class="items fixes" id="fixList"></ol>
+    </div>
+
+    <div class="block hidden" id="pathBlock">
+      <h3>📎 提示中检测到的路径</h3>
+      <div class="path-links" id="pathLinks"></div>
+    </div>
+  </section>
+
+  <section class="card hidden" id="historyCard">
+    <div class="tips-head">
+      <h3>🕘 检测历史</h3>
+      <button class="btn danger sm" id="clearHistory">清空历史</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+    <div class="hist-pager hidden" id="histPager">
+      <button class="btn ghost sm" id="histPrev">← 上一页</button>
+      <span class="h-page-info" id="histPageInfo"></span>
+      <button class="btn ghost sm" id="histNext">下一页 →</button>
+    </div>
+  </section>
+
+  <section class="card tips">
+    <div class="tips-head">
+      <h3>💡 小提示</h3>
+      <div class="tips-head-right">
+        <button class="btn ghost sm" id="historyToggle" aria-label="显示或隐藏检测历史">🕘 历史</button>
+        <label class="check">
+          <input type="checkbox" id="clipWatch" checked>
+          自动感知剪贴板里的报错提示
+        </label>
+      </div>
+    </div>
+    <ul>
+      <li>直接把<b>文件/文件夹拖进本页面</b>即可检测（自动定位真实路径）</li>
+      <li>复制报错提示后，页面会自动弹出“立即分析”建议</li>
+      <li>Windows 上顽固占用，可试试重启资源管理器（本工具会给出具体命令）</li>
+      <li>macOS 提示“没有权限”时，记得给 App 授予「完全磁盘访问权限」</li>
+      <li>本工具只监听本机 127.0.0.1，不上传任何数据</li>
+    </ul>
+  </section>
+
+</main>
+
+<div id="dropOverlay" class="drop-overlay hidden">
+  <div class="drop-inner">📥 松开鼠标，立即检测该文件 / 文件夹</div>
+</div>
+<div id="toastWrap"></div>
+
+<footer>LockSleuth · 本地运行 · 数据不出本机</footer>
+<script src="app.js"></script>
+</body>
+</html>
