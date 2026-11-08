@@ -1,0 +1,28 @@
+{
+  "batch": 8,
+  "count": 300,
+  "low": 0,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-孝感-2203",
+    "scenic-肇庆-2432",
+    "scenic-汕尾-2380",
+    "scenic-惠州-2376",
+    "scenic-茂名-2427",
+    "scenic-梅州-2359",
+    "scenic-东莞-2393",
+    "scenic-恩施土家族苗族自治州-2257",
+    "scenic-东莞-2392",
+    "scenic-广州-2288",
+    "scenic-南宁-2495",
+    "scenic-南宁-2474",
+    "scenic-黄冈-2224",
+    "scenic-深圳-2299",
+    "scenic-南宁-2484",
+    "scenic-恩施土家族苗族自治州-2255",
+    "scenic-咸宁-2237",
+    "scenic-清远-2446",
+    "scenic-荆门-2193",
+    "scenic-江门-2402"
+  ]
+}

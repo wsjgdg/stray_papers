@@ -1,0 +1,28 @@
+{
+  "batch": 8,
+  "count": 100,
+  "low": 89,
+  "missingRequired": 89,
+  "sample": [
+    "scenic-宣城-1330",
+    "scenic-龙岩-1407",
+    "scenic-南平-1390",
+    "scenic-南平-1389",
+    "scenic-宣城-1328",
+    "scenic-厦门-1384",
+    "scenic-南平-1395",
+    "scenic-池州-1352",
+    "scenic-宣城-1333",
+    "scenic-黄山-1364",
+    "scenic-漳州-1429",
+    "scenic-漳州-1423",
+    "scenic-池州-1346",
+    "scenic-黄山-1369",
+    "scenic-漳州-1426",
+    "scenic-池州-1356",
+    "scenic-宣城-1334",
+    "scenic-龙岩-1414",
+    "scenic-龙岩-1410",
+    "scenic-龙岩-1403"
+  ]
+}

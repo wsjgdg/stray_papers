@@ -1,0 +1,28 @@
+{
+  "batch": 3,
+  "count": 100,
+  "low": 58,
+  "missingRequired": 58,
+  "sample": [
+    "scenic-伊春-713",
+    "scenic-包头-443",
+    "scenic-北京-26",
+    "scenic-保定-190",
+    "scenic-北京-30",
+    "scenic-北京-19",
+    "scenic-佳木斯-747",
+    "scenic-北京-49",
+    "scenic-保定-187",
+    "scenic-包头-449",
+    "scenic-包头-446",
+    "scenic-包头-448",
+    "scenic-北京-53",
+    "scenic-兴安盟-506",
+    "scenic-北京-22",
+    "scenic-北京-43",
+    "scenic-北京-52",
+    "scenic-北京-28",
+    "scenic-保定-188",
+    "scenic-乌海-572"
+  ]
+}

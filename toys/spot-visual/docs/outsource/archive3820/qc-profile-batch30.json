@@ -1,0 +1,28 @@
+{
+  "batch": 30,
+  "count": 100,
+  "low": 59,
+  "missingRequired": 59,
+  "sample": [
+    "scenic-临夏回族自治州-3765",
+    "scenic-张掖-3741",
+    "scenic-张掖-3724",
+    "scenic-汉中-3680",
+    "scenic-张掖-3729",
+    "scenic-张掖-3728",
+    "scenic-陇南-3776",
+    "scenic-安康-3691",
+    "scenic-酒泉-3715",
+    "scenic-汉中-3681",
+    "scenic-陇南-3779",
+    "scenic-汉中-3676",
+    "scenic-酒泉-3707",
+    "scenic-临夏回族自治州-3762",
+    "scenic-汉中-3683",
+    "scenic-汉中-3684",
+    "scenic-天水-3747",
+    "scenic-天水-3750",
+    "scenic-汉中-3685",
+    "scenic-平凉-3755"
+  ]
+}

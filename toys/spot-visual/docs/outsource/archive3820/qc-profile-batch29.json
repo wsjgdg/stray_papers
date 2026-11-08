@@ -1,0 +1,28 @@
+{
+  "batch": 29,
+  "count": 100,
+  "low": 51,
+  "missingRequired": 51,
+  "sample": [
+    "scenic-商洛-3636",
+    "scenic-渭南-3604",
+    "scenic-汉中-3675",
+    "scenic-西安-3569",
+    "scenic-宝鸡-3588",
+    "scenic-宝鸡-3583",
+    "scenic-商洛-3632",
+    "scenic-宝鸡-3579",
+    "scenic-宝鸡-3589",
+    "scenic-商洛-3639",
+    "scenic-商洛-3641",
+    "scenic-宝鸡-3586",
+    "scenic-西安-3573",
+    "scenic-西安-3570",
+    "scenic-商洛-3634",
+    "scenic-渭南-3608",
+    "scenic-渭南-3607",
+    "scenic-汉中-3672",
+    "scenic-咸阳-3653",
+    "scenic-宝鸡-3592"
+  ]
+}

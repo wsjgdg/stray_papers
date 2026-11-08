@@ -1,0 +1,28 @@
+{
+  "batch": 6,
+  "count": 300,
+  "low": 0,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-济南-1661",
+    "scenic-临沂-1837",
+    "scenic-烟台-1729",
+    "scenic-上饶-1558",
+    "scenic-淄博-1841",
+    "scenic-烟台-1730",
+    "scenic-萍乡-1651",
+    "scenic-潍坊-1755",
+    "scenic-临沂-1814",
+    "scenic-萍乡-1654",
+    "scenic-烟台-1726",
+    "scenic-赣州-1591",
+    "scenic-宜春-1618",
+    "scenic-青岛-1692",
+    "scenic-临沂-1812",
+    "scenic-赣州-1592",
+    "scenic-上饶-1564",
+    "scenic-济南-1674",
+    "scenic-临沂-1816",
+    "scenic-威海-1804"
+  ]
+}

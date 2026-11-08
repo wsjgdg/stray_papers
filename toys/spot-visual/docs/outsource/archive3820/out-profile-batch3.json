@@ -1,0 +1,2108 @@
+{
+  "task": "景点档案结构化字段-批3",
+  "batch": 3,
+  "count": 100,
+  "authorship": "批3：Z.ai-GLM",
+  "items": [
+    {
+      "id": "scenic-金华-1141",
+      "name": "横店影视城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketNote": "多园区分别售票（秦王宫、清明上河图、明清宫苑、梦幻谷等），另有联票与套票，以各园区售票处公告为准",
+        "openHours": "各园区约08:30-17:00，梦幻谷等夜场延长（以各园区当日公告为准）",
+        "suggestedHours": 8,
+        "bestMonths": "全年",
+        "nearestAirport": "义乌机场",
+        "nearestRail": "义乌站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "园区分散，建议按兴趣选2-3个园区深度游览；影视拍摄期间部分场景可能临时封闭，演出场次请提前查看时刻表"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-铜仁-3315",
+      "name": "铜仁市江口梵净山生态旅游景区",
+      "profile": {
+        "ticketPeak": 110,
+        "ticketNote": "观光车往返、索道往返另计；按预约时段入园",
+        "openHours": "约07:30-15:30入园（随季节调整，停止入园后不再放行上山，以景区当日公告为准）",
+        "suggestedHours": 7,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "铜仁凤凰机场",
+        "nearestRail": "铜仁站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": true,
+        "reservationNote": "须通过「梵净山生态旅游区」官方平台实名预约购票，每日限流、分时段入园，旺季票源紧张请提前数日预订",
+        "notices": "红云金顶需攀铁链登顶，恐高与体力不佳者量力而行；山顶风大温低备防风外套；生态区禁烟禁明火"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-银川-3881",
+      "name": "镇北堡西部影城",
+      "profile": {
+        "ticketPeak": 100,
+        "ticketNote": "门票含定时讲解服务（以景区当日安排为准）",
+        "openHours": "约08:00-18:00（随季节调整，以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "银川河东国际机场",
+        "nearestRail": "银川站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "西北日照强、风沙大，备防晒与防风用品；影视剧组拍摄期间部分场景可能临时封闭"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-银川-3882",
+      "name": "水洞沟旅游区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketNote": "藏兵洞与景区特色交通工具（骆驼车、游船等）可购套票",
+        "openHours": "约08:00-18:00（16:30停止售票，以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "银川河东国际机场",
+        "nearestRail": "银川站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "雅丹峡谷与藏兵洞步道多，穿舒适防滑鞋；风沙天气注意防护，留意景区广播提示"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-镇江-4252",
+      "name": "镇江市句容茅山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketNote": "实行门票与观光车票制（含联票），具体票价以售票处公告为准",
+        "openHours": "约07:30-17:00（以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "句容西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "道教圣地，九霄万福宫等宫观请文明参观；山道盘曲，自驾注意会车"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-镇江-4253",
+      "name": "金山·焦山·北固山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketNote": "金山、焦山、北固山三园分别售票，另有联票，单园票价以各园售票处公告为准",
+        "openHours": "各园约08:00-17:30（随季节调整，以各园当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "常州奔牛国际机场",
+        "nearestRail": "镇江站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "金山寺裹山、焦山江中浮玉、北固山三国遗韵各有看点；焦山需摆渡上岛，留意末班船时间"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-长春-574",
+      "name": "长春伪满皇宫博物院",
+      "profile": {
+        "ticketPeak": 80,
+        "openHours": "约08:30-16:50（停止售票后停止入馆，闭馆日以博物院当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "历史遗址陈列密集，建议租用讲解器；部分展区请勿触摸文物与喧哗"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长春-575",
+      "name": "长春净月潭景区",
+      "profile": {
+        "ticketPeak": 30,
+        "openHours": "约06:00-20:00（园中园与游船、索道等项目运营时间不一，以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月，12-2月冰雪活动季亦佳",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "环潭步道较长，可乘观光车分段游览；冬季冰雪路面注意防滑，滑雪场另购票"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长春-576",
+      "name": "长影世纪城旅游区",
+      "profile": {
+        "ticketPeak": 240,
+        "ticketNote": "通票含大部分特效放映项目，个别项目需另购票或按场次排队",
+        "openHours": "约09:00-17:00（放映场次与闭园时间随季节调整，以当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "全年（项目以室内为主，四季皆宜）",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "热门4D与巨幕项目场次固定，入园先拍下时刻表再规划路线；部分项目有身高与年龄限制"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长春-577",
+      "name": "长春世界雕塑园",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketNote": "松山韩蓉非洲艺术收藏博物馆等馆展按展馆购票或含联票，以园方公告为准",
+        "openHours": "约08:00-17:00（展馆开放时间以园方当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "长春站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "室外雕塑区面积大，夏季注意防晒补水；冬季户外停留时间不宜过长"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4445",
+      "name": "长沙市岳麓山-橘子洲旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "岳麓山、橘子洲均免费开放；岳麓书院等收费景点与观光车、索道另计",
+        "openHours": "景区全天开放（岳麓书院等收费点约07:30-18:00，以当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "长沙南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "橘子洲头节假日人流极大，焰火燃放时段请提前离洲或错峰；地铁2号线直达最便捷"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长沙-4446",
+      "name": "长沙市花明楼景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放",
+        "freePolicy": "刘少奇同志纪念馆免费参观（凭有效证件领票，以馆方公告为准）",
+        "openHours": "约09:00-17:00（16:30停止入馆，纪念馆逢周一闭馆，法定节假日除外，以当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长沙黄花国际机场",
+        "nearestRail": "宁乡西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "纪念馆为庄重场所请保持肃静，部分展区禁止拍照；铜像广场与故居可步行串联参观"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-长治-365",
+      "name": "太行山八泉峡景区",
+      "profile": {
+        "ticketPeak": 100,
+        "ticketNote": "观光车、游船、索道等交通项目另计，亦可购含交通的联票",
+        "openHours": "约08:00-16:30入园（17:30前后闭园，随季节调整，以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "长治王村机场",
+        "nearestRail": "长治东站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "峡谷水陆联游（船+索道+步道），穿防滑鞋并留足体力；雨季防山洪落石，听从景区安全提示"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阜阳-1227",
+      "name": "八里河旅游区",
+      "profile": {
+        "ticketPeak": 100,
+        "openHours": "约08:00-17:30（以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "阜阳西关机场",
+        "nearestRail": "阜阳西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "园区以湖景与各国微缩建筑为主，夏季日晒强备防晒；临水区域请看护好儿童"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阳江-2411",
+      "name": "海陵岛大角湾海上丝路旅游区",
+      "profile": {
+        "ticketPeak": 48,
+        "openHours": "约08:00-18:30（泳季与节假日延长，以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月（泳季）",
+        "nearestRail": "阳江站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "下海请在指定泳区并留意救生旗与台风预警；夏季紫外线强，防晒与补水必备"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阿勒泰地区-3948",
+      "name": "喀纳斯景区",
+      "profile": {
+        "ticketPeak": 160,
+        "ticketNote": "区间车票另计；观鱼台车票及禾木、白哈巴等景区另行购票",
+        "openHours": "约08:00-19:00入园（随季节调整，冬季部分区域封闭，以景区当日公告为准）",
+        "suggestedHours": 8,
+        "bestMonths": "6-9月，9月中下旬金秋尤佳",
+        "nearestAirport": "喀纳斯机场",
+        "nearestRail": "北屯市站",
+        "driveFromCityMin": 260,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "山区昼夜温差大，夏季也需备保暖衣物；旺季区间车与住宿紧张请提前安排；白哈巴等边境区域需办边防证"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阿勒泰地区-3949",
+      "name": "可可托海景区",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketNote": "区间车票另计",
+        "openHours": "约09:00-18:00（随季节调整，以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "富蕴可可托海机场",
+        "driveFromCityMin": 220,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "额尔齐斯大峡谷内气候多变备外套；神钟山段步道较长量力而行；冬季极寒谨防冻伤"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阿坝藏族羌族自治州-2942",
+      "name": "九寨沟风景名胜区",
+      "profile": {
+        "ticketPeak": 169,
+        "ticketOff": 80,
+        "ticketNote": "观光车票旺季90元、淡季80元另计",
+        "openHours": "约07:30-17:00（分时段预约入园，随季节调整，以景区当日公告为准）",
+        "suggestedHours": 8,
+        "bestMonths": "9-11月（10月中下旬秋色最佳）、4-6月",
+        "nearestAirport": "九寨黄龙机场",
+        "nearestRail": "黄龙九寨站",
+        "driveFromCityMin": 540,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": true,
+        "reservationNote": "实行全网实名制分时段预约购票，每日限流，请通过九寨沟官方平台提前预订，旺季票源紧张",
+        "notices": "沟内海拔2000-3100米，缓步游览防高原反应；生态区禁烟禁明火；一日游以两条主沟为主，穿舒适的鞋"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阿坝藏族羌族自治州-2943",
+      "name": "黄龙国家级风景名胜区",
+      "profile": {
+        "ticketPeak": 170,
+        "ticketOff": 60,
+        "ticketNote": "索道上行80元、下行40元另计；索道只达半程，五彩池仍需步行",
+        "openHours": "约08:00-17:00入园（随季节调整，冬季有封闭养护期，以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "5-6月、9-10月",
+        "nearestAirport": "九寨黄龙机场",
+        "nearestRail": "黄龙九寨站",
+        "driveFromCityMin": 420,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "景区海拔3000-3900米，缓步慢行防高反，可备便携氧气；钙化彩池严禁下水踩踏"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阿坝藏族羌族自治州-2944",
+      "name": "汶川特别旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "映秀、水磨等主体区块免费开放；个别场馆讲解与三江片区如另行收费以景区公告为准",
+        "openHours": "街区全天开放；纪念馆类场馆约09:00-17:00（闭馆日以各场馆公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "成都双流国际机场",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "地震遗址参观请保持肃穆；山区雨季留意落石与道路管制信息"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-阿拉善盟-552",
+      "name": "胡杨林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketNote": "观赏期实行门票与区间车票制，具体票价以景区当年公告为准",
+        "openHours": "约08:00-18:00（观赏期随季节调整，以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "9月下旬-10月中旬（金黄观赏期）",
+        "nearestAirport": "额济纳桃来机场",
+        "nearestRail": "额济纳站",
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "10月观赏期人流车流极为集中，门票与住宿请提前安排；沙漠地带昼夜温差大备保暖衣物"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-陇南-3769",
+      "name": "陇南官鹅沟旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketNote": "含观光车等交通票制，具体票价以景区售票处公告为准",
+        "openHours": "约08:00-17:30（以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "陇南成县机场",
+        "nearestRail": "陇南站",
+        "driveFromCityMin": 100,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "峡谷步道较长，雨季防落石与湿滑；部分区域海拔较高备薄外套"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-雅安-3062",
+      "name": "碧峰峡旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketNote": "野生动物世界与风景区分别售票，园区内设有大熊猫基地",
+        "openHours": "约08:30-16:30入园（动物园与风景区时间略有差异，以当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "3-6月、9-11月",
+        "nearestRail": "雅安站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "猛兽区须乘投喂车参观并听从安排；雅安多雨备雨具；出行前请核实最新票价与公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-青岛-1677",
+      "name": "崂山风景区",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketNote": "按游览区分别售票（流清—仰口线90元等），观光车、索道与太清宫等另计，各线票价不同",
+        "openHours": "约06:30-18:00（各游览区与索道运营时间不一，随季节调整，以景区当日公告为准）",
+        "suggestedHours": 6,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "青岛胶东国际机场",
+        "nearestRail": "青岛站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "巨峰与仰口线台阶多量力而行；滨海路段风大注意安全；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-鞍山-4315",
+      "name": "辽宁千山景区",
+      "profile": {
+        "ticketPeak": 80,
+        "openHours": "约08:00-17:00（以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestRail": "鞍山西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "寺庙道观遍布山间请文明礼佛；五佛顶等路段台阶陡峭，量力而行"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-韶关-2331",
+      "name": "韶关市丹霞山景区",
+      "profile": {
+        "ticketPeak": 100,
+        "ticketNote": "门票两日有效；索道另计",
+        "openHours": "约06:00-18:30（观日出可提前入园，随季节调整，以景区当日公告为准）",
+        "suggestedHours": 6,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "韶关丹霞机场",
+        "nearestRail": "韶关站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "长老峰、阳元石片区台阶多，穿防滑鞋；夏季日晒强补水防晒，观日出备头灯或手电"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-驻马店-2016",
+      "name": "嵖岈山风景区",
+      "profile": {
+        "ticketPeak": 70,
+        "openHours": "约07:30-17:30（以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-10月",
+        "nearestRail": "驻马店西站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "花岗岩奇石区攀爬路段多，穿防滑鞋；雷雨大风天气险段临时关闭请配合指引"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-鸡西-704",
+      "name": "虎头旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-17:00（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "5-9月",
+        "nearestAirport": "鸡西兴凯湖机场",
+        "nearestRail": "虎林站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "要塞遗址通道阴凉潮湿备薄外套；乌苏里江沿岸属边境区域请遵守管理规定"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-鹰潭-1565",
+      "name": "龙虎山景区",
+      "profile": {
+        "ticketPeak": 260,
+        "ticketNote": "常售联票含景区观光车与泸溪河竹筏漂流；天师府等部分景点按需购票",
+        "openHours": "约07:30-17:30（竹筏漂流视水情停开，以景区当日公告为准）",
+        "suggestedHours": 6,
+        "bestMonths": "4-6月、9-11月",
+        "nearestRail": "鹰潭北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "悬棺升棺表演场次固定请提前安排；乘竹筏务必穿好救生衣；正一观等道教场所文明参观"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-黄山-1359",
+      "name": "黄山景区",
+      "profile": {
+        "ticketPeak": 190,
+        "ticketOff": 150,
+        "ticketNote": "云谷、玉屏、太平索道单程80元与景交车19元/程均另计",
+        "openHours": "约06:30-16:30入园（随季节与客流调整，以景区当日公告为准）",
+        "suggestedHours": 8,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "黄山屯溪国际机场",
+        "nearestRail": "黄山北站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "山上住宿紧张且价高请提前预订；台阶多备手杖，雨天穿雨衣不打伞；雷雨大风索道可能停运"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-黄山-1360",
+      "name": "皖南古村落",
+      "profile": {
+        "ticketPeak": 104,
+        "ticketNote": "西递、宏村两村分别售票，非联票",
+        "openHours": "约07:30-17:30（随季节调整，以各村当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "3-4月（油菜花）、11月（晒秋）",
+        "nearestAirport": "黄山屯溪国际机场",
+        "nearestRail": "黄山北站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "村内石板巷道多，穿舒适鞋；写生季与节假日人流大，请勿打扰村民生活，祠堂内文明参观"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-黑河-719",
+      "name": "五大连池风景区",
+      "profile": {
+        "ticketPeak": 78,
+        "ticketNote": "老黑山（黑龙山）78元；温泊、北饮泉等各景点分别售票，亦有联票，以景区公告为准",
+        "openHours": "约07:30-17:00（各景点时间略有差异，以当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "五大连池德都机场",
+        "nearestRail": "北安站",
+        "driveFromCityMin": 220,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "火山地貌区日晒强补水防晒；南饮泉冷矿泉可品尝，肠胃敏感者适量；冬季结冰期注意防滑"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-黔东南苗族侗族自治州-3328",
+      "name": "黔东南州镇远古城旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "古城街区免费开放；青龙洞、石屏山等收费景点与舞阳河游船另计",
+        "openHours": "古城全天开放；青龙洞等收费景点约08:00-17:30（以当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "凯里黄平机场",
+        "nearestRail": "镇远站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "夜游舞阳河灯光是亮点，河岸夜游注意安全；节假日古城内停车紧张，建议乘火车抵达或提前订房"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-黔南布依族苗族自治州-3344",
+      "name": "黔南州荔波樟江旅游景区",
+      "profile": {
+        "ticketPeak": 130,
+        "ticketNote": "小七孔与大七孔可分别购票或购联票；景区观光车另计",
+        "openHours": "约08:00-16:30入园（17:30前后清园，随季节调整，以景区当日公告为准）",
+        "suggestedHours": 6,
+        "bestMonths": "4-8月（丰水期瀑布最盛）",
+        "nearestAirport": "荔波机场",
+        "nearestRail": "荔波站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "68级跌水与水上森林段步道湿滑，穿防滑鞋；旺季客流大请尽早入园；喀斯特水域禁止野泳"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-龙岩-1401",
+      "name": "福建土楼（永定）旅游景区",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketNote": "洪坑、高北、初溪等土楼群分别售票（承启楼在高北土楼群），另有组合联票",
+        "openHours": "约08:00-17:30（各土楼群略有差异，以当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "龙岩冠豸山机场",
+        "nearestRail": "龙岩站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "土楼内仍有居民生活，请勿喧哗与擅入民宅；楼内木构易燃禁烟；山区各楼群间转场留意末班车"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-龙岩-1402",
+      "name": "龙岩市古田旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放",
+        "freePolicy": "古田会议纪念馆免费参观（凭有效证件，以馆方公告为准）",
+        "openHours": "约09:00-17:00（16:30停止入馆，纪念馆逢周一闭馆，法定节假日除外，以当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "龙岩冠豸山机场",
+        "nearestRail": "古田会址站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "会址与纪念馆为庄重场所请保持肃静；会议旧址群集中，沿参观动线依次游览"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-三亚-1",
+      "name": "鹿回头风景区",
+      "profile": {
+        "ticketPeak": 45,
+        "openHours": "约08:00-22:00（夜场灯光开放，停止入园时间以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "10月-次年4月",
+        "nearestAirport": "三亚凤凰国际机场",
+        "nearestRail": "三亚站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "山顶可俯瞰三亚湾与凤凰岛，日落与夜景时段最佳；园内蚊虫较多备驱蚊用品"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-三亚-3",
+      "name": "三亚西岛海洋文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketNote": "门票与往返船票打包售票，水上项目另计，具体以景区公告为准",
+        "openHours": "约08:00-17:30（末班离岛船时间以当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "10月-次年4月",
+        "nearestAirport": "三亚凤凰国际机场",
+        "nearestRail": "三亚站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "上岛须乘船，大风大浪可能停航，出行前关注当日航运公告；参与水上项目请穿好救生衣"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-三亚-4",
+      "name": "天涯海角游览区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免门票开放；观光车与园内体验项目另计",
+        "openHours": "约07:30-19:00（随季节调整，以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "10月-次年4月",
+        "nearestAirport": "三亚凤凰国际机场",
+        "nearestRail": "三亚站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "轮椅租借"
+        ],
+        "needReservation": false,
+        "notices": "礁石区湿滑请勿越过安全线；夏季紫外线极强，防晒必备；日落时分海岸线最出片"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-1",
+      "name": "龙华寺",
+      "profile": {
+        "ticketPeak": 10,
+        "ticketNote": "香券10元（初一、十五与庙会期间或有调整，以寺院公告为准）",
+        "openHours": "约07:00-16:30（以寺院当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海南站",
+        "driveFromCityMin": 20,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "素斋与素面闻名可体验；殿内请勿喧哗拍照，香火注意用火安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-11",
+      "name": "北外滩滨江绿地",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "江边风大注意保暖与安全；隔江对望陆家嘴天际线，傍晚至夜景时段最佳"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-14",
+      "name": "陆家嘴三件套打卡位",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放（傍晚蓝调时段出片最佳）",
+        "suggestedHours": 0.5,
+        "bestMonths": "全年",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "路口车流密集，切勿站入机动车道拍照；人流高峰注意礼让与随身财物"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-15",
+      "name": "武康路历史文化名街",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放（沿线名人故居内部开放时间各异）",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海站",
+        "driveFromCityMin": 15,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "武康大楼取景人流密集，注意交通安全；沿线多为居民区，请保持安静勿打扰住户"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-17",
+      "name": "上海人民广场",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放（喷泉与草坪开放时段以现场公告为准）",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "周边上海博物馆、上海城市规划展示馆等可串联；重大活动期间部分区域临时管制请配合"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-2",
+      "name": "上海豫园",
+      "profile": {
+        "ticketPeak": 40,
+        "ticketOff": 30,
+        "openHours": "约09:00-16:30（16:00停止入园，以园方当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年（春节灯会尤盛）",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "园林空间狭窄、节假日人流大，园外城隍庙商圈可顺游；灯会期间实行限流请错峰"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-22",
+      "name": "上海海洋水族馆",
+      "profile": {
+        "ticketPeak": 160,
+        "openHours": "约09:00-18:00（17:30停止售票入馆，以馆方当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "notices": "展缸暗光环境请勿使用闪光灯；海底隧道自动步道单向通行，喂食表演场次请提前查看"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-33",
+      "name": "上海徐家汇源",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "街区免费开放；徐家汇天主堂、藏书楼等场馆凭预约或登记参观",
+        "openHours": "街区全天开放；各场馆约09:00-16:30（部分场馆周一闭馆，以各馆公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "天主堂等宗教场所请着装得体、保持安静；各场馆开放日与预约方式以官方公告为准"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-40",
+      "name": "上海之巅观光厅",
+      "profile": {
+        "ticketPeak": 180,
+        "openHours": "约08:30-22:00（21:30停止入场，以当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年（晴日视野最佳）",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "高层观景受天气影响，雾霾与雷雨时段视野受限；可先看天气再择时段，傍晚蓝调与夜景最受欢迎"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-上海-49",
+      "name": "金茂大厦88层观光厅",
+      "profile": {
+        "ticketPeak": 120,
+        "openHours": "约08:30-21:30（以当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "上海虹桥国际机场",
+        "nearestRail": "上海站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "88层可俯瞰陆家嘴与外滩，古典筒式空间与上海之巅观景视角互补，可按天气择一登高"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-乐山-1",
+      "name": "东方佛都",
+      "profile": {
+        "ticketPeak": 80,
+        "openHours": "约08:00-18:00（以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestRail": "乐山站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "与乐山大佛景区相邻，可串联游览；山林石刻区台阶较多，穿舒适鞋"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-乐山-10",
+      "name": "罗城古镇",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放（老茶馆营业约08:00-18:00）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestRail": "犍为站",
+        "driveFromCityMin": 60,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "船形街凉厅子茶馆是看点，可体验盖碗茶与市井生活；古镇仍在生活使用，请尊重居民"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-乐山-18",
+      "name": "乌木珍品文化博物苑",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:00-17:30（以馆方当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestRail": "乐山站",
+        "driveFromCityMin": 20,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "出行前请核实景区最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-乐山-3",
+      "name": "大佛禅院",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放；香烛等自愿请购",
+        "openHours": "约08:00-18:00（以寺院当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestRail": "峨眉山站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "寺院庄严请保持安静；可作为朝拜峨眉山的前站，殿宇恢宏适合顺时针礼佛巡游"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-14",
+      "name": "朝阳公园",
+      "profile": {
+        "ticketPeak": 5,
+        "ticketNote": "园内游乐设施与游船另计",
+        "openHours": "约06:00-22:00（以公园当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "园内水域请看护好儿童；大型活动与节庆期间部分区域封闭请配合指引"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-15",
+      "name": "中山公园",
+      "profile": {
+        "ticketPeak": 3,
+        "openHours": "约06:00-21:00（旺季延时开放，以公园当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月（郁金香）、9-10月",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "轮椅租借"
+        ],
+        "needReservation": false,
+        "notices": "紧邻天安门，入园需安检并携带身份证件；社稷坛与古柏林区请文明游园"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-19",
+      "name": "陶然亭公园",
+      "profile": {
+        "ticketPeak": 2,
+        "openHours": "约06:00-21:30（冬夏略有调整，以公园当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "notices": "夏季湖面游船开放请穿好救生衣；高君宇烈士墓区域请保持肃穆"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-20",
+      "name": "北京明城墙遗址公园",
+      "profile": {
+        "ticketPeak": 10,
+        "ticketNote": "公园绿地免费开放；登东南角楼城墙段购票10元",
+        "openHours": "公园全天开放；角楼约09:00-17:00（停止入内时间与闭馆日以现场公告为准）",
+        "suggestedHours": 1,
+        "bestMonths": "3-4月（梅花）、9-10月",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "角楼登临段台阶较陡注意脚下；春季梅花花期城墙下人流较多"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-29",
+      "name": "大观园",
+      "profile": {
+        "ticketPeak": 40,
+        "openHours": "约07:30-17:30（随季节调整，以园方当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "红楼梦主题园林，怡红院、潇湘馆等按原著布景，建议结合导览了解造景出处；夜间活动以园方公告为准"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-3",
+      "name": "景山公园",
+      "profile": {
+        "ticketPeak": 2,
+        "openHours": "约06:30-21:00（冬季提前闭园，以公园当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年（秋日万春亭观中轴线日落最佳）",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "万春亭是俯瞰故宫全景的最佳点，日落时段人流集中；牡丹花展期间门票与开放时间或有调整"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-30",
+      "name": "北京动物园",
+      "profile": {
+        "ticketPeak": 15,
+        "ticketOff": 10,
+        "ticketNote": "旺季联票19元（含大熊猫馆）；园内游船等另计",
+        "openHours": "旺季约07:30-18:00、淡季约07:30-17:00（停止入园时间以公园当日公告为准）",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-10月",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京西站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "儿童游乐区",
+          "轮椅租借",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "notices": "请勿投喂动物；大熊猫馆高峰时段排队较长，建议早入园；周边停车紧张建议地铁前往"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-4",
+      "name": "北海公园",
+      "profile": {
+        "ticketPeak": 10,
+        "ticketOff": 5,
+        "ticketNote": "琼华岛、团城等园中园另购票",
+        "openHours": "约06:00-21:00（淡季提前闭园，园中园开放时间不一，以公园当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "荷花季（6-8月）游人集中；冬季湖面结冰严禁上冰；划船请穿戴救生衣"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-7",
+      "name": "雍和宫",
+      "profile": {
+        "ticketPeak": 25,
+        "openHours": "约09:00-16:30（冬季提前闭殿，香期或有调整，以寺院当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道"
+        ],
+        "needReservation": true,
+        "reservationNote": "通过「雍和宫」微信小程序等官方渠道实名预约购票，分时段入场，春节与初一、十五时段尤其紧张",
+        "notices": "殿内禁止拍照；免费提供环保短香，请勿自带香烛；香期人流极大请错峰"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-北京-9",
+      "name": "地坛公园",
+      "profile": {
+        "ticketPeak": 2,
+        "ticketNote": "园中园皇祇室另购票",
+        "openHours": "约06:00-21:00（以公园当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年（春节庙会人气最旺）",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "春节庙会期间客流极大注意防扒与保暖；方泽坛区域请保持肃穆"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-0",
+      "name": "总统府",
+      "profile": {
+        "ticketPeak": 35,
+        "openHours": "约08:30-18:00（17:00停止入园；周一闭馆，法定节假日除外）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "寄存柜",
+          "无障碍卫生间"
+        ],
+        "needReservation": true,
+        "reservationNote": "通过「南京总统府」官方渠道实名预约购票，节假日票源紧张请提前预订",
+        "notices": "周一闭馆请安排好行程；中轴、西轴、东轴三区展馆多，建议按导览图由中轴线开始游览"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-15",
+      "name": "毗卢寺",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-17:00（以寺院当日公告为准）",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京站",
+        "driveFromCityMin": 15,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "出行前请核实景区最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-南京-20",
+      "name": "朝天宫",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:00-18:00（17:00停止入馆，闭馆日以馆方公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京站",
+        "driveFromCityMin": 15,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "出行前请核实景区最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-南京-22",
+      "name": "侵华日军南京大屠杀遇难同胞纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放（凭预约码入馆）",
+        "openHours": "约08:30-17:00（16:30停止入馆；周一闭馆，法定节假日除外，以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "通过纪念馆官方微信公众号免费实名预约，凭码与有效证件入馆，节假日名额紧张请提前预约",
+        "notices": "馆内请保持肃穆，禁止喧哗与不当拍照；部分展区画面沉重，低龄儿童参观请家长酌情引导"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-23",
+      "name": "颐和路歪脖子树",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放",
+        "suggestedHours": 0.5,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京站",
+        "driveFromCityMin": 15,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "位于民国建筑街区路口，拍照注意过往车辆与人流；请勿攀爬树木、妨碍通行"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-29",
+      "name": "中华门",
+      "profile": {
+        "ticketPeak": 50,
+        "openHours": "约08:30-20:00（随季节调整，夜场开放以景区当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "瓮城藏兵洞内光线较暗注意脚下；可与老门东、明城墙串联游览，傍晚登城看灯火"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-31",
+      "name": "阅江楼景区",
+      "profile": {
+        "ticketPeak": 40,
+        "openHours": "约08:00-17:30（以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "登楼可望长江与南京长江大桥，山顶风大；楼内可乘电梯代步部分楼层，外围步道台阶仍较多"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-34",
+      "name": "南京雨花台风景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放",
+        "openHours": "景区全天开放；纪念馆约08:30-17:00（16:30停止入馆，周一闭馆，以公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京南站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "适老步道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "烈士陵园请保持肃穆；园区南北门相距较远，可乘观光车串联主要纪念点"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-4",
+      "name": "玄武湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放；游船与观光车另计",
+        "openHours": "约06:00-21:00（各园门开放时间不一，以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月（樱洲樱花）、9-11月",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "观光车/电瓶车",
+          "轮椅租借"
+        ],
+        "needReservation": false,
+        "notices": "环湖路较长，可乘观光车或骑行；荷花季（6-8月）游人集中；与鸡鸣寺、明城墙可串联一游"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-8",
+      "name": "南京夫子庙",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketNote": "街区免费开放；大成殿门票30元，江南贡院等展馆另购票",
+        "openHours": "街区全天开放；大成殿约09:00-22:00（以当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年（秦淮灯会期间尤盛）",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京南站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "寄存柜",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "notices": "秦淮灯会（春节至元宵）人流极大请错峰；乘画舫游秦淮河请穿好救生衣"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-南京-9",
+      "name": "红山森林动物园",
+      "profile": {
+        "ticketPeak": 40,
+        "openHours": "约08:30-17:00（16:30停止入园，以园方当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "南京禄口国际机场",
+        "nearestRail": "南京站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "儿童游乐区",
+          "轮椅租借",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "园区依山而建坡道较多，穿舒适鞋；请勿投喂动物；考拉馆等热门场馆建议开门即入"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-厦门-1",
+      "name": "厦门园林植物园",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketNote": "园内观光车票另计",
+        "openHours": "约06:30-18:00（雨林世界雾森等展项开放时段以园方公告为准）",
+        "suggestedHours": 3.5,
+        "bestMonths": "全年",
+        "nearestAirport": "厦门高崎国际机场",
+        "nearestRail": "厦门站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "雨林世界雾森每天开放时段有限请提前查询；沙生植物区多刺勿触碰；山地步道穿舒适鞋"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-厦门-17",
+      "name": "海滨公园",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "厦门高崎国际机场",
+        "nearestRail": "厦门站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "适老步道",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "与鼓浪屿隔鹭江相望，傍晚看落日与轮渡灯火最佳；沿海风大注意防滑保暖"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-厦门-19",
+      "name": "胡里山炮台",
+      "profile": {
+        "ticketPeak": 25,
+        "openHours": "约07:30-18:00（红夷火炮清兵操演场次以当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "厦门高崎国际机场",
+        "nearestRail": "厦门站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "克虏伯大炮与操演表演是看点，表演时间请提前确认；可与环岛路骑行、曾厝垵串联"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-厦门-44",
+      "name": "集美鳌园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放；陈嘉庚纪念馆凭有效证件参观",
+        "openHours": "园区约08:00-18:00；纪念馆约09:00-17:00（周一闭馆，以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "厦门高崎国际机场",
+        "nearestRail": "厦门北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "鳌园石雕与嘉庚建筑精细，参观请勿触摸；纪念馆庄重场所保持安静"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-哈尔滨-1",
+      "name": "圣·索菲亚教堂",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "教堂广场全天开放；内部展馆约08:30-17:00（以当日公告为准）",
+        "suggestedHours": 1,
+        "bestMonths": "全年（冬季雪景与夜景尤佳）",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 20,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "外观与广场可自由参观，入内参观票价与开放时间请以现场公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-哈尔滨-19",
+      "name": "龙塔",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:00-19:00（以塔方当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨西站",
+        "driveFromCityMin": 15,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "出行前请核实景区最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-哈尔滨-2",
+      "name": "东北虎林园",
+      "profile": {
+        "ticketPeak": 100,
+        "ticketNote": "门票含园区乘车观光",
+        "openHours": "约08:00-16:30（冬季运营时间调整，以园区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年（冬季雪中观虎有特色）",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "入园参观须乘园区专用观光车，请听从安排勿下车、勿拍打车窗；请勿投喂"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-哈尔滨-39",
+      "name": "哈尔滨文化公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费入园；游乐项目按单项或套票收费",
+        "openHours": "约08:30-21:00（设备运营时间随季节调整，以园方公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "大型游乐设备有身高与年龄限制请按规乘坐；冬季部分户外项目停运"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-哈尔滨-6",
+      "name": "侵华日军第七三一部队遗址",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放（实名预约入馆）",
+        "openHours": "约09:00-16:30（16:00停止入馆；周一闭馆，法定节假日除外，以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨西站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "通过「侵华日军第七三一部队罪证陈列馆」官方微信公众号免费实名预约，凭有效证件入馆",
+        "notices": "展陈内容沉重请保持肃穆；部分场景不宜低龄儿童；本部大楼与遗址区参观动线较长"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-哈尔滨-9",
+      "name": "哈尔滨极地公园",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:00-17:00（表演场次以当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 25,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "白鲸等表演场次固定，入园先看时刻表；出行前请核实最新票价与公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-嘉兴-22",
+      "name": "梅花洲景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-17:00（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestRail": "嘉兴南站",
+        "driveFromCityMin": 30,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "出行前请核实景区最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-大连-13",
+      "name": "大连圣亚海洋世界",
+      "profile": {
+        "ticketPeak": null,
+        "ticketNote": "海洋世界、极地世界等多馆联票与单馆票并存，具体以园区售票为准",
+        "openHours": "约09:00-17:30（各馆与表演场次以当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "出行前请核实景区最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-大连-19",
+      "name": "黑石礁公园",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放",
+        "suggestedHours": 1,
+        "bestMonths": "5-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "黑色礁石滩是地质看点，礁石湿滑勿冒险攀爬；退潮时滩涂泥泞注意脚下"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-大连-35",
+      "name": "大连横山公园",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-17:00（以园区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "出行前请核实景区最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-大连-8",
+      "name": "大连森林动物园",
+      "profile": {
+        "ticketPeak": 120,
+        "openHours": "约08:30-16:30入园（随季节调整，以园区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "大连周水子国际机场",
+        "nearestRail": "大连站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "园区依山而建步行量大，可乘观光车与索道分段游览；散养区车行游览请勿开门窗投喂"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-0",
+      "name": "广州起义烈士陵园",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "约06:00-21:00（以陵园当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "轮椅租借"
+        ],
+        "needReservation": false,
+        "notices": "陵墓区请保持肃穆；团队祭扫与主题活动请提前与管理处联系"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-1",
+      "name": "陈家祠堂",
+      "profile": {
+        "ticketPeak": 10,
+        "openHours": "约09:00-17:30（17:00停止售票，以馆方当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "木雕、砖雕、灰塑等岭南工艺精华，建议租讲解器；展馆内部分区域禁止闪光灯"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-16",
+      "name": "五羊雕像",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "位于越秀公园内，公园免费开放",
+        "openHours": "约06:00-21:00（以公园当日公告为准）",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "适老步道",
+          "观光车/电瓶车",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "雕像在越秀山木壳岗，需上坡步行；广州博物馆（镇海楼）与明城墙可顺游"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-18",
+      "name": "广州动物园",
+      "profile": {
+        "ticketPeak": 20,
+        "ticketNote": "园内部分场馆与游乐项目另计",
+        "openHours": "约08:00-18:00（以园方当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "儿童游乐区",
+          "母婴室",
+          "轮椅租借",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "请勿投喂动物；暑期与节假日人流大，地铁前往更便捷"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-2",
+      "name": "越秀公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "免费开放；园内游船与游乐设施另计",
+        "openHours": "约06:00-21:00（以公园当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "园内山丘步道多，穿舒适鞋；迎春花灯会期间部分区域限流请错峰"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-3",
+      "name": "大佛寺",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "约08:00-18:00（以寺院当日公告为准）",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "notices": "寺处北京路商圈，闹中取静请保持安静；素食阁有特色，夜间亮灯景观别致"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-33",
+      "name": "黄花岗公园",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "约06:00-20:00（以园区当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "轮椅租借"
+        ],
+        "needReservation": false,
+        "notices": "七十二烈士陵园为纪念场所请保持肃穆；纪念日活动日人流较多"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-4",
+      "name": "三元宫",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "约08:00-17:00（初一、十五提前开放，以宫观当日公告为准）",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州站",
+        "driveFromCityMin": 10,
+        "accessibility": null,
+        "needReservation": false,
+        "notices": "道观依越秀山而建台阶较多；香期人流较大注意安全与财物"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-广州-49",
+      "name": "正佳极地海洋世界",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约10:00-21:30（表演场次以当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于正佳广场内，闭馆时间随商场调整；出行前请核实最新票价与公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "poi-广州-7",
+      "name": "永庆坊",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketNote": "街区免费开放；李小龙祖居等展馆免费或需预约参观",
+        "openHours": "街区全天开放（沿街展馆与商铺约10:00-22:00）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "广州白云国际机场",
+        "nearestRail": "广州站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "notices": "粤剧艺术博物馆可顺游（周一闭馆）；节假日骑楼街人流大，注意错峰与财物"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "poi-成都-15",
+      "name": "海合安成都极地海洋公园",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:30-17:30（表演场次以当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "全年",
+        "nearestAirport": "成都双流国际机场",
+        "nearestRail": "成都南站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "儿童游乐区",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "白鲸、海豚表演场次请提前规划；出行前请核实最新票价与公告"
+      },
+      "confidence": "low"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "batch": 16,
+  "count": 100,
+  "low": 84,
+  "missingRequired": 81,
+  "sample": [
+    "scenic-恩施土家族苗族自治州-2259",
+    "scenic-随州-2244",
+    "scenic-荆门-2192",
+    "scenic-广州-2293",
+    "scenic-孝感-2207",
+    "scenic-黄冈-2228",
+    "scenic-黄冈-2211",
+    "scenic-黄冈-2214",
+    "scenic-广州-2280",
+    "scenic-恩施土家族苗族自治州-2275",
+    "scenic-深圳-2297",
+    "scenic-黄冈-2227",
+    "scenic-黄冈-2213",
+    "scenic-广州-2291",
+    "scenic-广州-2289",
+    "scenic-孝感-2202",
+    "scenic-黄冈-2209",
+    "scenic-黄冈-2220",
+    "scenic-黄冈-2215",
+    "scenic-黄冈-2223"
+  ]
+}

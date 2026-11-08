@@ -1,0 +1,168 @@
+# 景点览胜 - 旅游景点可视化平台
+
+基于 **Next.js 16 + TypeScript + Tailwind CSS v4 + Zustand + Framer Motion** 构建的景点数据可视化单页应用。
+
+## 功能
+
+### 核心景点功能
+
+- **景点览胜** — 约 3000 条统一库（30 手工精选全字段 + 1349 高德 POI + 1637 A 级名录景区）；网格/列表双视图（60/页无限滚动）、拼音搜索、评分/距离排序、城市过滤 chips；卡片含图片、分类、★ 高德评分、5A/4A 标识；详情弹窗含开放时间（高德 95% 填充）、预约警示（14 个人工标注必约点）、多图相册、就近串联、我的备注
+- **景点网络** — SVG 经纬度投影网络图，按区域分组连色线，支持拖动/缩放/点击居中（二次点击进详情），拖尾连线展示地理位置关系
+- **收藏景点** — 收藏功能，数据持久化到 localStorage；收藏数量角标实时更新
+- **我的信息** — 景点/收藏/分类数统计
+- **旅人测试** — 基于收藏景点的分类分布计算旅人人格;塔罗牌式 3D 翻牌动画逐张揭示维度;生成个性化人格卡（称号 + 描述 + 推荐），支持分享/复制
+- **预算沙盘** — 按景点展开推荐项目，逐项勾选计费;实时汇总当前预算，对比满选总价;穷游/舒适/土豪三档预算条对比;价格分层统计（免费/平价/中档/高端）;支持全选付费和全部取消快捷操作
+
+### 数据导入
+
+- **JSON 导入** — 支持自定义 JSON 数据追加导入（按名称去重，不覆盖已有数据）
+- **智能配图** — 导入时自动通过 Unsplash/Pexels API 按分类关键词拉取真实照片，API 失败降级到本地图片池，图片池耗尽则显示分类渐变色占位
+
+### 行程闭环
+
+- **行程单** — 把景点串成可执行的**计划**：详情弹窗「加入行程」→ 上下调序 → **分天规划**（手动分天或按体力预算 100/天自动分段，每天显示预算/体力小计，超预算标红）→ **整条行程 7 日体检**（带坐标站点逐日平均紫外线评分，标出最佳出行日）→ **出行装备清单**（按行程分类自动推导，可勾选）→ 预算沙盘/体力沙盘自动优先按行程计算（可切换回全部景点）→ 一键复制文本行程或导出「行程卡」PNG（canvas 绘制 + 二维码）
+- **7 日出行窗口** — PTSI 视图按未来 7 天逐日紫外线峰值评分，标出本周最适合出行的一天（`/api/weather` 服务端代理 Open-Meteo，客户端零外链）
+- **口碑前置** — 景点详情直接显示该景点的翻车记录数与高频标签；带坐标数据集（如 OSM 实时探索）提供 25km 内「就近串联」建议和「离我最近」距离排序
+- **跨模块联动** — 景点地址命中省份时，一键跳转「中国味道」看该省代表菜（?prov= 深链）
+- **价格诚实性** — 预算沙盘的价格为按项目名推断的估算值（标「估」），点击即可改为实际票价（标「改」，localStorage 持久化）
+
+### 沉浸式辅助视图
+
+- **劝退指南** — 根据时段和身体条件评估是否适合出行
+  - 健康预警拨盘（清晨/正午/黄昏的紫外线强度与阴影占比）
+  - 身体红灯筛选（膝盖不适/心脏负担/怕热中暑，单击切换、双击看差评原文）
+  - 翻车时间轴（snap 滚动浏览各时段排队与避峰建议）
+  - 长按 3 秒结论球：基于当前 UV + 激活的身体红灯综合评分给出"建议改日再来 / 今天可以冲"
+  - TTS 语音播报劝退原因、震动反馈
+- **登山账本** — 智能评估行程体力消耗（导航名区分于「体力沙盘」：沙盘吃真实景点数据，账本是单条路线）
+  - ⚠️ 当前为**示例路线演示**：海拔剖面与补给点是内置的 5.5km 示例山路数据，未接入真实景点
+  - 同行人录入（腿脚灵便/需要搀扶/轮椅出行），按最受限者决定路线样式
+  - 海拔折线图带可拖动红色游标，实时计算已爬楼层/剩余体力/下个补给点距离
+  - 3D 翻转切换"全程路线/分段休息"视图，轻松模式隐藏上坡数据
+  - SOS 紧急按钮（长按 1.5 秒触发最短脱困路径 + 一键拨打 120）
+
+## 快速开始
+
+```bash
+# 安装依赖
+npm install
+
+# 复制并填写环境变量
+cp .env.example .env
+
+# 开发模式
+npm run dev
+
+# 构建生产版本
+npm run build
+npm start
+```
+
+访问 http://localhost:3000
+
+## 环境变量
+
+在 `.env`（或部署平台的 Environment Variables）中配置以下密钥，用于景点导入时的智能配图：
+
+```env
+NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=your_key #Unsplash API 密钥（图片搜索首选源）
+NEXT_PUBLIC_PEXELS_API_KEY=your_key #Pexels API 密钥（Unsplash 失败时降级）
+```
+
+> 两个密钥都未配置时，导入功能仍可用，图片将自动降级到本地图片池或渐变占位，控制台会输出 `NO_API_KEYS` 警告。
+
+## 项目结构
+
+```
+src/
+├── app/
+│   ├── api/search-photo/route.ts  # 图片搜索 API（Unsplash + Pexels 双源 + 服务端缓存）
+│   ├── layout.tsx                  # 根布局
+│   ├── page.tsx                    # 主页面（侧边栏/移动端顶栏/景点视图/详情弹窗/导入逻辑）
+│   └── globals.css                 # 全局样式 + Tailwind 主题
+├── components/
+│   ├── network-view.tsx            # 景点网络 SVG 视图（经纬度投影 + 拖动缩放）
+│   ├── personality-view.tsx        # 旅人测试（塔罗牌 + 人格卡）
+│   ├── budget-view.tsx             # 预算沙盘（项目勾选 + 三档对比）
+│   ├── deterrent-view.tsx          # 劝退指南视图（时段拨盘 + 身体红灯 + 时间轴）
+│   ├── fitness-view.tsx            # 体力账本视图（海拔图 + 同行人 + SOS）
+│   └── ui/                         # shadcn/ui 组件（badge/button/dialog/input/scroll-area/separator）
+└── lib/
+    ├── spot-data.ts                # 景点数据类型、JSON 解析、分类映射、本地图片池、示例数据
+    ├── store.ts                    # Zustand 状态管理（localStorage 持久化 spots + favorites）
+    └── utils.ts                    # cn() 工具函数
+public/                             # logo.svg、robots.txt
+next.config.ts                      # Next.js 构建配置
+tailwind.config.ts / postcss.config.mjs   # Tailwind CSS v4 配置
+tsconfig.json                       # TypeScript 配置（@/* → src/*）
+```
+
+## 图片源说明
+
+景点图片获取遵循五级来源链路（详情弹窗会标注每张图的来源，失效自动逐级降级）：
+
+| 优先级 | 来源         | 说明                                                                                                |
+| ------ | ------------ | --------------------------------------------------------------------------------------------------- |
+| 0a     | 内置离线包   | sampleSpots 12 张已本地打包为 `public/spots/*.webp`（Bing 抓取 + 人工终检），断网/无 key 也有真图   |
+| 0b     | OSM 实拍图   | 实时探索时直接采用 OSM `image` 标签的直链照片（Wikimedia 域名除外，国内不可达）                     |
+| 1      | Unsplash API | 按分类英文关键词搜索，每分类游标去重，可获取数百张不重复照片                                        |
+| 2      | Pexels API   | Unsplash 失败时自动降级                                                                             |
+| 3      | 本地图片池   | 每分类 8 张，**已离线打包**为 `public/spots/pool/*.webp`（`npm run pool:fetch` 下载生成），断网可用 |
+| 4      | 渐变占位     | 以上全部耗尽/失效时显示分类主题色 + emoji                                                           |
+
+分类池离线包用 `npm run pool:fetch` 生成；景点离线包用 `npm run spots:fetch`（Bing 抓候选）→ 人工过目 `public/spots/_candidates/_contact-sheet.jpg` → `npm run spots`（选图压缩 + 生成清单）即可扩充离线包。
+
+OSM 实时探索与 JSON 导入共用同一套配图流程（`fillSpotImages`）：优先保留 OSM 自带实拍图，
+缺图景点按分类批量拉图；任意来源的图片 404 时，前端按 分类池 → 渐变 的顺序二级降级。
+
+> **关于本地图片池（第 3 级）的更新机制**：它是编译期写死的常量数组，与第 1/2 级 API 运行时拉取的结果**相互独立**，API 拉到的新 URL 不会自动回写到本地图片池。如需扩展本地池，需手动编辑 `src/lib/spot-data.ts` 中的 `CATEGORY_PHOTOS`。
+
+## 中国味道：菜品照片接入
+
+菜品照片走**本地打包 + 人工供图**，不引用任何境外图床（Wikimedia 在国内不可达，实测 `upload.wikimedia.org` 返回 000）。
+
+把图片放进 `public/dishes/`、文件名带上菜名（如 `麻婆豆腐.jpg`），再跑 `npm run photos`，清单自动生成，详情面板就把「口味卡面」换成照片；没放图的菜保持卡面，不会裂图。命名规则、署名写法与 34 道省级代表菜清单见 `public/dishes/README.md`。
+
+## 部署注意（带访问口令的网关）
+
+本项目发布在 EdgeOne + CloudStudio Gateway 之后，网关对**所有**路径（含 `/_next/static/*`）都校验 `?sharecode=`，而 Next 生成的资源 URL 不带该参数。两处必要处理：
+
+- `scripts/inject-sharecode.mjs`：发布后给 `.next/server` 下的 HTML / RSC / 清单补上口令。**必须覆盖 `route-cache/APP_PAGE` 下的同名 HTML**，那是 Next 16 实际服务的那份，只改 `app/` 目录线上仍然白屏。
+- `server.mjs`：把文档响应强制设为 `Cache-Control: no-store`。否则 CDN 会按 Next 默认的 `s-maxage=31536000` 把某个 URL 的 HTML 缓存一年，下次发布换了 chunk 哈希就会白屏，且应用侧清不掉。
+
+## JSON 导入格式
+
+支持多种字段名，自动识别：
+
+```json
+[
+  {
+    "name": "景点名称",
+    "image": "https://... (可选)",
+    "address": "广东省广州市海珠区",
+    "category": "自然风光",
+    "description": "景点介绍",
+    "facilities": ["设施1", "设施2"],
+    "projects": ["项目1", "项目2"],
+    "location": { "lat": 23.1, "lng": 113.3 }
+  }
+]
+```
+
+也支持嵌套格式与别名：
+
+- 嵌套：`{ "data": [...] }`、`{ "spots": [...] }`、`{ "list": [...] }`、`{ "items": [...] }`
+- 字段别名：`image/cover/pic/imageUrl/thumb`、`address/addr`、`facilities/facility`、`projects/project/activities`、`category/type/classify/tag`、`location/coord/coordinates/lat_lng`
+- 坐标支持对象 `{lat,lng}`、数组 `[lat,lng]`、字符串 `"lat,lng"` 三种格式
+
+## 技术栈
+
+- **框架**：Next.js 16（App Router）+ React 19
+- **语言**：TypeScript 5
+- **样式**：Tailwind CSS v4
+- **状态管理**：Zustand 5（persist 中间件持久化到 localStorage）
+- **动画**：Framer Motion 12
+- **UI 组件**：shadcn/ui + Radix UI
+- **图标**：lucide-react
+
+> **发布沙箱不执行 `npm run build`**（实测 `.next/BUILD_ID` 一直停在首次构建的时间），只重启进程。所以 `npm start` 里必须自带构建：`npm run build && node server.mjs`，否则线上永远跑的是老产物。

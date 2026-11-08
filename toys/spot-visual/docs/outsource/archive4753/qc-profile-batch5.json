@@ -1,0 +1,28 @@
+{
+  "batch": 5,
+  "count": 100,
+  "low": 81,
+  "missingRequired": 74,
+  "sample": [
+    "scenic-大同-310",
+    "scenic-大庆-751",
+    "scenic-天津-83",
+    "scenic-大庆-752",
+    "scenic-天津-94",
+    "scenic-唐山-162",
+    "scenic-四平-611",
+    "scenic-大同-309",
+    "scenic-天津-72",
+    "scenic-唐山-173",
+    "scenic-天津-79",
+    "scenic-唐山-169",
+    "scenic-大兴安岭地区-728",
+    "scenic-天津-98",
+    "scenic-天津-78",
+    "scenic-大同-314",
+    "scenic-天津-77",
+    "scenic-大兴安岭地区-729",
+    "scenic-嘉兴-835",
+    "scenic-四平-610"
+  ]
+}

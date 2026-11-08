@@ -1,0 +1,28 @@
+{
+  "batch": 26,
+  "count": 100,
+  "low": 100,
+  "missingRequired": 66,
+  "sample": [
+    "scenic-黔东南苗族侗族自治州-3337",
+    "scenic-毕节-3314",
+    "scenic-安顺-3288",
+    "scenic-六盘水-3290",
+    "scenic-铜仁-3326",
+    "scenic-毕节-3308",
+    "scenic-遵义-3265",
+    "scenic-毕节-3310",
+    "scenic-安顺-3282",
+    "scenic-遵义-3264",
+    "scenic-毕节-3312",
+    "scenic-遵义-3252",
+    "scenic-安顺-3279",
+    "scenic-安顺-3286",
+    "scenic-遵义-3257",
+    "scenic-安顺-3287",
+    "scenic-铜仁-3323",
+    "scenic-安顺-3284",
+    "scenic-铜仁-3319",
+    "scenic-黔东南苗族侗族自治州-3339"
+  ]
+}

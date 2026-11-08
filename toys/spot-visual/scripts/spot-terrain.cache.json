@@ -1,0 +1,46 @@
+{
+  "八达岭长城风景名胜区": {
+    "maxSlope": 65.3,
+    "steepPct": 72
+  },
+  "慕田峪长城": {
+    "maxSlope": 58.6,
+    "steepPct": 86
+  },
+  "圆明园遗址公园": {
+    "maxSlope": 27.4,
+    "steepPct": 1
+  },
+  "颐和园": {
+    "maxSlope": 42.9,
+    "steepPct": 7
+  },
+  "北京市奥林匹克公园": {
+    "maxSlope": 33.7,
+    "steepPct": 1
+  },
+  "十三陵": {
+    "maxSlope": 54.4,
+    "steepPct": 57
+  },
+  "天津古文化街旅游区（津门故里）": {
+    "maxSlope": 47.1,
+    "steepPct": 1
+  },
+  "天津盘山风景名胜区": {
+    "maxSlope": 63,
+    "steepPct": 62
+  },
+  "西柏坡景区": {
+    "maxSlope": 43.6,
+    "steepPct": 41
+  },
+  "承德避暑山庄及周围寺庙景区": {
+    "maxSlope": 57.2,
+    "steepPct": 62
+  },
+  "承德市滦平县金山岭长城景区": {
+    "maxSlope": 48.7,
+    "steepPct": 67
+  }
+}

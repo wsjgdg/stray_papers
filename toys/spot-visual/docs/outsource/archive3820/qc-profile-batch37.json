@@ -1,0 +1,28 @@
+{
+  "batch": 37,
+  "count": 100,
+  "low": 65,
+  "missingRequired": 55,
+  "sample": [
+    "scenic-邵阳-4488",
+    "scenic-湘西土家族苗族自治州-4523",
+    "scenic-长沙-4463",
+    "scenic-郴州-4480",
+    "scenic-岳阳-4441",
+    "scenic-长沙-4450",
+    "scenic-株洲-4497",
+    "scenic-长沙-4447",
+    "scenic-湘西土家族苗族自治州-4516",
+    "scenic-长沙-4462",
+    "scenic-永州-4537",
+    "scenic-益阳-4528",
+    "scenic-郴州-4468",
+    "scenic-邵阳-4487",
+    "scenic-岳阳-4443",
+    "scenic-常德-4501",
+    "scenic-长沙-4466",
+    "scenic-常德-4509",
+    "scenic-永州-4539",
+    "scenic-长沙-4465"
+  ]
+}

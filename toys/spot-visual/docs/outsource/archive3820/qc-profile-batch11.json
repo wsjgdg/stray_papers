@@ -1,0 +1,28 @@
+{
+  "batch": 11,
+  "count": 100,
+  "low": 70,
+  "missingRequired": 70,
+  "sample": [
+    "scenic-东营-1712",
+    "scenic-济南-1662",
+    "scenic-青岛-1689",
+    "scenic-济南-1676",
+    "scenic-潍坊-1757",
+    "scenic-东营-1714",
+    "scenic-烟台-1720",
+    "scenic-青岛-1688",
+    "scenic-枣庄-1701",
+    "scenic-烟台-1729",
+    "scenic-潍坊-1756",
+    "scenic-潍坊-1754",
+    "scenic-青岛-1684",
+    "scenic-潍坊-1749",
+    "scenic-新余-1655",
+    "scenic-烟台-1731",
+    "scenic-青岛-1683",
+    "scenic-枣庄-1702",
+    "scenic-烟台-1718",
+    "scenic-萍乡-1653"
+  ]
+}

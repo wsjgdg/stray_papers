@@ -1,0 +1,28 @@
+{
+  "batch": 1,
+  "count": 100,
+  "low": 23,
+  "missingRequired": 22,
+  "sample": [
+    "scenic-宜春-1598",
+    "scenic-安顺-3276",
+    "scenic-无锡-4134",
+    "scenic-宿迁-4076",
+    "scenic-承德-127",
+    "scenic-安阳-1987",
+    "scenic-岳阳-4435",
+    "scenic-文山壮族苗族自治州-3436",
+    "scenic-唐山-159",
+    "scenic-天水-3743",
+    "scenic-延安-3614",
+    "scenic-大理白族自治州-3386",
+    "scenic-安阳-1986",
+    "scenic-杭州-918",
+    "scenic-延安-3615",
+    "scenic-平凉-3752",
+    "scenic-常州-4085",
+    "scenic-宝鸡-3576",
+    "scenic-大兴安岭地区-727",
+    "scenic-吐鲁番-3985"
+  ]
+}

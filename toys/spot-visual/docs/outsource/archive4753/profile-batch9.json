@@ -1,0 +1,1008 @@
+{
+  "task": "景点档案结构化字段-批9（4A）",
+  "batch": 9,
+  "count": 100,
+  "rules": "见 TASK-SPOT-PROFILE.md",
+  "items": [
+    {
+      "id": "scenic-邯郸-200",
+      "name": "丛台区丛台公园",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "丛台区",
+      "level": "4A",
+      "address": "河北邯郸市丛台区丛台公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-邯郸-201",
+      "name": "涉县八路军129师司令部旧址",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "涉县",
+      "level": "4A",
+      "address": "河北邯郸市涉县河北涉县八路军129师司令部旧址",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-邯郸-202",
+      "name": "武安市朝阳沟",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "武安市",
+      "level": "4A",
+      "address": "河北邯郸市武安市河北武安市朝阳沟",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-邯郸-203",
+      "name": "武安市京娘湖风景区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "武安市",
+      "level": "4A",
+      "address": "河北邯郸市武安市河北武安市京娘湖风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-邯郸-204",
+      "name": "武安市东山文化博艺园",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "武安市",
+      "level": "4A",
+      "address": "河北邯郸市武安市河北武安市东山文化博艺园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-邯郸-205",
+      "name": "峰峰矿区响堂山风景名胜区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "峰峰矿区",
+      "level": "4A",
+      "address": "河北邯郸市峰峰矿区响堂山风景名胜区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-邯郸-206",
+      "name": "丛台区赵苑公园",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "复兴区",
+      "level": "4A",
+      "address": "河北邯郸市复兴区河北丛台区赵苑公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-邯郸-207",
+      "name": "武安市长寿村",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "武安市",
+      "level": "4A",
+      "address": "河北邯郸市武安市河北武安市长寿村",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-邯郸-208",
+      "name": "涉县太行山五指山旅游区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "涉县",
+      "level": "4A",
+      "address": "河北邯郸市涉县河北涉县太行山五指山旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-邯郸-209",
+      "name": "邯山区晋冀鲁豫革命纪念园",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "邯山区",
+      "level": "4A",
+      "address": "河北邯郸市邯山区晋冀鲁豫革命纪念园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-邯郸-210",
+      "name": "武安市七步沟",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "武安市",
+      "level": "4A",
+      "address": "河北邯郸市武安市河北武安市七步沟",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-邯郸-211",
+      "name": "涉县韩王九寨旅游景区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "涉县",
+      "level": "4A",
+      "address": "河北邯郸市涉县河北涉县韩王九寨旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-邯郸-212",
+      "name": "馆陶县粮画小镇旅游景区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "馆陶县",
+      "level": "4A",
+      "address": "河北邯郸市馆陶县粮画小镇旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-邯郸-213",
+      "name": "武安市东太行旅游景区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "武安市",
+      "level": "4A",
+      "address": "河北邯郸市武安市河北武安市东太行旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-邯郸-214",
+      "name": "肥乡区丛台酒苑景区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "肥乡区",
+      "level": "4A",
+      "address": "河北邯郸市肥乡区丛台酒苑景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-邯郸-215",
+      "name": "武安市古武当山旅游景区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "武安市",
+      "level": "4A",
+      "address": "河北邯郸市武安市河北武安市古武当山旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-邯郸-216",
+      "name": "广平县赵王印象城景区",
+      "province": "河北",
+      "city": "邯郸",
+      "district": "广平县",
+      "level": "4A",
+      "address": "河北邯郸市广平县赵王印象城景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-456",
+      "name": "蒙根花万通生态旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "达拉特旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市达拉特旗内蒙古跻尔多斯市蒙根花万通生态旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-457",
+      "name": "银肯塔拉沙漠绿洲自然生态旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "东胜区",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市东胜区银肯塔拉沙漠绿洲自然生态旅游区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-鄂尔多斯-458",
+      "name": "恩格贝旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "达拉特旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市达拉特旗恩格贝旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-459",
+      "name": "布龙湖温泉度假区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "鄂托克旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市鄂托克旗布龙湖温泉度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-460",
+      "name": "鄂尔多斯草原旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "杭锦旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市杭锦旗内蒙古郛尔多斯市鄂尔多斯草原旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-461",
+      "name": "三盛公水利风景区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "三盛公水利风景区",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市三盛公水利风景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-462",
+      "name": "七星湖旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "杭锦旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市杭锦旗七星湖旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-463",
+      "name": "萨拉乌苏旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "乌审旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市乌审旗萨拉乌苏旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-464",
+      "name": "康巴什旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "康巴什区",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市康巴什区康巴什旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-465",
+      "name": "苏泊罕草原旅游景区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "达拉特旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市达拉特旗苏泊罕草原旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-466",
+      "name": "鄂尔多斯文化产业园景区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "伊金霍洛旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市伊金霍洛旗鄂尔多斯文化产业园景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-467",
+      "name": "颐和生态文化博览园",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "鄂托克前旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市鄂托克前旗颐和生态文化博览园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-468",
+      "name": "准格尔召旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "准格尔旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市准格尔旗准格尔召旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-469",
+      "name": "油松王旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "油松王孤游区",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市油松王孤游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-470",
+      "name": "水镜湖休闲度假旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "准格尔旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市准格尔旗水镜湖休闲度假旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-471",
+      "name": "准格尔黄河大峡谷旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "准格尔旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市准格尔旗准格尔黄河大峡谷旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-472",
+      "name": "大沙头生态文化旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "鄂托克前旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市鄂托克前旗内蒙古密尔多斯市大沙头生态文化旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-473",
+      "name": "城川红色文化旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "鄂托克前旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市鄂托克前旗城川红色文化旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-474",
+      "name": "马兰花草原旅游景区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "杭锦旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市杭锦旗马兰花草原旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-475",
+      "name": "九城宫草原漫瀚文化旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "鄂托克前旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市鄂托克前旗九城宫草原漫瀚文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-476",
+      "name": "东联动漫城",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "东胜区",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市东胜区东联动漫城",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-477",
+      "name": "鄂尔多斯野生动物园",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "东胜区",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市东胜区鄂尔多斯野生动物园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-鄂尔多斯-478",
+      "name": "万家惠欢乐世界游乐园",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "杭锦旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市杭锦旗万家惠欢乐世界游乐园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-鄂尔多斯-479",
+      "name": "鄂尔多斯羊绒工业旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "达拉特旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市达拉特旗内蒙古郛尔多斯市鄂尔多斯羊绒工业旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-480",
+      "name": "鄂尔多斯草原丝路文化景区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "杭锦旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市杭锦旗鄂尔多斯草原丝路文化景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-481",
+      "name": "鄂尔多斯赛车小镇文化旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "鄂托克前旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市鄂托克前旗鄂尔多斯赛车小镇文化旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-鄂尔多斯-482",
+      "name": "黄河三盛公国家水利风景区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "杭锦旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市杭锦旗内蒙古巴彦淖尔市黄河三盛公国家水利风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-鄂尔多斯-483",
+      "name": "河套酒业工业旅游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯",
+      "district": "达拉特旗",
+      "level": "4A",
+      "address": "内蒙古鄂尔多斯市达拉特旗内蒙古巴唐淖尔市河套酒业工业旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-银川-3888",
+      "name": "西夏陵",
+      "province": "宁夏",
+      "city": "银川",
+      "district": "西夏区",
+      "level": "4A",
+      "address": "宁夏银川市西夏区西夏陵",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-529",
+      "name": "贝子庙旅游景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "锡林浩特市",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟锡林浩特市贝子庙旅游景区贝子庙",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-530",
+      "name": "蒙古汗城旅游景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "西乌珠穆沁旗",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟西乌珠穆沁旗内蒙古锡林郭勃盟蒙古汗城旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-531",
+      "name": "御马苑旅游景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "太仆寺旗",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟太仆寺旗御马苑旅游景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-532",
+      "name": "乌兰五台旅游景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "西乌珠穆沁旗",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟西乌珠穆沁旗乌兰五台旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-533",
+      "name": "中国马都核心区文化生态旅游区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "锡林浩特市",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟锡林浩特市中国马都核心区文化生态旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-534",
+      "name": "锡林郭勒盟元上都遗址旅游区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "正蓝旗",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟正蓝旗元上都遗址旅游区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-535",
+      "name": "乌拉盖九曲弯景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "苏尼特右旗",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟苏尼特右旗内蒙古偈林郭勤蹙乌拉盖九曲弯景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-536",
+      "name": "多伦湖景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "多伦县",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟多伦县多伦湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-537",
+      "name": "乌拉盖布林泉景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "东乌珠穆沁旗",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟东乌珠穆沁旗内蒙古锡林郭勒显乌拉盖布林泉景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-538",
+      "name": "乌拉盖野狼谷景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "东乌珠穆沁旗",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟东乌珠穆沁旗乌拉盖野狼谷景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-539",
+      "name": "二连浩特市国门旅游景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "二连浩特市",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟二连浩特市内蒙古二连浩特市国门旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-锡林郭勒盟-540",
+      "name": "二连浩特市国家地质公园景区",
+      "province": "内蒙古",
+      "city": "锡林郭勒盟",
+      "district": "二连浩特市",
+      "level": "4A",
+      "address": "内蒙古锡林郭勒盟二连浩特市内蒙古二连浩特市国家地质公园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-578",
+      "name": "御龙温泉度假村",
+      "province": "吉林",
+      "city": "长春",
+      "district": "双阳区",
+      "level": "4A",
+      "address": "吉林长春市双阳区御龙温泉度假村",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-579",
+      "name": "孔子文化园",
+      "province": "吉林",
+      "city": "长春",
+      "district": "南关区",
+      "level": "4A",
+      "address": "吉林长春市南关区孔子文化园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-580",
+      "name": "关东文化园",
+      "province": "吉林",
+      "city": "长春",
+      "district": "绿园区",
+      "level": "4A",
+      "address": "吉林长春市绿园区关东文化园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-581",
+      "name": "北湖国家湿地公园",
+      "province": "吉林",
+      "city": "长春",
+      "district": "宽城区",
+      "level": "4A",
+      "address": "吉林长春市宽城区北湖国家湿地公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-582",
+      "name": "庙香山休闲旅游度假区",
+      "province": "吉林",
+      "city": "长春",
+      "district": "九台区",
+      "level": "4A",
+      "address": "吉林长春市九台区庙香山休闲旅游度假区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-长春-583",
+      "name": "农业博览园",
+      "province": "吉林",
+      "city": "长春",
+      "district": "南关区",
+      "level": "4A",
+      "address": "吉林长春市南关区净月区农业博览园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-584",
+      "name": "吉林省酒文化博物馆",
+      "province": "吉林",
+      "city": "长春",
+      "district": "南关区",
+      "level": "4A",
+      "address": "吉林长春市南关区吉林省酒文化博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-长春-585",
+      "name": "东北民族民俗馆",
+      "province": "吉林",
+      "city": "长春",
+      "district": "二道区",
+      "level": "4A",
+      "address": "吉林长春市二道区经开区东北民族民俗馆",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-长春-586",
+      "name": "动植物公园",
+      "province": "吉林",
+      "city": "长春",
+      "district": "南关区",
+      "level": "4A",
+      "address": "吉林长春市南关区动植物公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-587",
+      "name": "天怡温泉度假山庄",
+      "province": "吉林",
+      "city": "长春",
+      "district": "宽城区",
+      "level": "4A",
+      "address": "吉林长春市宽城区净月区天怡温泉度假山庄",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-588",
+      "name": "长影旧址博物馆",
+      "province": "吉林",
+      "city": "长春",
+      "district": "朝阳区",
+      "level": "4A",
+      "address": "吉林长春市朝阳区长影旧址博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-长春-589",
+      "name": "长春凯撒森林温泉旅游度假区",
+      "province": "吉林",
+      "city": "长春",
+      "district": "南关区",
+      "level": "4A",
+      "address": "吉林长春市南关区净月区长春凯撒森林温泉旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-590",
+      "name": "莲花岛影视休闲文化园",
+      "province": "吉林",
+      "city": "长春",
+      "district": "朝阳区",
+      "level": "4A",
+      "address": "吉林长春市朝阳区莲花岛影视休闲文化园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-591",
+      "name": "辽金时代文化园",
+      "province": "吉林",
+      "city": "长春",
+      "district": "农安县",
+      "level": "4A",
+      "address": "吉林长春市农安县辽金时代文化园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-592",
+      "name": "榆树钱酒文化庄园",
+      "province": "吉林",
+      "city": "长春",
+      "district": "榆树市",
+      "level": "4A",
+      "address": "吉林长春市榆树市榆树钱酒文化庄园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-593",
+      "name": "长春天定山旅游度假小镇景区",
+      "province": "吉林",
+      "city": "长春",
+      "district": "二道区",
+      "level": "4A",
+      "address": "吉林长春市二道区莲花山度假区长春天定山旅游度假小镇景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-594",
+      "name": "长春国信南山温泉旅游景区",
+      "province": "吉林",
+      "city": "长春",
+      "district": "双阳区",
+      "level": "4A",
+      "address": "吉林长春市双阳区长春国信南山温泉旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长春-595",
+      "name": "清泉湖文化与旅游度假区",
+      "province": "吉林",
+      "city": "长春",
+      "district": "宽城区",
+      "level": "4A",
+      "address": "吉林长春市宽城区新区清泉湖文化与旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长治-366",
+      "name": "太行山大峡谷景区",
+      "province": "山西",
+      "city": "长治",
+      "district": "壶关县",
+      "level": "4A",
+      "address": "山西长治市壶关县太行山大峡谷景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长治-367",
+      "name": "洗耳河景区",
+      "province": "山西",
+      "city": "长治",
+      "district": "黎城县",
+      "level": "4A",
+      "address": "山西长治市黎城县洗耳河景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长治-368",
+      "name": "欢乐太行谷",
+      "province": "山西",
+      "city": "长治",
+      "district": "壶关县",
+      "level": "4A",
+      "address": "山西长治市壶关县欢乐太行谷",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-长治-369",
+      "name": "太行水乡",
+      "province": "山西",
+      "city": "长治",
+      "district": "平顺县",
+      "level": "4A",
+      "address": "山西长治市平顺县太行水乡",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-长治-370",
+      "name": "振兴小镇",
+      "province": "山西",
+      "city": "长治",
+      "district": "上党区",
+      "level": "4A",
+      "address": "山西长治市上党区振兴小镇",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-长治-371",
+      "name": "通天峡景区",
+      "province": "山西",
+      "city": "长治",
+      "district": "平顺县",
+      "level": "4A",
+      "address": "山西长治市平顺县通天峡景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长治-372",
+      "name": "天脊山景区",
+      "province": "山西",
+      "city": "长治",
+      "district": "平顺县",
+      "level": "4A",
+      "address": "山西长治市平顺县天脊山景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长治-373",
+      "name": "黄崖洞文化旅游区",
+      "province": "山西",
+      "city": "长治",
+      "district": "黎城县",
+      "level": "4A",
+      "address": "山西长治市黎城县黄崖洞文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长治-374",
+      "name": "八路军太行纪念馆",
+      "province": "山西",
+      "city": "长治",
+      "district": "武乡县",
+      "level": "4A",
+      "address": "山西长治市武乡县八路军太行纪念馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-长治-375",
+      "name": "八路军文化园",
+      "province": "山西",
+      "city": "长治",
+      "district": "武乡县",
+      "level": "4A",
+      "address": "山西长治市武乡县八路军文化园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长治-376",
+      "name": "太行龙洞",
+      "province": "山西",
+      "city": "长治",
+      "district": "武乡县",
+      "level": "4A",
+      "address": "山西长治市武乡县太行龙洞",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-长治-377",
+      "name": "仙堂山",
+      "province": "山西",
+      "city": "长治",
+      "district": "襄垣县",
+      "level": "4A",
+      "address": "山西长治市襄垣县仙堂山",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-阳泉-349",
+      "name": "藏山",
+      "province": "山西",
+      "city": "阳泉",
+      "district": "盂县",
+      "level": "4A",
+      "address": "山西阳泉市盂县藏山",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-阳泉-350",
+      "name": "大汖温泉",
+      "province": "山西",
+      "city": "阳泉",
+      "district": "盂县",
+      "level": "4A",
+      "address": "山西阳泉市盂县大汖温泉",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-阳泉-351",
+      "name": "娘子关",
+      "province": "山西",
+      "city": "阳泉",
+      "district": "平定县",
+      "level": "4A",
+      "address": "山西阳泉市平定县娘子关",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-阳泉-352",
+      "name": "桃林沟",
+      "province": "山西",
+      "city": "阳泉",
+      "district": "郊区",
+      "level": "4A",
+      "address": "山西阳泉市郊区桃林沟",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-阳泉-353",
+      "name": "翠枫山",
+      "province": "山西",
+      "city": "阳泉",
+      "district": "郊区",
+      "level": "4A",
+      "address": "山西阳泉市郊区翠枫山",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-阿拉善盟-551",
+      "name": "纳林湖生态旅游区",
+      "province": "内蒙古",
+      "city": "阿拉善盟",
+      "district": "阿拉善左旗",
+      "level": "4A",
+      "address": "内蒙古阿拉善盟阿拉善左旗内蒙古巴彦淳尔市纳林湖生态旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-阿拉善盟-553",
+      "name": "阿拉善左旗贺兰山广宗寺景区",
+      "province": "内蒙古",
+      "city": "阿拉善盟",
+      "district": "阿拉善左旗",
+      "level": "4A",
+      "address": "内蒙古阿拉善盟阿拉善左旗内蒙古阿拉普望阿拉善左旗贺兰山广宗寺景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-阿拉善盟-554",
+      "name": "腾格里沙漠月亮湖景区",
+      "province": "内蒙古",
+      "city": "阿拉善盟",
+      "district": "阿拉善左旗",
+      "level": "4A",
+      "address": "内蒙古阿拉善盟阿拉善左旗内蒙古阿拉普望阿拉善左旗腾格里沙漠月亮湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-阿拉善盟-555",
+      "name": "腾格里沙漠天鹅湖旅游风景区",
+      "province": "内蒙古",
+      "city": "阿拉善盟",
+      "district": "阿拉善左旗",
+      "level": "4A",
+      "address": "内蒙古阿拉善盟阿拉善左旗内蒙古阿拉善饕阿拉善左旗腾格里沙漠天鹅湖旅游风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-阿拉善盟-556",
+      "name": "福因寺（北寺）旅游区",
+      "province": "内蒙古",
+      "city": "阿拉善盟",
+      "district": "阿拉善左旗",
+      "level": "4A",
+      "address": "内蒙古阿拉善盟阿拉善左旗内蒙古阿拉善望阿拉善左旗福因寺（北寺）旅游区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-阿拉善盟-557",
+      "name": "梦想沙漠汽车航天乐园",
+      "province": "内蒙古",
+      "city": "阿拉善盟",
+      "district": "阿拉善左旗",
+      "level": "4A",
+      "address": "内蒙古阿拉善盟阿拉善左旗梦想沙漠汽车航天乐园景区",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-阿拉善盟-558",
+      "name": "阿拉善左旗定远营古城景区",
+      "province": "内蒙古",
+      "city": "阿拉善盟",
+      "district": "阿拉善左旗",
+      "level": "4A",
+      "address": "内蒙古阿拉善盟阿拉善左旗定远营古城景区",
+      "category": "古镇村落"
+    }
+  ]
+}

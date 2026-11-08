@@ -1,0 +1,2702 @@
+{
+  "task": "景点档案结构化字段-批7",
+  "batch": 7,
+  "count": 100,
+  "authorship": "批7：会话B",
+  "items": [
+    {
+      "id": "scenic-晋城-389",
+      "name": "司徒小镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免大门票开放；《千年铁魂》等实景演出及打铁花表演需另行购票，体验项目单独收费",
+        "freePolicy": "免大门票；园区开放式进入，演出票另购",
+        "openHours": "约09:00-22:00（21:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "夜间打铁花演出是最大看点，演出场次以当日公示为准；节假日客流集中，建议提前抵达并错峰观演。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-晋城-390",
+      "name": "海会书院",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于阳城县北留镇，以明代琉璃双塔著称，可与皇城相府同线游览；票价及开放安排请出行前向景区核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-朔州-316",
+      "name": "应县木塔",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季约08:00-18:00（17:30停止售票），淡季约08:00-17:30；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "应县站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "佛宫寺释迦塔是世界现存最古老、最高大的纯木结构楼阁式建筑，目前仅可在一层及塔外围参观，不开放登塔。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-朔州-317",
+      "name": "金沙滩生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": null,
+        "nearestRail": "朔州站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以杨家将金沙滩古战场文化为主题的生态园区，含崇国寺、杨令公祠等点位；门票及内部项目收费情况请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-朔州-318",
+      "name": "右玉生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（各景点开放时间不一，以现场公示为准）",
+        "suggestedHours": 4,
+        "bestMonths": "6月-10月",
+        "nearestAirport": null,
+        "nearestRail": "朔州站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "区域型生态旅游区，含杀虎口、苍头河湿地等点位，点位分散建议自驾；杀虎口等处是否单独售票请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-朔州-319",
+      "name": "崇福寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "朔州站",
+        "driveFromCityMin": 12,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "金代弥陀殿堪称辽金建筑瑰宝，殿内塑像、壁画均为金代原物；殿内请勿使用闪光灯，票价政策以现场公示为准。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-886",
+      "name": "灵栖洞景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "为多洞联票参考价；洞内船渡、导览等费用以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "由灵泉洞、清风洞、霭云洞三洞组成，灵泉洞以乘船进洞为特色，曾为《西游记》取景地；洞内湿滑，请穿防滑鞋。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-887",
+      "name": "杭州湘湖跨湖桥景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放；湘湖游船及部分游乐项目另收费",
+        "freePolicy": "免费开放；跨湖桥遗址博物馆免费参观",
+        "openHours": "全天开放；跨湖桥遗址博物馆约09:00-16:30（16:00停止入馆），周一闭馆",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "寄存柜",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "跨湖桥遗址博物馆展出发掘的约8000年前独木舟，周一闭馆请错峰安排；湖畔步道适合骑行漫步，周末车位紧张建议公共交通。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-888",
+      "name": "超山风景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "2月-3月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州东站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "江南赏梅胜地，以'十里梅花香雪海'著称，梅花节期间（约2-3月）为最佳观赏期，花期与票价或有调整，请提前查询。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-889",
+      "name": "杭州山沟沟旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "由汤坑、茅塘等片区组成，以峡谷瀑布与村落风情见长；各片区票制与接驳安排请出行前向景区核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-890",
+      "name": "垂云通天河景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（15:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "地下暗河溶洞，需乘船进入洞内，旺季排船时间或较长；洞内恒温约18℃，夏季进洞建议备薄外套。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-891",
+      "name": "垂云通天河",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30；15:30后停止入园（以当日公示为准）",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "寄存柜",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "与瑶琳仙境同处桐庐瑶琳镇，可组合一日游；乘船段与步行段相接，行动不便者进洞前请评估自身情况。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-892",
+      "name": "杭州双溪漂流景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止售票）；漂流经营期约为4月-10月，具体以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-9月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "竹筏漂流与皮筏漂流分属不同航道，票价与开放时段随水情调整，冬季基本停漂；随身电子产品请做好防水。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-893",
+      "name": "杭州长乔极地海洋公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-17:00（16:30停止入园）；以园区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "寄存柜",
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "主题园区票价、年卡与亲子套餐变动较频繁，请以官方渠道当日报价为准；入园先拍下动物表演与喂食时刻表，便于规划动线；节假日或实行实名制购票，出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-894",
+      "name": "千岛湖石林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "千岛湖站",
+        "driveFromCityMin": 155,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于淳安县石林镇，距千岛湖主湖区较远，属独立景区而非湖区游线；山区公路弯多，自驾请预留充足时间，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-895",
+      "name": "京杭大运河·杭州景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放；运河漕舫游船及部分展馆另行收费",
+        "freePolicy": "免费开放（开放式运河沿线景区）",
+        "openHours": "全天开放（街区）；运河游船约09:00-20:30（20:00停止售票），班次以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场",
+          "无障碍卫生间"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "拱宸桥与桥西历史文化街区是精华段，夜景灯光值得留观；水上巴士票价亲民，可替代游船体验运河风情。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-897",
+      "name": "杭州东方文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "儒释道文化主题园区，含万佛金塔地宫等点位，园区体量大、步行较多；票价与演出安排请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-898",
+      "name": "运河·塘栖古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放；古镇内部分展馆与游船项目另收费",
+        "freePolicy": "免费开放（古镇街区开放式进入）",
+        "openHours": "全天开放（街区）；广济桥及展馆约08:30-16:30（16:00停止入馆），以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "京杭大运河上的千年水乡，广济桥为运河上仅存的七孔石拱桥；5月前后枇杷季人气最旺，节假日塘栖路易拥堵。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-899",
+      "name": "大慈岩景区",
+      "profile": {
+        "ticketPeak": 85,
+        "ticketOff": null,
+        "ticketNote": "上行索道等费用另计，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "江南悬空寺，一半嵌入山崖、一半悬临深谷，长空栈道恐高者量力而行；建德方向把握不大的车站不列，建议自驾或从杭州乘城际大巴前往。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-900",
+      "name": "下姜村景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式村庄，免费进入；讲解服务另收费",
+        "freePolicy": "免费开放（开放式村庄景区）",
+        "openHours": "全天开放；村史馆等展馆约09:00-16:30（16:00停止入馆）",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "千岛湖站",
+        "driveFromCityMin": 155,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "无障碍卫生间"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "从'穷山沟'蜕变为'绿富美'的乡村振兴样板村，研学团队与干部培训参观较多；个人到访无需门票，展馆开放安排以现场为准。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-901",
+      "name": "富春桃源景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "富阳站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "九霄碧云洞为超大单体溶洞，洞口乘云梯可俯瞰岩岭湖；联票构成及是否含船票请购票前确认，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-松原-640",
+      "name": "查干湖旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（湖区）；游客中心及展馆约08:30-16:30",
+        "suggestedHours": 4,
+        "bestMonths": "12月-次年2月、6月-9月",
+        "nearestAirport": "松原查干湖机场",
+        "nearestRail": "松原站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "冬季查干湖冬捕为国家级非物质文化遗产，冬捕节期间人车密集且气温可低于零下20℃，务必防寒保暖；各点位收费情况请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-松原-641",
+      "name": "松原市规划展览馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免票入馆，需出示有效身份证件",
+        "freePolicy": "免费开放（需带身份证件）",
+        "openHours": "约09:00-16:30（16:00停止入馆）；周一闭馆，以馆方公告为准",
+        "suggestedHours": 1,
+        "bestMonths": "全年",
+        "nearestAirport": "松原查干湖机场",
+        "nearestRail": "松原站",
+        "driveFromCityMin": 12,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "集中展示松原城市规划与松嫩平原地理变迁，沙盘演示适合顺访；团队参观宜提前电话确认开放时段，出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沧州-238",
+      "name": "吴桥杂技大世界",
+      "profile": {
+        "ticketPeak": 130,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "吴桥站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "'上至九十九，下至刚会走'，江湖文化城内鬼手、怪腿等民间艺人绝活是精华，表演场次分散请提前留意时间表。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沧州-239",
+      "name": "东光铁佛寺",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "东光站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "寺内宋代铁佛高逾八米，为华北知名古刹；香期与节庆日人流较大，门票政策请以现场公示为准。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-沧州-240",
+      "name": "河间府署",
+      "profile": {
+        "ticketPeak": 40,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "复建的明清府级衙署，规制完整、展陈还原古代吏治文化，可与河间驴肉火烧美食体验同日安排；票价以现场公示为准。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-沧州-241",
+      "name": "南大港湿地",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-5月、9月-11月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "候鸟迁徙重要停歇地，观鸟以春秋两季最佳，请勿惊扰繁殖期水鸟；游线多乘船或电瓶车接驳，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1009",
+      "name": "楠溪江风景名胜区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "开放式大景区；各收费景点约08:00-17:00，以各点位公示为准",
+        "suggestedHours": 6,
+        "bestMonths": "4月-6月、9月-11月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州北站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国家级风景名胜区，岩头、石桅岩、龙湾潭、竹筏漂流等点位分散且分别售票，建议按主题精选2-3处深度游，勿求一日走遍。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-849",
+      "name": "湖州市德清莫干山风景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "景区观光车费用另计",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": null,
+        "nearestRail": "德清站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "中国四大避暑胜地之一，两百余幢百年老别墅散布山间，剑池飞瀑与万顷竹海是标配；夏季周末山中民宿爆满，节假日进山车辆或限行。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-850",
+      "name": "江南天池景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "冬季滑雪、温泉等项目另收费",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5月-10月、12月-次年2月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "建于天荒坪抽水蓄能电站上水库，可俯瞰天池与连绵竹海，冬季另有户外滑雪场；盘山公路弯多，夜间行车需谨慎。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-851",
+      "name": "下渚湖湿地风景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "为门票与游船联票价格，游船为进出各岛主要方式",
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-6月、9月-10月",
+        "nearestAirport": null,
+        "nearestRail": "德清站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "母婴室",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "江南最大天然湿地，朱鹮保护基地设于岛上，观鸟请保持安静；岛屿间靠船接驳，务必留意末班船时间。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-852",
+      "name": "仙山湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于长兴县泗安镇，仙山与仙湖相映，湖上芦苇迷宫乘船穿行是一大特色；门票与船票构成请购票时确认。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-853",
+      "name": "中国竹子博览园",
+      "profile": {
+        "ticketPeak": 68,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "儿童游乐区",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "集竹种基因库与竹文化博物馆于一体，三百余种竹子一次看全；大熊猫馆人气最高，避开正午高温时段参观更佳。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-854",
+      "name": "杭州Hello Kitty乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-17:00；节假日或延时，以园区当日公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4月-6月、9月-11月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "母婴室",
+          "儿童游乐区",
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "凯蒂猫家园位于安吉城郊，设备偏亲子向；票价与节日活动波动较大，务必以官方渠道实时报价为准；旺季或需线上购票，出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-855",
+      "name": "金钉子远古世界景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以全球二叠系-三叠系界线层型剖面（'金钉子'）为核心的地学科普基地，适合带学龄儿童研学；票价及展馆开放情况请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-856",
+      "name": "浪漫山川景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（乡域开放式景区，各项目时间以现场公示为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山川乡以云上草原、仙龙峡漂流等项目聚集人气，乡域本身开放式进入；各项目单独售票且随季节调整，请以商家现场公示为准。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-857",
+      "name": "安吉江南天池景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "滑雪、温泉、天池观光车等另收费",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00；16:30停止入园，冬季滑雪季营业时间另行延长（以景区公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "5月-10月、12月-次年2月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "寄存柜",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "冬季滑雪需按场次租借装备，节假日上雪道排队较久；观景平台风大，冬季路面或结冰，建议在天黑前完成天池环线。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-858",
+      "name": "中国扬子鳄村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国内规模领先的扬子鳄人工繁育基地，喂食演示时段最有看头；冬季扬子鳄入洞冬眠基本难见，观赏以5-10月为佳，票价请现场核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-859",
+      "name": "庾村景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式街区；文创市集、展馆及骑行项目另收费",
+        "freePolicy": "免费开放（开放式街区）",
+        "openHours": "全天开放（街区）；展馆及店铺约09:00-17:00，以现场公示为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "4月-11月",
+        "nearestAirport": null,
+        "nearestRail": "德清站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "莫干山门户小镇，由民国车站改建的文创园与周末市集是打卡重点；车位有限，旺季建议停在集镇外围步行进入。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-860",
+      "name": "荻港景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古村开放式进入；展馆讲解与渔家体验另收费",
+        "freePolicy": "免费开放（古村开放式进入）",
+        "openHours": "全天开放（古村）；一元茶馆等场所约08:00-16:30",
+        "suggestedHours": 2,
+        "bestMonths": "3月-5月、9月-11月",
+        "nearestAirport": null,
+        "nearestRail": "湖州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "桑基鱼塘系统核心地，鱼塘与桑园相间的江南农业景观仍在运转，一元茶馆保留旧时水乡茶俗；村内巷道狭窄，建议步行慢游。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-861",
+      "name": "安吉浪漫山川景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（开放式乡域，项目营业时间以各商户公示为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山川乡翠竹连绵，夏季漂流与冬季滑雪是两大招牌，均需单独购票；乡内公路较窄会车困难，自驾请减速慢行。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-862",
+      "name": "湖州原乡小镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "湖州站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "母婴室",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "亲子农旅综合体，梅花鹿互动、滑草与彩虹滑道是热门项；项目多为单项收费，购票前列个清单更划算，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-864",
+      "name": "莫干山风景名胜区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "观光车及部分场馆讲解另收费",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；16:30起停止入园，遇恶劣天气或提前闭园（以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": null,
+        "nearestRail": "德清站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "寄存柜",
+          "医疗服务点",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "竹海、云雾与老别墅构成'清凉世界'，下榻旧址、白云山馆等点位分散，建议乘景区观光车串联；山路单车道段多，新手慎自驾。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-865",
+      "name": "余村景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式村庄景区，免费进入",
+        "freePolicy": "免费开放（开放式村庄景区）",
+        "openHours": "全天开放；'两山'理念展示馆等约09:00-16:30（16:00停止入馆）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "'绿水青山就是金山银山'理念诞生地，矿坑遗址公园与两山石碑为必到点；与江南天池同在天荒坪镇，可串联安排半日。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-866",
+      "name": "黄金湖岸景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式滨湖岸线，免费进入",
+        "freePolicy": "免费开放（开放式滨湖岸线）",
+        "openHours": "全天开放（滨湖开放岸线）",
+        "suggestedHours": 1.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "湖州站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "无障碍卫生间"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "太湖南岸观湖带，日落时分湖面泛金最贴'黄金'之名；风大时湖面浪涌，请勿翻越亲水护栏，周边酒店餐饮配套成熟。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-867",
+      "name": "湖州市菰城景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式景区；个别体验项目另收费",
+        "freePolicy": "免费开放（开放式城市景区）",
+        "openHours": "全天开放（开放式景区）；游客中心约09:00-17:00",
+        "suggestedHours": 2,
+        "bestMonths": "3月-11月",
+        "nearestAirport": null,
+        "nearestRail": "湖州站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以湖州古称'菰城'命名的城市文化景区，仁皇山一带可俯瞰城区全貌；晨练市民较多，傍晚时段氛围最佳。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-868",
+      "name": "中国扬子鳄村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30；16:00后停止入园，冬季观赏效果有限请合理安排（以景区公示为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "5月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "儿童游乐区",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于长兴县泗安镇尹家边村，人工繁育扬子鳄规模居全国前列，被誉为'扬子鳄之家'；夏季喂食场面壮观，观赏时请勿投喂或拍打玻璃。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-869",
+      "name": "地理信息小镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放；科技馆等场馆或有预约要求",
+        "freePolicy": "免费开放；地理信息科技馆等场馆参观可能需预约",
+        "openHours": "小镇街区全天开放；科技馆约09:00-16:30，以馆方公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": null,
+        "nearestRail": "德清站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "母婴室",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "全国首个地理信息主题小镇，联合国世界地理信息大会会址所在地；科技馆互动展项丰富，出行前请核实最新预约政策与开放安排。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-870",
+      "name": "安吉竹子博览园",
+      "profile": {
+        "ticketPeak": 68,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30；16:00后停止入园，节假日时段以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "寄存柜",
+          "无障碍通道",
+          "停车场",
+          "母婴室",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "竹类种质资源保护基地，园内竹博馆系统讲述竹子与生活、建筑、艺术的关系；夏季浓荫蔽日体感舒适，出口处的竹制文创可作伴手礼。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-871",
+      "name": "湖州丝绸小镇（西山漾景区）",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式湿地园区，免费进入",
+        "freePolicy": "免费开放（开放式湿地公园）",
+        "openHours": "全天开放（开放式湿地园区）",
+        "suggestedHours": 2,
+        "bestMonths": "3月-11月",
+        "nearestAirport": null,
+        "nearestRail": "湖州站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以西山漾湿地为底、丝绸文化为魂，环漾步道约5公里适合骑行漫步；丝绸主题展馆开放时间不一，感兴趣者请先查询。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-872",
+      "name": "湖州太湖旅游度假区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "度假区开放式进入；游船、乐园等项目另收费",
+        "freePolicy": "免费开放（开放式旅游度假区）",
+        "openHours": "全天开放（开放式度假区）",
+        "suggestedHours": 3,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "湖州站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "省级旅游度假区，渔人码头'月亮酒店'为地标建筑，湖鲜餐饮集中但请选择明码标价的商家；节假日滨湖大道易堵，公交可达。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-873",
+      "name": "山水灵峰·田园嘉乐比乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以园区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "母婴室",
+          "儿童游乐区",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "田园主题亲子乐园，小猪跳水、萌宠互动等演出有固定场次，入园先拍下时刻表；票价与套票组合多变，请以园区官方渠道为准。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-874",
+      "name": "浙北大峡谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-9月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于报福镇石岭村，峡谷溪瀑与高空项目并存，雨后水量大时景观最佳但步道湿滑；票价及高空项目收费请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-875",
+      "name": "中南百草原景区",
+      "profile": {
+        "ticketPeak": 120,
+        "ticketOff": null,
+        "ticketNote": "园内游乐、动物互动等部分项目另收费",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "安吉站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "母婴室",
+          "儿童游乐区",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "集植物园、动物园与拓展游乐于一体的大型综合园区，步行覆盖全区较吃力，建议入园先乘观光车踩点；动物投喂需购买园区指定食物。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-876",
+      "name": "水口茶文化旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡域开放式免费进入；大唐贡茶院等景点另行售票",
+        "freePolicy": "免费开放（开放式乡村旅游区）",
+        "openHours": "全天开放（乡村开放式）；大唐贡茶院约08:30-16:30，以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-5月、9月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "顾渚山为唐代贡茶紫笋茶的产地，大唐贡茶院再现陆羽茶事；山间民宿农家乐密集，节假日请提前订房订餐。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-878",
+      "name": "太湖演艺小镇（太湖图影生态湿地文化园）",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；演艺场次及夜间开放以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "图影湿地以水上芦苇迷宫闻名，演艺项目与湿地游线的组合方式多变，购票前请分清单门票与演艺套票，票价以现场公示为准。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-879",
+      "name": "德清下渚湖湿地风景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "门票与游船为联票制，船票为进出岛必要交通",
+        "freePolicy": null,
+        "openHours": "约08:30-16:30；16:00停止入园，游船末班时间以码头公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-6月、9月-10月",
+        "nearestAirport": null,
+        "nearestRail": "德清站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "港汊交错、芦荻摇曳的天然湿地，登观景塔可俯瞰'地裂防风国、天开下渚湖'全貌；防风氏祠与朱鹮岛值得细看，请按船班规划动线。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-880",
+      "name": "仙山湖国家湿地公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30；16:00后停止入园，具体以当日公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国家湿地公园，乘摇橹船穿行芦苇荡，水面白鹭成群；仙山古刹在侧，登山与游湖可各取所需，票制请现场确认。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-881",
+      "name": "水口茶文化景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式进入；大唐贡茶院门票及茶艺体验另收费",
+        "freePolicy": "免费开放（开放式茶乡景区）",
+        "openHours": "全天开放（开放式茶乡）；大唐贡茶院等收费景点时段以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "4月-5月、9月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "春季采茶季最宜到访，可体验采茶与炒茶；贡茶院茶礼表演有固定场次，自驾穿行水口乡请留意行人、限速通行。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-882",
+      "name": "长兴金钉子远古世界景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30；16:00停止入园（以当日公示为准）",
+        "suggestedHours": 2,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "'金钉子'是全球年代地层对比的黄金标准，这里的剖面记录了2.5亿年前生物大灭绝的地层证据；地质展馆如临时闭馆，外观剖面仍可参观，票价请核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-湖州-883",
+      "name": "新四军苏浙军区旧址群景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免票参观，请携带身份证件备查",
+        "freePolicy": "免费开放（需带身份证件）",
+        "openHours": "约09:00-16:30（16:00停止入馆）；周一闭馆（法定节假日除外），以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": null,
+        "nearestRail": "长兴站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "江南保存最完整的新四军军区旧址群，温塘村司令部旧址与纪念馆展陈互为补充；旧址分散于煤山镇槐坎一带，出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-884",
+      "name": "菰城景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式景区，免费进入",
+        "freePolicy": "免费开放（开放式景区）",
+        "openHours": "全天开放；仁皇山登山步道可通行至夜间，灯光时段随季节调整",
+        "suggestedHours": 2,
+        "bestMonths": "3月-11月",
+        "nearestAirport": null,
+        "nearestRail": "湖州站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "母婴室",
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "因湖州建城之源'菰城'得名，游客中心设于仁皇山南大门，环形登山步道布局清晰；山顶观景台北望太湖，晨昏光线最美。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-湖州-885",
+      "name": "移沿山生态景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": null,
+        "nearestRail": "湖州站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于八里店镇移沿山村，锡洪漾畔的生态农庄型景区，采摘、垂钓与烧烤是主要玩法；项目收费与采摘品类随季节变化，请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-692",
+      "name": "牡丹江宁安火山口国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "即'地下森林'，火山口内的原始红松林高耸参天，可沿步道下探井底式火山口；冬季大雪封山道路通行受限，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-693",
+      "name": "渤海上京龙泉府遗址旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "唐代渤海国'海东盛国'都城遗存，宫城中轴线与兴隆寺唐代石灯幢均为珍稀文物；请勿攀爬夯土城垣，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-694",
+      "name": "牡丹江市飞龙潭山庄景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 2,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "临水而建的山庄型景区，公开资料有限，票价、餐饮与住宿均需出行前电话或现场确认；距镜泊湖景区北门不远，可与湖区分开安排。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-695",
+      "name": "雪乡旅游区",
+      "profile": {
+        "ticketPeak": 115,
+        "ticketOff": null,
+        "ticketNote": "观光车及雪地摩托、马拉爬犁等体验项目另收费",
+        "freePolicy": null,
+        "openHours": "雪季（约12月上旬至次年2月底）约07:00-16:30（16:00停止入园）；非雪季部分设施停业，以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "12月-次年2月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": "海林站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "地处海林市大海林双峰林场，积雪期长达七个月，'雪蘑菇'夜景是精华；雪季房价波动极大，请通过官方渠道预订并注意防寒与相机保温；雪季常实行预约限流，出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-牡丹江-696",
+      "name": "森工牡丹江柴河九寨旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "威虎山主脉腹地，九叠泉瀑群与原始林栈道是主线，秋季五花山色最上镜；林区信号弱，建议结伴出行并带足补给，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-697",
+      "name": "牡丹江东宁要塞遗址",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免票参观，请携带身份证件备查",
+        "freePolicy": "免费开放（需带身份证件）",
+        "openHours": "约08:30-16:30（16:00停止入馆）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "侵华日军在中苏边境构筑的要塞群，勋山地下工事可入内参观，陈列馆史料详实；界碑与国门一线可远眺境外，边境地带请遵守管理规定；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-牡丹江-698",
+      "name": "牡丹江横道东北虎林园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": "横道河子站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "东北虎繁育观赏基地，乘防护车进入散放区近距离观虎是特色；与横道河子小镇相邻但独立售票，票价请现场核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-699",
+      "name": "牡丹江市黑宝熊乐园水上大世界",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00；水上项目季节性开放，以园区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-8月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": "牡丹江站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "黑熊观赏与水上乐园结合的主题园，位于三道关森林公园方向；水上项目仅夏季开放且与熊类观赏分区售票，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-700",
+      "name": "三道关国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（公园）；内部项目时段以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": "牡丹江站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "牡丹江市区近郊的森林公园，岱王峰、小黄山一线登山强度中等；秋季红叶期车流集中，山门内农家乐供餐时间不定，票价请现场核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-701",
+      "name": "牡丹江市海林亿龙水上风情园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "夏季约08:30-17:00；季节性经营，开放与否请提前确认",
+        "suggestedHours": 4,
+        "bestMonths": "6月-8月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": "海林站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海林市新安镇的水上休闲园区，漂流与水上游乐是主打，仅暖季运营；水位受降雨影响大，出行前务必确认当日是否开漂及票价。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-702",
+      "name": "牡丹江市海浪河欢乐谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "夏季约08:30-16:30；季节性经营，以园区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6月-8月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": "海林站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "依托海浪河水系的欢乐谷，漂流航道与亲子水寨并存，旺季周末排队久建议早到；汛期或临时停漂，票价请现场核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-牡丹江-703",
+      "name": "横道河子俄罗斯风情小镇旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "街区全天开放；中东铁路机车库等场馆约08:30-16:30，以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6月-9月、12月-次年2月",
+        "nearestAirport": "牡丹江海浪国际机场",
+        "nearestRail": "横道河子站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "中东铁路百年小镇，扇形机车库与圣母进堂教堂是标志性建筑，冬季雪景浓郁；街区可自由进入，个别场馆或单独售票，请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白城-642",
+      "name": "莫莫格国家自然保护区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以保护区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-5月、9月-10月",
+        "nearestAirport": "白城长安机场",
+        "nearestRail": "镇赉站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "白鹤等候鸟迁徙的重要停歇地，春秋观鸟季最为震撼；保护区核心区不得擅入，请沿指定观鸟线路活动，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白城-643",
+      "name": "向海国家级自然保护区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以保护区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5月-9月",
+        "nearestAirport": "白城长安机场",
+        "nearestRail": null,
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "丹顶鹤半散养繁育中心可观看放飞，沙丘榆林与湖泊苇荡交织出科尔沁沙地独特景观；地处通榆县向海乡深处，进乡前请加满油，票价请核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白城-644",
+      "name": "查干浩特旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（度假区）；各场馆时段以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "白城长安机场",
+        "nearestRail": "白城站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于白城市洮北区的草原风情度假区，与松原查干湖并无关联；蒙古包餐饮与骑马项目多为单项收费，夏季日落时分草原最出片，票价请核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白城-645",
+      "name": "嫩江湾国家湿地公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "开放式城市湿地公园，免费进入",
+        "freePolicy": "免费开放（开放式城市湿地公园）",
+        "openHours": "全天开放；部分场馆开放时段以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "5月-9月",
+        "nearestAirport": "白城长安机场",
+        "nearestRail": null,
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "大安市城边的嫩江湾，生态修复后成为滨江休闲带，塔楼观江视野开阔；傍晚蚊虫较多，请备好驱蚊用品。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-白山-631",
+      "name": "露水河国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "长白山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以亚洲最大连片红松母树林著称，冬季另有特色林项目；林区道路养护一般，雨后坑洼较多，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白山-632",
+      "name": "松江河国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "长白山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "松江河镇周边的森林型公园，与长白山西坡景区相距不远但独立成园；镇上住宿餐饮配套完善，适合作长白山南线中转站，票价请核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白山-633",
+      "name": "望天鹅风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "长白山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 185,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于长白县十五道沟，火山活动形成的柱状节理石壁与串珠状瀑布群是招牌；距白山市区很远，建议沿环长白山旅游线顺访，票价请核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白山-634",
+      "name": "长白山鲁能胜地旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（度假区）；滑雪等运营项目时段以度假区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "12月-次年2月、6月-9月",
+        "nearestAirport": "长白山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "寄存柜",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "漫江镇山地度假综合体，冬季滑雪场与夏季山地户外双季运营；区内酒店套餐常含雪具或缆车权益，单项购票前请先比价，票价请核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白山-635",
+      "name": "四保临江纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免票入馆，建议携带身份证件",
+        "freePolicy": "免费开放（需带身份证件）",
+        "openHours": "约09:00-16:30（16:00停止入馆）；周一闭馆，以馆方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "长白山机场",
+        "nearestRail": "临江站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "纪念解放战争'四保临江'战役的专题纪念馆，与临江烈士陵园相邻；团队讲解宜提前电话预约，个人参观无需门票，出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-白山-637",
+      "name": "长白山讷殷古城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "长白山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以明末女真讷殷部城址为基础复建的古城，毗邻锦江大峡谷，殿宇展陈讲述满族源流；冬季部分区域或关闭，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-白山-638",
+      "name": "长白山二道白河名镇",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "镇区开放式进入；长白山各坡景区门票另计",
+        "freePolicy": "免费开放（开放式旅游名镇）",
+        "openHours": "全天开放（镇区）",
+        "suggestedHours": 2.5,
+        "bestMonths": "6月-9月、12月-次年2月",
+        "nearestAirport": "长白山机场",
+        "nearestRail": "白河站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "实际位于二道白河镇（长白山池北区），并非白山市区方向，自驾请按'二道白河'导航；镇内美人松公园与慢行绿道免费开放，是长白山北坡登山门户与补给基地。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-白山-639",
+      "name": "老黑河遗址景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": null,
+        "suggestedHours": 1.5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": null,
+        "accessibility": null,
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "长白山腹地的东北抗联活动遗址，地处偏远山区且公开信息有限，路况、开放与参观安排务必提前向当地文物或文旅部门核实后再前往。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-101",
+      "name": "驼梁景区",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "与五岳寨相邻但分属平山、灵寿两县，山顶云顶草原与盛夏冰泉是奇观；暑期日均气温约20℃是避暑卖点，昼夜温差大请备外套。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-石家庄-102",
+      "name": "平山县天桂山风景名胜区",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "有'北武当'之誉的青龙观道院依崖而筑，银河洞一线溶洞与栈道相连；清明前后山桃花满坡最上镜，票价以现场公示为准。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-石家庄-103",
+      "name": "佛光山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "北冶乡山岳型景区，以状若佛形的崖壁奇石与佛教文化为看点；与沕沕水、紫云山同乡，可组合一日环线，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-104",
+      "name": "平山县黑山大峡谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "营里乡深山峡谷，穆柯寨传说与溪潭瀑群交织，谷内湿度大、夏季体感凉爽；是距石家庄市区最远的平山景区之一，请预留充足行车时间，票价请核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-105",
+      "name": "平山县沕沕水景区",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；冬季冰瀑节期间时间或有调整，以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5月-10月、12月-次年2月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "'北方小九寨'以百丈飞瀑闻名，也是我党第一座水力发电站所在地，红色旧址与自然瀑布同园；冬季冰瀑灯光节是华北知名冬游项目，门票请以现场公示为准。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-石家庄-106",
+      "name": "河北平山藤龙山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "因山藤缠绕、藤海茫茫得名，春季藤花盛放如瀑；登山步道坡度较缓适合初阶徒步，商业配套少，建议自备饮水干粮，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-107",
+      "name": "东方巨龟苑",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4月-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以巨型甲鱼雕塑与甲鱼养殖科普起家的农旅景区，涉水乐园与果蔬采摘项目偏亲子向；各项目分项计费，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-108",
+      "name": "西苑温泉度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉度假村，无统一大门票；温泉票、住宿及餐饮另行消费",
+        "freePolicy": null,
+        "openHours": "全天营业（住宿）；温泉池约09:00-23:00，以度假村公示为准",
+        "suggestedHours": 4,
+        "bestMonths": "10月-次年4月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "平山温塘镇老牌温泉地，住宿加温泉套餐通常比单买温泉票划算；周末夜间为泡汤高峰，旺季请提前订房，价格以前台公示为准。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-109",
+      "name": "白鹿温泉景区",
+      "profile": {
+        "ticketPeak": 198,
+        "ticketOff": null,
+        "ticketNote": "为成人温泉票参考价；住宿、餐饮及休息区套餐另计",
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入场）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "10月-次年4月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "温塘镇知名温泉综合体，室外加料汤池数十种，冬季雪中泡汤体验独特；节假日人流高峰请错峰前往，泳衣毛巾可自带或现场购买。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-石家庄-110",
+      "name": "平山县紫云山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "北冶乡溶洞与山岳复合型景区，紫云洞内钟乳石形态丰富；与佛光山相邻，同乡多山可按体力二选一，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-111",
+      "name": "灵寿县水泉溪自然风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "寨头乡溪谷型景区，一路溪潭相伴、步道亲水，夏季玩水体验好；雨季需留意山洪风险与景区预警，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-112",
+      "name": "秋山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5月-10月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "陈庄镇原生态山岳景区，秋叶染山时最契合'秋山'之名；开发程度较低、设施朴素，适合喜欢清静的徒步者，票价请出行前核实。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-石家庄-113",
+      "name": "五岳寨风景区",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季约07:30-17:30，淡季约08:30-16:30（均含停止入园安排，以景区公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "6月-9月",
+        "nearestAirport": "石家庄正定国际机场",
+        "nearestRail": "石家庄站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国家森林公园，五座主峰状似五岳得名，主峰海拔近两千米为石家庄周边之最；与驼梁山体相连，体力好者可规划双景区穿越线，但需分别购票。"
+      },
+      "confidence": "high"
+    }
+  ]
+}

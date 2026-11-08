@@ -1,0 +1,28 @@
+{
+  "batch": 9,
+  "count": 100,
+  "low": 70,
+  "missingRequired": 70,
+  "sample": [
+    "scenic-宁德-1455",
+    "scenic-上饶-1540",
+    "scenic-福州-1478",
+    "scenic-泉州-1460",
+    "scenic-泉州-1464",
+    "scenic-吉安-1523",
+    "scenic-吉安-1519",
+    "scenic-三明-1437",
+    "scenic-福州-1480",
+    "scenic-福州-1479",
+    "scenic-九江-1515",
+    "scenic-泉州-1458",
+    "scenic-上饶-1534",
+    "scenic-吉安-1524",
+    "scenic-宁德-1454",
+    "scenic-福州-1476",
+    "scenic-莆田-1497",
+    "scenic-福州-1475",
+    "scenic-吉安-1520",
+    "scenic-泉州-1470"
+  ]
+}

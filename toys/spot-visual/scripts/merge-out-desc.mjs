@@ -1,0 +1,210 @@
+/**
+ * 外包 4A 描述合并器：out-desc-4a-batchN.json → 验收 → 按 id 落键 → 生成读取表。
+ *
+ * 用法：
+ *   node scripts/merge-out-desc.mjs docs/outsource/out-desc-4a-batch2.json [更多文件...]
+ *
+ * 验收（每批）：
+ *   1. items 数 = 输入清单数（按 task 里的批号找 desc-4a-batchN.json）；
+ *   2. 每条 id 必须回填且存在于输入清单，name 与输入逐字符一致（nameIssues 另计）；
+ *   3. desc 长度 60–110、禁写词检查（与 check-desc-facts.mjs 同口径的快速子集）；
+ *   4. 任一硬违规整批拒绝（退出码 1），不落盘。
+ *
+ * 合并目标：src/lib/scenic-desc-outsource.generated.ts（键 = 库条目 id，
+ * 读取侧 spot-data 直接按 id 取，天然避免同名跨市串写）。
+ * 累积存档：docs/outsource/out-desc-4a-merged.json（重复运行幂等，后写覆盖同名 id）。
+ */
+import fs from "node:fs";
+import path from "node:path";
+
+const OUT_TS = path.resolve("src/lib/scenic-desc-outsource.generated.ts");
+const MERGED = path.resolve("docs/outsource/out-desc-4a-merged.json");
+const IN_DIR = path.resolve("docs/outsource");
+
+const MIN = 60;
+const MAX = 110;
+const FORBIDDEN =
+  /门票|票价|人均|性价比|开放时间|营业时间|闭园|售票|预约|限流|实名|抢票|电话|官网|二维码|最佳季节|建议游玩|打卡|必去|不虚此行/;
+
+/** 原子写入：先写临时文件再 rename，避免并行会话读到截断的中间态（VERIFY-FEEDBACK 避坑点 3） */
+function writeAtomic(file, text) {
+  const tmp = file + ".tmp";
+  fs.writeFileSync(tmp, text, "utf8");
+  fs.renameSync(tmp, file);
+}
+
+/** 确定性 PRNG（mulberry32）：qc 抽样用，同批号每次抽出的样本固定，便于跨会话比对复核 */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** 从 id 列表确定性抽 n 个（部分 Fisher-Yates 洗牌，不足 n 全取） */
+function sampleIds(ids, n, rand) {
+  const arr = ids.slice();
+  const k = Math.min(n, arr.length);
+  for (let i = 0; i < k; i++) {
+    const j = i + Math.floor(rand() * (arr.length - i));
+    const t = arr[i];
+    arr[i] = arr[j];
+    arr[j] = t;
+  }
+  return arr.slice(0, k);
+}
+
+const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+if (!args.length) {
+  console.error(
+    "用法: node scripts/merge-out-desc.mjs <out-desc-4a-batchN.json> [...]",
+  );
+  process.exit(2);
+}
+
+// 累积存档（幂等）
+const merged = fs.existsSync(MERGED)
+  ? JSON.parse(fs.readFileSync(MERGED, "utf8"))
+  : {};
+
+let totalNew = 0;
+let totalLow = 0;
+const nameIssues = [];
+const batchQc = []; // 每批抽检数据，验收通过并落盘后统一写 qc 文件
+
+for (const file of args) {
+  const out = JSON.parse(fs.readFileSync(file, "utf8"));
+  const m = out.task?.match(/批(\d+)/) ?? file.match(/batch(\d+)/);
+  if (!m) {
+    console.error(`✗ ${file}: 无法从 task/文件名识别批号`);
+    process.exit(1);
+  }
+  const inputPath = path.join(IN_DIR, `desc-4a-batch${m[1]}.json`);
+  const input = JSON.parse(fs.readFileSync(inputPath, "utf8"));
+  const byId = new Map(input.items.map((i) => [i.id, i]));
+  const byName = new Map(input.items.map((i) => [i.name, i]));
+
+  if (out.items.length !== input.items.length) {
+    console.error(
+      `✗ ${file}: 条数不符 out=${out.items.length} input=${input.items.length}（整批拒绝）`,
+    );
+    process.exit(1);
+  }
+
+  let bad = 0;
+  for (const item of out.items) {
+    const src = byId.get(item.id);
+    if (!src) {
+      console.error(
+        `✗ id 未回填或不存在: ${item.name} (id=${item.id ?? "缺"})`,
+      );
+      bad++;
+      continue;
+    }
+    if (item.name !== src.name) {
+      console.error(
+        `✗ name 不一致: id=${item.id} out="${item.name}" 输入="${src.name}"`,
+      );
+      bad++;
+      continue;
+    }
+    const len = [...String(item.desc ?? "")].length;
+    if (len < MIN || len > MAX) {
+      console.error(`✗ 长度越界(${len}): id=${item.id} ${src.name}`);
+      bad++;
+      continue;
+    }
+    // 禁写词只针对「作者自己写进去的内容」：有些景点的官方名本身就含禁写词
+    // （例：poi-上海-14「陆家嘴三件套打卡位」——名字里就有「打卡」）。
+    // 描述里照抄全名会被误判，所以先剥掉该景点的名字再扫描。
+    // 作者另行写出的「门票60元」「建议游玩3小时」之类仍然会被拦下。
+    const body = String(item.desc).split(src.name).join("");
+    if (FORBIDDEN.test(body)) {
+      const w = body.match(FORBIDDEN);
+      console.error(`✗ 禁写词「${w?.[0]}」: id=${item.id} ${src.name}`);
+      bad++;
+      continue;
+    }
+  }
+  if (bad) {
+    console.error(`✗ ${file}: ${bad} 条硬违规，整批拒绝（原样退回重写）`);
+    process.exit(1);
+  }
+
+  let batchLow = 0;
+  for (const item of out.items) {
+    merged[item.id] = {
+      name: item.name,
+      desc: item.desc,
+      batch: m[1],
+      ...(item.confidence === "low" ? { low: true } : {}),
+    };
+    if (item.confidence === "low") {
+      totalLow++;
+      batchLow++;
+    }
+    totalNew++;
+  }
+  const batchNameIssues = out.nameIssues ?? [];
+  for (const ni of batchNameIssues) nameIssues.push(ni);
+  batchQc.push({
+    batch: parseInt(m[1], 10),
+    count: out.items.length,
+    low: batchLow,
+    nameIssues: batchNameIssues.length,
+    ids: out.items.map((i) => i.id),
+  });
+  console.log(`✓ 批${m[1]}: ${out.items.length} 条验收通过并入`);
+}
+
+// 累积存档
+writeAtomic(MERGED, JSON.stringify(merged, null, 2));
+
+// 生成读取表（键 = 库条目 id）
+const outGen = Object.fromEntries(
+  Object.entries(merged).map(([k, v]) => [k, v.desc]),
+);
+const banner = `// GENERATED by scripts/merge-out-desc.mjs — 外包 4A 景区描述（按库条目 id 落键）。
+// 数据源：docs/outsource/out-desc-4a-merged.json（验收通过的批次累积）。
+// 不要手改；重跑 merge 脚本再生成。描述由外部 AI 撰写并经事实校验，low 标记见 merged 存档。
+export const OUTSOURCE_DESCRIPTIONS: Record<string, string> = ${JSON.stringify(
+  outGen,
+  null,
+  2,
+)};
+`;
+writeAtomic(OUT_TS, banner);
+
+// 抽检辅助：整批验收通过并落键后，为每批写 qc 文件供人工抽检
+// （seed = 批号*1024 固定种子随机抽 20 条，同批重复运行结果一致，幂等）
+for (const b of batchQc) {
+  const qcFile = path.join(IN_DIR, `qc-desc-batch${b.batch}.json`);
+  writeAtomic(
+    qcFile,
+    JSON.stringify(
+      {
+        batch: b.batch,
+        count: b.count,
+        low: b.low,
+        nameIssues: b.nameIssues,
+        sample: sampleIds(b.ids, 20, mulberry32(b.batch * 1024)),
+      },
+      null,
+      2,
+    ),
+  );
+  console.log(`✓ 抽检文件 → ${qcFile}`);
+}
+
+const lows = Object.values(merged).filter((v) => v.low).length;
+console.log(
+  `完成：本轮新增 ${totalNew}（low ${totalLow}），累计 ${Object.keys(merged).length} 条 → ${OUT_TS}`,
+);
+if (nameIssues.length)
+  console.log(
+    `nameIssues ${nameIssues.length} 条：`,
+    JSON.stringify(nameIssues),
+  );

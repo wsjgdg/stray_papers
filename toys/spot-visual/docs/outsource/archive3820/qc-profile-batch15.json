@@ -1,0 +1,28 @@
+{
+  "batch": 15,
+  "count": 100,
+  "low": 97,
+  "missingRequired": 97,
+  "sample": [
+    "scenic-十堰-2171",
+    "scenic-十堰-2176",
+    "scenic-荆门-2191",
+    "scenic-宜昌-2147",
+    "scenic-襄阳-2121",
+    "scenic-十堰-2172",
+    "scenic-襄阳-2115",
+    "scenic-十堰-2167",
+    "scenic-武汉-2099",
+    "scenic-宜昌-2132",
+    "scenic-宜昌-2135",
+    "scenic-周口-2084",
+    "scenic-武汉-2101",
+    "scenic-武汉-2092",
+    "scenic-宜昌-2149",
+    "scenic-荆州-2181",
+    "scenic-十堰-2162",
+    "scenic-信阳-2080",
+    "scenic-武汉-2098",
+    "scenic-襄阳-2114"
+  ]
+}

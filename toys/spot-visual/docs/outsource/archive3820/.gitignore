@@ -1,0 +1,5 @@
+# 这两份与仓库内权威文件内容重复（合并档/生成表），只保留在磁盘作交付证据，不进版本库：
+#   out-profile-merged.json        → docs/outsource/out-profile-merged.json（我方导入后归一版）
+#   spot-profiles.generated.ts     → src/lib/spot-profiles.generated.ts
+out-profile-merged.json
+spot-profiles.generated.ts

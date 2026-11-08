@@ -1,0 +1,2663 @@
+{
+  "task": "景点档案结构化字段-批9",
+  "batch": 9,
+  "count": 100,
+  "authorship": "批9：Z.ai-GLM",
+  "items": [
+    {
+      "id": "scenic-三明-1435",
+      "name": "中央苏区反“围剿”纪念园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放（爱国主义教育基地）",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园），展馆闭馆时间以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "建宁县北站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "参观陈列馆请保持安静；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-三明-1436",
+      "name": "三明市建宁闽江源生态区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；索道运营时间以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "建宁县北站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高山天气多变，登顶注意保暖防滑；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1437",
+      "name": "宁化客家祖地",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "宁化站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "祭祖大典期间人流集中，请提前安排；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1438",
+      "name": "三明市清流天芳悦潭生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "11-3月",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "清流站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "泡汤时间不宜过长，酒后、空腹不宜入池；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1439",
+      "name": "三明泰宁明清园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "泰宁站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆藏旧木构件与匾额请爱护，勿随意触碰；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1440",
+      "name": "三明尤溪县侠天下景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:00停止入园）；高空项目开放情况以景区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "尤溪站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高空与涉水项目请遵从安全提示，量力参与；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1441",
+      "name": "尤溪朱子文化园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；展馆开放时间以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "尤溪站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-三明-1442",
+      "name": "尤溪桂峰古村落景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "尤溪站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "村内巷道石阶较多，夜行注意照明；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1443",
+      "name": "大仙峰·茶美人景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "三明北站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "茶山路段多雾，自驾减速慢行；可乘动车至三明北站后转乘班车前往大田方向；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1444",
+      "name": "尤溪九阜山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "尤溪站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "溯溪步道湿滑，穿防滑鞋；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1445",
+      "name": "三明万寿岩文旅小镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "遗址博物馆约09:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外）；户外区域全天开放；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "三明站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "博物馆周一闭馆；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-三明-1446",
+      "name": "永安安贞堡景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "永安南站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "堡内房间套间多，容易迷路，建议随队参观；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1447",
+      "name": "尤溪古溪星河休闲旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "度假区全天开放，内部项目约09:00-18:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "尤溪站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "夜间山区温差大，注意保暖；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1448",
+      "name": "建宁客坊乡水尾红色小镇",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（村落），展馆约09:00-16:30；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "建宁县北站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "地处闽赣边界山区，班车班次有限，建议自驾；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1449",
+      "name": "明溪滴水岩红色旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "明溪站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "岩壁湿滑，注意脚下；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1450",
+      "name": "泰宁九龙潭生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "以水上游线为主，船票及夜游费用以景区公告为准",
+        "freePolicy": null,
+        "openHours": "日游约08:30-16:30（16:00停止售票），夜游场次以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "泰宁站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "乘船请穿好救生衣，夜游注意脚下湿滑；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-三明-1451",
+      "name": "宁化天鹅洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "三明沙县机场",
+        "nearestRail": "宁化站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "洞内湿滑低温，备防滑鞋与薄外套；地下河行船穿好救生衣；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁德-1454",
+      "name": "鲤鱼溪·九龙漈旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "周宁站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "投喂锦鲤请使用景区专用饲料；九龙漈观瀑栈道湿滑；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁德-1455",
+      "name": "宁德福安白云山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福安站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "河谷石臼区域岩面湿滑，勿越护栏；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁德-1456",
+      "name": "柘荣县鸳鸯草场景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "福鼎站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高山草场风大日照强，注意防风防晒；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泉州-1458",
+      "name": "泉州开元寺",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放；节假日及高峰期可能实行预约入寺",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入场）；以寺方公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "泉州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "寺内礼佛请保持安静，东西塔区域注意人流；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-泉州-1459",
+      "name": "安溪清水岩旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:00-18:00；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "安溪东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "香火旺季（春节、祖师诞辰前后）人流集中，进香石阶较多注意体力；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泉州-1460",
+      "name": "永春牛姆林生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "永春站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "林区禁止吸烟用火，穿防滑鞋并防蚊虫；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泉州-1461",
+      "name": "惠安崇武古城风景区",
+      "profile": {
+        "ticketPeak": 45,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "惠安站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岬风大，城墙上游览注意安全；退潮赶海注意潮汐；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-泉州-1462",
+      "name": "泉州市德化石牛山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "索道、观光车及「天空之心」观景台等项目费用另计，以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；索道停运时间以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "德化站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "崖顶玻璃观景台风大，恐高者量力；节假日索道排队较长；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泉州-1463",
+      "name": "福建中国闽台缘博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆）",
+        "openHours": "约09:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "泉州站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "周一闭馆；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-泉州-1464",
+      "name": "泉州市博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": "免费开放（凭有效证件入馆）",
+        "openHours": "约09:00-17:00（16:30停止入馆），周一闭馆（法定节假日除外）；以馆方公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "泉州站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "周一闭馆；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-泉州-1465",
+      "name": "泉州德化九仙山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "12-2月（雾凇）、4-10月",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "德化站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "冬季路面易结冰，观雾凇注意防滑保暖；山顶风大；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泉州-1466",
+      "name": "晋江市五店市传统文化旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "街区免费开放，部分展馆与体验项目以现场公告为准",
+        "freePolicy": null,
+        "openHours": "街区全天开放，展馆约09:00-17:30；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "晋江站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "戏台演出场次以现场公告为准；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-泉州-1467",
+      "name": "源和1916创意产业园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "园区免费开放，部分展览与活动以现场公告为准",
+        "freePolicy": null,
+        "openHours": "园区全天开放，店铺与展馆约09:30-18:00；以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "泉州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-泉州-1468",
+      "name": "泉州安平桥（五里桥）景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "公园约06:00-21:00；桥面开放时段以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "晋江站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "桥面较长，全程步行约需1小时，注意补给与休息；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-泉州-1469",
+      "name": "永春北溪文苑旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-4月",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "永春站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "桃花季客流集中，建议错峰；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-泉州-1470",
+      "name": "石狮宝盖山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "公园免费开放",
+        "freePolicy": null,
+        "openHours": "约07:00-18:00；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "晋江站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山顶风大，登塔远眺注意安全；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-泉州-1471",
+      "name": "安溪县溪禾山铁观音文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-18:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "泉州晋江国际机场",
+        "nearestRail": "安溪东站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "制茶体验按场次安排，可提前咨询；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1473",
+      "name": "福州国家森林公园（福州植物园）",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "约06:30-17:30；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福州站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "无障碍通道",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "林区注意防火；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-福州-1474",
+      "name": "永泰青云山风景名胜区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "含多个分景区（峡谷、瀑布群等），门票分售或联售，以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "永泰站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "景区范围大，徒步量力而行并备足饮水；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1475",
+      "name": "福清市石竹山风景名胜区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "索道费用另计，以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约07:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福清站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "求梦习俗区请遵守场所指引；山路台阶较多；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1476",
+      "name": "福州市鼓山风景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "登山步道免费开放；涌泉寺门票另计（约40元，以寺方公告为准）",
+        "freePolicy": null,
+        "openHours": "登山道全天开放；涌泉寺约06:30-17:30；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福州站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "晨练人流多，注意错峰；古道石阶湿滑注意脚下；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-福州-1477",
+      "name": "福州市中国船政文化景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放，部分体验项目以现场公告为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆），博物馆周一闭馆（法定节假日除外）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福州站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "博物馆周一闭馆；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-福州-1478",
+      "name": "福州市永泰天门山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "永泰站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷栈道湿滑，穿防滑鞋；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1479",
+      "name": "沙县小吃文化城",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "街区免费开放",
+        "freePolicy": null,
+        "openHours": "街区全天开放，展馆约09:00-17:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福州站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "美食街区人流集中，注意随身物品；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-福州-1480",
+      "name": "福州永泰云顶景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "天池草场、峡谷、索道等分项或套票销售，以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "永泰站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高山区域昼夜温差大，避暑旺季客流集中；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1481",
+      "name": "连江贵安新天地休闲旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "欢乐世界、水世界、温泉等分项售票，价格以园区公告为准",
+        "freePolicy": null,
+        "openHours": "各园区约09:30-18:00（夜场另行公告）；以园区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "连江站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "节假日热门项目排队较长，建议错峰；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1482",
+      "name": "福州连江溪山休闲旅游度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以度假村公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "11-3月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "连江站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒后、空腹不宜泡汤；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1483",
+      "name": "福州闽侯旗山森林温泉度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以度假村公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "11-3月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福州站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "泡汤后注意补水保暖；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1484",
+      "name": "福州罗源湾海洋世界旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-17:30（17:00停止入园）；表演场次以园区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "罗源站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "表演场次请入场时确认；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1485",
+      "name": "武夷香江茗苑景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费参观，制茶体验与品鉴项目以现场公告为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福州站",
+        "driveFromCityMin": 210,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "参观车间请遵守引导路线；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-福州-1486",
+      "name": "永泰百漈沟生态旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "永泰站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "瀑布区湿滑，走栈道勿越护栏；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1487",
+      "name": "平潭坛南湾—海坛古城旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "海滨与街区免费开放，部分演艺与游乐项目以现场公告为准",
+        "freePolicy": null,
+        "openHours": "全天开放（海滨与街区），演艺场次以现场公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "平潭站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海滨游泳注意安全区域与潮汐；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-福州-1488",
+      "name": "福建武夷温泉旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "11-3月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福州站",
+        "driveFromCityMin": 210,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒后、空腹不宜泡汤；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1489",
+      "name": "永泰欧乐堡海洋世界",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-17:30（17:00停止入园）；表演场次以园区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "永泰站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "演出场次请入场时确认；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1490",
+      "name": "福清市瑞岩山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福清站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "摩崖石刻请勿触碰涂画；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-福州-1491",
+      "name": "福建长乐闽江河口国家湿地公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以管理处公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "11-3月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "长乐站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "适老步道",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "候鸟季（11月-次年3月）观鸟请保持安静，勿惊扰水鸟；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-福州-1492",
+      "name": "福建三钢工业旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "福州站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "厂区参观请遵守安全指引，勿脱离参观线路；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-莆田-1494",
+      "name": "莆田市莆田工艺美术城",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放（展销街区）",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "莆田站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "选购工艺品请认准正规店铺；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-莆田-1495",
+      "name": "莆田市九龙谷生态旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "莆田站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "亲水区域注意安全，吊桥勿超员；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-莆田-1496",
+      "name": "莆田市仙游县九鲤湖旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "仙游站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖瀑区石径湿滑，观瀑勿越护栏；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-莆田-1497",
+      "name": "莆田市瑞云山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "仙游站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山地徒步量力而行；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-莆田-1498",
+      "name": "仙游县菜溪岩风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "仙游站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山路回环多弯，自驾减速；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-莆田-1499",
+      "name": "莆田绶溪公园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "全天开放；园内场馆约09:00-17:30；以公园公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "福州长乐国际机场",
+        "nearestRail": "莆田站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "适老步道",
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "夜间沿溪散步注意安全；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-九江-1501",
+      "name": "庐山龙湾温泉度假村（汤太宗）景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以度假村公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "11-3月",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "庐山站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒后、空腹不宜泡汤；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1502",
+      "name": "星子天沐温泉景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "11-3月",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "庐山站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒后、空腹不宜泡汤；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1503",
+      "name": "庐山西海国际温泉度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-23:00（22:00停止入园）；以度假村公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "11-3月",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "永修站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "泡汤与游湖注意安全；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1504",
+      "name": "石钟山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "湖口站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "临崖步道注意安全，江湖交汇处风大；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1505",
+      "name": "富华山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；闭馆日以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "共青城站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "陵园区域请保持肃穆；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-九江-1506",
+      "name": "庐山西海风景名胜区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "大门票与游船票分售或联售，以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止售票）；游船班次以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "永修站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "乘船穿好救生衣，注意天气变化；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1507",
+      "name": "南崖-马家洲景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "全天开放；园内场馆约09:00-17:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "九江站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "修水县暂无客运火车站，可先抵九江站再转乘班车；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-九江-1508",
+      "name": "山西海湾景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "九江站",
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "公开区位信息有限，请先核实景区具体位置与开放安排；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1509",
+      "name": "龙宫洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "彭泽站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "洞内湿滑低温，注意防滑保暖；行船穿好救生衣；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1510",
+      "name": "中华贤母园景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；展馆开放时段以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "庐山站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-九江-1511",
+      "name": "九江南山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "九江站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "晨练高峰人流较多，注意错峰；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-九江-1512",
+      "name": "八里湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "全天开放（滨湖绿道）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "九江站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖边风大，注意防风保暖；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-九江-1513",
+      "name": "大千世界梦幻乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-17:30（17:00停止入园）；夜场另行公告",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "九江站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "部分设施有身高与年龄限制；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1514",
+      "name": "阳光照耀29度假景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "度假区全天开放，设施约09:00-21:00；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "庐山站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "住宿与游乐项目建议提前预订；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-九江-1515",
+      "name": "湖口台山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "全天开放",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "湖口站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "适老步道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "登山道晨练人流较多；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-九江-1516",
+      "name": "东浒寨景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": "九江庐山机场",
+        "nearestRail": "九江站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "修水县暂无客运火车站，可先抵九江站再转乘班车；栈道湿滑注意安全；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1518",
+      "name": "渼陂古村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "村内古建筑请勿烟火；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1519",
+      "name": "天祥景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；展馆闭馆日以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "纪念场馆请保持安静；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吉安-1520",
+      "name": "庐陵文化生态园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放",
+        "freePolicy": null,
+        "openHours": "全天开放（园区）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "适老步道",
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吉安-1521",
+      "name": "青原山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古寺区域请保持安静；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1522",
+      "name": "钓源古村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "巷道安静，参观请勿扰民；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1523",
+      "name": "陂下古村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "村内巷道狭窄，请将车停在村口停车场；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1524",
+      "name": "吉州窑景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；展馆闭馆日以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "陶艺体验按场次安排；遗址区请勿攀爬窑包；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1525",
+      "name": "燕坊古村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉水站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古宅多为民居，请勿进入未开放区域；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1526",
+      "name": "羊狮幕景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "索道费用另计，以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；索道运营时间以景区公告为准",
+        "suggestedHours": 4.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高山栈道云雾天湿滑，注意防滑保暖；可经安福方向转乘班车，班次有限；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1527",
+      "name": "田北农民画村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "万安站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "画室体验请提前联系；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1528",
+      "name": "东固景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（村落与旧址群），纪念馆约09:00-16:30；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区班车班次有限，建议自驾；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉安-1529",
+      "name": "永新三湾景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（旧址群），纪念馆约09:00-16:30；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "井冈山机场",
+        "nearestRail": "吉安站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "地处山区，可在吉安或永新县城转乘班车；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1533",
+      "name": "李坑景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": "婺源多景点通票（210元，5日内有效）亦含本景点，具体以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-4月、11月",
+        "nearestAirport": "景德镇罗家机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "油菜花季与节假日客流集中，建议错峰；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-上饶-1534",
+      "name": "大鄣山卧龙谷",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "属婺源通票适用景点（通票210元，5日内有效），单票以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "黄山屯溪国际机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷涉水路段湿滑，穿防滑鞋；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1535",
+      "name": "思溪延村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "属婺源通票适用景点（通票210元，5日内有效），单票以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-4月、11月",
+        "nearestAirport": "景德镇罗家机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "老宅天井地面湿滑，注意脚下；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1536",
+      "name": "文公山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "属婺源通票适用景点（通票210元，5日内有效），单票以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "景德镇罗家机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山林防火，登山怀古请轻声慢行；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1537",
+      "name": "汪口景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "属婺源通票适用景点（通票210元，5日内有效），单票以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-4月、11月",
+        "nearestAirport": "景德镇罗家机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宗祠木雕为重点看点，请勿触摸；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1538",
+      "name": "严田景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "景德镇罗家机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古樟区请勿攀爬；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1539",
+      "name": "婺源灵岩风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "属婺源通票适用景点（通票210元，5日内有效），单票以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "黄山屯溪国际机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "洞内湿滑，注意照明与脚下；历代题刻请勿触摸；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1540",
+      "name": "篁岭景区",
+      "profile": {
+        "ticketPeak": 145,
+        "ticketOff": null,
+        "ticketNote": "门票与往返索道为套票（索道为主要进出通道）；单独门票与优惠政策以景区公告为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（索道末班时间以景区公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "3-4月（油菜花）、9-11月（晒秋）",
+        "nearestAirport": "黄山屯溪国际机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "晒秋与花期旺季客流集中，索道排队时间长，建议早到；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-上饶-1541",
+      "name": "源头古村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "景德镇罗家机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "村内步道傍溪，注意脚下；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1542",
+      "name": "翼天文化旅游城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "街区免费开放，山水实景演出《梦里老家》票价另计，以官方公告为准",
+        "freePolicy": null,
+        "openHours": "街区全天开放，演出场次以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-11月",
+        "nearestAirport": "景德镇罗家机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "夜间演出散场人多，注意返程安排；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1543",
+      "name": "熹园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "景德镇罗家机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "砚雕展品请勿触摸；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-上饶-1544",
+      "name": "五龙源景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "漂流场次约10:00-15:00（视水情调整）；以景区当日公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-9月",
+        "nearestAirport": "黄山屯溪国际机场",
+        "nearestRail": "婺源站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "漂流有年龄与身体条件限制，穿好救生装备；手机等贵重物品做好防水；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "low"
+    }
+  ]
+}

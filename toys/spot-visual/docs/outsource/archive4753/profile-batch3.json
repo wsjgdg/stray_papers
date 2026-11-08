@@ -1,0 +1,1008 @@
+{
+  "task": "景点档案结构化字段-批3（5A）",
+  "batch": 3,
+  "count": 100,
+  "rules": "见 TASK-SPOT-PROFILE.md",
+  "items": [
+    {
+      "id": "scenic-乌海-570",
+      "name": "乌海市蒙根花生态休闲区",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "内蒙古岛海市",
+      "level": "4A",
+      "address": "内蒙古乌海市内蒙古岛海市乌海市蒙根花生态休闲区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌海-571",
+      "name": "阳光田宇国际酒庄",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "海勃湾区",
+      "level": "4A",
+      "address": "内蒙古乌海市海勃湾区阳光田宇国际酒庄",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌海-572",
+      "name": "当代中国书法艺术馆景区",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "海勃湾区",
+      "level": "4A",
+      "address": "内蒙古乌海市海勃湾区当代中国书法艺术馆景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-乌海-573",
+      "name": "乌海湖休闲度假旅游区",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "海勃湾区",
+      "level": "4A",
+      "address": "内蒙古乌海市海勃湾区乌海湖休闲度假旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-伊春-711",
+      "name": "嘉荫恐龙国家地质公园",
+      "province": "黑龙江",
+      "city": "伊春",
+      "district": "嘉萌县",
+      "level": "4A",
+      "address": "黑龙江伊春市黑龙江省伊春市嘉萌县嘉萌恐龙国家地质公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-伊春-712",
+      "name": "嘉荫茅兰沟森林旅游景区",
+      "province": "黑龙江",
+      "city": "伊春",
+      "district": "嘉荫县",
+      "level": "4A",
+      "address": "黑龙江伊春市嘉荫县黑龙江省伊春市向阳乡帰荫茅兰沟森林旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-伊春-713",
+      "name": "小兴安岭桃山景区（悬羊峰）",
+      "province": "黑龙江",
+      "city": "伊春",
+      "district": "铁力市",
+      "level": "4A",
+      "address": "黑龙江伊春市铁力市黑龙江省桃山镇伊春小兴安岭桃山景区（悬羊峰）",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-伊春-714",
+      "name": "伊春桃山桃源湖旅游区",
+      "province": "黑龙江",
+      "city": "伊春",
+      "district": "铁力市",
+      "level": "4A",
+      "address": "黑龙江伊春市铁力市黑龙江省桃山镇伊春桃山桃源湖旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-伊春-715",
+      "name": "伊春市上甘岭溪水森林旅游区",
+      "province": "黑龙江",
+      "city": "伊春",
+      "district": "友好区",
+      "level": "4A",
+      "address": "黑龙江伊春市友好区黑龙江省伊春市上甘岭林业局溪水经苜伊春市上甘岭溪水森林旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-伊春-716",
+      "name": "伊春市九峰山养心谷景区",
+      "province": "黑龙江",
+      "city": "伊春",
+      "district": "金林区",
+      "level": "4A",
+      "address": "黑龙江伊春市金林区黑龙江省伊春市九峰山养心谷景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-伊春-717",
+      "name": "伊春美溪回龙湾国家森林公园",
+      "province": "黑龙江",
+      "city": "伊春",
+      "district": "伊美区",
+      "level": "4A",
+      "address": "黑龙江伊春市伊美区黑龙江省伊春市鹤伊公路110公里处伊春美溪回龙湾国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-伊春-718",
+      "name": "伊春市新青湿地公园景区",
+      "province": "黑龙江",
+      "city": "伊春",
+      "district": "丰林县",
+      "level": "4A",
+      "address": "黑龙江伊春市丰林县黑龙江省伊春市新育镇新有湿地公园伊春市新背湿地公园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-741",
+      "name": "汤原大亮子河国家森林公园",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "汤原县",
+      "level": "4A",
+      "address": "黑龙江佳木斯市汤原县黑龙江省大亮子河国家森林公园汤原大亮子河国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-742",
+      "name": "富锦市国家湿地公园",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "富锦市",
+      "level": "4A",
+      "address": "黑龙江佳木斯市富锦市黑龙江省西平路南段富锦市国家湿地公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-743",
+      "name": "敖其湾赫哲族旅游区",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "郊区",
+      "level": "4A",
+      "address": "黑龙江佳木斯市郊区黑龙江省佳木斯市友谊路8号佳木斯市敖其湾赫哲族旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-744",
+      "name": "同江市三江口生态旅游区",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "同江市",
+      "level": "4A",
+      "address": "黑龙江佳木斯市同江市黑龙江省三江口生态旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-745",
+      "name": "同江市街津口赫哲旅游度假区",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "同江市",
+      "level": "4A",
+      "address": "黑龙江佳木斯市同江市黑龙江省街津口赫哲族乡所在地同江市街津口赫哲旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-746",
+      "name": "黑瞎子岛旅游区",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "抚远市",
+      "level": "4A",
+      "address": "黑龙江佳木斯市抚远市黑龙江省迎宾路66号黑瞎子岛旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-747",
+      "name": "黑瞎子岛探秘野熊园",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "抚远市",
+      "level": "4A",
+      "address": "黑龙江佳木斯市抚远市黑龙江省迎宾路66号黑脖子岛探秘野熊园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-748",
+      "name": "桦南森林百年蒸汽小火车休闲旅游区",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "桦南县",
+      "level": "4A",
+      "address": "黑龙江佳木斯市桦南县黑龙江省森工林业局桦南森林百年蒸汽小火车休闲旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-佳木斯-749",
+      "name": "伊春市锦绣山水公园旅游区",
+      "province": "黑龙江",
+      "city": "佳木斯",
+      "district": "前进区",
+      "level": "4A",
+      "address": "黑龙江佳木斯市前进区黑龙江省前进办扶林委护林街伊春市锦绣山水公园旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-保定-183",
+      "name": "易县狼牙山风景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "易县",
+      "level": "4A",
+      "address": "河北保定市易县河北易县狼牙山风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-保定-184",
+      "name": "易水湖景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "易县",
+      "level": "4A",
+      "address": "河北保定市易县河北易县易水湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-保定-185",
+      "name": "曲阳北岳庙景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "曲阳县",
+      "level": "4A",
+      "address": "河北保定市曲阳县曲阳北岳庙景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-保定-186",
+      "name": "虎山风景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "曲阳县",
+      "level": "4A",
+      "address": "河北保定市曲阳县虎山风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-保定-187",
+      "name": "满城汉墓景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "满城区",
+      "level": "4A",
+      "address": "河北保定市满城区满城汉墓景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-保定-188",
+      "name": "奥润顺达节能门窗工业旅游景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "高碑店市",
+      "level": "4A",
+      "address": "河北保定市高碑店市奥润顺达节能门窗工业旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-保定-189",
+      "name": "和道国际箱包城旅游景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "高碑店市",
+      "level": "4A",
+      "address": "河北保定市高碑店市白沟新城白沟新城和道国际箱包城旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-保定-190",
+      "name": "鱼谷洞景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "涞水县",
+      "level": "4A",
+      "address": "河北保定市涞水县鱼谷洞景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-保定-191",
+      "name": "晋察冀边区革命纪念馆",
+      "province": "河北",
+      "city": "保定",
+      "district": "阜平县",
+      "level": "4A",
+      "address": "河北保定市阜平县晋察冀边区革命纪念馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-保定-192",
+      "name": "直隶总督署博物馆",
+      "province": "河北",
+      "city": "保定",
+      "district": "莲池区",
+      "level": "4A",
+      "address": "河北保定市莲池区直隶总督署博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-保定-193",
+      "name": "刘伶醉景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "徐水区",
+      "level": "4A",
+      "address": "河北保定市徐水区刘伶醉景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-保定-194",
+      "name": "阜平天生桥景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "阜平县",
+      "level": "4A",
+      "address": "河北保定市阜平县阜平天生桥景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-保定-195",
+      "name": "阜平县云花溪谷景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "阜平县",
+      "level": "4A",
+      "address": "河北保定市阜平县云花溪谷景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-保定-196",
+      "name": "唐县潭瀑峡景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "唐县",
+      "level": "4A",
+      "address": "河北保定市唐县潭瀑峡景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-保定-197",
+      "name": "恋乡·太行水镇旅游综合体景区",
+      "province": "河北",
+      "city": "保定",
+      "district": "易县",
+      "level": "4A",
+      "address": "河北保定市易县恋乡·太行水镇旅游综合体景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-兴安盟-505",
+      "name": "奥伦布坎森林文化旅游区",
+      "province": "内蒙古",
+      "city": "兴安盟",
+      "district": "阿尔山市",
+      "level": "4A",
+      "address": "内蒙古兴安盟阿尔山市奥伦布坎森林文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-兴安盟-506",
+      "name": "阿尔山海神圣泉旅游度假区",
+      "province": "内蒙古",
+      "city": "兴安盟",
+      "district": "阿尔山市",
+      "level": "4A",
+      "address": "内蒙古兴安盟阿尔山市内蒙古兴安曾阿尔山海神圣泉旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-兴安盟-507",
+      "name": "成吉思汗庙景区",
+      "province": "内蒙古",
+      "city": "兴安盟",
+      "district": "乌兰浩特市",
+      "level": "4A",
+      "address": "内蒙古兴安盟乌兰浩特市成吉思汗庙景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-兴安盟-508",
+      "name": "五角枫生态旅游区",
+      "province": "内蒙古",
+      "city": "兴安盟",
+      "district": "乌兰浩特市",
+      "level": "4A",
+      "address": "内蒙古兴安盟乌兰浩特市五角枫生态旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-兴安盟-509",
+      "name": "天骄天骏生态旅游度假区",
+      "province": "内蒙古",
+      "city": "兴安盟",
+      "district": "乌兰浩特市",
+      "level": "4A",
+      "address": "内蒙古兴安盟乌兰浩特市天骄天骏生态旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-兴安盟-510",
+      "name": "碧海阳光温泉旅游区",
+      "province": "内蒙古",
+      "city": "兴安盟",
+      "district": "阿尔山市",
+      "level": "4A",
+      "address": "内蒙古兴安盟阿尔山市内蒙古辄尔多斯市碧海阳光温泉旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-包头-443",
+      "name": "包头市土默特右旗敕勒川景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "土默特右旗",
+      "level": "4A",
+      "address": "内蒙古包头市土默特右旗敕勒川景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-包头-444",
+      "name": "包头市石拐区五当召景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "东河区",
+      "level": "4A",
+      "address": "内蒙古包头市东河区石拐区五当召景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-包头-445",
+      "name": "春坤山生态旅游景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "固阳县",
+      "level": "4A",
+      "address": "内蒙古包头市固阳县春坤山生态旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-包头-446",
+      "name": "百灵那达慕文化旅游区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "达尔罕茂明安联合旗",
+      "level": "4A",
+      "address": "内蒙古包头市达尔罕茂明安联合旗百灵那达慕文化旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-包头-447",
+      "name": "包头市花舞人间旅游景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "石拐区",
+      "level": "4A",
+      "address": "内蒙古包头市石拐区花舞人间旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-包头-448",
+      "name": "包头市东河区南海湿地景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "东河区",
+      "level": "4A",
+      "address": "内蒙古包头市东河区南海湿地景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-包头-449",
+      "name": "包头市土默特右旗美岱召景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "土默特右旗",
+      "level": "4A",
+      "address": "内蒙古包头市土默特右旗美岱召景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-包头-450",
+      "name": "包头市青山区北方兵器城景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "青山区",
+      "level": "4A",
+      "address": "内蒙古包头市青山区北方兵器城景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-包头-451",
+      "name": "梅力更自然生态风景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "九原区",
+      "level": "4A",
+      "address": "内蒙古包头市九原区梅力更自然生态风景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-包头-452",
+      "name": "吉穆斯泰旅游区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "达尔罕茂明安联合旗",
+      "level": "4A",
+      "address": "内蒙古包头市达尔罕茂明安联合旗吉穆斯泰旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-包头-453",
+      "name": "达茂旗诗画草原旅游景区",
+      "province": "内蒙古",
+      "city": "包头",
+      "district": "达尔罕茂明安联合旗",
+      "level": "4A",
+      "address": "内蒙古包头市达尔罕茂明安联合旗达茂旗诗画草原旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-10",
+      "name": "野鸭湖景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "延庆区",
+      "level": "4A",
+      "address": "北京市延庆区康庄镇刘浩营村西野鸭湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-11",
+      "name": "国家植物园",
+      "province": "北京",
+      "city": "北京",
+      "district": "海淀区",
+      "level": "4A",
+      "address": "北京市海淀区植物园(卧佛寺)国家植物园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-12",
+      "name": "凤凰岭自然风景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "海淀区",
+      "level": "4A",
+      "address": "北京市海淀区苏家坨镇凤凰岭路19号凤凰岭自然风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-13",
+      "name": "世界公园",
+      "province": "北京",
+      "city": "北京",
+      "district": "丰台区",
+      "level": "4A",
+      "address": "北京市丰台区花乡大葆台158号世界公园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-北京-14",
+      "name": "雁栖湖旅游区",
+      "province": "北京",
+      "city": "北京",
+      "district": "怀柔区",
+      "level": "4A",
+      "address": "北京市怀柔区怀北镇雁水路3号雁栖湖旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-15",
+      "name": "京东石林峡风景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "平谷区",
+      "level": "4A",
+      "address": "北京市平谷区雕窝村73号京东石林峡风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-16",
+      "name": "八达岭水关长城景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "延庆区",
+      "level": "4A",
+      "address": "北京市延庆区八达岭镇石佛寺村八达岭水关长城景区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北京-17",
+      "name": "司马台长城景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "密云区",
+      "level": "4A",
+      "address": "北京市密云区古北口镇司马台村司马台长城景区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北京-18",
+      "name": "中国人民抗日战争纪念馆",
+      "province": "北京",
+      "city": "北京",
+      "district": "丰台区",
+      "level": "4A",
+      "address": "北京市丰台区卢沟桥宛平城内街101号中国人民抗日战争纪念馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北京-19",
+      "name": "石花洞",
+      "province": "北京",
+      "city": "北京",
+      "district": "房山区",
+      "level": "4A",
+      "address": "北京市房山区河北镇南车营村石花洞",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-20",
+      "name": "北京韩美林艺术馆",
+      "province": "北京",
+      "city": "北京",
+      "district": "通州区",
+      "level": "4A",
+      "address": "北京市通州区梨园镇九棵树东路68号北京韩美林艺术馆",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-21",
+      "name": "金海湖风景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "平谷区",
+      "level": "4A",
+      "address": "北京市平谷区金海湖镇金海湖景区坝前广场路1号金海湖风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-22",
+      "name": "玉渊潭公园",
+      "province": "北京",
+      "city": "北京",
+      "district": "海淀区",
+      "level": "4A",
+      "address": "北京市海淀区西三环中路10号玉渊潭公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-23",
+      "name": "北京黄花城水长城旅游区",
+      "province": "北京",
+      "city": "北京",
+      "district": "怀柔区",
+      "level": "4A",
+      "address": "北京市怀柔区九渡河镇西水峪村16号北京黄花城水长城旅游区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北京-24",
+      "name": "戒台寺",
+      "province": "北京",
+      "city": "北京",
+      "district": "门头沟区",
+      "level": "4A",
+      "address": "北京市门头沟区门头沟永定镇戒台寺戒台寺",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-北京-25",
+      "name": "青龙峡旅游度假区",
+      "province": "北京",
+      "city": "北京",
+      "district": "怀柔区",
+      "level": "4A",
+      "address": "北京市怀柔区怀北镇大水峪村北500米青龙峡旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-26",
+      "name": "黑龙潭旅游区",
+      "province": "北京",
+      "city": "北京",
+      "district": "密云区",
+      "level": "4A",
+      "address": "北京市密云区石城镇大关桥黑龙潭旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-27",
+      "name": "龙庆峡旅游区",
+      "province": "北京",
+      "city": "北京",
+      "district": "延庆区",
+      "level": "4A",
+      "address": "北京市延庆区旧县镇古城村北龙庆峡旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-28",
+      "name": "北京丫髻山道教文化名胜区",
+      "province": "北京",
+      "city": "北京",
+      "district": "平谷区",
+      "level": "4A",
+      "address": "北京市平谷区刘家店镇北吉山村北吉山大街临485号北京丫髻山道教文化名胜区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-29",
+      "name": "北京海洋馆",
+      "province": "北京",
+      "city": "北京",
+      "district": "海淀区",
+      "level": "4A",
+      "address": "北京市海淀区北京西城区西直门外大街137号49幢平房第一间北京海洋馆",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-北京-30",
+      "name": "中国紫檀博物馆",
+      "province": "北京",
+      "city": "北京",
+      "district": "朝阳区",
+      "level": "4A",
+      "address": "北京市朝阳区建国路23号中国紫檀博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北京-31",
+      "name": "北京顺义国际鲜花港",
+      "province": "北京",
+      "city": "北京",
+      "district": "顺义区",
+      "level": "4A",
+      "address": "北京市顺义区杨镇鲜花港南路9号(白马路北侧)北京顺义国际鲜花港",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-32",
+      "name": "绿野晴川野生动物园",
+      "province": "北京",
+      "city": "北京",
+      "district": "大兴区",
+      "level": "4A",
+      "address": "北京市大兴区榆垡镇万亩林绿野晴川野生动物园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-北京-33",
+      "name": "仙居谷风景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "密云区",
+      "level": "4A",
+      "address": "北京市密云区太师屯镇令公村甲一号仙居谷风景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-北京-34",
+      "name": "小汤山现代农业示范园区",
+      "province": "北京",
+      "city": "北京",
+      "district": "昌平区",
+      "level": "4A",
+      "address": "北京市昌平区小汤山镇立汤路马坊小汤山现代农业示范园区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-35",
+      "name": "北京园博园",
+      "province": "北京",
+      "city": "北京",
+      "district": "丰台区",
+      "level": "4A",
+      "address": "北京市丰台区射击场路15号北京园博园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-36",
+      "name": "谷山村景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "门头沟区",
+      "level": "4A",
+      "address": "北京市门头沟区妙峰山镇谷山村景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-37",
+      "name": "乐多港假日广场",
+      "province": "北京",
+      "city": "北京",
+      "district": "昌平区",
+      "level": "4A",
+      "address": "北京市昌平区城南街道邓庄村西(西关环岛西侧2公里)乐多港假日广场",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-北京-38",
+      "name": "龙脉温泉度假村",
+      "province": "北京",
+      "city": "北京",
+      "district": "昌平区",
+      "level": "4A",
+      "address": "北京市昌平区小汤山镇龙脉温泉度假村龙脉温泉度假村",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-39",
+      "name": "北京十渡风景名胜区",
+      "province": "北京",
+      "city": "北京",
+      "district": "房山区",
+      "level": "4A",
+      "address": "北京市房山区九渡大街9号北京十渡风景名胜区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-北京-40",
+      "name": "八大处公园",
+      "province": "北京",
+      "city": "北京",
+      "district": "石景山区",
+      "level": "4A",
+      "address": "北京市石景山区八大处路3号八大处公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-41",
+      "name": "八奇洞景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "门头沟区",
+      "level": "4A",
+      "address": "北京市门头沟区潭柘寺镇八奇洞景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-42",
+      "name": "银山塔林风景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "昌平区",
+      "level": "4A",
+      "address": "北京市昌平区银山路1银山塔林风景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-北京-43",
+      "name": "居庸关长城",
+      "province": "北京",
+      "city": "北京",
+      "district": "昌平区",
+      "level": "4A",
+      "address": "北京市昌平区南口镇居庸关村居庸关管理处居庸关长城",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北京-44",
+      "name": "圣莲山旅游度假区",
+      "province": "北京",
+      "city": "北京",
+      "district": "房山区",
+      "level": "4A",
+      "address": "北京市房山区史家营乡柳林水村圣莲山旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-45",
+      "name": "北京渔阳国际滑雪场景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "平谷区",
+      "level": "4A",
+      "address": "北京市平谷区东高村镇大旺务村东688号北京渔阳国际滑雪场景区",
+      "category": "轻运动"
+    },
+    {
+      "id": "scenic-北京-46",
+      "name": "云居寺",
+      "province": "北京",
+      "city": "北京",
+      "district": "房山区",
+      "level": "4A",
+      "address": "北京市房山区大石窝镇水头村云居寺",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-北京-47",
+      "name": "红螺寺",
+      "province": "北京",
+      "city": "北京",
+      "district": "怀柔区",
+      "level": "4A",
+      "address": "北京市怀柔区怀柔镇红螺东路2号红螺寺",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-北京-48",
+      "name": "中央广播电视塔",
+      "province": "北京",
+      "city": "北京",
+      "district": "海淀区",
+      "level": "4A",
+      "address": "北京市海淀区西三环中路11号中央广播电视塔",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-北京-49",
+      "name": "南宫旅游景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "丰台区",
+      "level": "4A",
+      "address": "北京市丰台区王佐镇南宫南路1号南宫旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-北京-50",
+      "name": "中国航空博物馆",
+      "province": "北京",
+      "city": "北京",
+      "district": "昌平区",
+      "level": "4A",
+      "address": "北京市昌平区小汤山镇航空博物馆中国航空博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北京-51",
+      "name": "京东大峡谷旅游区",
+      "province": "北京",
+      "city": "北京",
+      "district": "平谷区",
+      "level": "4A",
+      "address": "北京市平谷区山东庄镇鱼子山村京东大峡谷旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-52",
+      "name": "香山公园",
+      "province": "北京",
+      "city": "北京",
+      "district": "海淀区",
+      "level": "4A",
+      "address": "北京市海淀区香山公园买卖街40号香山公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-北京-53",
+      "name": "潭柘寺",
+      "province": "北京",
+      "city": "北京",
+      "district": "门头沟区",
+      "level": "4A",
+      "address": "北京市门头沟区潭柘寺镇潭柘寺管理处潭柘寺",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-北京-54",
+      "name": "北京欢乐谷",
+      "province": "北京",
+      "city": "北京",
+      "district": "朝阳区",
+      "level": "4A",
+      "address": "北京市朝阳区东四环小武基北路北京欢乐谷",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-北京-55",
+      "name": "北京汽车博物馆",
+      "province": "北京",
+      "city": "北京",
+      "district": "丰台区",
+      "level": "4A",
+      "address": "北京市丰台区南四环西路126号北京汽车博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北京-56",
+      "name": "延庆百里山水画廊景区",
+      "province": "北京",
+      "city": "北京",
+      "district": "延庆区",
+      "level": "4A",
+      "address": "北京市延庆区千家店镇硅化木景区管理处大院内延庆百里山水画廊景区",
+      "category": "自然风光"
+    }
+  ]
+}

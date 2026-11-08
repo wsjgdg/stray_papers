@@ -1,0 +1,28 @@
+{
+  "batch": 4,
+  "count": 100,
+  "low": 70,
+  "missingRequired": 70,
+  "sample": [
+    "scenic-北京-63",
+    "scenic-呼和浩特-424",
+    "scenic-吉林-597",
+    "scenic-吕梁-354",
+    "scenic-北京-59",
+    "scenic-呼伦贝尔-497",
+    "scenic-呼和浩特-429",
+    "scenic-呼和浩特-428",
+    "scenic-北京-8",
+    "scenic-呼伦贝尔-486",
+    "scenic-哈尔滨-676",
+    "scenic-呼和浩特-437",
+    "scenic-哈尔滨-683",
+    "scenic-吕梁-360",
+    "scenic-吕梁-357",
+    "scenic-哈尔滨-674",
+    "scenic-哈尔滨-672",
+    "scenic-北京-62",
+    "scenic-呼和浩特-430",
+    "scenic-双鸭山-765"
+  ]
+}

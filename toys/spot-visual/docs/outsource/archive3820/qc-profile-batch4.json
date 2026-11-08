@@ -1,0 +1,28 @@
+{
+  "batch": 4,
+  "count": 100,
+  "low": 61,
+  "missingRequired": 61,
+  "sample": [
+    "scenic-宁波-969",
+    "scenic-杭州-921",
+    "scenic-宁波-985",
+    "scenic-杭州-913",
+    "scenic-杭州-916",
+    "scenic-宁波-974",
+    "scenic-宁波-952",
+    "scenic-杭州-947",
+    "scenic-宁波-965",
+    "scenic-杭州-903",
+    "scenic-宁波-963",
+    "scenic-宁波-958",
+    "scenic-宁波-955",
+    "scenic-杭州-934",
+    "scenic-杭州-938",
+    "scenic-杭州-932",
+    "scenic-宁波-971",
+    "scenic-宁波-983",
+    "scenic-宁波-986",
+    "scenic-宁波-970"
+  ]
+}

@@ -1,0 +1,1008 @@
+{
+  "task": "景点档案结构化字段-批2（5A）",
+  "batch": 2,
+  "count": 100,
+  "rules": "见 TASK-SPOT-PROFILE.md",
+  "items": [
+    {
+      "id": "scenic--281",
+      "name": "东山岭文化旅游区",
+      "province": "",
+      "city": "海南万宁",
+      "district": "",
+      "level": "4A",
+      "address": "海南万宁市海南省万宁市万城镇东山岭景区东山岭文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--282",
+      "name": "兴隆热带植物园",
+      "province": "",
+      "city": "海南万宁",
+      "district": "",
+      "level": "4A",
+      "address": "海南万宁市海南省万宁市兴隆热带植物园兴隆热带植物园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--283",
+      "name": "中国（海南）南海博物馆",
+      "province": "",
+      "city": "海南琼海",
+      "district": "",
+      "level": "4A",
+      "address": "海南琼海市海南省琼海市潭门镇博物馆路1号中国（海南）南海博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic--284",
+      "name": "海南百花岭热带雨林文化旅游区",
+      "province": "",
+      "city": "",
+      "district": "海南琼中黎族苗族自治县",
+      "level": "4A",
+      "address": "海南琼中黎族苗族自治县海南琼中黎族苗族自治县营根镇百花岭旅游区海南百花岭热带雨林文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--285",
+      "name": "母瑞山红色文化旅游区",
+      "province": "",
+      "city": "",
+      "district": "海南定安县",
+      "level": "4A",
+      "address": "海南定安县海南省翰林镇中瑞农场母瑞山红色文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--286",
+      "name": "海南铜鼓岭景区",
+      "province": "",
+      "city": "海南文昌",
+      "district": "",
+      "level": "4A",
+      "address": "海南文昌市海南省文昌市龙楼镇铜鼓岭国际生态旅游区铜鼓北路铜鼓岭景区海南铜鼓岭景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--287",
+      "name": "屯昌梦幻香山旅游区",
+      "province": "",
+      "city": "",
+      "district": "海南屯昌县",
+      "level": "4A",
+      "address": "海南屯昌县海南省屯城镇加利坡村附近（中线高速公路旁）屯昌梦幻香山旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--288",
+      "name": "五指山市红峡谷文化旅游区",
+      "province": "",
+      "city": "海南五指山",
+      "district": "",
+      "level": "4A",
+      "address": "海南五指山市海南省五指山市南圣镇至水满乡6公里处五指山市红峡谷文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--289",
+      "name": "宋氏祖居景区",
+      "province": "",
+      "city": "海南文昌",
+      "district": "",
+      "level": "4A",
+      "address": "海南文昌市海南省文昌市昌洒镇古路园村宋氏祖居景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic--290",
+      "name": "海南解放公园",
+      "province": "",
+      "city": "",
+      "district": "海南临高县",
+      "level": "4A",
+      "address": "海南临高县海南省临城镇临高角风景区内海南解放公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--291",
+      "name": "海南白石岭旅游景区",
+      "province": "",
+      "city": "海南琼海",
+      "district": "",
+      "level": "4A",
+      "address": "海南琼海市海南省琼海市白石岭景区海南白石岭旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--292",
+      "name": "五指山革命根据地纪念园",
+      "province": "",
+      "city": "海南五指山",
+      "district": "",
+      "level": "4A",
+      "address": "海南五指山市毛阳镇五指山革命根据地纪念园五指山革命根据地纪念园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--293",
+      "name": "海南富力海洋欢乐世界",
+      "province": "",
+      "city": "",
+      "district": "海南陵水黎族自治县",
+      "level": "4A",
+      "address": "海南陵水黎族自治县海南省黎安镇双湖大道1号海南富力海洋欢乐世界",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic--294",
+      "name": "海南花梨谷文化旅游区",
+      "province": "",
+      "city": "海南东方",
+      "district": "",
+      "level": "4A",
+      "address": "海南东方市海南省东方市板桥镇花梨谷文化旅游区景区海南花梨谷文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-773",
+      "name": "上海余山国家森林公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区外青松公路9258号上海余山国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-774",
+      "name": "上海城市规划展示馆",
+      "province": "上海",
+      "city": "上海",
+      "district": "黄浦区",
+      "level": "4A",
+      "address": "上海市黄浦区人民大道100号上海城市规划展示馆",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-775",
+      "name": "东平国家森林公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "崇明区",
+      "level": "4A",
+      "address": "上海市崇明区北沿公路2188号东平国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-776",
+      "name": "上海动物园",
+      "province": "上海",
+      "city": "上海",
+      "district": "长宁区",
+      "level": "4A",
+      "address": "上海市长宁区虹桥路2381居上海动物园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-上海-777",
+      "name": "上海世纪公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "浦东新区",
+      "level": "4A",
+      "address": "上海市浦东新区锦绣路1001号上海世纪公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-778",
+      "name": "上海大姐园",
+      "province": "上海",
+      "city": "上海",
+      "district": "青浦区",
+      "level": "4A",
+      "address": "上海市青浦区青商路701号上海大姐园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-779",
+      "name": "上海共青森林公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "杨浦区",
+      "level": "4A",
+      "address": "上海市杨浦区军工路2000居上海共青森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-780",
+      "name": "朱家角古镇",
+      "province": "上海",
+      "city": "上海",
+      "district": "青浦区",
+      "level": "4A",
+      "address": "上海市青浦区朱家角镇内朱家角古镇",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-上海-781",
+      "name": "上海古猗园",
+      "province": "上海",
+      "city": "上海",
+      "district": "嘉定区",
+      "level": "4A",
+      "address": "上海市嘉定区沪宜公路218号上海古猗园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-782",
+      "name": "上海方塔园",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区中山东路235号上海方塔园",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-上海-783",
+      "name": "青少年校外活动营地-东方绿舟",
+      "province": "上海",
+      "city": "上海",
+      "district": "青浦区",
+      "level": "4A",
+      "address": "上海市青浦区沪青平公路6888号上海市青少年校外活动营地-东方绿舟",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-784",
+      "name": "枫泾古镇",
+      "province": "上海",
+      "city": "上海",
+      "district": "金山区",
+      "level": "4A",
+      "address": "上海市金山区亭根公路8588弄28号枫泾古镇",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-上海-785",
+      "name": "锦江乐园",
+      "province": "上海",
+      "city": "上海",
+      "district": "闵行区",
+      "level": "4A",
+      "address": "上海市闵行区虹梅路201号锦江乐园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-上海-786",
+      "name": "金山城市沙渊景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "金山区",
+      "level": "4A",
+      "address": "上海市金山区浩源路289号城投大厦1512室金山城市沙渊景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-787",
+      "name": "碧海金沙景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "奉贤区",
+      "level": "4A",
+      "address": "上海市奉贤区海湾旅游区海通路6号碧海金沙景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-788",
+      "name": "上海鲜花港",
+      "province": "上海",
+      "city": "上海",
+      "district": "浦东新区",
+      "level": "4A",
+      "address": "上海市浦东新区东海农场振东路2号上海鲜花港",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-789",
+      "name": "上海月湖雕塑公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区余山度偏区林荫新路1158号上海月湖雕塑公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-790",
+      "name": "上海嘉定州桥",
+      "province": "上海",
+      "city": "上海",
+      "district": "嘉定区",
+      "level": "4A",
+      "address": "上海市嘉定区嘉定镇街道城中街40弄16-1上海嘉定州桥",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-791",
+      "name": "上海都市菜园景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "奉贤区",
+      "level": "4A",
+      "address": "上海市奉贤区海湾镌海兴路888弄上海都市菜园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-792",
+      "name": "上海长风公园·长风海洋世界景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "普陀区",
+      "level": "4A",
+      "address": "上海市普陀区大渡河路189号上海长风公园•长风海洋世界景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-793",
+      "name": "前卫生态村",
+      "province": "上海",
+      "city": "上海",
+      "district": "崇明区",
+      "level": "4A",
+      "address": "上海市崇明区竖新镇前卫村前卫生态村",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-上海-794",
+      "name": "上海海湾国家森林公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "奉贤区",
+      "level": "4A",
+      "address": "上海市奉贤区海湾镇随塘河路1677号上海海湾国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-795",
+      "name": "中国航海博物馆",
+      "province": "上海",
+      "city": "上海",
+      "district": "浦东新区",
+      "level": "4A",
+      "address": "上海市浦东新区临港新城申港大道197号中国航海博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-上海-796",
+      "name": "上海欢乐谷",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区余山林湖路888号上海欢乐谷",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-上海-797",
+      "name": "上海植物园",
+      "province": "上海",
+      "city": "上海",
+      "district": "徐汇区",
+      "level": "4A",
+      "address": "上海市徐汇区龙吴路1111号上海植物园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-798",
+      "name": "上海南翔景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "嘉定区",
+      "level": "4A",
+      "address": "上海市嘉定区南翔镇解放街206号上海南翔景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-799",
+      "name": "上海明珠湖•西沙湿地景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "崇明区",
+      "level": "4A",
+      "address": "上海市崇明区三华公路333号上海明珠湖•西沙湿地景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-800",
+      "name": "上海东林寺景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "金山区",
+      "level": "4A",
+      "address": "上海市金山区朱泾镇东林街150号上海东林寺景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-上海-801",
+      "name": "上海顾村公园景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "宝山区",
+      "level": "4A",
+      "address": "上海市宝山区沪太路4788号环岛路1号上海顾村公园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-802",
+      "name": "上海辰山植物园",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区辰花公路3888号上海辰山植物园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-803",
+      "name": "上海炮台湾景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "宝山区",
+      "level": "4A",
+      "address": "上海市宝山区塘后路206号上海炮台湾景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-804",
+      "name": "上海宝山国际民间艺术博览馆景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "宝山区",
+      "level": "4A",
+      "address": "上海市宝山区沪太路4788号上海宝山国际民间艺术博览馆景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-805",
+      "name": "上海汽车博览公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "嘉定区",
+      "level": "4A",
+      "address": "上海市嘉定区博园路7。01号上海汽车博览公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-806",
+      "name": "上海闻道园",
+      "province": "上海",
+      "city": "上海",
+      "district": "宝山区",
+      "level": "4A",
+      "address": "上海市宝山区藩泾路2888号上海闻道园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-807",
+      "name": "上海江南三民文化村景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "崇明区",
+      "level": "4A",
+      "address": "上海市崇明区林风公路2201号上海江南三民文化村景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-808",
+      "name": "上海国际时尚中心",
+      "province": "上海",
+      "city": "上海",
+      "district": "杨浦区",
+      "level": "4A",
+      "address": "上海市杨浦区杨树浦路2866号上海国际时尚中心",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-809",
+      "name": "上海召稼楼景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "闵行区",
+      "level": "4A",
+      "address": "上海市闵行区浦江镇沈社公路（近苏召路）上海召稼楼景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-810",
+      "name": "上海玻璃博物馆",
+      "province": "上海",
+      "city": "上海",
+      "district": "宝山区",
+      "level": "4A",
+      "address": "上海市宝山区长江西路685号上海玻璃博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-上海-811",
+      "name": "上海国际赛车场旅游景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "嘉定区",
+      "level": "4A",
+      "address": "上海市嘉定区伊宁路2199号上海国际赛车场旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-812",
+      "name": "上海杜莎夫人蜡像馆",
+      "province": "上海",
+      "city": "上海",
+      "district": "黄浦区",
+      "level": "4A",
+      "address": "上海市黄浦区南京西路2-68号新世界十楼上海杜莎夫人蜡像馆",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-813",
+      "name": "陈云故里•练塘古镇景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "青浦区",
+      "level": "4A",
+      "address": "上海市青浦区朱根公路3516号陈云故里•练塘古镇景区",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-上海-814",
+      "name": "上海幽视乐园",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区车坳镇北松公路4915号上海幽视乐园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-上海-815",
+      "name": "上海英衣草公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "浦东新区",
+      "level": "4A",
+      "address": "上海市浦东新区申迪东路399弄187号上海英衣草公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-816",
+      "name": "上海联怡枇杷乐园",
+      "province": "上海",
+      "city": "上海",
+      "district": "青浦区",
+      "level": "4A",
+      "address": "上海市青浦区外青松公路7166号上海联怡枇杷乐园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-上海-817",
+      "name": "上海金山嘴渔村",
+      "province": "上海",
+      "city": "上海",
+      "district": "金山区",
+      "level": "4A",
+      "address": "上海市金山区沪杭公路6394号上海金山嘴渔村",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-818",
+      "name": "上海东滩湿地公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "崇明区",
+      "level": "4A",
+      "address": "上海市崇明区陈家镇东旺路（风车处）上海东滩湿地公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-819",
+      "name": "上海赛会生活文化园",
+      "province": "上海",
+      "city": "上海",
+      "district": "浦东新区",
+      "level": "4A",
+      "address": "上海市浦东新区园中路888号上海赛会生活文化园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-820",
+      "name": "上海长兴岛郊野公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "崇明区",
+      "level": "4A",
+      "address": "上海市崇明区长兴谅秋柑路666号上海长兴岛郊野公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-821",
+      "name": "比斯特上海购物村景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "浦东新区",
+      "level": "4A",
+      "address": "上海市浦东新区申迪东路88号比斯特上海购物村景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-822",
+      "name": "上海浦江郊野公园景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "闵行区",
+      "level": "4A",
+      "address": "上海市闵行区浦星公路2578弄8号上海浦江郊野公园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-823",
+      "name": "上海张马景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "青浦区",
+      "level": "4A",
+      "address": "上海市青浦区朱家角镇沈太路2119号上海张马景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-824",
+      "name": "上海海昌海洋公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "浦东新区",
+      "level": "4A",
+      "address": "上海市浦东新区南汇新城镇银飞路166号上海海昌海洋公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-825",
+      "name": "上海闵行文化公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "闵行区",
+      "level": "4A",
+      "address": "上海市闵行区七宝镇吴中路2019号上海闵行文化公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-826",
+      "name": "上海七宝古镇",
+      "province": "上海",
+      "city": "上海",
+      "district": "闵行区",
+      "level": "4A",
+      "address": "上海市闵行区七宝滇横沥路108号上海七宝古镇",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-上海-827",
+      "name": "上海广富林文化遗址",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区广富林路3206弄上海广富林文化邃址",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-828",
+      "name": "上海醉白池公园",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区人民南路64号上海醉白池公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-829",
+      "name": "上海高家庄生态园",
+      "province": "上海",
+      "city": "上海",
+      "district": "崇明区",
+      "level": "4A",
+      "address": "上海市崇明区港东公路999号上海高家庄生态园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-830",
+      "name": "上海廊下郊野公园景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "金山区",
+      "level": "4A",
+      "address": "上海市金山区漕廊公路9133号、廊下谅山塘上海廊下郊野公园昙区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上海-831",
+      "name": "上海蓝精灵乐园",
+      "province": "上海",
+      "city": "上海",
+      "district": "松江区",
+      "level": "4A",
+      "address": "上海市松江区辰花路5088号上海蓝精灵乐园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-上海-832",
+      "name": "上海犹太难民纪念馆",
+      "province": "上海",
+      "city": "上海",
+      "district": "虹口区",
+      "level": "4A",
+      "address": "上海市虹口区长阳路62号上海犹太难民纪念馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-上海-833",
+      "name": "上海笔墨宫坊景区",
+      "province": "上海",
+      "city": "上海",
+      "district": "杨浦区",
+      "level": "4A",
+      "address": "上海市杨浦区军工路1300号合生茶岸文创园\n16幢上海笔墨宫坊景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临汾-393",
+      "name": "尧庙-华门景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "尧都区",
+      "level": "4A",
+      "address": "山西临汾市尧都区尧庙-华门景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-临汾-394",
+      "name": "汾河文化生态景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "洪洞县",
+      "level": "4A",
+      "address": "山西临汾市洪洞县汾河文化生态景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临汾-395",
+      "name": "古县牡丹文化旅游景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "尧都区",
+      "level": "4A",
+      "address": "山西临汾市尧都区古县牡丹文化旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临汾-396",
+      "name": "黄河壶口瀑布风景名胜区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "吉县",
+      "level": "4A",
+      "address": "山西临汾市吉县黄河壶口瀑布风景名胜区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临汾-397",
+      "name": "隰县小西天景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "隰县",
+      "level": "4A",
+      "address": "山西临汾市隰县小西天景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临汾-398",
+      "name": "蒲县柏山东岳庙",
+      "province": "山西",
+      "city": "临汾",
+      "district": "蒲县",
+      "level": "4A",
+      "address": "山西临汾市蒲县柏山东岳庙",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-临汾-399",
+      "name": "彭真故居纪念馆",
+      "province": "山西",
+      "city": "临汾",
+      "district": "侯马市",
+      "level": "4A",
+      "address": "山西临汾市侯马市彭真故居纪念馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-临汾-400",
+      "name": "曲沃晋国博物馆",
+      "province": "山西",
+      "city": "临汾",
+      "district": "曲沃县",
+      "level": "4A",
+      "address": "山西临汾市曲沃县曲沃晋国博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-临汾-401",
+      "name": "临汾人祖山景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "吉县",
+      "level": "4A",
+      "address": "山西临汾市吉县临汾人祖山景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临汾-402",
+      "name": "曲沃晋园景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "曲沃县",
+      "level": "4A",
+      "address": "山西临汾市曲沃县曲沃晋园景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临汾-403",
+      "name": "霍太山（广胜）风景名胜区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "",
+      "level": "4A",
+      "address": "山西临汾市霍太山（广胜）风景名胜区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临汾-404",
+      "name": "襄汾龙澍峪景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "襄汾县",
+      "level": "4A",
+      "address": "山西临汾市襄汾县襄汾龙澍峪景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临汾-405",
+      "name": "永和县黄河乾坤湾景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "永和县",
+      "level": "4A",
+      "address": "山西临汾市永和县黄河乾坤湾景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临汾-406",
+      "name": "襄汾县荷花小镇旅游景区",
+      "province": "山西",
+      "city": "临汾",
+      "district": "襄汾县",
+      "level": "4A",
+      "address": "山西临汾市襄汾县荷花小镇旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-乌兰察布-541",
+      "name": "集宁战役红色纪念园",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "集宁区",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市集宁区集宁战役红色纪念园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-542",
+      "name": "辉腾锡勒黄花沟草原旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "察哈尔右翼中旗",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市察哈尔右翼中旗内蒙古4兰察布市辉腾锡勒黄花沟草原旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-543",
+      "name": "格根塔拉草原旅游中心",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "四子王旗",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市四子王旗格根塔拉草原旅游中心",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-乌兰察布-544",
+      "name": "京能岱海游度假区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "凉城县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市凉城县京能岱海游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-545",
+      "name": "岱海旅游度假区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "凉城县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市凉城县岱海旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-546",
+      "name": "岱海国际滑雪场",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "凉城县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市凉城县岱海国际滑雪场",
+      "category": "轻运动"
+    },
+    {
+      "id": "scenic-乌兰察布-547",
+      "name": "红召九龙湾生态旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "兴和县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市兴和县红召九龙湾生态旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-548",
+      "name": "林胡古塞旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "卓资县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市卓资县林胡古塞旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-549",
+      "name": "察尔湖旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "兴和县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市兴和县察尔湖旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-550",
+      "name": "苏木山旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "兴和县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市兴和县苏木山旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌海-569",
+      "name": "金沙湾生态旅游景区",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "海勃湾区",
+      "level": "4A",
+      "address": "内蒙古乌海市海勃湾区金沙湾生态旅游景区",
+      "category": "自然风光"
+    }
+  ]
+}

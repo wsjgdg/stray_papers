@@ -1,0 +1,28 @@
+{
+  "batch": 13,
+  "count": 100,
+  "low": 94,
+  "missingRequired": 93,
+  "sample": [
+    "scenic-郑州-1911",
+    "scenic-菏泽-1891",
+    "scenic-滨州-1887",
+    "scenic-平顶山-1966",
+    "scenic-洛阳-1949",
+    "scenic-洛阳-1934",
+    "scenic-郑州-1899",
+    "scenic-新乡-1971",
+    "scenic-郑州-1917",
+    "scenic-郑州-1895",
+    "scenic-洛阳-1936",
+    "scenic-洛阳-1937",
+    "scenic-滨州-1880",
+    "scenic-郑州-1914",
+    "scenic-郑州-1901",
+    "scenic-德州-1871",
+    "scenic-滨州-1884",
+    "scenic-郑州-1903",
+    "scenic-郑州-1916",
+    "scenic-洛阳-1945"
+  ]
+}

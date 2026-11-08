@@ -1,0 +1,2081 @@
+{
+  "task": "景点档案结构化字段-批4",
+  "batch": 4,
+  "count": 100,
+  "authorship": "批4：Z.ai-GLM",
+  "items": [
+    {
+      "id": "scenic-杭州-902",
+      "name": "天目山",
+      "profile": {
+        "ticketPeak": 136,
+        "openHours": "约08:00-17:00（16:00停止入园，随季节调整，以景区公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "观光车/电瓶车",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "西天目山「大树王国」景区挂牌价，线上渠道常有优惠；景区交通车等费用另计",
+        "notices": "山路台阶较多，请穿防滑鞋；雪天部分游线可能关闭；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-903",
+      "name": "浙旅院国际教育旅游体验区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:00-16:30（校园开放时段，以校方公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州南站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "校园景区开放安排可能随教学活动调整，出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-904",
+      "name": "杭州乐园",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:30-17:00（夏季设夜场，以园区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州南站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "母婴室",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "notices": "部分游乐设施有身高与健康限制；节假日排队较长；出行前请核实最新票价与公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-905",
+      "name": "新沙岛景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（需乘渡船登岛，班次以渡口公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "富阳站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "上岛依赖渡船，恶劣天气可能停航，请预留往返候船时间"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-906",
+      "name": "杭州余杭运河.塘栖古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "街区全天开放；馆内景点一般约08:30-16:30开放，以现场公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "ticketNote": "古镇街区免费开放；部分展馆、游船等另行收费",
+        "notices": "枇杷季（5-6月）人流集中；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-907",
+      "name": "七里扬帆景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-15:00（游船班次制，以码头当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "建德站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "以乘船游览为主，船班受水位天气影响，出行前请咨询景区"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-908",
+      "name": "杭州野生动物世界",
+      "profile": {
+        "ticketPeak": 220,
+        "openHours": "约09:00-17:00（一般16:00停止入园，节假日及夜场季延长，以园区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "富阳站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "观光车/电瓶车",
+          "寄存柜",
+          "母婴室",
+          "医疗服务点",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "成人票挂牌220元，线上渠道常有优惠；自驾游车辆通行证另购（约220元/车）；儿童/长者优待票约140元",
+        "freePolicy": "1.2米以下儿童免票",
+        "notices": "节假日排队较长；自驾车行区需另购车辆通行证；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-909",
+      "name": "临安市太湖源景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "溪谷戏水注意湿滑；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-910",
+      "name": "杭州宋城景区",
+      "profile": {
+        "ticketPeak": 120,
+        "openHours": "约09:00-21:00（夜场与节假日时段有调整，以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "寄存柜",
+          "母婴室",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "景区大门票挂牌120元；《宋城千古情》演出票另购，常见门票+演出套餐，席别不同价格不同",
+        "notices": "节假日及演出高峰时段人流集中，建议错峰；出行前请核实最新购票与预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-911",
+      "name": "瑶琳仙境景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "洞内湿滑、内外温差大，建议穿防滑鞋并备薄外套；以景区当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-912",
+      "name": "建德航空小镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "街区全天开放；低空飞行、热气球等体验项目需预约并视天气安排",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "建德站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "飞行体验受天气与空域限制，务必提前预约确认"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-913",
+      "name": "柳溪江",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "漂流时段约09:00-15:00（受水情与天气影响，以景区公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "漂流请备换洗衣物，儿童须符合身高要求；出行前请核实开漂情况"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-914",
+      "name": "杭州临安太湖源景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "溪谷戏水注意湿滑；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-916",
+      "name": "严子陵钓台",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:00（需乘船前往，班次以码头公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "登台需乘船，江面大风时可能停航；出行前请核实船班与开放情况"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-917",
+      "name": "大明山景区",
+      "profile": {
+        "ticketPeak": 110,
+        "openHours": "约08:00-16:30（一般15:30停止入园；冬季雪季运营时间调整，以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票110元；景区巴士与索道另计（索道单程50元、往返80元为参考价）",
+        "notices": "万米岩洞内湿滑、光线较弱；冬季滑雪场另行售票；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-919",
+      "name": "良渚博物院",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "周二至周日约09:00-16:30（16:00停止入馆），周一闭馆（法定节假日除外，以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": true,
+        "ticketNote": "免费开放（特展及部分活动或另行收费）",
+        "reservationNote": "通过官方微信公众号等渠道实名预约，节假日名额紧张",
+        "notices": "周一闭馆；可联游良渚古城遗址公园（另行购票）"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-920",
+      "name": "大明山",
+      "profile": {
+        "ticketPeak": 110,
+        "openHours": "约08:00-16:30（一般15:30停止入园；冬季雪季运营时间调整，以景区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票110元；景区巴士与索道另计（索道单程50元、往返80元为参考价）",
+        "notices": "万米岩洞内湿滑、光线较弱；冬季滑雪场另行售票；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-921",
+      "name": "浪石金滩",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（漂流时段随水情调整，以景区公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "夏季亲水活动请备换洗衣物并注意安全；出行前请核实开漂情况"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-922",
+      "name": "浪石金滩景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（漂流时段随水情调整，以景区公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "夏季亲水活动请备换洗衣物并注意安全；出行前请核实开漂情况"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-923",
+      "name": "杭州龙门古镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（街区全天开放，收费景点以现场公示为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "富阳站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "卵石巷弄交错易迷路，建议沿指示牌游览；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-924",
+      "name": "双溪漂流景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "漂流时段约09:00-15:30（受水情与天气影响，以景区公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "竹筏与皮筏分开售票；请备换洗衣物，儿童须符合身高要求"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-925",
+      "name": "天子地生态风景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:00（以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "玻璃桥、滑道等体验项目可能另行收费并受天气影响；山路湿滑注意安全"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-926",
+      "name": "杭州皋亭山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放（千桃园等区域约08:00-17:00）",
+        "suggestedHours": 3,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "山体景区免费开放；千桃园、部分场馆与体验项目另行收费",
+        "notices": "春季观桃季人流集中；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-927",
+      "name": "兰里景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "田园片区全天开放；农事体验项目约09:00-17:00（以现场公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州东站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "农事体验项目需现场购票或预约；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-928",
+      "name": "浙西大峡谷景区",
+      "profile": {
+        "ticketPeak": 130,
+        "openHours": "旺季（3月2日-11月30日）约07:00-17:30；淡季（12月1日-次年3月1日）约08:00-16:00（以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "观光车/电瓶车",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票130元，部分票种不含景区交通车，具体以售票公示为准",
+        "notices": "峡谷步道多石阶，雨后湿滑；汛期部分游段可能关闭"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-929",
+      "name": "湘湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "湖区全天开放；场馆与游船运营约08:30-17:00（以现场公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州南站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "观光车/电瓶车",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "湖区免费开放；游船、观光车及部分场馆以现场公示为准",
+        "notices": "跨湖桥遗址博物馆等场馆有独立开放时间与闭馆日，出行前请核实"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-930",
+      "name": "少儿公园（杭州极地海洋公园）",
+      "profile": {
+        "ticketPeak": 360,
+        "openHours": "约09:00-17:00（16:00停止入园，节假日及夜场季另行调整，以园区当日公告为准）",
+        "suggestedHours": 4.5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州南站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "母婴室",
+          "寄存柜",
+          "医疗服务点",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "改扩建后标准票挂牌360元，线上渠道或另有优惠；儿童/长者等优待票以园区公示为准",
+        "notices": "场馆表演场次请入园后确认；节假日排队较长；出行前请核实最新票价与公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-931",
+      "name": "临安河桥古镇旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "街区全天开放；展馆约08:30-16:30开放",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "古镇内仍为居民生活区，游览请保持安静；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-932",
+      "name": "杭州新安江旅业七里扬帆景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-15:00（游船班次制，以码头当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "建德站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "以乘船游览为主，船班受水位天气影响，出行前请咨询景区"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-933",
+      "name": "皋亭山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放（千桃园等区域约08:00-17:00）",
+        "suggestedHours": 3,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "山体景区免费开放；千桃园、部分场馆与体验项目另行收费",
+        "notices": "春季观桃季人流集中；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-934",
+      "name": "杭州新安江旅业灵栖洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:00（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "建德站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "洞内湿滑，地下河乘船段注意安全；洞内常年温凉，夏季备薄外套"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-935",
+      "name": "黄公望隐居地景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "富阳站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "谷内步道多台阶；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-937",
+      "name": "龙坞茶镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "街区全天开放；茶馆与体验点约09:00-17:00",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "茶镇街区与茶园免费开放；采茶炒茶体验、茶艺课程等另行收费",
+        "notices": "清明前后采茶季人流较多；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-938",
+      "name": "杭州野生动物世界景区",
+      "profile": {
+        "ticketPeak": 220,
+        "openHours": "约09:00-17:00（一般16:00停止入园，节假日及夜场季延长，以园区当日公告为准）",
+        "suggestedHours": 5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "富阳站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "观光车/电瓶车",
+          "寄存柜",
+          "母婴室",
+          "医疗服务点",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "成人票挂牌220元，线上渠道常有优惠；自驾游车辆通行证另购（约220元/车）；儿童/长者优待票约140元",
+        "freePolicy": "1.2米以下儿童免票",
+        "notices": "节假日排队较长；自驾车行区需另购车辆通行证；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-939",
+      "name": "杭州新安江旅业大慈岩景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:00（索道运营时段以景区公告为准）",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "建德站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "索道/扶梯",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "悬空寺栈道悬高，恐高者量力而行；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-940",
+      "name": "千岛湖乐水小镇.文渊狮城景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:00-17:00（夜游时段季节性开放，以景区公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "千岛湖站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "位于淳安姜家镇，距千岛湖中心湖区较远，请合理安排行程；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-941",
+      "name": "富阳市龙门古镇",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（街区全天开放，收费景点以现场公示为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "富阳站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "卵石巷弄交错易迷路，建议沿指示牌游览；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-942",
+      "name": "江南古村落景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "村落全天开放；展馆约08:30-16:30开放",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "村底暗渠水系请勿嬉水；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-943",
+      "name": "瑶琳仙境",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "洞内湿滑、内外温差大，建议穿防滑鞋并备薄外套；以景区当日公告为准"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-944",
+      "name": "严子陵钓台景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:00（需乘船前往，班次以码头公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "桐庐站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "登台需乘船，江面大风时可能停航；出行前请核实船班与开放情况"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-杭州-945",
+      "name": "东天目山",
+      "profile": {
+        "ticketPeak": 100,
+        "openHours": "约08:00-16:00（景交与索道运营时段以景区公告为准）",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "观光车/电瓶车",
+          "索道/扶梯",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票含景区观光（景交）费用；上行索道另购",
+        "notices": "山中步道较长，请量力而行；寺院区域请尊重宗教习俗"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-947",
+      "name": "天目山景区",
+      "profile": {
+        "ticketPeak": 136,
+        "openHours": "约08:00-17:00（16:00停止入园，随季节调整，以景区公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "观光车/电瓶车",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "西天目山「大树王国」景区挂牌价，线上渠道常有优惠；景区交通车等费用另计",
+        "notices": "山路台阶较多，请穿防滑鞋；雪天部分游线可能关闭；出行前请核实最新预约与限流政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-杭州-948",
+      "name": "杭州梦想小镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "街区全天开放；展馆约09:00-17:00开放（以现场公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "杭州西站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "开放式街区免费参观；部分展馆与活动需预约",
+        "notices": "园区内为办公区域，请勿打扰正常办公；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-949",
+      "name": "招宝山旅游风景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "山顶炮台区域台阶较多；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-950",
+      "name": "达蓬山景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（园内乐园运营时间以园区公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "主题乐园、禅寺与度假区分属不同票务，请注意区分；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-951",
+      "name": "伍山石窟景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁海站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "硐内光线较暗、地面湿滑，注意脚下；陡峭硐室请勿攀爬"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-952",
+      "name": "宁波镇海招宝山旅游风景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "山顶炮台区域台阶较多；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-953",
+      "name": "九龙湖旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放（环湖绿道）；游船及场馆运营约08:30-16:30（以现场公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "湖区免费开放；游船、游乐项目及部分场馆另行收费",
+        "notices": "环湖骑行注意来往车辆；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-954",
+      "name": "梁祝文化园",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "展馆开放时段以现场公告为准；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-955",
+      "name": "宁波老外滩",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "街区全天开放（沿江步道夜间照明至深夜）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "开放式街区，免费参观；酒吧、展馆等消费另计",
+        "notices": "夜间酒吧区域人多，注意财物；江边亲水注意安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-956",
+      "name": "宁波博物馆景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "周二至周日约09:00-17:00（16:00停止入馆），周一闭馆（法定节假日除外，以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": true,
+        "ticketNote": "免费开放（特展或另行收费）",
+        "reservationNote": "通过官方微信公众号实名预约，免费入馆，节假日名额紧张",
+        "officialSite": "https://www.nbmuseum.cn",
+        "notices": "周一闭馆；屋顶平台开放时段以馆方公告为准"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-957",
+      "name": "宁波大桥生态农庄",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-17:00（采摘体验按季节安排，以现场公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "果蔬采摘按季节轮换，出行前请咨询园区当季项目"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-958",
+      "name": "石浦渔港古城",
+      "profile": {
+        "ticketPeak": 60,
+        "openHours": "约08:00-17:00（16:30停止入园，以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票60元，线上渠道常有优惠",
+        "notices": "老街石板路起伏，请穿舒适鞋；开渔节（9月）期间人流量大"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-959",
+      "name": "天宫庄园景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（温室及场馆以现场公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "桑果采摘季（4-5月）人气较旺；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-960",
+      "name": "宁波科学探索中心景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "约09:30-17:00（16:30停止入馆），周一闭馆（法定节假日除外，以馆方公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": true,
+        "ticketNote": "常设展厅免费预约参观；球幕影院、特效影院及特展另行收费",
+        "reservationNote": "常设展厅通过官方渠道实名预约，节假日名额紧张",
+        "notices": "周一闭馆；部分互动展项按场次开放，入园后请先查看当日安排"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-961",
+      "name": "宁波九龙湖旅游度假区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "全天开放（环湖绿道）；游船及场馆运营约08:30-16:30（以现场公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "湖区免费开放；游船、游乐项目及部分场馆另行收费",
+        "notices": "环湖骑行注意来往车辆；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-962",
+      "name": "宁波海洋世界",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:00-17:00（表演场次以园区当日公示为准）",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "海豚表演等人气场次时间固定，建议入园先确认；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-963",
+      "name": "宁波帮博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "周二至周日约09:00-17:00（16:00停止入馆），周一闭馆（法定节假日除外，以馆方公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": true,
+        "ticketNote": "免费开放",
+        "reservationNote": "通过官方微信公众号预约入馆",
+        "notices": "周一闭馆"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-964",
+      "name": "宁波市黄贤森林旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "奉化站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "登高望海路段注意防滑；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-965",
+      "name": "宁波郑氏十七房景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "灯会等活动期间人流集中；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-966",
+      "name": "宁海县森林温泉旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "温泉营业约09:00-22:00（各汤池开放时段以度假区公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "11月-次年3月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁海站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "泡汤前请知悉禁忌人群；节假日房源与汤位紧张，建议提前预订"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-967",
+      "name": "绿野山庄",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-17:00（以现场公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "山庄接待能力有限，节假日建议提前预订"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-968",
+      "name": "东钱湖马山休闲旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "环湖绿地约全天开放；部分场馆以现场公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "东钱湖沿线小普陀、福泉山等景点单独收费，请注意区分"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-969",
+      "name": "宁波市天一阁博物馆",
+      "profile": {
+        "ticketPeak": 30,
+        "openHours": "周二至周日约08:30-17:00（16:30停止入园），周一闭馆（法定节假日及暑期延时等以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "全票30元，闭馆前半小时停止售票；线上渠道或另有优惠",
+        "notices": "周一闭馆；藏书楼区域为古建筑，严禁烟火"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-970",
+      "name": "象山影视城",
+      "profile": {
+        "ticketPeak": 150,
+        "openHours": "约08:30-17:00（16:30停止入园，以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票150元，线上渠道常有折扣；剧组拍摄期间部分区域可能临时管控",
+        "freePolicy": "1.2米以下儿童免票；70周岁以上老人凭证免票；1.2-1.5米儿童半价",
+        "notices": "遇剧组拍摄可能封闭部分街区；夏季室外日晒较强注意防暑"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-971",
+      "name": "宁波慈城古县城景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "古街区全天开放；县衙、孔庙等收费景点约08:30-16:30开放",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "收费景点联票价格以现场公示为准；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-972",
+      "name": "海皮岛景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约10:00-18:00（水乐园与温泉分季节运营，以园区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "水乐园与温泉分区开放，请按季节确认项目安排"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-973",
+      "name": "天下玉苑",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "园区较大、殿宇依山而建，注意台阶；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-974",
+      "name": "丹山赤水",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "秋季柿林村柿子成熟期人流集中；山村道路弯多坡陡，自驾请谨慎驾驶"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-975",
+      "name": "宁波五龙潭风景名胜区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "峡谷步道石阶湿滑，请穿防滑鞋；汛期注意景区限流通知"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-976",
+      "name": "海天一洲景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-17:00（以景区当日公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "位于杭州湾跨海大桥海上平台，需经大桥专用匝道进入；大风大雾等恶劣天气可能临时关闭，出行前务必核实开放状态"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-977",
+      "name": "方特东方神画景区",
+      "profile": {
+        "ticketPeak": 280,
+        "openHours": "平日约10:00-17:00；节假日约10:00-20:30（以园区当日公告为准）",
+        "suggestedHours": 6,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "寄存柜",
+          "母婴室",
+          "医疗服务点",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "全价票280元，儿童与长者票210元（挂牌价，线上渠道或另有优惠）",
+        "officialSite": "https://www.fangte.com",
+        "notices": "热门剧场项目需排队或取号；部分项目有身高限制；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-978",
+      "name": "宁波博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "周二至周日约09:00-17:00（16:00停止入馆），周一闭馆（法定节假日除外，以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": true,
+        "ticketNote": "免费开放（特展或另行收费）",
+        "reservationNote": "通过官方微信公众号实名预约，免费入馆，节假日名额紧张",
+        "officialSite": "https://www.nbmuseum.cn",
+        "notices": "周一闭馆；屋顶平台开放时段以馆方公告为准"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-979",
+      "name": "绿野山居",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "全天接待（餐饮住宿按时段供应，体验项目约08:30-17:00）",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "以民宿短住为主，一日游配套有限，建议提前联系确认"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-980",
+      "name": "慈城古县城景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "古街区全天开放；县衙、孔庙等收费景点约08:30-16:30开放",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "收费景点联票价格以现场公示为准；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-981",
+      "name": "宁波松兰山旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "度假区全天开放；海滨浴场约08:00-17:30（季节性开放，以景区公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "下海游泳请在开放泳区内并注意安全警示；台风季节关注景区公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-982",
+      "name": "宁波伍山石窟景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁海站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "硐内光线较暗、地面湿滑，注意脚下；陡峭硐室请勿攀爬"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-983",
+      "name": "达蓬山旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（园内乐园运营时间以园区公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "主题乐园、禅寺与度假区分属不同票务，请注意区分；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-984",
+      "name": "丹山赤水景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "秋季柿林村柿子成熟期人流集中；山村道路弯多坡陡，自驾请谨慎驾驶"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-985",
+      "name": "东钱湖旅游度假区马山休闲旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "环湖绿地约全天开放；部分场馆以现场公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "东钱湖沿线小普陀、福泉山等景点单独收费，请注意区分"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-986",
+      "name": "宁波市保国寺古建筑博物馆",
+      "profile": {
+        "ticketPeak": 20,
+        "openHours": "约09:00-16:30（16:00停止入场，以景区公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "全票20元，闭馆前停止售票",
+        "notices": "千年木构建筑防火要求高，馆区严禁烟火；殿内构件请勿触摸"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-987",
+      "name": "浙东（四明山）抗日根据地旧址群景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "约08:30-16:30（各场馆开放时段略有差异，以现场公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "旧址群及纪念馆免费开放（特展除外）",
+        "notices": "横坎头村一带仍为生活村落，参观请保持安静；出行前请核实最新公告"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-988",
+      "name": "宁波雅戈尔动物园景区",
+      "profile": {
+        "ticketPeak": 180,
+        "openHours": "约08:30-17:00（16:30停止入园，以园区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "观光车/电瓶车",
+          "寄存柜",
+          "母婴室",
+          "医疗服务点",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "全票180元、优待票90元；现名宁波野生动物园（原雅戈尔动物园），线上渠道常有优惠",
+        "freePolicy": "1.2米以下儿童免票；1.2-1.5米儿童及70周岁以上老人等优待票90元",
+        "notices": "猛兽区请勿拍打玻璃或投喂；节假日人流集中，建议早到"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-989",
+      "name": "凤凰山海港乐园",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约09:30-17:00（夜场季节性开放，以园区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "寄存柜",
+          "母婴室",
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "部分刺激项目有身高与健康限制；设备检修期部分设施停开"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-991",
+      "name": "象山影视城景区",
+      "profile": {
+        "ticketPeak": 150,
+        "openHours": "约08:30-17:00（16:30停止入园，以景区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "观光车/电瓶车",
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票150元，线上渠道常有折扣；剧组拍摄期间部分区域可能临时管控",
+        "freePolicy": "1.2米以下儿童免票；70周岁以上老人凭证免票；1.2-1.5米儿童半价",
+        "notices": "遇剧组拍摄可能封闭部分街区；夏季室外日晒较强注意防暑"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-992",
+      "name": "保国寺古建筑博物馆",
+      "profile": {
+        "ticketPeak": 20,
+        "openHours": "约09:00-16:30（16:00停止入场，以景区公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "全票20元，闭馆前停止售票",
+        "notices": "千年木构建筑防火要求高，馆区严禁烟火；殿内构件请勿触摸"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-993",
+      "name": "黄贤森林公园景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "奉化站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "登高望海路段注意防滑；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-994",
+      "name": "宁波天宫庄园休闲旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（温室及场馆以现场公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "桑果采摘季（4-5月）人气较旺；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-995",
+      "name": "前童古镇",
+      "profile": {
+        "ticketPeak": 60,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁海站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票60元，含职思其居、明经堂、民俗博物馆等主要景点，线上渠道常有优惠",
+        "notices": "正月十四、十五元宵行会期间人流极大；镇内仍为生活村落，请尊重居民生活"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-996",
+      "name": "五龙潭景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "峡谷步道石阶湿滑，请穿防滑鞋；汛期注意景区限流通知"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-997",
+      "name": "前童古镇旅游区",
+      "profile": {
+        "ticketPeak": 60,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁海站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票60元，含职思其居、明经堂、民俗博物馆等主要景点，线上渠道常有优惠",
+        "notices": "正月十四、十五元宵行会期间人流极大；镇内仍为生活村落，请尊重居民生活"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-999",
+      "name": "中国港口博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "周二至周日约09:00-17:00（16:00停止入馆），周一闭馆（法定节假日除外，以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": true,
+        "ticketNote": "免费开放（特展或另行收费）",
+        "reservationNote": "通过官方微信公众号实名预约入馆",
+        "notices": "周一闭馆"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-1000",
+      "name": "郑氏十七房景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:30-16:30（以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "灯会等活动期间人流集中；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-1001",
+      "name": "九峰山旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "2-3月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "梅花开花期随气候浮动，出行前请查询花情；登山步道请量力而行"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-1003",
+      "name": "宁波雅戈尔动物园",
+      "profile": {
+        "ticketPeak": 180,
+        "openHours": "约08:30-17:00（16:30停止入园，以园区当日公告为准）",
+        "suggestedHours": 4,
+        "bestMonths": "4-6月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "观光车/电瓶车",
+          "寄存柜",
+          "母婴室",
+          "医疗服务点",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "全票180元、优待票90元；现名宁波野生动物园（原雅戈尔动物园），线上渠道常有优惠",
+        "freePolicy": "1.2米以下儿童免票；1.2-1.5米儿童及70周岁以上老人等优待票90元",
+        "notices": "猛兽区请勿拍打玻璃或投喂；节假日人流集中，建议早到"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-1004",
+      "name": "天下玉苑风景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "余姚北站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "园区较大、殿宇依山而建，注意台阶；出行前请核实最新公告"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-1005",
+      "name": "老外滩景区",
+      "profile": {
+        "ticketPeak": 0,
+        "openHours": "街区全天开放（沿江步道夜间照明至深夜）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "ticketNote": "开放式街区，免费参观；酒吧、展馆等消费另计",
+        "notices": "夜间酒吧区域人多，注意财物；江边亲水注意安全"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-1006",
+      "name": "石浦渔港古城景区",
+      "profile": {
+        "ticketPeak": 60,
+        "openHours": "约08:00-17:00（16:30停止入园，以景区当日公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "ticketNote": "挂牌门票60元，线上渠道常有优惠",
+        "notices": "老街石板路起伏，请穿舒适鞋；开渔节（9月）期间人流量大"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-宁波-1007",
+      "name": "石浦中国渔村景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-17:30（沙滩及海上项目季节性开放，以景区公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "notices": "沙滩游玩注意潮汐与安全警示；夏季紫外线强，注意防晒"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-宁波-1008",
+      "name": "九峰山景区",
+      "profile": {
+        "ticketPeak": null,
+        "openHours": "约08:00-16:30（以景区当日公告为准）",
+        "suggestedHours": 3,
+        "bestMonths": "2-3月、9-11月",
+        "nearestAirport": "宁波栎社国际机场",
+        "nearestRail": "宁波站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "notices": "梅花开花期随气候浮动，出行前请查询花情；登山步道请量力而行"
+      },
+      "confidence": "low"
+    }
+  ]
+}

@@ -1,0 +1,2633 @@
+{
+  "task": "景点档案结构化字段-批6",
+  "batch": 6,
+  "count": 100,
+  "authorship": "批6：会话B",
+  "items": [
+    {
+      "id": "scenic-太原-296",
+      "name": "晋祠博物馆",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": 65,
+        "ticketNote": "门票为晋祠博物馆核心区大门票；旺季（约4-10月）80元、淡季（约11月-次年3月）65元；不含讲解等园内服务。",
+        "freePolicy": "儿童、学生、老年人、军人等按国家及景区规定凭证件减免",
+        "openHours": "旺季约08:00-18:00（17:30停止入园），淡季约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原南站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "寄存柜",
+          "停车场",
+          "老年人优惠"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "中国现存最早的皇家祭祀园林之一，圣母殿、鱼沼飞梁、献殿为国宝级古建；晋祠公园免费进入，晋祠博物馆核心区需购票；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-太原-297",
+      "name": "汾河景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；园内游船、电瓶车等经营性项目另行收费。",
+        "freePolicy": "免费开放的开放式滨水公园",
+        "openHours": "全天开放（24小时，无停止入园时间限制）；园内经营项目运营时间以现场公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原站",
+        "driveFromCityMin": 12,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "太原市区沿汾河展开的城市滨河生态绿廊，可步行、骑行游览，夜间灯光景观有特色；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-太原-298",
+      "name": "蒙山大佛景区",
+      "profile": {
+        "ticketPeak": 35,
+        "ticketOff": 35,
+        "ticketNote": "大门票35元/人；景区观光车等另行收费（以现场公示为准）。",
+        "freePolicy": null,
+        "openHours": "旺季约08:00-18:00（17:30停止入园），淡季约09:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原南站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "开凿于北齐的摩崖大佛，经登山步道或观光车可抵佛脚平台，步行路程较长请穿舒适鞋；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-太原-299",
+      "name": "东湖醋园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山西老陈醋主题工业旅游景点，可参观酿醋工艺展示并品尝选购，参观内容与收费以园区当日安排为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-太原-300",
+      "name": "太原动物园",
+      "profile": {
+        "ticketPeak": 10,
+        "ticketOff": 10,
+        "ticketNote": "大门票10元/人；园内部分场馆及游乐项目可能另行收费。",
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园），夏季可能延长；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "东山脚下的城市动物园，含大熊猫馆等场馆，适合亲子；请勿投喂动物；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-太原-301",
+      "name": "太原市森林公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；园内游乐、水面等经营性项目另行收费。",
+        "freePolicy": "免费开放的城市森林公园",
+        "openHours": "全天开放（24小时，无停止入园时间）；园内经营项目运营时间以现场公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "尖草坪区大型城市森林公园，有人工湖与环园绿道，适合徒步、骑行与休闲；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-太原-302",
+      "name": "中国煤炭博物馆“煤海探秘游”",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": 60,
+        "ticketNote": "门票为博物馆通票，含基本陈列与“煤海探秘游”（模拟矿井体验等）项目，具体包含内容以场馆当日安排为准。",
+        "freePolicy": "儿童、学生、老年人等按场馆规定凭证件减免",
+        "openHours": "约09:00-17:00（16:00停止入馆）；周一是否闭馆及体验场次安排请以场馆公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国家级煤炭行业博物馆，模拟矿井体验按场次进行；名称中的“煤海探秘游”含中文引号，购票检票以官方渠道为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-太原-303",
+      "name": "宝源老醋坊",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原南站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "清徐县老字号醋企的醋文化工业旅游景点，可观看传统酿醋工艺并品尝选购，收费与参观安排以园区当日公示为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-太原-304",
+      "name": "紫林醋文化工业园区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原南站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "紫林醋业的醋文化工业园区，展示山西老陈醋现代化酿造流程与醋史文化，可参观生产线并品尝选购，收费与参观安排以园区当日公示为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-太原-305",
+      "name": "六味斋云梦坞",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "太原南站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "六味斋老字号的肉制品工业旅游园区（云梦坞），展示中华老字号酱肉传统制作技艺与品牌文化，可参观生产线并选购产品，收费与参观安排以园区当日公示为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-巴彦淖尔-566",
+      "name": "黄河河套文化旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；园内游船、观光车等经营性项目另行收费。",
+        "freePolicy": "免费开放的开放式滨河景区",
+        "openHours": "全天开放（24小时，无停止入园时间）；园内场馆与项目运营时间以现场公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "巴彦淖尔天吉泰机场",
+        "nearestRail": "巴彦淖尔站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "临河区沿黄河与总干渠展开的河套文化风光带，含湿地、雕塑与水利景观节点；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-巴彦淖尔-567",
+      "name": "河套农耕文化博览园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "巴彦淖尔天吉泰机场",
+        "nearestRail": "巴彦淖尔站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于五原县方向的河套农耕文化博览园，展示河套灌区农耕文明、水利灌溉与民俗器物；博物馆类场馆多有周一闭馆惯例，以园区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-巴彦淖尔-568",
+      "name": "内蒙古五原抗战纪念园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；请携带身份证件登记入馆。",
+        "freePolicy": "免费开放（需带身份证件）",
+        "openHours": "约09:00-17:00（16:30停止入馆）；纪念馆类场馆多有周一闭馆惯例，以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "巴彦淖尔天吉泰机场",
+        "nearestRail": "巴彦淖尔站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "纪念1940年五原战役的抗战纪念园区，含烈士陵园与纪念馆，为爱国主义教育基地；瞻仰参观请保持肃穆；免费开放（需带身份证件）；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-廊坊-233",
+      "name": "中信国安第一城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "北京大兴国际机场",
+        "nearestRail": "廊坊站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "香河县内按明清北京城垣格局仿建的大型建筑群，兼具会展、度假功能，部分区域为酒店与会议区；开放范围与收费以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-廊坊-234",
+      "name": "金丰农科园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以园区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": null,
+        "nearestAirport": "北京大兴国际机场",
+        "nearestRail": "廊坊站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "广阳区集现代农业科技展示、温室观赏与亲子采摘于一体的农旅园区；冬季以温室项目为主，收费与开放安排以园区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-廊坊-235",
+      "name": "金钥匙家居",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；家具采购等消费项目自理。",
+        "freePolicy": "免费开放（家居展销商贸中心）",
+        "openHours": "约09:00-18:00（17:30停止入园）；以卖场公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "北京大兴国际机场",
+        "nearestRail": "廊坊站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "依托香河家具产业的家居展销旅游点，以逛展采购、家居文化体验为主，非传统观光景区；营业时间以卖场公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-廊坊-236",
+      "name": "中国红木城",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；内部个别展馆或体验项目可能另行收费，以现场公告为准。",
+        "freePolicy": "免费开放（红木文化商贸综合体）",
+        "openHours": "约09:00-17:30（17:00停止入园）；以市场公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "北京大兴国际机场",
+        "nearestRail": "廊坊站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "大城县北方红木家具集散地，含红木展销、鉴赏与文化展示功能；以采购与文化体验为主，非山水观光景区；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-廊坊-237",
+      "name": "梦东方未来世界",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:30-17:30（16:30停止入园）；以乐园当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": null,
+        "nearestAirport": "北京大兴国际机场",
+        "nearestRail": "廊坊站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "儿童游乐区",
+          "母婴室",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "三河市燕郊方向的航天主题乐园，含航天体验、动感影院等室内项目，适合亲子；部分项目有身高与年龄限制，票价与开放时间以乐园当日公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延安-3619",
+      "name": "黄河壶口瀑布景区",
+      "profile": {
+        "ticketPeak": 90,
+        "ticketOff": 90,
+        "ticketNote": "大门票90元/人；景区交通车等另行收费（以现场公示为准）。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "旺季（约4-10月）约07:00-18:30（17:30停止售票入园），淡季约08:00-17:00（16:00停止售票入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "延安南泥湾机场",
+        "nearestRail": "延安站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "本条为陕西宜川县侧壶口景区（山西吉县侧为另一景区，门票不通用）；观瀑效果受黄河水量影响，春季桃花汛与秋季汛期最壮观，冬季可能结冰；距延安市区约150公里，请预留往返时间；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-647",
+      "name": "长白山峡谷浮石林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；冬季可能关闭或缩短开放时间；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "安图站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "安图县长白山北麓的火山浮石峡谷景观带，栈道步行为主；距延吉市区较远且冬季可能封闭，建议与长白山北坡线路一并安排；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-648",
+      "name": "龙顺雪山飞湖景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；冬季与夏季开放项目不同，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "安图站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "安图县两江镇方向的湖山景区，以湖泊、雪山映衬景观与水上项目为特色；季节性明显，冬夏开放项目差异大；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-649",
+      "name": "防川景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；边境管理区按规定时段放行，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "珲春站",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "中朝俄交界“一眼望三国”之地（珲春市防川村），登龙虎阁可远望三国；属边境管理区，须携带身份证并遵守边防管理规定；距延吉市区约180公里以上，请预留充足时间；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-650",
+      "name": "大戏台河景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；冬季可能关闭或仅开放冰雪项目；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "安图站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "安图县长白山北麓原始林间的河谷景区，以溪流、叠瀑与森林栈道为主；距延吉市区较远，冬季可能封闭；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-651",
+      "name": "延边博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；请携带身份证件领票或登记入馆。",
+        "freePolicy": "免费开放（需带身份证件）",
+        "openHours": "约09:00-16:30（16:00停止入馆）；周一闭馆（法定节假日以馆方公告为准）",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "延吉西站",
+        "driveFromCityMin": 17,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "延吉市区内的地志综合性博物馆，朝鲜族民俗陈列与延边历史展为特色；免费开放（需带身份证件），周一闭馆以馆方公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-652",
+      "name": "梦都美民俗旅游度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "度假区全天可进入；温泉、水乐园等项目各有运营时间，以度假区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": null,
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "延吉西站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "延吉市北部的朝鲜族民俗风情度假区，含温泉、水上游乐等项目，各项目单独收费；冬夏项目差异较大；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-653",
+      "name": "长白山雁鸣湖温泉度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "度假村全天可进入；温泉等项目约09:00-22:00运营，以度假村公告为准",
+        "suggestedHours": 4,
+        "bestMonths": null,
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "敦化站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "敦化方向的温泉度假村，温泉泡浴、住宿与餐饮为主要消费项目；距延吉市区较远（约140分钟车程），建议自驾；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-654",
+      "name": "创兴长白山原始萨满部落风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；冬季可能关闭；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "安图站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "安图县境内以长白山原始森林与萨满文化展示为主题的景区；位置偏远、冬季可能封闭；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-655",
+      "name": "大关东文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "安图站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "安图县永庆乡方向的关东民俗文化园，含民俗展陈、关东老街等体验内容；距延吉市区较远，建议与长白山北坡线路一并安排；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-656",
+      "name": "魔界风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约07:00-17:00（16:00停止入园）；观赏时段以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "12月-次年2月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "安图站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "安图县二道白河镇河畔的雾凇与水中枯木奇观景观带（自然摄影地，非主题乐园），冬季清晨观赏效果最佳；开放时间随季节调整；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-657",
+      "name": "长白山历史文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "安图站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "安图县松江镇方向的长白山历史文化主题园区；距延吉市区较远，开放与收费情况以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-658",
+      "name": "琵岩山文化旅游风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "延吉近郊山地休闲景区，以玻璃栈道、悬崖秋千等体验项目为主，项目单独收费；距延吉市区约40分钟车程，适合半日游；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-659",
+      "name": "老白山原始生态风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:00停止入园）；冬季大雪可能封山关闭；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "敦化站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "敦化市北部的高山原始生态景区，以高山草甸、森林与溪流为主；位置偏远、季节性开放，冬季可能封山；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-660",
+      "name": "大石头亚光湖国家湿地公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；开放时间随季节调整，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "敦化站",
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "敦化市大石头镇的国家湿地公园，以湿地观光、栈道漫步与森林康养为主，设施较为原生态；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-661",
+      "name": "青龙渔业景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以渔业养殖观光、垂钓与特色餐饮为主题的休闲景区；交通参考时间仅供参考，建议自驾并提前确认营业情况；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-662",
+      "name": "延吉帽儿山（恐龙）文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "帽儿山山林区域全天开放；恐龙主题馆区约09:00-17:00（16:30停止入园），以园区当日公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": "延吉西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "由帽儿山森林公园与恐龙文化主题区组成，山林开放区域与主题馆区收费政策不同；夏秋季适合登山远眺延吉市景；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-延边朝鲜族自治州-663",
+      "name": "好记文化旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "延吉朝阳川国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以老字号酿造食品文化为主题的休闲度假区，含文化展示与体验内容；交通参考时间仅供参考，建议自驾并提前确认营业情况；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-217",
+      "name": "万龙滑雪场景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "雪季（约11月中旬-次年4月初）缆车约08:30-16:30运行（15:30停止售票入闸）；夜场安排以雪场公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "12月-次年2月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "太子城站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "索道/扶梯",
+          "医疗服务点",
+          "寄存柜",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "崇礼大型滑雪度假区，雪道以中高级为主；雪具租赁、教学与餐饮另收费；非雪季不营业，开放时间以雪场公告为准；出行前请核实雪况与最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-218",
+      "name": "张北中都原始草原度假村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "夏季（约5-9月）约08:00-19:00（18:00停止入园）；冬季草原项目基本停业，以度假村公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-8月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "张家口站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "张北县坝上草原度假区，夏季有骑马、射箭、篝火晚会与蒙古包住宿等项目；季节性开放（约5-9月），冬季基本停业；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-219",
+      "name": "黄龙山庄景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-9月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "怀来站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "怀来县北部山地景区，以峡谷溪流与高山草甸景观为主，夏季凉爽；部分步道坡度较大，注意安全；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-220",
+      "name": "安家沟生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "张家口站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "张家口市区西部的生态沟谷景区，沟内设有玻璃桥、滑道等游乐项目（另收费），适合近郊半日游；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-221",
+      "name": "大境门景区",
+      "profile": {
+        "ticketPeak": 13,
+        "ticketOff": 13,
+        "ticketNote": "登城楼（长城段）门票13元；大境门历史文化街区免费进入（以现场管理为准）。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "旺季约08:00-18:00（17:30停止入园），淡季约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "张家口站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "万里长城著名关隘，“大好河山”匾额所在，张家口城市地标；街区免费游览、登楼购票；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-张家口-222",
+      "name": "小五台·金河景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；冬季防火封山期可能关闭；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": null,
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "河北最高峰小五台山北麓景区，以金河口峡谷、溪瀑与原始森林为主；冬季封山防火期可能关闭，登山请量力并遵守防火规定；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-223",
+      "name": "赤城温泉度假村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "度假村全天开放；温泉泡池约08:30-22:00运营，以度假村公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "10月-次年4月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": null,
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "历史悠久的温泉疗养地，泡汤、住宿与餐饮为主要消费项目，各汤池与酒店收费标准不同；冬季亦营业，户外项目视天气安排；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-224",
+      "name": "沽水福源度假村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "夏季（约5-9月）约08:00-18:30（17:30停止入园）；冬季基本停业，以度假村公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "6-8月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": null,
+        "driveFromCityMin": 125,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沽源县草原湖畔度假村，夏季有湖上游乐、骑马与篝火等项目；季节性开放（约5-9月），冬季基本停业；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-225",
+      "name": "天鹅湖旅游度假村景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "夏季约08:00-19:00（18:00停止入园）；冬季视冰雪活动安排，以度假村公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-9月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": null,
+        "driveFromCityMin": 135,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沽源县高原湖泊度假村，春秋常有天鹅等候鸟栖息，夏季可体验湖上与草原项目；季节性明显；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-226",
+      "name": "滦河神韵风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "夏季（约5-9月）约08:00-18:30（17:30停止入园）；冬季基本停业，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-8月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": null,
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沽源县闪电河湿地“九曲十八弯”观景地，转佛山观景台俯瞰草原曲流为精华；季节性开放（约5-9月）；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-227",
+      "name": "鸡鸣山风景旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "下花园北站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "下花园区孤峰名山，山上有寺庙建筑群，可步行登顶俯瞰洋河河谷；登山步道较陡，量力而行；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-228",
+      "name": "黄帝城遗址文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": null,
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": null,
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "涿鹿县矾山镇的中华三祖文化纪念地，含黄帝城遗址、中华三祖堂等点位，遗址与展馆结合；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-229",
+      "name": "太舞四季小镇",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "雪季（约11月-次年4月）缆车约08:30-16:30运行（16:00停止入闸）；非雪季不营业，开放时间以雪场公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "12月-次年2月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "太子城站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "索道/扶梯",
+          "医疗服务点",
+          "寄存柜",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "崇礼大型滑雪度假小镇，雪道与地形公园丰富，酒店餐饮配套齐全；雪票分平日与周末价格，雪具租赁另收费；小镇商业区雪季外另有安排，雪场设施非雪季不营业，开放时间以雪场公告为准；出行前请核实雪况与最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-230",
+      "name": "富龙四季小镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "雪季（约11月-次年3月底）日场约08:30-16:30，夜场约17:30-21:30（停止入闸时间以雪场公告为准）；非雪季不营业，开放时间以雪场公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "12月-次年2月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "太子城站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "索道/扶梯",
+          "医疗服务点",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "紧邻崇礼城区的滑雪度假区，以夜场滑雪为特色；雪具租赁、教学另收费；非雪季不营业，开放时间以雪场公告为准；出行前请核实雪况与最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-231",
+      "name": "桑干河大峡谷·飞瀑峡景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；冬季可能缩短开放；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "宣化北站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "宣化区南部桑干河峡谷中的飞瀑峡景观带，以峡谷、瀑布与滨水栈道为主；雨后水量大时景观最佳，冬季部分区域封闭，建议自驾前往；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-张家口-232",
+      "name": "张家口市翠云山森林风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（16:30停止入园）；冬夏开放项目不同，以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": null,
+        "nearestAirport": "张家口宁远机场",
+        "nearestRail": "太子城站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "崇礼的森林山地景区，夏季避暑徒步、冬季有滑雪项目，四季业态不同；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-忻州-322",
+      "name": "忻州市定襄河边民俗博物馆",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": 50,
+        "ticketNote": "大门票50元/人；不含讲解等园内服务。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "旺季约08:00-18:00（17:30停止入园），淡季约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "忻州西站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以阎锡山故居建筑群为依托的民俗博物馆，晋北民居建筑与近代史迹陈列为特色；五台山机场位于定襄县，距景区较近；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-忻州-323",
+      "name": "忻州市宁武万年冰洞旅游区",
+      "profile": {
+        "ticketPeak": 120,
+        "ticketOff": 120,
+        "ticketNote": "大门票120元/人；不含芦芽山景区其他景点门票；洞内低温，保暖用品租赁费用另计（以现场公示为准）。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "旺季（约4-10月）约08:00-18:00（16:30停止入园），淡季约09:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月",
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "忻州西站",
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "国家地质公园核心景点，洞内冰体四季不化，夏季洞内外温差极大，建议携带保暖衣物；与芦芽山、汾河源头同在宁武县但分开售票；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-忻州-324",
+      "name": "忻州市宁武芦芽山生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季（约4-10月）约07:30-18:00（16:30停止入园）；冬季部分区域封闭；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "忻州西站",
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "管涔山主峰生态旅游区，含芦芽山主峰、马仑草原、情人谷等景点（部分景点分开售票）；登山强度较大，冬季大雪可能封山；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-忻州-325",
+      "name": "忻州市宁武汾河源头旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季约08:00-18:00（17:00停止入园），淡季约09:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-9月",
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "忻州西站",
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "汾河发源地，有源头泉眼、雷鸣寺等景观，与万年冰洞、芦芽山同在宁武县但分别售票；冬季开放情况以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-忻州-326",
+      "name": "忻州市忻府区云中河景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；园内水上乐园、游乐等经营性项目另行收费。",
+        "freePolicy": "免费开放的开放式滨河景区",
+        "openHours": "全天开放（24小时，无停止入园时间）；园内项目运营时间以现场公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "忻州西站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "忻州城区北侧的滨河生态景区，绿地、水面与健身步道结合，市民休闲与观光兼备；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-忻州-327",
+      "name": "忻州市忻府区禹王洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；冬季开放情况以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "忻州西站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "系舟山上的天然喀斯特溶洞，洞内需步行爬升，洞口海拔较高、夏季凉爽；溶洞路段湿滑，建议穿防滑鞋；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-忻州-328",
+      "name": "忻州滹源景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（滨河开放区域无停止入园时间限制）；园内场馆运营时间以现场公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "繁峙站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "繁峙县滹沱河畔的滨河生态景区，以河流湿地景观与休闲步道为主；开放与收费情况以景区现场公示为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-忻州-329",
+      "name": "忻州市原平市天涯山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "原平西站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "原平市东郊山地景区，以天涯山奇石景观与石鼓寺人文景点为主，登山步道较为平缓；开放与收费情况以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-忻州-330",
+      "name": "偏关县老牛湾景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季（约4-10月）约08:00-18:30（17:30停止入园），淡季缩短；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 155,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "长城与黄河“握手”之地，晋陕蒙交界处的峡谷村落景观；距忻州市区约150公里以上且多山路，建议预留全天行程；冬季严寒部分设施停用；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-忻州-331",
+      "name": "忻府区忻州古城",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "古城街区免费进入；秀容书院等个别院落、展馆及部分体验项目另行收费。",
+        "freePolicy": "免费开放（开放式古城街区，个别院落另购票）",
+        "openHours": "街区全天开放；城楼与收费院落约09:00-18:00（17:30停止入园），以现场公告为准",
+        "suggestedHours": 3,
+        "bestMonths": null,
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "忻州西站",
+        "driveFromCityMin": 18,
+        "accessibility": [
+          "无障碍通道",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "晋北古城文旅街区，以民俗演艺、晋北小吃与夜景为特色；节假日人流集中，周边停车紧张，建议错峰前往；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-忻州-332",
+      "name": "静乐县天柱山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "静乐县城附近的山地公园式景区，可俯瞰县城与汾河川谷地；开放与收费情况以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-忻州-333",
+      "name": "繁峙县憨山文化旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "忻州五台山机场",
+        "nearestRail": "五台山站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "五台山北麓砂河镇的文化旅游园区，以憨山文化为主题，紧邻通往五台山北线的通道；开放与收费情况以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-128",
+      "name": "塞罕坝森林公园",
+      "profile": {
+        "ticketPeak": 130,
+        "ticketOff": 130,
+        "ticketNote": "门票约130元/人（公园门票及联票政策以景区公示为准）；园内个别景点、观光车等可能另行收费。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "旺季（约5-10月）约08:00-17:30（16:30停止入园）；冬季大部分区域关闭或缩短开放；以景区公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "6-9月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "承德站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "围场坝上人工林海国家森林公园，夏季避暑、秋季彩林为佳；园内景点分散，建议自驾或乘区间车；季节性明显，冬季部分区域关闭；与御道口风景区相邻但独立售票；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-承德-129",
+      "name": "承德市丰宁县京北第一草原景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "夏季（约6-9月）约08:00-18:30（17:30停止入园）；冬季草原项目基本停业，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-8月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": null,
+        "driveFromCityMin": 135,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "丰宁坝上（大滩镇一带）草原景区，骑马、越野车、篝火等项目丰富；季节性开放（约6-9月），冬季寒冷停业；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-130",
+      "name": "承德市御道口草原森林风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季（约5-10月）约08:00-17:30（16:30停止入园）；冬季大部分区域关闭；以景区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "承德站",
+        "driveFromCityMin": 125,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "坝上草原与森林混合景观（月亮湖、太阳湖等），与塞罕坝森林公园相邻但独立售票；季节性明显，冬季关闭大部分区域；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-131",
+      "name": "承德市双滦区双塔山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "承德站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "承德近郊丹霞地貌双峰，峰顶存辽代砖塔，可步道登临或山下远观；门票与开放时间以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-132",
+      "name": "承德市隆化县董存瑞纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；请携带身份证件登记入馆。",
+        "freePolicy": "免费开放（需带身份证件）",
+        "openHours": "约09:00-16:30（16:00停止入馆）；周一闭馆（法定节假日以馆方公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "承德站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "无障碍通道",
+          "无障碍卫生间",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "全国爱国主义教育示范基地，纪念在隆化战斗中舍身炸碉堡的董存瑞烈士；瞻仰参观请保持肃穆；免费开放（需带身份证件），周一闭馆以馆方公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-承德-133",
+      "name": "承德市兴隆县兴隆溶洞景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "承德站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "发育规模大、沉积形态丰富的石灰岩溶洞，洞内恒温、路滑，建议穿防滑鞋；洞内参观容量有限，高峰期需排队；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-134",
+      "name": "承德市丰宁县大汗行宫旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "夏季（约5-9月）约08:00-18:00（17:00停止入园）；冬季停业，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-8月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": null,
+        "driveFromCityMin": 145,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "坝上草原上的蒙元主题宫殿建筑群，展示成吉思汗时期军帐与宫帐文化；季节性开放（约5-9月），冬季停业；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-135",
+      "name": "承德市丰宁县马镇旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季（约5-10月）约09:00-18:00（17:00停止入园）；夜间演艺及冬季项目安排以度假区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": null,
+        "driveFromCityMin": 135,
+        "accessibility": [
+          "观光车/电瓶车",
+          "母婴室",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以马文化为主题的度假乐园（舞马世界），含马术演出、游乐设备与主题酒店群；演出场次多、票种分区，建议提前查询当日安排；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-136",
+      "name": "山庄老酒文化产业园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "平泉站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "平泉市山庄老酒酒文化工业旅游园，可参观酿造工艺、酒窖与酒文化展馆，参观品鉴以园区当日安排为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-137",
+      "name": "承德市兴隆县兴隆山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；索道运行时间以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "承德站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "燕山山地景区，以峡谷栈道与索道登临观景为主，索道与观光车另收费；冬季部分设施停运；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-138",
+      "name": "承德市丰宁县七彩森林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季（约5-10月）约08:00-18:00（17:00停止入园）；冬季停业，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-10月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": null,
+        "driveFromCityMin": 145,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "坝上彩色森林与草原湿地景观，秋季彩林层次丰富为最佳观赏期；季节性开放（约5-10月），冬季停业；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-139",
+      "name": "承德市磬锤峰森林公园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:30（16:30停止入园）；索道运行时间以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "承德站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "承德名景“棒槌山”，上粗下细的丹霞奇峰与蛤蟆石相邻，可乘索道或步行登山（索道另收费）；冬季索道可能停运；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-承德-140",
+      "name": "鼎盛文化产业园景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "园区全天可进入；大型实景演出《鼎盛王朝·康熙大典》约20:00开演（场次随季节调整），以园区当日公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月",
+        "nearestAirport": "承德普宁机场",
+        "nearestRail": "承德站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以大型实景演出《鼎盛王朝·康熙大典》为核心的文化产业园，演出为主要消费项目且冬季多停演，票务与场次以园区公告为准；白天园区可休闲游览；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋中-336",
+      "name": "乌金山国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "公园约08:00-18:00（17:00停止入园）；园内主题乐园项目运营时间以园区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "晋中站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "观光车/电瓶车",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "榆次区北郊的森林公园与主题乐园复合景区（乌金山欢乐谷），公园与游乐项目分别收费；游乐设备冬季部分停开；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋中-337",
+      "name": "九龙国际文化生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-18:00（17:30停止入园）；度假项目运营时间以园区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "晋中站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "寿阳县方向的温泉度假与康养休闲生态园区（九龙温泉等），各项目单独收费；冬季温泉项目照常；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋中-338",
+      "name": "昭馀古城茶商文化旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "古城街区全天开放；收费院落约08:30-18:00（17:30停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "祁县东站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "晋商茶票文化主题古城，街区开放，渠家大院等晋商院落分别售票；与平遥古城同处晋中但为独立景区；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋中-339",
+      "name": "太行龙泉旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季约08:00-18:00（17:00停止入园），淡季缩短；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 125,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "左权县太行山区森林公园性质的山水景区，森林、瀑布与洞峡景观结合；距晋中市区较远，建议自驾；冬季部分区域封闭；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋中-340",
+      "name": "麻田八路军总部纪念馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放；请携带身份证件登记入馆。",
+        "freePolicy": "免费开放（需带身份证件）",
+        "openHours": "约09:00-17:00（16:30停止入馆）；周一闭馆（法定节假日以馆方公告为准）",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 135,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "太行抗战旧址群核心地（左权县麻田镇），八路军总部旧址与陈列展为特色，爱国主义教育基地；免费开放（需带身份证件），周一闭馆以馆方公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-晋中-341",
+      "name": "灵石县王家大院民居艺术馆",
+      "profile": {
+        "ticketPeak": 55,
+        "ticketOff": 55,
+        "ticketNote": "大门票55元/人（含高家崖、红门堡等建筑群）；不含讲解等园内服务。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "旺季约08:00-18:30（17:30停止入园），淡季约08:30-17:30（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "介休站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "老年人优惠"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "晋商民居建筑群（高家崖、红门堡等），砖雕、木雕、石雕精美，素有“王家归来不看院”之说；旺季游客较多；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-晋中-342",
+      "name": "红崖峡谷景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季约08:00-18:00（17:00停止入园），淡季缩短；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "介休站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "太岳山中的峡谷景区，以峡谷溪流与山地草甸景观为主，园区纵深较长可乘观光车（另收费）；与王家大院、石膏山同在灵石但分别售票；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋中-343",
+      "name": "石膏山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季约08:00-18:00（17:00停止入园），淡季缩短；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "介休站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "太岳山北段山林景区，以森林、岩溶景观与山中寺庙遗存为主，与红崖峡谷相邻但独立售票；冬季部分区域封闭；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋中-344",
+      "name": "张壁古堡景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": 60,
+        "ticketNote": "大门票60元/人，含古堡参观与地道游览；不含讲解等园内服务。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "约08:30-17:30（17:00停止入园），淡季缩短；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "介休站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "介休市集军事古堡、万米地道与宗教祠庙于一体的古村落，地道游览建议跟随讲解；旺季有民俗演出；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-晋中-345",
+      "name": "平遥县双林寺彩塑艺术馆",
+      "profile": {
+        "ticketPeak": 35,
+        "ticketOff": 35,
+        "ticketNote": "大门票35元/人；不含讲解。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "旺季约08:00-18:00（17:30停止入园），淡季约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "平遥古城站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以精美明代彩塑著称，有“东方彩塑艺术宝库”之誉；属世界遗产平遥古城的组成部分，但位于古城外西南、独立售票；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-晋中-346",
+      "name": "镇国寺",
+      "profile": {
+        "ticketPeak": 25,
+        "ticketOff": 25,
+        "ticketNote": "大门票25元/人；不含讲解。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "约08:30-17:30（17:00停止入园），淡季缩短；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "平遥古城站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "五代木构万佛殿与同期彩塑为最大看点；属世界遗产平遥古城的组成部分，但位于古城东北郊、独立售票，与双林寺分别购票；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-晋中-347",
+      "name": "大寨景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "“农业学大寨”发源地，含虎头山森林公园、大寨陈列馆与陈永贵故居等点位，红色教育与乡村风貌结合；开放与收费情况以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋中-348",
+      "name": "小西沟",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费进入；内部餐饮、文创、民宿与游乐等消费项目自理。",
+        "freePolicy": "免费开放（开放式文旅小镇）",
+        "openHours": "小镇全天开放；商铺营业时间以现场公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": null,
+        "nearestAirport": "太原武宿国际机场",
+        "nearestRail": "晋中站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "榆次区近郊文旅康养小镇，业态以特色餐饮、文创与亲子体验为主，夜间灯光氛围较好；免票进入；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-晋城-379",
+      "name": "珏山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "索道/扶梯",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "泽州县太行山南麓双峰景区，与千年古刹青莲寺相邻，为传统中秋赏月胜地；登顶步道较陡，索道另收费；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋城-380",
+      "name": "大阳古镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "古镇街区全天开放；收费场馆约08:30-18:00（17:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": null,
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "历史悠久的古工商业城镇，古建筑群规模大，以传统冶铁制针文化与打铁花表演等体验为特色；街区与收费场馆分开，联票政策以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋城-381",
+      "name": "炎帝陵景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": null,
+        "nearestRail": "高平东站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高平市神农镇的炎帝陵寝与祭祀建筑群，炎帝文化寻根祭祖主题地，每年有祭祀活动；开放与祭典安排以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋城-382",
+      "name": "天官王府",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "明代重臣王国光故里（阳城县润城镇一带），晋东南官宅民居与古堡村落结合；与郭峪古城、皇城相府同在阳城县但独立售票；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋城-383",
+      "name": "郭峪古城",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "明代防御性古堡村落，豫楼与堡墙保存完好，紧邻皇城相府但为独立售票景区；开放与票价以景区公告为准；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋城-384",
+      "name": "蟒河景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-18:00（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-9月",
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "猕猴出没的山水峡谷景区，夏季凉爽、丰水期瀑潭相连为最佳；园内步道较长可乘区间车（另收费），请勿投喂猕猴；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋城-385",
+      "name": "王莽岭景区",
+      "profile": {
+        "ticketPeak": 110,
+        "ticketOff": 110,
+        "ticketNote": "大门票110元/人；景区交通车、索道等另行收费（以现场公示为准）。",
+        "freePolicy": "儿童、学生、老年人等按国家及景区规定凭证件减免",
+        "openHours": "旺季约07:30-18:00（16:30停止入园），淡季约08:00-17:00（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-10月",
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 105,
+        "accessibility": [
+          "索道/扶梯",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "南太行云海日出观景地，含王莽岭主景区与锡崖沟（挂壁公路）等区域；山区温差大，观云海宜清晨；出行前请核实最新预约政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-晋城-386",
+      "name": "历山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "旺季约08:00-18:00（17:00停止入园）；冬季大雪可能关闭；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月",
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 115,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "中条山主峰舜王坪所在的高山草甸与原始森林景区（地跨沁水等县），距晋城市区较远、山路多，建议自驾；冬季可能封闭；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋城-387",
+      "name": "柳氏民居景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "唐代文学家柳宗元后裔聚居古村落（沁水县土沃乡一带），明清民居与木石雕刻精美；乡村道路行车较慢请预留时间；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-晋城-388",
+      "name": "湘峪古堡景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:30（17:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": null,
+        "nearestAirport": null,
+        "nearestRail": "晋城东站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "明代军事防御古堡（三都古城），藏兵洞与堡墙为特色，与郭峪古城、天官王府等同属晋东南古堡群但独立售票；出行前请核实最新预约政策。"
+      },
+      "confidence": "low"
+    }
+  ]
+}

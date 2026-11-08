@@ -1,0 +1,44 @@
+{
+  "libraryScenic": 4619,
+  "txtLines": 4620,
+  "counts": {
+    "renames": 237,
+    "drops": 42,
+    "keep": 22,
+    "sum": 301
+  },
+  "coverage": {
+    "b1Missing": [],
+    "b2Missing": [],
+    "duplicatedInOutput": [],
+    "extraOutsideDirty": [
+      "遂昌千佛山景区有限公司"
+    ]
+  },
+  "references": {
+    "fromNotInLibrary": [],
+    "dropNotInLibrary": [],
+    "duplicateOfNotInLibrary": []
+  },
+  "toCollisions": {
+    "amongThemselves": [],
+    "withUntouchedLibrary": []
+  },
+  "dryRun": {
+    "before": 4619,
+    "after": 4577,
+    "expectAfter": 4577,
+    "newDupGroups": [],
+    "preservedDupGroups": [
+      "白桦林景区",
+      "天台山风景名胜区",
+      "牯牛降景区",
+      "六盘山红军长征景区",
+      "六盘山国家森林公园",
+      "宁夏固原市须弥山旅游区",
+      "宁夏固原市火石寨国家地质公园",
+      "宁夏固原市博物馆",
+      "将台堡红军长征会师纪念园"
+    ]
+  }
+}

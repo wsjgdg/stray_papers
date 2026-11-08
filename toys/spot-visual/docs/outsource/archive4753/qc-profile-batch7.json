@@ -1,0 +1,28 @@
+{
+  "batch": 7,
+  "count": 100,
+  "low": 57,
+  "missingRequired": 57,
+  "sample": [
+    "scenic-湖州-861",
+    "scenic-沧州-239",
+    "scenic-湖州-867",
+    "scenic-石家庄-111",
+    "scenic-杭州-890",
+    "scenic-白山-634",
+    "scenic-石家庄-113",
+    "scenic-湖州-871",
+    "scenic-湖州-870",
+    "scenic-牡丹江-701",
+    "scenic-牡丹江-700",
+    "scenic-湖州-855",
+    "scenic-湖州-860",
+    "scenic-湖州-852",
+    "scenic-杭州-897",
+    "scenic-湖州-880",
+    "scenic-湖州-879",
+    "scenic-湖州-854",
+    "scenic-石家庄-102",
+    "scenic-杭州-888"
+  ]
+}

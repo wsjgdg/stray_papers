@@ -1,0 +1,28 @@
+{
+  "batch": 34,
+  "count": 100,
+  "low": 64,
+  "missingRequired": 41,
+  "sample": [
+    "scenic-无锡-4136",
+    "scenic-泰州-4169",
+    "scenic-苏州-4214",
+    "scenic-苏州-4215",
+    "scenic-盐城-4206",
+    "scenic-无锡-4149",
+    "scenic-淮安-4178",
+    "scenic-扬州-4128",
+    "scenic-淮安-4185",
+    "scenic-淮安-4174",
+    "scenic-无锡-4145",
+    "scenic-泰州-4171",
+    "scenic-淮安-4191",
+    "scenic-苏州-4223",
+    "scenic-无锡-4154",
+    "scenic-泰州-4170",
+    "scenic-扬州-4119",
+    "scenic-淮安-4190",
+    "scenic-泰州-4168",
+    "scenic-扬州-4129"
+  ]
+}

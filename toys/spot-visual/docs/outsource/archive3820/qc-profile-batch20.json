@@ -1,0 +1,28 @@
+{
+  "batch": 20,
+  "count": 100,
+  "low": 91,
+  "missingRequired": 91,
+  "sample": [
+    "scenic-钦州-2641",
+    "scenic-桂林-2685",
+    "scenic-桂林-2675",
+    "scenic-桂林-2682",
+    "scenic-钦州-2640",
+    "scenic-河池-2708",
+    "scenic-柳州-2649",
+    "scenic-柳州-2662",
+    "scenic-钦州-2642",
+    "scenic-桂林-2671",
+    "scenic-梧州-2618",
+    "scenic-柳州-2655",
+    "scenic-防城港-2694",
+    "scenic-钦州-2644",
+    "scenic-桂林-2681",
+    "scenic-河池-2714",
+    "scenic-柳州-2652",
+    "scenic-防城港-2691",
+    "scenic-柳州-2661",
+    "scenic-河池-2700"
+  ]
+}

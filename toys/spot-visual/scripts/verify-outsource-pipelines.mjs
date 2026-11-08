@@ -1,0 +1,360 @@
+/**
+ * 验收两条外包流水线（描述 / 档案）：正向能合入、反向必须整批拒绝。
+ *
+ * 为什么现在就验：外部 AI 的 15 批描述 + 48 批档案还没交回来，
+ * 但合并器已经落地了。等到真数据回来再验，一旦合并器有 bug，
+ * 那 63 批的返工成本是几十倍。现在用合成数据把两条链走通，
+ * 真数据回来时只需要跑一遍 merge，不用再碰代码。
+ *
+ * 用法: node scripts/verify-outsource-pipelines.mjs
+ * 用完会把仓库状态完整还原（两张生成表 + 两份累积存档 + 合并器写出的
+ * qc 抽检文件），可以放心反复跑。
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { execFileSync } from "node:child_process";
+
+const ROOT = process.cwd();
+/** 固定文件：两张生成表 + 两份累积存档 */
+const BACKUPS = {
+  "src/lib/scenic-desc-outsource.generated.ts": null,
+  "src/lib/spot-profiles.generated.ts": null,
+  "docs/outsource/out-desc-4a-merged.json": null,
+  "docs/outsource/out-profile-merged.json": null,
+  // 收官后清单为空，验收器会临时写一份合成清单；跑完必须还原（原本没有就删掉）
+  "docs/outsource/profile-batch1.json": null,
+};
+/**
+ * 合并器写出的 qc 抽检文件：按 glob 全量纳入，而不是写死 batch1。
+ * 写死的话，批 2+ 交付后跑一次验收就会留下 qc-desc-batch2.json 等残留，
+ * 内容是合成数据的 id，足以让人误判「该批已交付」并去抽检假数据。
+ */
+const QC_GLOB = /^qc-(desc|profile)-batch\d+\.json$/;
+
+const listQcFiles = () =>
+  fs
+    .readdirSync(path.resolve("docs/outsource"))
+    .filter((f) => QC_GLOB.test(f))
+    .map((f) => `docs/outsource/${f}`);
+
+const backup = () => {
+  for (const f of Object.keys(BACKUPS)) {
+    const p = path.resolve(f);
+    BACKUPS[f] = fs.existsSync(p) ? fs.readFileSync(p, "utf8") : null;
+  }
+  for (const f of listQcFiles()) {
+    const p = path.resolve(f);
+    BACKUPS[f] = fs.readFileSync(p, "utf8");
+  }
+};
+const restore = () => {
+  for (const [f, content] of Object.entries(BACKUPS)) {
+    const p = path.resolve(f);
+    if (content === null) {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    } else {
+      fs.writeFileSync(p, content, "utf8");
+    }
+  }
+  // 运行期新产生的 qc 文件（备份时还不存在）也要删掉，否则会留下「该批已交付」的假信号
+  for (const f of listQcFiles()) {
+    if (!(f in BACKUPS)) fs.unlinkSync(path.resolve(f));
+  }
+};
+
+const run = (script, arg) => {
+  try {
+    execFileSync(process.execPath, [script, arg], { stdio: "pipe" });
+    return { code: 0 };
+  } catch (e) {
+    return { code: e.status ?? -1, out: String(e.stdout || "").slice(0, 200) };
+  }
+};
+
+const results = [];
+const check = (name, pass, detail = "") => {
+  results.push({ name, pass, detail });
+  console.log(`${pass ? "✓" : "✗"} ${name}${detail ? "  — " + detail : ""}`);
+};
+
+// ── 合成数据 ──────────────────────────────────────────────────────────────
+const descBatch = JSON.parse(
+  fs.readFileSync("docs/outsource/desc-4a-batch1.json", "utf8"),
+);
+// 档案清单在收官后会被清空（待补池 0 条），此时用合成清单跑验收用例。
+// 注意：必须在 backup() 之后才写这份夹具，否则备份会把它当成「原有文件」而不还原。
+const PROF_LIST = "docs/outsource/profile-batch1.json";
+let profBatch = null;
+const ensureProfBatch = () => {
+  if (fs.existsSync(PROF_LIST))
+    return JSON.parse(fs.readFileSync(PROF_LIST, "utf8"));
+  const names = [
+    ["scenic-北京-6", "故宫博物院"],
+    ["scenic-北京-7", "天坛公园"],
+    ["scenic-北京-8", "颐和园"],
+    ["scenic-北京-9", "八达岭长城"],
+    ["scenic-北京-10", "明十三陵"],
+  ];
+  const b = {
+    task: "景点档案结构化字段-批1（合成验收夹具）",
+    batch: 1,
+    count: names.length,
+    items: names.map(([id, name]) => ({
+      id,
+      name,
+      province: "北京",
+      city: "北京",
+      district: "",
+      level: "5A",
+      address: "北京",
+      category: "历史人文",
+    })),
+  };
+  fs.writeFileSync(PROF_LIST, JSON.stringify(b, null, 2));
+  return b;
+};
+
+const N = descBatch.items.length; // 合并器按整批验收条数，合成数据必须整批
+let PN = 0; // 在 backup() 之后由 ensureProfBatch() 赋值
+const descItems = descBatch.items;
+let profItems = []; // 同上，backup() 之后赋值
+// 60–110 字、不含禁写词的合规描述（模板 + 名字，不足则补、超了则截）
+const goodDesc = (name) => {
+  let s =
+    `${name}地处所在区域的山水之间，主体景观与周边村落、植被共同构成完整的游览面，` +
+    `四季皆有可观之处，是当地代表性的游览目的地。`;
+  const pad = [
+    "区域内步道与观景平台等配套设施较为完善。",
+    "周边村落保留了较完整的传统格局与生活方式。",
+    "山体、水体与植被共同构成层次分明的景观结构。",
+  ];
+  let i = 0;
+  while (s.length < 60 && i < pad.length) s += pad[i++];
+  return s.length > 110 ? s.slice(0, 110) : s;
+};
+
+const writeDesc = (file, items, mutate = () => {}) => {
+  const out = {
+    task: descBatch.task,
+    batch: 1,
+    count: items.length,
+    items: items.map((it) => {
+      const o = { id: it.id, name: it.name, desc: goodDesc(it.name) };
+      mutate(o, it);
+      return o;
+    }),
+  };
+  fs.writeFileSync(file, JSON.stringify(out, null, 2));
+};
+const writeProf = (file, items, mutate = () => {}) => {
+  const out = {
+    task: profBatch.task,
+    batch: 1,
+    count: items.length,
+    items: items.map((it) => {
+      const o = {
+        id: it.id,
+        name: it.name,
+        profile: {
+          ticketPeak: 60,
+          ticketOff: 40,
+          ticketNote: "内部索道另计",
+          freePolicy: "学生半价",
+          openHours: "08:30-17:00（16:00停止入园）",
+          suggestedHours: 3,
+          bestMonths: "4-5月、9-10月",
+          nearestAirport: null,
+          nearestRail: null,
+          driveFromCityMin: 45,
+          accessibility: ["无障碍通道"],
+          needReservation: false,
+          reservationNote: null,
+          officialSite: null,
+          tel: null,
+          notices: null,
+        },
+        confidence: "high",
+      };
+      mutate(o, it);
+      return o;
+    }),
+  };
+  fs.writeFileSync(file, JSON.stringify(out, null, 2));
+};
+
+const TMP = "C:/tmp";
+const D_OK = `${TMP}/out-desc-4a-batch1.json`;
+const P_OK = `${TMP}/out-profile-batch1.json`;
+
+backup();
+
+try {
+  // ══ 正向：合规批次必须合入 ══
+  // 真实交付已合入时合并档不是空的，所以断言一律按「基线 + 增量」算，不能写死绝对值。
+  const readKeys = (f) =>
+    fs.existsSync(f) ? Object.keys(JSON.parse(fs.readFileSync(f, "utf8"))) : [];
+  const baseDesc = new Set(readKeys("docs/outsource/out-desc-4a-merged.json"));
+  const baseProf = new Set(readKeys("docs/outsource/out-profile-merged.json"));
+  const descAdded = descItems.filter((it) => !baseDesc.has(it.id)).length;
+  const profAdded = profItems.filter((it) => !baseProf.has(it.id)).length;
+
+  writeDesc(D_OK, descItems);
+  profBatch = ensureProfBatch();
+  PN = profBatch.items.length;
+  profItems = profBatch.items;
+  let r = run("scripts/merge-out-desc.mjs", D_OK);
+  const mergedDesc = JSON.parse(
+    fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
+  );
+  check(
+    `描述·正向合入 5 条（新增 ${descAdded}）`,
+    r.code === 0 &&
+      Object.keys(mergedDesc).length === baseDesc.size + descAdded,
+    `exit=${r.code} 落键 ${baseDesc.size}→${Object.keys(mergedDesc).length}`,
+  );
+
+  writeProf(P_OK, profItems);
+  r = run("scripts/merge-out-profile.mjs", P_OK);
+  const mergedProf = JSON.parse(
+    fs.readFileSync("docs/outsource/out-profile-merged.json", "utf8"),
+  );
+  check(
+    `档案·正向合入 5 条（新增 ${profAdded}）`,
+    r.code === 0 &&
+      Object.keys(mergedProf).length === baseProf.size + profAdded,
+    `exit=${r.code} 落键 ${baseProf.size}→${Object.keys(mergedProf).length}`,
+  );
+
+  // 落键必须是 id 而不是名字（同名跨市串写的根子就在这里）：
+  // 断言每条 fixture 都能用 id 取回自己那份内容。
+  // 真实数据已占位同名 id 时不能比对内容（会被真值覆盖），只断言：
+  //   ① 每条 fixture 的 id 都是合并档的键；② 合并档里没有任何键是「景点名」。
+  const has = (m, k) => Object.prototype.hasOwnProperty.call(m, k);
+  const descKeyed =
+    descItems.every((it) => has(mergedDesc, it.id)) &&
+    !Object.keys(mergedDesc).some((k) => descItems.some((it) => it.name === k));
+  check("描述·按 id 落键（不是按名字）", descKeyed);
+  const profKeyed =
+    profItems.every((it) => has(mergedProf, it.id)) &&
+    !Object.keys(mergedProf).some((k) => profItems.some((it) => it.name === k));
+  check("档案·按 id 落键（不是按名字）", profKeyed);
+
+  // 幂等：再跑一次不该炸也不该翻倍
+  const descCountAfterFirst = Object.keys(mergedDesc).length;
+  r = run("scripts/merge-out-desc.mjs", D_OK);
+  const again = JSON.parse(
+    fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
+  );
+  check(
+    "描述·重复运行幂等",
+    r.code === 0 && Object.keys(again).length === descCountAfterFirst,
+    `落键 ${descCountAfterFirst}→${Object.keys(again).length}`,
+  );
+
+  // ══ 反向：任一硬违规必须整批拒绝 ══
+  const cases = [
+    ["条数不足", (o, it, arr) => arr.splice(1, 1)],
+    ["id 未回填", (o) => delete o.id],
+    ["name 改了一个字", (o) => (o.name = o.name + "区")],
+    ["描述过短", (o) => (o.desc = "很短")],
+    [
+      "描述含禁写词",
+      (o) => (o.desc = o.desc.slice(0, 50) + "门票60元开放时间8点"),
+    ],
+  ];
+  for (const [label, mutate] of cases) {
+    const f = `${TMP}/bad-desc.json`;
+    const items = descBatch.items.map((it) => ({
+      id: it.id,
+      name: it.name,
+      desc: goodDesc(it.name),
+    }));
+    if (label === "条数不足") items.splice(1, 1);
+    else mutate(items[0]);
+    fs.writeFileSync(
+      f,
+      JSON.stringify(
+        { task: descBatch.task, batch: 1, count: items.length, items },
+        null,
+        2,
+      ),
+    );
+    const before = Object.keys(
+      JSON.parse(
+        fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
+      ),
+    ).length;
+    const rr = run("scripts/merge-out-desc.mjs", f);
+    const after = Object.keys(
+      JSON.parse(
+        fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
+      ),
+    ).length;
+    check(
+      `描述·拒绝「${label}」`,
+      rr.code === 1 && after === before,
+      `exit=${rr.code} 落键 ${before}→${after}`,
+    );
+  }
+
+  const pcases = [
+    ["id 未回填", (o) => delete o.id],
+    ["name 改了一个字", (o) => (o.name = o.name + "景区")],
+    ["票价为负", (o) => (o.profile.ticketPeak = -5)],
+    ["时长越界 40h", (o) => (o.profile.suggestedHours = 40)],
+    ["车程越界 9999", (o) => (o.profile.driveFromCityMin = 9999)],
+    ["闭集外词", (o) => (o.profile.accessibility = ["海底隧道"])],
+    ["必填为空未标 low", (o) => (o.profile.ticketPeak = null)],
+  ];
+  for (const [label, mutate] of pcases) {
+    const f = `${TMP}/bad-prof.json`;
+    const items = profBatch.items.map((it) => ({
+      id: it.id,
+      name: it.name,
+      profile: {
+        ticketPeak: 60,
+        ticketOff: 40,
+        openHours: "08:30-17:00",
+        suggestedHours: 3,
+        driveFromCityMin: 45,
+        accessibility: ["无障碍通道"],
+        needReservation: false,
+      },
+      confidence: "high",
+    }));
+    mutate(items[0]);
+    fs.writeFileSync(
+      f,
+      JSON.stringify(
+        { task: profBatch.task, batch: 1, count: items.length, items },
+        null,
+        2,
+      ),
+    );
+    const before = Object.keys(
+      JSON.parse(
+        fs.readFileSync("docs/outsource/out-profile-merged.json", "utf8"),
+      ),
+    ).length;
+    const rr = run("scripts/merge-out-profile.mjs", f);
+    const after = Object.keys(
+      JSON.parse(
+        fs.readFileSync("docs/outsource/out-profile-merged.json", "utf8"),
+      ),
+    ).length;
+    check(
+      `档案·拒绝「${label}」`,
+      rr.code === 1 && after === before,
+      `exit=${rr.code} 落键 ${before}→${after}`,
+    );
+  }
+} finally {
+  restore();
+}
+
+const failed = results.filter((r) => !r.pass);
+console.log(
+  `\n${results.length - failed.length}/${results.length} 通过` +
+    (failed.length ? `\n失败项：${failed.map((f) => f.name).join("、")}` : ""),
+);
+process.exit(failed.length ? 1 : 0);

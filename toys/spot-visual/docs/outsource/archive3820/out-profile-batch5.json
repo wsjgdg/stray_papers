@@ -1,0 +1,2751 @@
+{
+  "task": "景点档案结构化字段-批5",
+  "batch": 5,
+  "count": 100,
+  "authorship": "批5：Z.ai-GLM",
+  "items": [
+    {
+      "id": "scenic-温州-1010",
+      "name": "温州乐园",
+      "profile": {
+        "ticketPeak": 130,
+        "ticketOff": null,
+        "ticketNote": "夜场票、与温州极地海洋世界等联票及部分设备另收费",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:00停止入园）；节假日及暑期有夜场延长，以园区当日公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "儿童游乐区",
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-温州-1011",
+      "name": "森林氧吧小镇",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（小镇街区），具体以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1012",
+      "name": "南麂列岛景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "进岛门票与往返船票分别计费，以鳌江码头及景区公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放；进出岛船班班次与时间以鳌江码头当日公告为准",
+        "suggestedHours": 8,
+        "bestMonths": "5-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "平阳站",
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1013",
+      "name": "氡泉景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "峡谷区域票价与温泉泡池按各度假村档位分别收费，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "峡谷区域约08:00-17:00（16:30停止入园）；温泉泡池营业时间以各度假村公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "11月-次年2月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1014",
+      "name": "南雁荡山",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；全年开放，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "平阳站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1015",
+      "name": "百丈漈景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "线上渠道成人票约55-65元不等，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；全年开放，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-9月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1016",
+      "name": "江心屿景区",
+      "profile": {
+        "ticketPeak": 25,
+        "ticketOff": null,
+        "ticketNote": "25元含往返轮渡及保险；江心西园及园内部分场馆另收费",
+        "freePolicy": "120公分以下儿童、70周岁以上老人凭证免票；120-140公分儿童、60-69周岁老人凭证半价",
+        "openHours": "08:00-23:00（登岛轮渡末班以码头公告为准）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "全天开放；登岛须乘轮渡，驾车可达江心码头。出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-温州-1018",
+      "name": "碗窑景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "苍南站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1019",
+      "name": "廊桥文化园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放，园内部分展馆与演艺另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（古桥与溪滩区域）；展馆开放时间以现场公示为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-温州-1020",
+      "name": "泰顺廊桥文化园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "免费开放，园内部分展馆与演艺另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（古桥与溪滩区域）；展馆开放时间以现场公示为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-温州-1021",
+      "name": "温州南塘文化旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放；街区商铺营业时间以现场为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-温州-1022",
+      "name": "南雁荡山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；全年开放，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "平阳站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1023",
+      "name": "寨寮溪风景名胜区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "瑞安站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1024",
+      "name": "寨寮溪风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "瑞安站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1025",
+      "name": "乌岩岭景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；保护区开放范围有限，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 140,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1026",
+      "name": "铜铃山国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1027",
+      "name": "铜铃山镇",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "镇区免费开放，周边铜铃山森林公园等景区门票另计",
+        "freePolicy": null,
+        "openHours": "全天开放（镇区）；周边景区开放时间以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-温州-1028",
+      "name": "洞头景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "海岛城区开放式游览，望海楼、仙叠岩等收费景点分别售票，以各点公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（海岛城区）；望海楼、仙叠岩等收费景点约08:00-17:00，以各点公示为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1029",
+      "name": "百丈漈风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "线上渠道成人票约55-65元不等，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；全年开放，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-9月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1030",
+      "name": "浙江省玉苍山森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "苍南站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1031",
+      "name": "中雁荡山旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "玉甑峰等片区分别售票，索道另收费，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；索道运营时间以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-5月、9-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "乐清站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "索道/扶梯",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1032",
+      "name": "永嘉县楠溪江风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "大景区分景点售票（如石桅岩成人票约45-50元），多处古村与滩林免费开放，以各点公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（沿江滩林与古村）；石桅岩等收费景点约08:00-16:30，以各点公示为准",
+        "suggestedHours": 6,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "永嘉站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1033",
+      "name": "温州瓯海泽雅景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（纸山古村与溪谷区域）；七瀑涧等收费景点约08:00-16:30，以各点公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1034",
+      "name": "龙麒源景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-温州-1035",
+      "name": "洞头半屏山-仙叠岩（同心小镇）",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "半屏山、仙叠岩等分点售票，价格以各点公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（海岛岸线）；半屏山、仙叠岩等收费景点约08:00-17:00，以各点公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "温州龙湾国际机场",
+        "nearestRail": "温州南站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1036",
+      "name": "浮盖山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "江山站",
+        "driveFromCityMin": 100,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1037",
+      "name": "龙游石窟",
+      "profile": {
+        "ticketPeak": 85,
+        "ticketOff": null,
+        "ticketNote": "进入景区免费，参观石窟收费；「全球免费游衢州」政策下多数时段可免票参观（法定节假日与双休日除外），以景区公示为准",
+        "freePolicy": "1.2米以下儿童免票；1.2-1.5米儿童、学生、70周岁以上老人凭证享优惠票",
+        "openHours": "08:00-16:30（16:00停止售票）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "龙游站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-衢州-1039",
+      "name": "清漾景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（村落）；展馆约09:00-16:30，以现场公示为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "江山站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1040",
+      "name": "衢州七彩长虹景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村休闲带开放式游览，个别节点场馆另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（乡村片区）；节点场馆以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "开化站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-衢州-1041",
+      "name": "衢州开化古田山风景旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "开化站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1042",
+      "name": "廿八都景区",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "「全球免费游衢州」政策下多数时段免大门票（法定节假日与双休日除外），以景区公示为准",
+        "freePolicy": "70周岁以上老人、6周岁（含）以下或1.2米（含）以下儿童免票",
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "江山站",
+        "driveFromCityMin": 95,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-衢州-1043",
+      "name": "民居苑景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "龙游站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1044",
+      "name": "龙天红木小镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入园）；以园区公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "龙游站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1045",
+      "name": "梅树底景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（山间村落）；以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "常山站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1046",
+      "name": "古田山风景旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "开化站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1048",
+      "name": "七彩长虹景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村休闲带开放式游览，个别节点场馆另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（乡村片区）；节点场馆以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "开化站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-衢州-1049",
+      "name": "江郎山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "门票（含景交车）线上渠道约105元，另有阶段性免票活动，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "江山站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1050",
+      "name": "三衢石林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "常山站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1051",
+      "name": "桃源七里景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "片区开放式游览，农家乐与体验项目另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（乡村片区）；以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "衢州站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-衢州-1052",
+      "name": "龙游民居苑",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "龙游站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1053",
+      "name": "仙霞关景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "江山站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1054",
+      "name": "盛世莲花休闲农业观光园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "园区开放式游览，亲子采摘与农事课堂等项目另收费",
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；温室大棚区域以园区公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "衢州站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-衢州-1056",
+      "name": "龙游石窟旅游区",
+      "profile": {
+        "ticketPeak": 85,
+        "ticketOff": null,
+        "ticketNote": "进入景区免费，参观石窟收费；「全球免费游衢州」政策下多数时段可免票参观（法定节假日与双休日除外），以景区公示为准",
+        "freePolicy": "1.2米以下儿童免票；1.2-1.5米儿童、学生、70周岁以上老人凭证享优惠票",
+        "openHours": "08:00-16:30（16:00停止售票）",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "龙游站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-衢州-1057",
+      "name": "衢州江南儒城·水亭门景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放；儒学馆等场馆约09:00-17:00（16:30停止入场），以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "衢州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-衢州-1058",
+      "name": "药王山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "衢州站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1059",
+      "name": "天脊龙门景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "衢州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-衢州-1060",
+      "name": "三衢石林风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "衢州机场",
+        "nearestRail": "常山站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "衢州常年推行「全球免费游衢州」政策（多数时段免大门票，法定节假日与双休日除外，景交车等另计）；出行前请核实最新预约、限流与优惠政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1061",
+      "name": "诸暨市珍珠小镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "园区免费开放；开蚌取珠等体验项目另收费",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（展馆16:30停止入场）；街区全天开放",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "诸暨站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1062",
+      "name": "新昌大佛寺",
+      "profile": {
+        "ticketPeak": 100,
+        "ticketOff": null,
+        "ticketNote": "线上渠道常有优惠票，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "嵊州新昌站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "寄存柜",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1063",
+      "name": "五泄风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "历史上成人票80元（含往返班船约10元），现执行票价以景区公示为准",
+        "freePolicy": null,
+        "openHours": "夏令（5月1日-9月30日）约07:30-17:00，冬令（10月1日-次年4月30日）约08:00-16:00；停止入园时间以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-9月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "诸暨站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1064",
+      "name": "大佛寺文化旅游区",
+      "profile": {
+        "ticketPeak": 100,
+        "ticketOff": null,
+        "ticketNote": "线上渠道常有优惠票，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "嵊州新昌站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "寄存柜",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1065",
+      "name": "达利•丝绸世界",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入场）；以园区公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴东站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1066",
+      "name": "十九峰景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "嵊州新昌站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1067",
+      "name": "大禹陵景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；公祭大典等重大活动期间另行安排，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1068",
+      "name": "诸暨西施故里旅游管理区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "滨水街区开放式游览，西施殿等收费景点单独售票，以各点公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（滨水街区）；西施殿等收费景点约08:00-17:00，以各点公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-8月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "诸暨站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1069",
+      "name": "杭州湾海上花田景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；花季夜间活动以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴东站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1070",
+      "name": "桃花源生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "3-5月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴东站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1072",
+      "name": "绍兴东湖景区",
+      "profile": {
+        "ticketPeak": 50,
+        "ticketOff": null,
+        "ticketNote": "乌篷船游湖另行收费",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；乌篷船运营时间以码头公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 12,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1073",
+      "name": "安昌古镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古镇街区免费；师爷馆等收费展馆单独售票",
+        "freePolicy": null,
+        "openHours": "全天开放（古镇街区）；师爷馆等展馆约08:30-16:30，以现场公示为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年；腊月（12月-次年1月）风情节尤佳",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1074",
+      "name": "绍兴市华东国际珠宝城",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（市场营业时间），以市场公示为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "诸暨站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1075",
+      "name": "绍兴县大香林乡村休闲旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；桂花季延长以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "9-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1076",
+      "name": "绍兴乔波冰雪世界旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "无大门票；按滑雪时段、装备与教练费用另计，以场馆公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-18:00；滑雪场次与夜场安排以场馆当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "医疗服务点",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1077",
+      "name": "兰亭景区",
+      "profile": {
+        "ticketPeak": 70,
+        "ticketOff": null,
+        "ticketNote": "线上购票常有优惠；书法体验项目另收费",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1078",
+      "name": "绍兴东方山水乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "按场馆/项目组合售票，价格以园区公示为准",
+        "freePolicy": null,
+        "openHours": "约09:30-18:00；夜场与节假日延长以园区公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "儿童游乐区",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1079",
+      "name": "大香林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；桂花季延长以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "9-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1080",
+      "name": "丝绸世界旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入场）；以园区公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "嵊州新昌站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1081",
+      "name": "西施故里旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "滨水街区开放式游览，西施殿等收费景点单独售票，以各点公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（滨水街区）；西施殿等收费景点约08:00-17:00，以各点公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-8月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "诸暨站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1082",
+      "name": "中华孝德园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "园区免费开放，展馆开放时间以现场公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（园区）；展馆约09:00-16:30，以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴东站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "母婴室",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1083",
+      "name": "米果果小镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；采摘季活动以园区公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-10月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "诸暨站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1084",
+      "name": "覆卮山景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "山体开放式游览，个别点位收费情况以现场公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（山体与古道）；以现场公示为准",
+        "suggestedHours": 4,
+        "bestMonths": "3-4月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴东站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-绍兴-1085",
+      "name": "柯岩风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "柯岩+鉴湖+鲁镇联票制，官方线上渠道约90-100元（常含画舫船），以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；鲁镇片区20:30后停止入场，以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-绍兴-1086",
+      "name": "绍兴兰亭景区",
+      "profile": {
+        "ticketPeak": 70,
+        "ticketOff": null,
+        "ticketNote": "线上购票常有优惠；书法体验项目另收费",
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "杭州萧山国际机场",
+        "nearestRail": "绍兴北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-舟山-1087",
+      "name": "桃花岛旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "分景点售票：射雕影视城50元、桃花峪45元、安期峰45元、桃花寨35元，另有联票，以各点公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放；进出岛船班受天气影响，班次以沈家门墩头等码头公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "5-10月",
+        "nearestAirport": "舟山普陀山机场",
+        "nearestRail": null,
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-舟山-1088",
+      "name": "舟山桃花岛风景旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "分景点售票：射雕影视城50元、桃花峪45元、安期峰45元、桃花寨35元，另有联票，以各点公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放；进出岛船班受天气影响，班次以沈家门墩头等码头公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "5-10月",
+        "nearestAirport": "舟山普陀山机场",
+        "nearestRail": null,
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-舟山-1089",
+      "name": "朱家尖旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "分景点售票：南沙成人票70元、东沙35元，白山、乌石塘、大青山等另计，以各点公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（环岛公路）；南沙等收费景点约08:00-17:30，以各点公示为准",
+        "suggestedHours": 6,
+        "bestMonths": "5-10月",
+        "nearestAirport": "舟山普陀山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-舟山-1090",
+      "name": "沈家门渔港小镇景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放；夜排档营业至深夜",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "舟山普陀山机场",
+        "nearestRail": null,
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-舟山-1091",
+      "name": "嵊泗东海五渔村",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "渔村开放式游览；前往嵊泗需乘船，船票另计",
+        "freePolicy": null,
+        "openHours": "全天开放（渔村片区）；以现场公示为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "舟山普陀山机场",
+        "nearestRail": null,
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1093",
+      "name": "永安溪休闲绿道",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放；驿站与租赁点营业时间以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "仙居站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1094",
+      "name": "后岸乡居旅游",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村开放式游览，农家乐与骑行等项目另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（乡村）；农家乐与民宿接待以现场为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "天台站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1095",
+      "name": "方山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-5月、9-11月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "温岭站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1096",
+      "name": "灵湖景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放；夜灯时段以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "临海站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "观光车/电瓶车",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1098",
+      "name": "蛇蟠岛景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "海盗村、野人洞等分点售票，线上渠道单点约30元起，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "三门县站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1099",
+      "name": "九峰景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "城市公园免费开放，园内游乐设施另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（城市公园）；园内游乐设施营业时间以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "台州站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "母婴室",
+          "儿童游乐区",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1100",
+      "name": "长屿硐天旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "观夕硐、水云硐等分硐售票，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；岩洞音乐厅演出场次以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "全年",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "温岭站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1101",
+      "name": "漩门湾湿地景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；观鸟季栈道开放以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "温岭站",
+        "driveFromCityMin": 65,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1102",
+      "name": "蛇蟠岛",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "海盗村、野人洞等分点售票，线上渠道单点约30元起，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "三门县站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1103",
+      "name": "临海市江南长城景区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；夜游开放情况以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "临海站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "医疗服务点",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1104",
+      "name": "大鹿岛",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "上岛门票与往返船票分别计费，以码头及景区公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（需乘船上岛）；船班受天气影响，以玉环坎门等码头公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "温岭站",
+        "driveFromCityMin": null,
+        "accessibility": [
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1105",
+      "name": "天台后岸乡居旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "乡村开放式游览，农家乐与骑行等项目另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（乡村）；农家乐与民宿接待以现场为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "天台站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1106",
+      "name": "大鹿岛景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "上岛门票与往返船票分别计费，以码头及景区公示为准",
+        "freePolicy": null,
+        "openHours": "全天开放（需乘船上岛）；船班受天气影响，以玉环坎门等码头公告为准",
+        "suggestedHours": 5,
+        "bestMonths": "5-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "温岭站",
+        "driveFromCityMin": null,
+        "accessibility": [
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海岛行程受天气与船班影响较大，出行前请核实船班时刻与最新预约、限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1107",
+      "name": "江南长城旅游区",
+      "profile": {
+        "ticketPeak": 60,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:00-17:00（16:30停止入园）；夜游开放情况以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "3-5月、9-11月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "临海站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "医疗服务点",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1108",
+      "name": "永安溪休闲绿道景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放；驿站与租赁点营业时间以现场公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "仙居站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1110",
+      "name": "南屏乡旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "古道开放式游览，沿线村落歇脚点消费另计",
+        "freePolicy": null,
+        "openHours": "全天开放（古道山径）；沿线村落歇脚点以现场为准",
+        "suggestedHours": 3,
+        "bestMonths": "10-11月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "天台站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-台州-1111",
+      "name": "漩门湾观光农业园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约08:30-17:00（16:30停止入园）；农事体验项目以园区公示为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "温岭站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场",
+          "儿童游乐区",
+          "观光车/电瓶车",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1112",
+      "name": "仙居氧吧小镇景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "全天开放（小镇片区）；民宿与茶园接待以现场为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "仙居站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1113",
+      "name": "长屿硐天",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "观夕硐、水云硐等分硐售票，以景区公示为准",
+        "freePolicy": null,
+        "openHours": "约08:00-16:30（16:00停止入园）；岩洞音乐会场次以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "全年",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "温岭站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "观光车/电瓶车",
+          "停车场",
+          "医疗服务点",
+          "寄存柜",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1114",
+      "name": "台州海洋世界",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "按场馆门票售票，价格以场馆公示为准",
+        "freePolicy": null,
+        "openHours": "约09:00-17:00（16:30停止入馆）；表演场次以场馆当日公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "台州站",
+        "driveFromCityMin": 10,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "医疗服务点",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-台州-1115",
+      "name": "柔川景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "山谷村落开放式游览，农家乐与山货消费另计",
+        "freePolicy": null,
+        "openHours": "全天开放（山谷村落）；夏季戏水注意安全",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月",
+        "nearestAirport": "台州路桥机场",
+        "nearestRail": "台州站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "适老步道",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区天气多变、部分路段陡峭，出行前请核实最新预约、限流与天气信息。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-金华-1116",
+      "name": "东阳中国木雕城",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": null,
+        "freePolicy": null,
+        "openHours": "约09:00-17:30（市场营业时间），以市场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "义乌机场",
+        "nearestRail": "义乌站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "寄存柜",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-金华-1117",
+      "name": "东阳花园村景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": null,
+        "ticketNote": "村庄开放式游览，部分场馆另收费",
+        "freePolicy": null,
+        "openHours": "全天开放（村庄）；展馆开放时间以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年",
+        "nearestAirport": "义乌机场",
+        "nearestRail": "义乌站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "无障碍通道",
+          "适老步道",
+          "观光车/电瓶车",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "出行前请核实最新预约与限流政策。"
+      },
+      "confidence": "high"
+    }
+  ]
+}

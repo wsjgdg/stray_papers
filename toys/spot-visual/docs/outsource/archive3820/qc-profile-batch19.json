@@ -1,0 +1,28 @@
+{
+  "batch": 19,
+  "count": 100,
+  "low": 82,
+  "missingRequired": 82,
+  "sample": [
+    "scenic-崇左-2596",
+    "scenic-玉林-2570",
+    "scenic-贵港-2529",
+    "scenic-来宾-2554",
+    "scenic-玉林-2574",
+    "scenic-贵港-2537",
+    "scenic-来宾-2559",
+    "scenic-贺州-2543",
+    "scenic-贵港-2539",
+    "scenic-崇左-2599",
+    "scenic-北海-2518",
+    "scenic-崇左-2597",
+    "scenic-崇左-2585",
+    "scenic-贺州-2545",
+    "scenic-梧州-2604",
+    "scenic-崇左-2583",
+    "scenic-梧州-2605",
+    "scenic-来宾-2560",
+    "scenic-贺州-2548",
+    "scenic-梧州-2606"
+  ]
+}

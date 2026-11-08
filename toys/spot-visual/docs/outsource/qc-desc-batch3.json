@@ -1,0 +1,28 @@
+{
+  "batch": 3,
+  "count": 300,
+  "low": 32,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-哈尔滨-667",
+    "scenic-白城-642",
+    "scenic-牡丹江-699",
+    "scenic-湖州-853",
+    "scenic-上海-823",
+    "scenic-哈尔滨-681",
+    "scenic-齐齐哈尔-732",
+    "scenic-湖州-849",
+    "scenic-齐齐哈尔-738",
+    "scenic-佳木斯-748",
+    "scenic-湖州-883",
+    "scenic-延边朝鲜族自治州-651",
+    "scenic-嘉兴-836",
+    "scenic-佳木斯-746",
+    "scenic-上海-784",
+    "scenic-哈尔滨-686",
+    "scenic-松原-640",
+    "scenic-长春-592",
+    "scenic-嘉兴-837",
+    "scenic-通化-622"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "batch": 33,
+  "count": 100,
+  "low": 70,
+  "missingRequired": 57,
+  "sample": [
+    "scenic-南京-4059",
+    "scenic-南通-4073",
+    "scenic-哈密-4018",
+    "scenic-南通-4074",
+    "scenic-阿克苏地区-4040",
+    "scenic-常州-4089",
+    "scenic-塔城地区-4016",
+    "scenic-哈密-4017",
+    "scenic-喀什地区-4006",
+    "scenic-南通-4068",
+    "scenic-常州-4096",
+    "scenic-和田地区-4050",
+    "scenic-阿克苏地区-4029",
+    "scenic-常州-4090",
+    "scenic-哈密-4022",
+    "scenic-徐州-4105",
+    "scenic-喀什地区-4011",
+    "scenic-南京-4051",
+    "scenic-阿克苏地区-4025",
+    "scenic-阿克苏地区-4038"
+  ]
+}

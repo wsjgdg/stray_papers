@@ -1,0 +1,1008 @@
+{
+  "task": "景点档案结构化字段-批7（4A）",
+  "batch": 7,
+  "count": 100,
+  "rules": "见 TASK-SPOT-PROFILE.md",
+  "items": [
+    {
+      "id": "scenic-晋城-389",
+      "name": "司徒小镇景区",
+      "province": "山西",
+      "city": "晋城",
+      "district": "城区",
+      "level": "4A",
+      "address": "山西晋城市城区司徒小镇景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-晋城-390",
+      "name": "海会书院",
+      "province": "山西",
+      "city": "晋城",
+      "district": "阳城县",
+      "level": "4A",
+      "address": "山西晋城市阳城县海会书院",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-朔州-316",
+      "name": "应县木塔",
+      "province": "山西",
+      "city": "朔州",
+      "district": "应县",
+      "level": "4A",
+      "address": "山西朔州市应县木塔",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-朔州-317",
+      "name": "金沙滩生态旅游区",
+      "province": "山西",
+      "city": "朔州",
+      "district": "怀仁市",
+      "level": "4A",
+      "address": "山西朔州市怀仁市金沙滩生态旅游区",
+      "category": "海滨度假"
+    },
+    {
+      "id": "scenic-朔州-318",
+      "name": "右玉生态旅游区",
+      "province": "山西",
+      "city": "朔州",
+      "district": "右玉县",
+      "level": "4A",
+      "address": "山西朔州市右玉县右玉生态旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-朔州-319",
+      "name": "崇福寺景区",
+      "province": "山西",
+      "city": "朔州",
+      "district": "朔城区",
+      "level": "4A",
+      "address": "山西朔州市朔城区崇福寺景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-杭州-886",
+      "name": "灵栖洞景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "建德市",
+      "level": "4A",
+      "address": "浙江杭州市建德市浙江省杭州市航头镇石屏村灵栖洞风景区浙江省杭州市建德市灵栖洞景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-887",
+      "name": "杭州湘湖跨湖桥景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "萧山区",
+      "level": "4A",
+      "address": "浙江杭州市萧山区浙江省杭州市闻堰街道湘湖路132号杭州湘湖跨湖桥景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-888",
+      "name": "超山风景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "临平区",
+      "level": "4A",
+      "address": "浙江杭州市临平区浙江省杭州市余杭区塘栖镇超山村超山风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-889",
+      "name": "杭州山沟沟旅游景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "余杭区",
+      "level": "4A",
+      "address": "浙江杭州市余杭区浙江省杭州市鸬鸟镇山沟沟村下余65号杭州山沟沟旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-890",
+      "name": "垂云通天河景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "桐庐县",
+      "level": "4A",
+      "address": "浙江杭州市桐庐县浙江省杭州市瑶琳镇东琳村浙江省桐庐垂云通天河景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-891",
+      "name": "垂云通天河",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "桐庐县",
+      "level": "4A",
+      "address": "浙江杭州市桐庐县浙江省杭州市瑶琳镇东琳村垂云通天河",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-892",
+      "name": "杭州双溪漂流景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "余杭区",
+      "level": "4A",
+      "address": "浙江杭州市余杭区浙江省杭州市径山镇双溪竹海路7号杭州双溪漂流景区",
+      "category": "轻运动"
+    },
+    {
+      "id": "scenic-杭州-893",
+      "name": "杭州长乔极地海洋公园",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "萧山区",
+      "level": "4A",
+      "address": "浙江杭州市萧山区浙江省杭州市杭州长乔极地海洋公园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-894",
+      "name": "千岛湖石林景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "淳安县",
+      "level": "4A",
+      "address": "浙江杭州市淳安县浙江省杭州市石林镇西岭村千岛湖石林景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-895",
+      "name": "京杭大运河·杭州景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "上城区",
+      "level": "4A",
+      "address": "浙江杭州市上城区浙江省杭州市市辖区京杭大运河·杭州景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-897",
+      "name": "杭州东方文化园",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "萧山区",
+      "level": "4A",
+      "address": "浙江杭州市萧山区浙江省杭州市义桥镇湘东（建新）村杭州东方文化园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-898",
+      "name": "运河·塘栖古镇景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "临平区",
+      "level": "4A",
+      "address": "浙江杭州市临平区浙江省杭州市余杭区塘栖镇运河·塘栖古镇景区",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-杭州-899",
+      "name": "大慈岩景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "建德市",
+      "level": "4A",
+      "address": "浙江杭州市建德市浙江省杭州市大慈岩村大慈岩风景区浙江省杭州市建德市大慈岩景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-杭州-900",
+      "name": "下姜村景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "淳安县",
+      "level": "4A",
+      "address": "浙江杭州市淳安县浙江省杭州市枫树岭镇下姜村下姜村景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-杭州-901",
+      "name": "富春桃源景区",
+      "province": "浙江",
+      "city": "杭州",
+      "district": "富阳区",
+      "level": "4A",
+      "address": "浙江杭州市富阳区浙江省杭州市胥口镇上练村浙江省富春桃源景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-松原-640",
+      "name": "查干湖旅游度假区",
+      "province": "吉林",
+      "city": "松原",
+      "district": "前郭尔罗斯蒙古族自治县",
+      "level": "4A",
+      "address": "吉林松原市前郭尔罗斯蒙古族自治县吉林松原市前郭县查干湖旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-松原-641",
+      "name": "松原市规划展览馆",
+      "province": "吉林",
+      "city": "松原",
+      "district": "宁江区",
+      "level": "4A",
+      "address": "吉林松原市宁江区松原市规划展览馆",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-沧州-238",
+      "name": "吴桥杂技大世界",
+      "province": "河北",
+      "city": "沧州",
+      "district": "吴桥县",
+      "level": "4A",
+      "address": "河北沧州市吴桥县吴桥杂技大世界",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-沧州-239",
+      "name": "东光铁佛寺",
+      "province": "河北",
+      "city": "沧州",
+      "district": "东光县",
+      "level": "4A",
+      "address": "河北沧州市东光县东光铁佛寺",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-沧州-240",
+      "name": "河间府署",
+      "province": "河北",
+      "city": "沧州",
+      "district": "河间市",
+      "level": "4A",
+      "address": "河北沧州市河间市河间府署",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-沧州-241",
+      "name": "南大港湿地",
+      "province": "河北",
+      "city": "沧州",
+      "district": "黄骅市",
+      "level": "4A",
+      "address": "河北沧州市黄骅市南大港湿地",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-温州-1009",
+      "name": "楠溪江风景名胜区",
+      "province": "浙江",
+      "city": "温州",
+      "district": "永嘉县",
+      "level": "4A",
+      "address": "浙江温州市永嘉县浙江省温州市县前路94号楠溪江风景名胜区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-849",
+      "name": "湖州市德清莫干山风景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "德清县",
+      "level": "4A",
+      "address": "浙江湖州市德清县浙江省湖州市莫干山景区97号湖州市德清莫干山风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-850",
+      "name": "江南天池景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市天荒坪镇天荒坪电站上库区浙江省湖州市安吉县江南天池景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-851",
+      "name": "下渚湖湿地风景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "德清县",
+      "level": "4A",
+      "address": "浙江湖州市德清县浙江省湖州市下渚湖街道下仁公路181号下渚湖湿地风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-852",
+      "name": "仙山湖景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市泗安镇仙山村仙山湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-853",
+      "name": "中国竹子博览园",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市递铺镇灵峰街道竹博园1号浙江省湖州市安吉县中国竹子博览园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-854",
+      "name": "杭州Hello Kitty乐园",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市昌硕街道天使大道1号浙江省湖州市安吉县杭州Hello Kitty乐园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-湖州-855",
+      "name": "金钉子远古世界景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市煤山镇槐坎葆青浙江省湖州市长兴县金钉子远古世界景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-856",
+      "name": "浪漫山川景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市山川乡浙江省浪漫山川景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-857",
+      "name": "安吉江南天池景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市天荒坪镇天荒坪电站上库区安吉江南天池景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-858",
+      "name": "中国扬子鳄村景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市林城镇新星村浙江省中国扬子鳄村景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-859",
+      "name": "庾村景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "德清县",
+      "level": "4A",
+      "address": "浙江湖州市德清县浙江省湖州市庾村集镇育才路1号庾村景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-湖州-860",
+      "name": "荻港景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "南浔区",
+      "level": "4A",
+      "address": "浙江湖州市南浔区浙江省湖州市和孚镇荻港村荻港景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-湖州-861",
+      "name": "安吉浪漫山川景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市山川乡安吉浪漫山川景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-862",
+      "name": "湖州原乡小镇景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "吴兴区",
+      "level": "4A",
+      "address": "浙江湖州市吴兴区浙江省湖州市肇村村原乡小镇景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-864",
+      "name": "莫干山风景名胜区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "德清县",
+      "level": "4A",
+      "address": "浙江湖州市德清县浙江省湖州市莫干山风景区97号莫干山风景名胜区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-865",
+      "name": "余村景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市天荒坪镇余村村浙江省湖州市安吉县余村景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-866",
+      "name": "黄金湖岸景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "吴兴区",
+      "level": "4A",
+      "address": "浙江湖州市吴兴区浙江省湖州市滨湖街道黄金湖岸(雷迪森酒店后面太湖大堤上)浙江省湖州市吴兴区黄金湖岸景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-867",
+      "name": "湖州市菰城景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "吴兴区",
+      "level": "4A",
+      "address": "浙江湖州市吴兴区浙江省湖州市龙王山路仁皇山南大门游客中心湖州市菰城景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-868",
+      "name": "中国扬子鳄村",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市泗安镇尹家边村管埭自然村中国扬子鳄村",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-湖州-869",
+      "name": "地理信息小镇景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "德清县",
+      "level": "4A",
+      "address": "浙江湖州市德清县浙江省湖州市塔山街901号地理信息小镇景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-湖州-870",
+      "name": "安吉竹子博览园",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市城南安吉竹子博览园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-871",
+      "name": "湖州丝绸小镇（西山漾景区）",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "吴兴区",
+      "level": "4A",
+      "address": "浙江湖州市吴兴区浙江省湖州市八里店镇西山漾浙江省湖州市吴兴区湖州丝绸小镇景区（西山漾景区）",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-872",
+      "name": "湖州太湖旅游度假区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "吴兴区",
+      "level": "4A",
+      "address": "浙江湖州市吴兴区浙江省湖州市湖州太湖旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-873",
+      "name": "山水灵峰·田园嘉乐比乐园",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市灵峰街道浙江省山水灵峰.田园嘉乐比乐园景区",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-湖州-874",
+      "name": "浙北大峡谷景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市报福镇石岭村浙北大峡谷景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-875",
+      "name": "中南百草原景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "安吉县",
+      "level": "4A",
+      "address": "浙江湖州市安吉县浙江省湖州市递铺镇三官村中南百草原景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-876",
+      "name": "水口茶文化旅游景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市水口乡水口茶文化旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-湖州-878",
+      "name": "太湖演艺小镇（太湖图影生态湿地文化园）",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市太湖图影旅游度假区图影大道与横山路交叉口浙江省湖州市长兴县太湖演艺小镇（太湖图影生态湿地文化园）景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-879",
+      "name": "德清下渚湖湿地风景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "德清县",
+      "level": "4A",
+      "address": "浙江湖州市德清县浙江省湖州市三合乡二都集镇德清下渚湖湿地风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-880",
+      "name": "仙山湖国家湿地公园",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市泗安镇泗安村仙山湖国家湿地公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-881",
+      "name": "水口茶文化景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市水口乡水口茶文化景区浙江省湖州市长兴县水口乡水口茶文化景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-882",
+      "name": "长兴金钉子远古世界景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市槐坎葆青山麓长兴金钉子远古世界景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-湖州-883",
+      "name": "新四军苏浙军区旧址群景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "长兴县",
+      "level": "4A",
+      "address": "浙江湖州市长兴县浙江省湖州市煤山镇新槐村温塘自然村浙江省湖州市长兴县新四军苏浙军区旧址群景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-884",
+      "name": "菰城景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "吴兴区",
+      "level": "4A",
+      "address": "浙江湖州市吴兴区浙江省湖州市市辖区湖州龙王山路仁皇山风景区（南大门）湖州菰城景区经营管理有限公司",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-湖州-885",
+      "name": "移沿山生态景区",
+      "province": "浙江",
+      "city": "湖州",
+      "district": "吴兴区",
+      "level": "4A",
+      "address": "浙江湖州市吴兴区浙江省湖州市八里店镇移沿山村锡洪漾浙江省湖州市吴兴区移沿山生态景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-牡丹江-692",
+      "name": "牡丹江宁安火山口国家森林公园",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "宁安市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市宁安市黑龙江省林业局火山口森林公园牡丹江宁安火山口国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-牡丹江-693",
+      "name": "渤海上京龙泉府遗址旅游景区",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "宁安市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市宁安市黑龙江省渤海镇牡丹江市宁安渤海上京龙泉府遗址旅游景区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-牡丹江-694",
+      "name": "牡丹江市飞龙潭山庄景区",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "宁安市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市宁安市黑龙江省镜泊湖北门向西5公里虹縛鱼场东侧牡丹江市飞龙潭山庄景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-牡丹江-695",
+      "name": "雪乡旅游区",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "海林市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市海林市黑龙江省大海林林业局雪乡旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-牡丹江-696",
+      "name": "森工牡丹江柴河九寨旅游景区",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "海林市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市海林市黑龙江省柴河林业局森工牡丹江柴河九寨旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-牡丹江-697",
+      "name": "牡丹江东宁要塞遗址",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "东宁市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市东宁市黑龙江省东宁县三岔口镇景东宁市三岔口朝鲜族镇南山村南牡丹江东宁要塞遗址",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-牡丹江-698",
+      "name": "牡丹江横道东北虎林园",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "海林市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市海林市黑龙江省横道河子东北虎林园牡丹江横道东北虎林园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-牡丹江-699",
+      "name": "牡丹江市黑宝熊乐园水上大世界",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "爱民区",
+      "level": "4A",
+      "address": "黑龙江牡丹江市爱民区黑龙江省三道关国家森林公园牡丹江市黑宝熊乐园水上大世界",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-牡丹江-700",
+      "name": "三道关国家森林公园",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "爱民区",
+      "level": "4A",
+      "address": "黑龙江牡丹江市爱民区黑龙江省北安乡三道关村牡丹江市三道关国家森林公园旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-牡丹江-701",
+      "name": "牡丹江市海林亿龙水上风情园",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "海林市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市海林市黑龙江省新安镇牡丹江市海林亿龙水上风情园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-牡丹江-702",
+      "name": "牡丹江市海浪河欢乐谷景区",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "海林市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市海林市黑龙江省新安朝鲜族镇牡丹江市海浪河欢乐谷景区",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-牡丹江-703",
+      "name": "横道河子俄罗斯风情小镇旅游区",
+      "province": "黑龙江",
+      "city": "牡丹江",
+      "district": "海林市",
+      "level": "4A",
+      "address": "黑龙江牡丹江市海林市黑龙江省横道河子镇牡丹江市海林横道河子俄罗斯风情小镇旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-白城-642",
+      "name": "莫莫格国家自然保护区",
+      "province": "吉林",
+      "city": "白城",
+      "district": "镇赉县",
+      "level": "4A",
+      "address": "吉林白城市镇赉县莫莫格国家自然保护区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-白城-643",
+      "name": "向海国家级自然保护区",
+      "province": "吉林",
+      "city": "白城",
+      "district": "通榆县",
+      "level": "4A",
+      "address": "吉林白城市通榆县向海国家级自然保护区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-白城-644",
+      "name": "查干浩特旅游度假区",
+      "province": "吉林",
+      "city": "白城",
+      "district": "洮北区",
+      "level": "4A",
+      "address": "吉林白城市洮北区查干浩特旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-白城-645",
+      "name": "嫩江湾国家湿地公园",
+      "province": "吉林",
+      "city": "白城",
+      "district": "大安市",
+      "level": "4A",
+      "address": "吉林白城市大安市嫩江湾国家湿地公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-白山-631",
+      "name": "露水河国家森林公园",
+      "province": "吉林",
+      "city": "白山",
+      "district": "抚松县",
+      "level": "4A",
+      "address": "吉林白山市抚松县露水河国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-白山-632",
+      "name": "松江河国家森林公园",
+      "province": "吉林",
+      "city": "白山",
+      "district": "抚松县",
+      "level": "4A",
+      "address": "吉林白山市抚松县松江河国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-白山-633",
+      "name": "望天鹅风景区",
+      "province": "吉林",
+      "city": "白山",
+      "district": "长白朝鲜族自治县",
+      "level": "4A",
+      "address": "吉林白山市长白朝鲜族自治县长白县望天鹅风景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-白山-634",
+      "name": "长白山鲁能胜地旅游度假区",
+      "province": "吉林",
+      "city": "白山",
+      "district": "抚松县",
+      "level": "4A",
+      "address": "吉林白山市抚松县长白山鲁能胜地旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-白山-635",
+      "name": "四保临江纪念馆",
+      "province": "吉林",
+      "city": "白山",
+      "district": "临江市",
+      "level": "4A",
+      "address": "吉林白山市临江市四保临江纪念馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-白山-637",
+      "name": "长白山讷殷古城",
+      "province": "吉林",
+      "city": "白山",
+      "district": "抚松县",
+      "level": "4A",
+      "address": "吉林白山市抚松县吉林长白山管委会长白山讷殷古城",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-白山-638",
+      "name": "长白山二道白河名镇",
+      "province": "吉林",
+      "city": "白山",
+      "district": "抚松县",
+      "level": "4A",
+      "address": "吉林白山市抚松县吉林长白山管委会长白山二道白河名镇",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-白山-639",
+      "name": "老黑河遗址景区",
+      "province": "吉林",
+      "city": "白山",
+      "district": "长白朝鲜族自治县",
+      "level": "4A",
+      "address": "吉林白山市长白朝鲜族自治县吉林长白山管委会老黑河遗址景区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-石家庄-101",
+      "name": "驼梁景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县驼梁景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-石家庄-102",
+      "name": "平山县天桂山风景名胜区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县天桂山风景名胜区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-103",
+      "name": "佛光山景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县佛光山景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-104",
+      "name": "平山县黑山大峡谷景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县黑山大峡谷景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-105",
+      "name": "平山县沕沕水景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县沕沕水景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-106",
+      "name": "河北平山藤龙山",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县河北平山藤龙山",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-107",
+      "name": "东方巨龟苑",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县东方巨龟苑",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-石家庄-108",
+      "name": "西苑温泉度假村",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县西苑温泉度假村",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-109",
+      "name": "白鹿温泉景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县白鹿温泉景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-110",
+      "name": "平山县紫云山景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "平山县",
+      "level": "4A",
+      "address": "河北石家庄市平山县紫云山景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-111",
+      "name": "灵寿县水泉溪自然风景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "灵寿县",
+      "level": "4A",
+      "address": "河北石家庄市灵寿县水泉溪自然风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-112",
+      "name": "秋山风景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "灵寿县",
+      "level": "4A",
+      "address": "河北石家庄市灵寿县秋山风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-石家庄-113",
+      "name": "五岳寨风景区",
+      "province": "河北",
+      "city": "石家庄",
+      "district": "灵寿县",
+      "level": "4A",
+      "address": "河北石家庄市灵寿县五岳寨风景区",
+      "category": "城市地标"
+    }
+  ]
+}

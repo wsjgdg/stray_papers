@@ -1,0 +1,28 @@
+{
+  "batch": 10,
+  "count": 100,
+  "low": 78,
+  "missingRequired": 78,
+  "sample": [
+    "scenic-抚州-1635",
+    "scenic-鹰潭-1566",
+    "scenic-宜春-1615",
+    "scenic-赣州-1596",
+    "scenic-上饶-1563",
+    "scenic-南昌-1645",
+    "scenic-赣州-1579",
+    "scenic-上饶-1547",
+    "scenic-景德镇-1568",
+    "scenic-赣州-1585",
+    "scenic-赣州-1580",
+    "scenic-景德镇-1571",
+    "scenic-上饶-1556",
+    "scenic-赣州-1581",
+    "scenic-上饶-1562",
+    "scenic-赣州-1592",
+    "scenic-宜春-1606",
+    "scenic-抚州-1626",
+    "scenic-上饶-1558",
+    "scenic-抚州-1620"
+  ]
+}

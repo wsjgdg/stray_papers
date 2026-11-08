@@ -1,0 +1,1008 @@
+{
+  "task": "景点档案结构化字段-批1（5A）",
+  "batch": 1,
+  "count": 100,
+  "rules": "见 TASK-SPOT-PROFILE.md",
+  "items": [
+    {
+      "id": "poi-成都-2",
+      "name": "东郊记忆",
+      "province": "四川省",
+      "city": "成都",
+      "district": "成华区",
+      "level": "4A",
+      "address": "四川省成都市成华区跳蹬河街道建设南支路1号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-成都-20",
+      "name": "浣花溪公园",
+      "province": "四川省",
+      "city": "成都",
+      "district": "青羊区",
+      "level": "4A",
+      "address": "四川省成都市青羊区草堂街道青华路9号(近杜甫草堂)",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-成都-23",
+      "name": "麓湖水城景区",
+      "province": "四川省",
+      "city": "成都",
+      "district": "双流区",
+      "level": "4A",
+      "address": "四川省成都市双流区天府新区麓湖中路西段988号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-成都-3",
+      "name": "锦里古街",
+      "province": "四川省",
+      "city": "成都",
+      "district": "武侯区",
+      "level": "4A",
+      "address": "四川省成都市武侯区武侯祠大街231号附1号",
+      "category": "古镇村落"
+    },
+    {
+      "id": "poi-成都-39",
+      "name": "天府芙蓉园",
+      "province": "四川省",
+      "city": "成都",
+      "district": "武侯区",
+      "level": "4A",
+      "address": "四川省成都市武侯区簇马路一段69号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-成都-5",
+      "name": "成都大熊猫繁育研究基地",
+      "province": "四川省",
+      "city": "成都",
+      "district": "成华区",
+      "level": "4A",
+      "address": "四川省成都市成华区熊猫大道1375号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-拉萨-7",
+      "name": "罗布林卡",
+      "province": "西藏自治区",
+      "city": "拉萨",
+      "district": "城关区",
+      "level": "4A",
+      "address": "西藏自治区拉萨市城关区罗堆东路",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-拉萨-8",
+      "name": "哲蚌寺",
+      "province": "西藏自治区",
+      "city": "拉萨",
+      "district": "城关区",
+      "level": "4A",
+      "address": "西藏自治区拉萨市城关区北京西路276号(西郊根培乌孜山下)",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-昆明-1",
+      "name": "滇池",
+      "province": "云南省",
+      "city": "昆明",
+      "district": "官渡区",
+      "level": "4A",
+      "address": "云南省昆明市官渡区滇池路1318号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-昆明-10",
+      "name": "大观公园",
+      "province": "云南省",
+      "city": "昆明",
+      "district": "西山区",
+      "level": "4A",
+      "address": "云南省昆明市西山区大观路284号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-昆明-14",
+      "name": "金殿风景名胜区",
+      "province": "云南省",
+      "city": "昆明",
+      "district": "盘龙区",
+      "level": "4A",
+      "address": "云南省昆明市盘龙区穿金路",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-昆明-24",
+      "name": "云南陆军讲武堂历史博物馆",
+      "province": "云南省",
+      "city": "昆明",
+      "district": "五华区",
+      "level": "4A",
+      "address": "云南省昆明市五华区翠湖西路22号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-昆明-34",
+      "name": "云南民族村",
+      "province": "云南省",
+      "city": "昆明",
+      "district": "西山区",
+      "level": "4A",
+      "address": "云南省昆明市西山区滇池路1310号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-昆明-6",
+      "name": "官渡古镇",
+      "province": "云南省",
+      "city": "昆明",
+      "district": "官渡区",
+      "level": "4A",
+      "address": "云南省昆明市官渡区九转花街d1号",
+      "category": "古镇村落"
+    },
+    {
+      "id": "poi-晋中-0",
+      "name": "榆次老城",
+      "province": "山西省",
+      "city": "晋中",
+      "district": "榆次区",
+      "level": "4A",
+      "address": "山西省晋中市榆次区府兴路225号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-晋中-3",
+      "name": "常家庄园",
+      "province": "山西省",
+      "city": "晋中",
+      "district": "榆次区",
+      "level": "4A",
+      "address": "山西省晋中市榆次区914县道",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-晋中-7",
+      "name": "后沟古村景区",
+      "province": "山西省",
+      "city": "晋中",
+      "district": "榆次区",
+      "level": "4A",
+      "address": "山西省晋中市榆次区东赵乡019乡道后沟村(近古村落售票处)",
+      "category": "古镇村落"
+    },
+    {
+      "id": "poi-杭州-1",
+      "name": "雷峰塔景区",
+      "province": "浙江省",
+      "city": "杭州",
+      "district": "西湖区",
+      "level": "4A",
+      "address": "浙江省杭州市西湖区南山路15号",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-杭州-19",
+      "name": "八卦田遗址公园",
+      "province": "浙江省",
+      "city": "杭州",
+      "district": "上城区",
+      "level": "4A",
+      "address": "浙江省杭州市上城区南星街道南星街道虎玉路41号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-杭州-33",
+      "name": "雷峰塔景区雷峰塔",
+      "province": "浙江省",
+      "city": "杭州",
+      "district": "西湖区",
+      "level": "4A",
+      "address": "浙江省杭州市西湖区南山路15号",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-杭州-7",
+      "name": "清河坊历史文化特色街区",
+      "province": "浙江省",
+      "city": "杭州",
+      "district": "上城区",
+      "level": "4A",
+      "address": "浙江省杭州市上城区河坊街180号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-杭州-8",
+      "name": "胡雪岩旧居",
+      "province": "浙江省",
+      "city": "杭州",
+      "district": "上城区",
+      "level": "4A",
+      "address": "浙江省杭州市上城区元宝街18号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-桂林-11",
+      "name": "南溪山公园",
+      "province": "广西壮族自治区",
+      "city": "桂林",
+      "district": "象山区",
+      "level": "4A",
+      "address": "广西壮族自治区桂林市象山区平山街道中山南路2号(近将军路)",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-桂林-22",
+      "name": "桂林飞虎队遗址公园",
+      "province": "广西壮族自治区",
+      "city": "桂林",
+      "district": "临桂区",
+      "level": "4A",
+      "address": "广西壮族自治区桂林市临桂区临桂镇飞虎路5号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-桂林-25",
+      "name": "芦笛景区",
+      "province": "广西壮族自治区",
+      "city": "桂林",
+      "district": "秀峰区",
+      "level": "4A",
+      "address": "广西壮族自治区桂林市秀峰区甲山街道芦笛路1号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-桂林-28",
+      "name": "桂花公社景区",
+      "province": "广西壮族自治区",
+      "city": "桂林",
+      "district": "秀峰区",
+      "level": "4A",
+      "address": "广西壮族自治区桂林市秀峰区阳江路阳江苑西岭御景东北侧150米",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-桂林-43",
+      "name": "刘三姐大观园",
+      "province": "广西壮族自治区",
+      "city": "桂林",
+      "district": "秀峰区",
+      "level": "4A",
+      "address": "广西壮族自治区桂林市秀峰区桃花江路1号(近西山路)",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-武汉-20",
+      "name": "长春观",
+      "province": "湖北省",
+      "city": "武汉",
+      "district": "武昌区",
+      "level": "4A",
+      "address": "湖北省武汉市武昌区武珞路269号(近武昌大东门)",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-武汉-42",
+      "name": "后襄河公园",
+      "province": "湖北省",
+      "city": "武汉",
+      "district": "江汉区",
+      "level": "4A",
+      "address": "湖北省武汉市江汉区后襄河北路(近武汉博物馆)",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-洛阳-3",
+      "name": "白马寺",
+      "province": "河南省",
+      "city": "洛阳",
+      "district": "瀍河回族区",
+      "level": "4A",
+      "address": "河南省洛阳市瀍河回族区白马寺镇洛白路6号",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-洛阳-31",
+      "name": "洛阳凤翔温泉旅游区",
+      "province": "河南省",
+      "city": "洛阳",
+      "district": "洛龙区",
+      "level": "4A",
+      "address": "河南省洛阳市洛龙区龙门街道张沟",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-洛阳-4",
+      "name": "隋唐城遗址植物园",
+      "province": "河南省",
+      "city": "洛阳",
+      "district": "洛龙区",
+      "level": "4A",
+      "address": "河南省洛阳市洛龙区王城大道281号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-洛阳-6",
+      "name": "关林景区",
+      "province": "河南省",
+      "city": "洛阳",
+      "district": "洛龙区",
+      "level": "4A",
+      "address": "河南省洛阳市洛龙区关林镇关林南街2号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-洛阳-7",
+      "name": "隋唐洛阳城国家遗址公园",
+      "province": "河南省",
+      "city": "洛阳",
+      "district": "老城区",
+      "level": "4A",
+      "address": "河南省洛阳市老城区定鼎路与中州路交汇处(应天门地铁站C2口步行220米)",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-深圳-26",
+      "name": "深圳仙湖植物园",
+      "province": "广东省",
+      "city": "深圳",
+      "district": "罗湖区",
+      "level": "4A",
+      "address": "广东省深圳市罗湖区莲塘街道仙湖社区仙湖路160号",
+      "category": "主题乐园"
+    },
+    {
+      "id": "poi-深圳-28",
+      "name": "深圳野生动物园",
+      "province": "广东省",
+      "city": "深圳",
+      "district": "南山区",
+      "level": "4A",
+      "address": "广东省深圳市南山区西丽街道西丽路4066号",
+      "category": "主题乐园"
+    },
+    {
+      "id": "poi-苏州-1",
+      "name": "七里山塘景区",
+      "province": "江苏省",
+      "city": "苏州",
+      "district": "姑苏区",
+      "level": "4A",
+      "address": "江苏省苏州市姑苏区山塘街177号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-苏州-11",
+      "name": "七里山塘千年古街",
+      "province": "江苏省",
+      "city": "苏州",
+      "district": "姑苏区",
+      "level": "4A",
+      "address": "江苏省苏州市姑苏区山塘街与上塘街交叉口西北20米",
+      "category": "古镇村落"
+    },
+    {
+      "id": "poi-苏州-16",
+      "name": "网师园",
+      "province": "江苏省",
+      "city": "苏州",
+      "district": "姑苏区",
+      "level": "4A",
+      "address": "江苏省苏州市姑苏区带城桥路阔家头巷11号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-苏州-23",
+      "name": "天平山风景名胜区",
+      "province": "江苏省",
+      "city": "苏州",
+      "district": "吴中区",
+      "level": "4A",
+      "address": "江苏省苏州市吴中区木渎镇灵天路",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-苏州-24",
+      "name": "木渎古镇",
+      "province": "江苏省",
+      "city": "苏州",
+      "district": "吴中区",
+      "level": "4A",
+      "address": "江苏省苏州市吴中区木渎镇山塘街188号",
+      "category": "古镇村落"
+    },
+    {
+      "id": "poi-苏州-47",
+      "name": "苏州御窑遗址园",
+      "province": "江苏省",
+      "city": "苏州",
+      "district": "相城区",
+      "level": "4A",
+      "address": "江苏省苏州市相城区阳澄湖西路95号(御窑地铁站1号口步行100米)",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-苏州-6",
+      "name": "狮子林",
+      "province": "江苏省",
+      "city": "苏州",
+      "district": "姑苏区",
+      "level": "4A",
+      "address": "江苏省苏州市姑苏区园林路23号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-苏州-8",
+      "name": "寒山寺",
+      "province": "江苏省",
+      "city": "苏州",
+      "district": "姑苏区",
+      "level": "4A",
+      "address": "江苏省苏州市姑苏区枫桥路16号",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-西安-1",
+      "name": "广仁寺",
+      "province": "陕西省",
+      "city": "西安",
+      "district": "莲湖区",
+      "level": "4A",
+      "address": "陕西省西安市莲湖区城墙西北角西北一路152号",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-西安-16",
+      "name": "西安世博园",
+      "province": "陕西省",
+      "city": "西安",
+      "district": "灞桥区",
+      "level": "4A",
+      "address": "陕西省西安市灞桥区世博大道1号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-西安-17",
+      "name": "西安浐灞国家湿地公园",
+      "province": "陕西省",
+      "city": "西安",
+      "district": "未央区",
+      "level": "4A",
+      "address": "陕西省西安市未央区启源三路1号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-西安-18",
+      "name": "大唐西市",
+      "province": "陕西省",
+      "city": "西安",
+      "district": "莲湖区",
+      "level": "4A",
+      "address": "陕西省西安市莲湖区劳动南路118号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-西安-29",
+      "name": "昆明池·七夕公园",
+      "province": "陕西省",
+      "city": "西安",
+      "district": "长安区",
+      "level": "4A",
+      "address": "陕西省西安市长安区昆明池七夕公园内",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-西安-54",
+      "name": "曲江海洋极地公园",
+      "province": "陕西省",
+      "city": "西安",
+      "district": "雁塔区",
+      "level": "4A",
+      "address": "陕西省西安市雁塔区曲江二路1号(北池头一路与芙蓉东路交叉口)",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-西安-6",
+      "name": "西安博物院",
+      "province": "陕西省",
+      "city": "西安",
+      "district": "碑林区",
+      "level": "4A",
+      "address": "陕西省西安市碑林区友谊西路72号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-酒泉-0",
+      "name": "西汉酒泉胜迹",
+      "province": "甘肃省",
+      "city": "酒泉",
+      "district": "肃州区",
+      "level": "4A",
+      "address": "甘肃省酒泉市肃州区公园路100号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-酒泉-1",
+      "name": "中国金塔沙漠胡杨林景区",
+      "province": "甘肃省",
+      "city": "酒泉",
+      "district": "金塔县",
+      "level": "4A",
+      "address": "甘肃省酒泉市金塔县金塔镇",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-重庆-0",
+      "name": "红岩革命纪念馆",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "渝中区",
+      "level": "4A",
+      "address": "重庆市渝中区大石坝街道红岩村52号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-重庆-1",
+      "name": "洪崖洞民俗风貌区",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "渝中区",
+      "level": "4A",
+      "address": "重庆市渝中区嘉陵江滨江路88号(小什字地铁站9号口步行430米)",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-重庆-14",
+      "name": "我在重庆大屏",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "两江新区",
+      "level": "4A",
+      "address": "重庆市两江新区北城天街6号北城天街A馆1F层",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-重庆-15",
+      "name": "长嘉汇弹子石老街",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "南岸区",
+      "level": "4A",
+      "address": "重庆市南岸区泰昌路69号",
+      "category": "古镇村落"
+    },
+    {
+      "id": "poi-重庆-17",
+      "name": "湖广会馆",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "渝中区",
+      "level": "4A",
+      "address": "重庆市渝中区长江滨江路芭蕉园1号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-重庆-19",
+      "name": "鸿恩寺森林公园",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "两江新区",
+      "level": "4A",
+      "address": "重庆市两江新区鸿恩路",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "poi-重庆-26",
+      "name": "重庆南山风景区",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "南岸区",
+      "level": "4A",
+      "address": "重庆市南岸区南山公园路101号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-重庆-29",
+      "name": "重庆动物园",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "九龙坡区",
+      "level": "4A",
+      "address": "重庆市九龙坡区西郊一村1号",
+      "category": "主题乐园"
+    },
+    {
+      "id": "poi-重庆-3",
+      "name": "洪崖洞夜景观景台",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "渝中区",
+      "level": "4A",
+      "address": "重庆市渝中区沧白路88号洪崖洞民俗风貌区11层",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-重庆-30",
+      "name": "磁器口古镇",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "沙坪坝区",
+      "level": "4A",
+      "address": "重庆市沙坪坝区磁南街1号",
+      "category": "古镇村落"
+    },
+    {
+      "id": "poi-重庆-32",
+      "name": "马鞍山堂里",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "渝中区",
+      "level": "4A",
+      "address": "重庆市渝中区学田湾正街枣子垭正街交汇处(大礼堂地铁站1号口步行290米)",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-重庆-35",
+      "name": "桂园",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "渝中区",
+      "level": "4A",
+      "address": "重庆市渝中区上清寺中山四路65号(求精中学旁)",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-重庆-5",
+      "name": "人民解放纪念碑",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "渝中区",
+      "level": "4A",
+      "address": "重庆市渝中区邹容路133号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-重庆-6",
+      "name": "江北嘴江滩公园",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "两江新区",
+      "level": "4A",
+      "address": "重庆市两江新区金沙门路与桂花街交叉口东南120米",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-重庆-7",
+      "name": "周公馆",
+      "province": "重庆",
+      "city": "重庆",
+      "district": "渝中区",
+      "level": "4A",
+      "address": "重庆市渝中区上清寺中山四路曾家岩50号(曾家岩地铁站2号口步行90米)",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-长沙-22",
+      "name": "长沙湘江海洋王国",
+      "province": "湖南省",
+      "city": "长沙",
+      "district": "岳麓区",
+      "level": "4A",
+      "address": "湖南省长沙市岳麓区坪塘街道坪塘街道潭州大道二段207号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-长沙-27",
+      "name": "长沙世界之窗",
+      "province": "湖南省",
+      "city": "长沙",
+      "district": "开福区",
+      "level": "4A",
+      "address": "湖南省长沙市开福区三一大道485号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-长沙-30",
+      "name": "天心阁",
+      "province": "湖南省",
+      "city": "长沙",
+      "district": "天心区",
+      "level": "4A",
+      "address": "湖南省长沙市天心区天心路17号",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-长沙-33",
+      "name": "三馆一厅旅游码头",
+      "province": "湖南省",
+      "city": "长沙",
+      "district": "开福区",
+      "level": "4A",
+      "address": "湖南省长沙市开福区栖凤路滨江文化园4号门楼梯上面",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-长沙-61",
+      "name": "湖南雷锋纪念馆",
+      "province": "湖南省",
+      "city": "长沙",
+      "district": "望城区",
+      "level": "4A",
+      "address": "湖南省长沙市望城区雷锋街道正兴路42号",
+      "category": "历史人文"
+    },
+    {
+      "id": "poi-长沙-8",
+      "name": "湖南烈士公园",
+      "province": "湖南省",
+      "city": "长沙",
+      "district": "开福区",
+      "level": "4A",
+      "address": "湖南省长沙市开福区东风路22号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-青岛-12",
+      "name": "金沙滩",
+      "province": "山东省",
+      "city": "青岛",
+      "district": "黄岛区",
+      "level": "4A",
+      "address": "山东省青岛市黄岛区金沙滩路",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-青岛-17",
+      "name": "青岛动物园",
+      "province": "山东省",
+      "city": "青岛",
+      "district": "市南区",
+      "level": "4A",
+      "address": "山东省青岛市市南区延安一路102号(近中山公园)",
+      "category": "主题乐园"
+    },
+    {
+      "id": "poi-青岛-18",
+      "name": "青岛海底世界",
+      "province": "山东省",
+      "city": "青岛",
+      "district": "市南区",
+      "level": "4A",
+      "address": "山东省青岛市市南区莱阳路2号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-青岛-2",
+      "name": "奥林匹克帆船中心·奥帆海洋文化旅游区",
+      "province": "山东省",
+      "city": "青岛",
+      "district": "市南区",
+      "level": "4A",
+      "address": "山东省青岛市市南区澳门路86号奥帆中心",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-青岛-20",
+      "name": "银海大世界",
+      "province": "山东省",
+      "city": "青岛",
+      "district": "市南区",
+      "level": "4A",
+      "address": "山东省青岛市市南区东海中路30号(近银都花园)",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-青岛-25",
+      "name": "海合安·青岛极地海洋公园",
+      "province": "山东省",
+      "city": "青岛",
+      "district": "崂山区",
+      "level": "4A",
+      "address": "山东省青岛市崂山区东海东路60号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-青岛-57",
+      "name": "凤凰岛旅游度假区",
+      "province": "山东省",
+      "city": "青岛",
+      "district": "黄岛区",
+      "level": "4A",
+      "address": "山东省青岛市黄岛区长江中路1号",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-青岛-7",
+      "name": "宫崎骏漫画街",
+      "province": "山东省",
+      "city": "青岛",
+      "district": "市南区",
+      "level": "4A",
+      "address": "山东省青岛市市南区龙江路与黄县路交叉口西南20米",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-黄山-0",
+      "name": "黎阳in巷",
+      "province": "安徽省",
+      "city": "黄山",
+      "district": "屯溪区",
+      "level": "4A",
+      "address": "安徽省黄山市屯溪区黎阳老街昱新路2号(文峰桥,屯溪一中)",
+      "category": "城市地标"
+    },
+    {
+      "id": "poi-黄山-12",
+      "name": "花山世界·花山谜窟",
+      "province": "安徽省",
+      "city": "黄山",
+      "district": "屯溪区",
+      "level": "4A",
+      "address": "安徽省黄山市屯溪区花山路",
+      "category": "自然风光"
+    },
+    {
+      "id": "poi-黄山-27",
+      "name": "黄山市新安江滨水旅游景区",
+      "province": "安徽省",
+      "city": "黄山",
+      "district": "屯溪区",
+      "level": "4A",
+      "address": "安徽省黄山市屯溪区屯光镇瑶里路8号(世纪广场下行2000米)",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--262",
+      "name": "龙岩千鹭湖景区",
+      "province": "",
+      "city": "龙岩",
+      "district": "千鹭湖景区",
+      "level": "4A",
+      "address": "福建福建龙岩千鹭湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--263",
+      "name": "济源市王屋山风景名胜区",
+      "province": "",
+      "city": "河南济源",
+      "district": "王屋山风景名胜区",
+      "level": "4A",
+      "address": "河南济源市王屋山风景名胜区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--264",
+      "name": "济源市五龙口风景名胜区",
+      "province": "",
+      "city": "河南济源",
+      "district": "五龙口风景名胜区",
+      "level": "4A",
+      "address": "河南济源市五龙口风景名胜区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic--265",
+      "name": "济源市黄河三峡景区",
+      "province": "",
+      "city": "河南济源",
+      "district": "黄河三峡景区",
+      "level": "4A",
+      "address": "河南济源市黄河三峡景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--266",
+      "name": "小沟背·银河峡景区",
+      "province": "",
+      "city": "河南济源",
+      "district": "小沟背·银河峡景区",
+      "level": "4A",
+      "address": "河南济源市小沟背·银河峡景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--267",
+      "name": "仙桃梦里水乡文化旅游区",
+      "province": "",
+      "city": "湖北仙桃",
+      "district": "湖北仙桃仙桃市",
+      "level": "4A",
+      "address": "湖北仙桃市湖北仙桃仙桃市赵西垸林场仙桃梦里水乡文化旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic--268",
+      "name": "天门市茶圣故里园景区",
+      "province": "",
+      "city": "湖北天门",
+      "district": "湖北天门天门市",
+      "level": "4A",
+      "address": "湖北天门市湖北天门天门市西寺路36号天门市茶圣故里园景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic--270",
+      "name": "神农架天燕景区",
+      "province": "",
+      "city": "神农架",
+      "district": "林区",
+      "level": "4A",
+      "address": "湖北神农架林区湖北神农架神农架林区红坪镇神农架天燕景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic--271",
+      "name": "神农架红坪景区",
+      "province": "",
+      "city": "神农架",
+      "district": "林区",
+      "level": "4A",
+      "address": "湖北神农架林区湖北神农架神农架林区木鱼镇神农架红坪景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic--272",
+      "name": "巴桃园景区",
+      "province": "",
+      "city": "神农架",
+      "district": "林区",
+      "level": "4A",
+      "address": "湖北神农架林区湖北神农架神农架林区松柏镇花朵村巴桃园景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic--276",
+      "name": "七仙岭温泉国家森林公园",
+      "province": "",
+      "city": "",
+      "district": "海南保亭黎族苗族自治县",
+      "level": "4A",
+      "address": "海南保亭黎族苗族自治县海南省保亭黎族苗族自治县东北部9公里处七仙岭温泉国家森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--277",
+      "name": "海南文笔峰盘古文化旅游区",
+      "province": "",
+      "city": "",
+      "district": "海南定安县",
+      "level": "4A",
+      "address": "海南定安县海南省龙湖镇丁湖路文笔峰盘古文化旅游区（东线高速46公里居丁出口处西行3公里）海南文笔峰盘古文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--278",
+      "name": "南湾猴岛生态旅游区",
+      "province": "",
+      "city": "",
+      "district": "海南陵水黎族自治县",
+      "level": "4A",
+      "address": "海南陵水黎族自治县海南省陵水县新村镇南湾猴岛景区南湾猴岛生态旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic--279",
+      "name": "博鳌亚洲论坛永久会址景区",
+      "province": "",
+      "city": "海南琼海",
+      "district": "",
+      "level": "4A",
+      "address": "海南琼海市海南省琼海市东屿岛博鳌亚洲论坛永久会址景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic--280",
+      "name": "清水湾旅游区",
+      "province": "",
+      "city": "",
+      "district": "海南陵水黎族自治县",
+      "level": "4A",
+      "address": "海南陵水黎族自治县海南省环岛东线高速英州出口清水湾旅游区",
+      "category": "自然风光"
+    }
+  ]
+}

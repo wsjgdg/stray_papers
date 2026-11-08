@@ -1,0 +1,178 @@
+[
+  {
+    "from": "浙江省嘉兴市桐乡市乌镇景区",
+    "to": "乌镇景区",
+    "fromLevel": "5A",
+    "fromAddr": "浙江嘉兴市桐乡市浙江省嘉兴市桐乡市乌",
+    "toLevel": "5A",
+    "toAddr": "浙江嘉兴市桐乡市浙江省嘉兴市桐乡市浙",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省嘉兴市海盐县南北湖风景区",
+    "to": "南北湖风景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江嘉兴市海盐县浙江省嘉兴市海盐县南",
+    "toLevel": "4A",
+    "toAddr": "浙江嘉兴市海盐县浙江省嘉兴市海盐县海",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省湖州市安吉县浙北大峡谷景区",
+    "to": "浙北大峡谷景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江湖州市安吉县浙江省湖州市安吉县报",
+    "toLevel": "4A",
+    "toAddr": "浙江湖州市安吉县浙江省湖州市安吉县安",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省杭州市桐庐县江南古村落景区",
+    "to": "江南古村落景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江杭州市桐庐县浙江省杭州市桐庐县深",
+    "toLevel": "4A",
+    "toAddr": "浙江杭州市桐庐县浙江省杭州市桐庐县杭",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省杭州市萧山区杭州东方文化园景区",
+    "to": "杭州东方文化园",
+    "fromLevel": "4A",
+    "fromAddr": "浙江杭州市萧山区浙江省杭州市萧山区义",
+    "toLevel": "4A",
+    "toAddr": "浙江杭州市萧山区浙江省杭州市萧山区萧",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省宁波市鄞州区宁波海洋世界",
+    "to": "宁波海洋世界",
+    "fromLevel": "4A",
+    "fromAddr": "浙江宁波市鄞州区浙江省宁波市鄞州区桑",
+    "toLevel": "4A",
+    "toAddr": "浙江宁波市鄞州区浙江省宁波市江东区宁",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省宁波市象山县石浦中国渔村景区",
+    "to": "石浦中国渔村景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江宁波市象山县浙江省宁波市象山县浙",
+    "toLevel": "4A",
+    "toAddr": "浙江宁波市象山县浙江省宁波市象山县石",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省宁波市镇海区宁波帮博物馆景区",
+    "to": "宁波帮博物馆",
+    "fromLevel": "4A",
+    "fromAddr": "浙江宁波市镇海区浙江省宁波市镇海区庄",
+    "toLevel": "4A",
+    "toAddr": "浙江宁波市镇海区浙江省宁波市镇海区宁",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省温州市鹿城区温州南塘文化旅游区",
+    "to": "温州南塘文化旅游区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江温州市鹿城区浙江省温州市鹿城区南",
+    "toLevel": "4A",
+    "toAddr": "浙江温州市鹿城区浙江省温州市鹿城区温",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省温州市文成县龙麒源景区",
+    "to": "龙麒源景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江温州市文成县浙江省温州市文成县西",
+    "toLevel": "4A",
+    "toAddr": "浙江温州市文成县浙江省温州市文成县西",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省温州市鹿城区江心屿景区",
+    "to": "江心屿景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江温州市鹿城区浙江省温州市鹿城区望",
+    "toLevel": "4A",
+    "toAddr": "浙江温州市鹿城区浙江省温州市鹿城区江",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省衢州市衢江区天脊龙门景区",
+    "to": "天脊龙门景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江衢州市衢江区浙江省衢州市衢江区黄",
+    "toLevel": "4A",
+    "toAddr": "浙江衢州市衢江区浙江省衢州市衢江区衢",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省衢州市衢江区药王山景区",
+    "to": "药王山景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江衢州市衢江区浙江省衢州市衢江区黄",
+    "toLevel": "4A",
+    "toAddr": "浙江衢州市衢江区浙江省衢州市衢江区衢",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省衢州市江山市仙霞关景区",
+    "to": "仙霞关景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江衢州市江山市浙江省衢州市江山市保",
+    "toLevel": "4A",
+    "toAddr": "浙江衢州市江山市浙江省衢州市江山市江",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江省衢州市柯城区桃源七里景区",
+    "to": "桃源七里景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江衢州市柯城区浙江省衢州市柯城区七",
+    "toLevel": "4A",
+    "toAddr": "浙江衢州市柯城区浙江省衢州市柯城区衢",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  },
+  {
+    "from": "浙江柯岩风景区开发股份有限公司",
+    "to": "柯岩风景区",
+    "fromLevel": "4A",
+    "fromAddr": "浙江绍兴市柯桥区浙江省绍兴市绍兴县绍",
+    "toLevel": "4A",
+    "toAddr": "浙江绍兴市柯桥区浙江省绍兴市柯桥区柯",
+    "sameCity": true,
+    "sameLevel": true,
+    "verdict": "同市同实体 → 应 drop"
+  }
+]

@@ -1,0 +1,2630 @@
+{
+  "task": "景点档案结构化字段-批4",
+  "batch": 4,
+  "count": 100,
+  "authorship": "批4：会话A",
+  "items": [
+    {
+      "id": "scenic-北京-57",
+      "name": "北宫国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票政策多次调整，未能核实现行价格，以售票处现场公示为准",
+        "freePolicy": null,
+        "openHours": "旺季约6:30-19:00（18:00停止入园），淡季约7:00-18:00（17:00停止入园），以公园公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月适宜，春季山花与秋季彩叶最佳",
+        "nearestAirport": "北京大兴国际机场",
+        "nearestRail": "北京西站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山地园路部分坡陡，请穿防滑鞋；冬季林区防火期严禁一切明火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-北京-58",
+      "name": "紫竹院公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），园内游船等项目另行收费",
+        "freePolicy": "全园免费开放",
+        "openHours": "约6:00-21:30（闭园前30分钟停止入园），冬季闭园略有提前，以公园公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月，夏季荷花开赏最佳",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "免费公园以竹景著称，竹丛观赏区请勿踩踏攀折；湖边亲水平台注意看护儿童；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-北京-59",
+      "name": "首都博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "常设展览免费开放（参考价，以现场公示为准），个别特展可能单独售票",
+        "freePolicy": "常设展览免费，需提前实名预约入馆",
+        "openHours": "周二至周日9:00-17:00（16:00停止入馆），周一闭馆（法定节假日安排另行公告）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，室内展馆不受季节影响",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京西站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "需通过官方渠道提前实名预约，凭预约码与身份证入馆",
+        "officialSite": null,
+        "tel": null,
+        "notices": "入馆安检严格，打火机等禁带；展厅内禁用闪光灯与三脚架；节假日预约名额紧张请提前数日抢约"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-北京-6",
+      "name": "通州大运河森林旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "公园免费开放（参考价，以现场公示为准），园内观光车、游船等项目另行收费",
+        "freePolicy": "免费开放",
+        "openHours": "约6:00-19:30（19:00停止入园），冬季约6:30-18:30，以园区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "4-10月，秋季芦苇与河景尤佳",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区沿运河狭长绵延十余公里，步行量大建议乘观光车；夏季河畔蚊虫较多备防护用品；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-北京-60",
+      "name": "北京奥林匹克水上公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "园区门票及水上运动项目收费政策未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:00（16:00停止入园），以园区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月水上项目开放期",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "皮划艇、赛艇等水上运动项目另收费且受天气水流影响可能临时停开；园区空旷夏季注意防晒补水；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-北京-61",
+      "name": "石景山游乐园",
+      "profile": {
+        "ticketPeak": 10,
+        "ticketOff": 10,
+        "ticketNote": "大门票参考价10元（参考价，以现场公示为准），园内游乐项目单独购票",
+        "freePolicy": null,
+        "openHours": "约9:00-17:30（16:30停止入园），节假日适当延长闭园，以园区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月，节假日多有主题游园活动",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "母婴室",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "游乐项目多需单独购票并受身高、年龄限制；庙会等大型活动期间人流密集注意随身物品与儿童；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-北京-62",
+      "name": "北京天文馆",
+      "profile": {
+        "ticketPeak": 10,
+        "ticketOff": null,
+        "ticketNote": "展厅门票参考价10元（参考价，以现场公示为准），天象厅、4D剧场等演出另行购票",
+        "freePolicy": null,
+        "openHours": "约9:00-16:30（15:30停止售票入馆），周一、周二闭馆（法定节假日及寒暑假安排另行公告）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，寒暑假有科普活动",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "北京北站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "热门剧场影片场次有限建议提前线上购票；剧场开演后禁止入场请提前到馆；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-北京-63",
+      "name": "世界葡萄博览中心景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "园区门票与采摘体验收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "7-10月葡萄季体验最佳",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "清河站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "延庆海拔较高气温低于市区，春秋前往备外套；采摘等活动季节性强，出行前请咨询景区并核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-北京-64",
+      "name": "北京张裕爱斐堡国际酒庄",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "酒庄参观门票与品酒体验收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月，葡萄采收季体验最佳",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": null,
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "酒庄参观与品酒多为收费项目且部分需提前预约；地下酒窖恒温较低建议备薄外套；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-北京-7",
+      "name": "中国园林博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），临时展览或讲解服务可能另行收费",
+        "freePolicy": "免费开放，需提前实名预约",
+        "openHours": "周二至周日9:00-17:00（16:30停止入馆），周一闭馆（法定节假日安排另行公告）",
+        "suggestedHours": 3,
+        "bestMonths": "全年适宜，室内展园四季可游",
+        "nearestAirport": "北京大兴国际机场",
+        "nearestRail": "北京西站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "通过官方微信公众号等渠道提前实名预约",
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆内含室内展园与室外山地园，室外部分步行量大穿舒适鞋；室内展馆保持安静禁闪光灯；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-北京-8",
+      "name": "北京世园公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "园区门票及花展期间票价政策未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:00（16:00停止入园），花季夜场时间另行公告",
+        "suggestedHours": 4,
+        "bestMonths": "4-10月花展季，夏季夜场避暑",
+        "nearestAirport": "北京首都国际机场",
+        "nearestRail": "清河站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "轮椅租借",
+          "停车场",
+          "母婴室",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区面积极大，务必乘电瓶车规划路线；延庆昼夜温差大备外套；花展期间人流集中建议早到；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-北京-9",
+      "name": "北京市房山区周口店遗址景区",
+      "profile": {
+        "ticketPeak": 30,
+        "ticketOff": null,
+        "ticketNote": "成人门票参考价30元（参考价，以现场公示为准），遗址与博物馆联票规则以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-16:30（16:00停止售票入园），博物馆周一闭馆（法定节假日另行公告）",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月适宜，室内外结合四季可游",
+        "nearestAirport": "北京大兴国际机场",
+        "nearestRail": "北京西站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "遗址区坡道台阶较多穿舒适鞋；猿人洞等化石地点严禁触摸刻画；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-双鸭山-762",
+      "name": "安邦河国家湿地公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "湿地公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:30停止入园），冬季湿地封冻期暂停开放，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月，7-8月水草丰美观鸟最佳",
+        "nearestAirport": null,
+        "nearestRail": "双鸭山西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湿地栈道雨后湿滑注意脚下；夏季蚊虫较多备好防护用品；春秋晨间气温低备外套；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-双鸭山-763",
+      "name": "北大荒农机博览园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "博览园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-16:30（16:00停止入馆），以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": null,
+        "nearestRail": "双鸭山西站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以陈列历代大型农机具为主，露天展区冬季严寒注意保暖防滑；展品体积大请勿攀爬；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-双鸭山-764",
+      "name": "青山国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约7:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月，秋季五花山色最佳",
+        "nearestAirport": null,
+        "nearestRail": "双鸭山西站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山林步道雨后湿滑，防火期严禁野外用火；冬季积雪结冰建议改期或做好防滑措施；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-双鸭山-765",
+      "name": "雁窝岛旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:30停止入园），封冻期及候鸟繁殖核心区可能限流关闭，以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月湿地观鸟最佳",
+        "nearestAirport": null,
+        "nearestRail": "双鸭山西站",
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "位于挠力河湿地腹地，部分路段路况一般，雨后小车谨慎前往；湿地蚊虫密集备好防护；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉林-596",
+      "name": "松花湖风景名胜区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区大门票政策未核实，以现场公示为准；游湖船票另行收费",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:30停止入园），游船班次以码头当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月，秋季湖畔红叶尤佳；冬季可赏雾凇",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "乘船游湖需另购船票，大风大雾天气停航请留意公告；冬季湖面结冰严禁上冰行走；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉林-597",
+      "name": "北大湖滑雪场度假区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "度假区免大门票进入（参考价，以现场公示为准），雪票、索道、雪具租赁及住宿另计费",
+        "freePolicy": "度假区免大门票，滑雪等消费项目自理",
+        "openHours": "度假区全天开放；雪季约11月中下旬至次年3月底，索道运营约8:30-16:00，以雪场当日公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "12-2月滑雪季最佳；夏季可山地避暑徒步",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "雪季气温可低至-25℃以下，需全套专业防寒装备并佩戴护具；滑雪属高风险运动请量力选择雪道；旺季雪票与住宿紧张建议提前预订"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吉林-598",
+      "name": "拉法山国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-16:30（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月适宜，秋季红叶佳",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山体陡峭登顶石阶多，请穿防滑登山鞋；山洞路段湿暗建议备手电；防火期严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉林-599",
+      "name": "北山风景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "公园免费开放（参考价，以现场公示为准），园内寺庙及个别项目可能另收费",
+        "freePolicy": "公园免费开放",
+        "openHours": "约6:00-18:00（17:30停止入园），冬季约6:30-17:30，园内寺庙开放时间以现场公示为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜，农历庙会期间最热闹",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "庙会期间人流极密集注意财物并看护老人儿童；登山台阶较多量力而行；进庙烧香请遵守场所管理规定；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吉林-600",
+      "name": "圣鑫葡萄酒庄园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "庄园门票及品酒采摘项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月采摘季体验最佳",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "品酒、采摘等多为收费项目请现场确认；坡地步道雨后湿滑；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉林-601",
+      "name": "圣德泉亲水度假花园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉票价格未核实，以度假区现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-21:00（20:00停止入场），温泉区域以度假区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季泡汤体验最佳，全年开放",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "温泉不宜空腹或酒后入浴，单次泡汤建议不超过20分钟；冬季往返注意路面结冰；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉林-602",
+      "name": "神农庄园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉及游乐项目收费未核实，以庄园现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-21:00（20:00停止入场），温泉与餐饮区域以庄园当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季温泉体验最佳，全年开放",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "温泉体验需另行购票；儿童及心脑血管不适者泡汤需谨慎并有人陪同；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉林-603",
+      "name": "吉林市博物馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），吉林陨石等专题讲解服务以现场公示为准",
+        "freePolicy": "免费开放，凭有效证件登记入馆",
+        "openHours": "周二至周日9:00-16:30（16:00停止入馆），周一闭馆（法定节假日另行公告）",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜，室内展馆不受季节影响",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "参观陨石展厅请勿触摸展品；馆内保持安静并关闭闪光灯；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吉林-604",
+      "name": "万科松花湖度假区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "度假区免大门票进入（参考价，以现场公示为准），雪票、索道及配套项目另计费",
+        "freePolicy": "度假区免大门票，滑雪等消费项目自理",
+        "openHours": "度假区全天开放；雪季约11月下旬至次年3月，索道运营约8:30-16:30，以雪场公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "12-2月滑雪季最佳；夏季山地避暑",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "寄存柜",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "冬季极寒注意手机电池保暖与路面防滑；滑雪请佩戴头盔护具并选择与水平匹配的雪道；旺季雪票紧张建议提前购买"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吉林-605",
+      "name": "朱雀山国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:00停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月适宜，秋季红叶佳",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "登山石阶较陡量力而行；冬季冰雪路面需防滑装备；林区防火期严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉林-606",
+      "name": "红石国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-16:30（16:00停止入园），冬季林区道路封闭时暂停开放",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月，秋季五花山色最佳",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 170,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "林区公路弯多路窄自驾谨慎慢行；森林防火期严禁一切野外用火；景区范围大景点分散请提前规划路线；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吉林-607",
+      "name": "金珠花海度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "花海门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:00（16:30停止入园），花期活动安排以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-8月花海盛放期",
+        "nearestAirport": "长春龙嘉国际机场",
+        "nearestRail": "吉林站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "观花请勿踩踏采摘；田间道路雨后泥泞穿防滑鞋；花期外景观效果有限出行前先确认；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吕梁-354",
+      "name": "方山县北武当山风景名胜区",
+      "profile": {
+        "ticketPeak": 72,
+        "ticketOff": null,
+        "ticketNote": "成人门票参考价72元（参考价，以现场公示为准），索道另行收费",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月适宜，秋季山色最佳",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山势陡峭台阶密集，登山量力而行并备足饮水；山顶风大温差明显；索道遇大风可能停运请留意公告；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吕梁-355",
+      "name": "汾阳汾酒文化景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票与讲解收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜，室内展馆为主",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "参观生产车间需遵守企业安全规定，部分区域禁止拍照；品鉴环节未成年人不参与；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吕梁-356",
+      "name": "汾阳市贾家庄文化生态旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "村区免费开放（参考价，以现场公示为准），园区内游乐、展馆等体验项目另行收费",
+        "freePolicy": "村区免费开放",
+        "openHours": "村区全天开放，园内展馆约9:00-17:30（17:00停止入园），以各馆公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "4-10月适宜，室内展馆四季可游",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "村内游览范围较大可租用观光车；艺术展馆开放时间各异请现场确认；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吕梁-357",
+      "name": "交城县卦山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山中古柏与古寺殿宇均为保护文物，严禁烟火与刻画；登山步道台阶较多；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吕梁-358",
+      "name": "交城县玄中寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "寺院门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:30停止入园），以寺院公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "净土宗祖庭，请保持安静勿大声喧哗；殿内禁止拍照；进山公路弯道较多谨慎驾驶；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吕梁-359",
+      "name": "孝义三皇庙景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 1,
+        "bestMonths": "全年适宜",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古建院落内请勿触摸彩绘与碑刻；庙内祭拜请遵守场所管理规定；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吕梁-360",
+      "name": "孝义市金龙山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:30（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山区步道坡度较大，雨雪天湿滑慎行；防火期严禁明火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吕梁-361",
+      "name": "孝义市胜溪湖国家森林公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），园内游船等经营项目另行收费",
+        "freePolicy": "免费开放",
+        "openHours": "约6:00-19:30（19:00停止入园），冬季约7:00-18:00，以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "4-10月适宜，夏季傍晚最舒适",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "城郊生态公园面积较大，徒步请合理安排体力；湖边注意看护儿童；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吕梁-362",
+      "name": "孝义市孝河湿地公园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），园内游船等经营项目另行收费",
+        "freePolicy": "免费开放",
+        "openHours": "约6:30-19:00（18:30停止入园），冬季约7:30-18:00，以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月水鸟活跃期最佳",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湿地栈道雨后湿滑；夏季蚊虫较多备防护用品；保护水鸟请勿投喂惊扰；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-吕梁-363",
+      "name": "临县义居寺景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "寺院门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:00（16:30停止入园），以寺院公告为准",
+        "suggestedHours": 1,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "古寺依山而建台阶较多；殿内文物请勿触摸并遵守寺规拍照规定；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-吕梁-364",
+      "name": "临县碛口景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "古镇街区免费开放（参考价，以现场公示为准），黑龙庙、李家山等点位及停车收费以现场公示为准",
+        "freePolicy": "古镇街区免费开放",
+        "openHours": "古镇街区全天开放，主要景点约8:30-18:00（17:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月适宜，秋季黄河水色最佳",
+        "nearestAirport": "吕梁大武机场",
+        "nearestRail": "吕梁站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "明清窑洞古镇石板路多，穿舒适防滑鞋；黄河岸边请看护好儿童勿近水边；李家山村需另爬坡道穿防滑鞋；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼伦贝尔-484",
+      "name": "呼和诺尔旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及草原体验项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），冬季冰雪活动期间时间另行公告",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月草原季最佳",
+        "nearestAirport": "海拉尔东山机场",
+        "nearestRail": "海拉尔站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "草原日照强风大，备防晒与防风外套；骑马、访牧户等体验项目另收费，参与前确认安全须知；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-485",
+      "name": "世界反法西斯战争海拉尔纪念园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "纪念园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:00（16:00停止入园），周一可能闭馆维护，以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月适宜，冬季展区条件受限",
+        "nearestAirport": "海拉尔东山机场",
+        "nearestRail": "海拉尔站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "地下工事遗址内部阴冷湿滑，备薄外套穿防滑鞋；缅怀历史保持肃穆请勿喧哗；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-486",
+      "name": "中国达斡尔民族园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "民族园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:00（16:30停止入园），以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "距呼伦贝尔中心城区路途较远，出发前确认道路与开放情况；园内请尊重达斡尔族民俗礼仪；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-487",
+      "name": "莫尔道嘎国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票及森林小火车票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:00停止入园），观光小火车班次以现场公告为准；冬季林区积雪通行受限",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月，9月中下旬秋色极美",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 300,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "森林防火期严禁一切烟火；园区内路途远建议乘小火车或自驾慢行防野生动物横穿；秋季昼夜温差大备保暖衣物；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-488",
+      "name": "金帐汗旅游部落旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "部落门票及骑马等体验项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月草原季最佳",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "草原骑马等体验项目另收费，须听从马队教练安排并佩戴护具；草原天气多变备防风衣物；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-489",
+      "name": "布苏里北疆军事文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:00（16:30停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "军事旧址山洞内部阴凉湿滑备外套；林区防火期严禁烟火；路途遥远出发前核实路况；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-490",
+      "name": "红花尔基樟子松国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:30（16:30停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 110,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "樟子松林区绝对严禁烟火；林间蚊虫与蜱虫较多请穿长袖长裤；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-491",
+      "name": "巴尔虎蒙古部落",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "部落门票及民俗演艺、骑马项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月草原季最佳",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "民俗演艺与骑马项目另收费，观看演出请提前确认场次时间；草原风大备防风外套；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-492",
+      "name": "根河源国家湿地公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "湿地公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:00（16:30停止入园），冬季极寒期部分区域关闭",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 240,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湿地栈道请勿偏离步道；林区防火期严禁烟火；根河冬季极端低温可至-40℃以下需专业防寒装备；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-493",
+      "name": "额尔古纳湿地景区",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": "成人门票参考价65元（参考价，以现场公示为准），观光车票另行收费",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），冬季视冰雪情况调整，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月，秋季白桦与草甸金黄尤佳",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "观景台台阶较多穿舒适鞋；山顶风大备外套；日落时光线最佳请注意观光车末班时间；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼伦贝尔-494",
+      "name": "达尔滨湖国家森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:00停止入园），冬季封山期暂停开放",
+        "suggestedHours": 3,
+        "bestMonths": "5-9月，5月中下旬兴安杜鹃花海",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "深山林区路途遥远且加油站稀少，出发前加满油备足补给；防火期严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-495",
+      "name": "诺干湖旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "度假区门票及水上项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:30（17:00停止入园），以度假区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 300,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖区垂钓、游船等项目以现场经营情况为准；草甸湿地注意防蚊；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-496",
+      "name": "额尔古纳白桦林景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月，9月下旬金秋白桦最佳",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "白桦林内严禁烟火；木栈道雨后湿滑；林间蚊虫多备驱蚊用品；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-497",
+      "name": "额尔古纳国家湿地公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "湿地公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:30（16:30停止入园），冬季结冰期关闭",
+        "suggestedHours": 2.5,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 120,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湿地木栈道较长请勿越出步道；夏季蚊虫密集建议穿长袖；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-498",
+      "name": "拓跋鲜卑历史文化园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "园区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:00（16:30停止入园），以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": null,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "嘎仙洞等遗址区域请勿触摸岩壁刻痕；路途遥远出发前确认路况与开放情况；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-499",
+      "name": "额尔古纳市乌兰山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 200,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "沿边防公路前往部分路段限速请谨慎驾驶；山顶观景台风大备外套；边境区域请勿偏离指定路线；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-500",
+      "name": "敖鲁古雅使鹿部落",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:30（17:00停止入园），冬季驯鹿园开放时间以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月适宜；12-2月冰雪驯鹿特色鲜明",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 240,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "投喂驯鹿请购买园区专用饲料并听从工作人员安排，勿追赶惊扰鹿群；根河冬季极寒需专业防寒装备；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-501",
+      "name": "翰嘎利湖休闲旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "度假区门票及湖上项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:30（17:00停止入园），以度假区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-8月消夏避暑最佳",
+        "nearestAirport": null,
+        "nearestRail": null,
+        "driveFromCityMin": 300,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湖上游乐项目以现场开放情况为准；盛夏湖畔日照强注意防晒补水；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼伦贝尔-503",
+      "name": "满洲里市扎赉诺尔猛犸旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "公园免费开放（参考价，以现场公示为准），园内博物馆及游乐设施收费以现场公示为准",
+        "freePolicy": "公园免费开放",
+        "openHours": "约8:00-18:00（17:30停止入园），冬季约8:30-17:00，以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月适宜，冬季可赏雪雕",
+        "nearestAirport": "满洲里西郊机场",
+        "nearestRail": "满洲里站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场",
+          "无障碍通道",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "广场猛犸雕塑群适合拍照，冬季风大注意保暖；馆区开放时间与公园不同步请现场确认；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-423",
+      "name": "昭君博物院",
+      "profile": {
+        "ticketPeak": 65,
+        "ticketOff": null,
+        "ticketNote": "成人门票参考价65元（参考价，以现场公示为准）",
+        "freePolicy": null,
+        "openHours": "约8:30-18:00（17:00停止入园），冬季约9:00-17:00，以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月适宜，室内展馆四季可游",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "青冢登台阶梯较多量力而行；园区开阔夏季防晒备足饮水；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-424",
+      "name": "蒙牛工业旅游景区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "工业旅游参观免费开放（参考价，以现场公示为准），讲解与体验环节以企业安排为准",
+        "freePolicy": "参观免费，需预约入厂",
+        "openHours": "参观场次约9:00-16:30，需按场次集合入厂，周日及企业检修日可能不开放，以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，室内参观不受季节影响",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": true,
+        "reservationNote": "工业参观需提前预约并携带身份证登记入厂",
+        "officialSite": null,
+        "tel": null,
+        "notices": "生产车间禁止拍照并须走指定参观通道；未成年人需成人陪同；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-425",
+      "name": "伊利・乳都科技示范园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "园区参观免费开放（参考价，以现场公示为准），个别体验项目以现场公示为准",
+        "freePolicy": "参观免费，需预约入厂",
+        "openHours": "参观场次约9:00-16:30，按场次入厂，企业检修日不开放，以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，室内参观不受季节影响",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": true,
+        "reservationNote": "需提前预约参观并携带有效身份证件",
+        "officialSite": null,
+        "tel": null,
+        "notices": "车间参观走固定通道禁止触摸设备；拍照规定以现场为准；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-426",
+      "name": "神泉生态旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及索道、游船、沙漠项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-18:00（17:00停止入园），黄河游船及索道运营时间以现场公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "跨河索道与游船受风浪影响可能停运；沙漠活动注意防晒补水并看护儿童；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-427",
+      "name": "敕勒川草原文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及体验项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "草原区域全天开放，核心景点约8:30-18:00（17:30停止入园），以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月草原季最佳",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "草原昼夜温差大备外套；骑马等体验项目另收费需确认安全须知；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-428",
+      "name": "大青山太伟运动休闲度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "度假区门票及球场、雪场项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-20:00，高尔夫球场与滑雪场营业时间以度假区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "夏季打球、冬季滑雪各有时令",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特东站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "高尔夫与滑雪等项目单独收费并需提前订场；冬季雪场注意保暖与佩戴护具；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-429",
+      "name": "内蒙古博物院",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），部分特展与讲解服务以现场公示为准",
+        "freePolicy": "免费开放，凭预约信息及身份证入馆",
+        "openHours": "周二至周日9:00-17:00（16:00停止入馆），周一闭馆（法定节假日另行公告）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，室内展馆不受季节影响",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "需通过官方渠道提前实名预约，节假日名额紧张",
+        "officialSite": null,
+        "tel": null,
+        "notices": "馆内禁止使用闪光灯与自拍杆；恐龙化石与民族文物展厅高峰建议错峰参观；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-430",
+      "name": "大召历史文化旅游区",
+      "profile": {
+        "ticketPeak": 35,
+        "ticketOff": null,
+        "ticketNote": "寺院门票参考价35元（参考价，以现场公示为准），周边塞上老街街区免费",
+        "freePolicy": null,
+        "openHours": "约8:30-17:30（17:00停止入园），法会期间开放安排以寺院公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "全年适宜，室内殿堂四季可游",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "殿内禁止拍照请尊重宗教礼仪；周边老街节假日人流密集注意财物；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-431",
+      "name": "老牛湾黄河大峡谷旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及观光车票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-18:00（17:00停止入园），以景区公告为准",
+        "suggestedHours": 3.5,
+        "bestMonths": "5-10月适宜，秋季峡谷色彩最壮美",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特东站",
+        "driveFromCityMin": 180,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "峡谷崖边步道请勿越过护栏；山区公路弯多自驾谨慎；秋季昼夜温差大备外套；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-432",
+      "name": "蒙亮民族风情园",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），民族手工艺品销售与体验项目消费自理",
+        "freePolicy": "免费开放",
+        "openHours": "约9:00-18:00（17:30停止入园），以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，室内参观不受季节影响",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 20,
+        "accessibility": [
+          "无障碍通道",
+          "停车场",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区兼营民族工艺品展销，请按需理性消费；观看手工艺制作演示请勿触碰半成品；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-433",
+      "name": "南山旅游景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约7:00-19:00（18:00停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场",
+          "适老步道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山地步道晨练人多建议错峰；防火期严禁明火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-434",
+      "name": "乌兰夫纪念馆旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），讲解服务以现场公示为准",
+        "freePolicy": "免费开放",
+        "openHours": "周二至周日约9:00-17:00（16:30停止入馆），周一闭馆（法定节假日另行公告）",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，室内展馆不受季节影响",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "红色纪念场馆请保持肃穆；团队参观讲解请提前联系馆方；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-435",
+      "name": "奥威马文化生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及马术体验收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:30（17:00停止入园），马术活动场次以园区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 60,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "马术体验须佩戴护具并听从教练指导，勿擅自靠近马匹尾部；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-436",
+      "name": "蒙草·草博园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "园区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:00（16:30停止入园），以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-9月植物生长期观赏最佳",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特东站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区以种质资源与生态展示为主，参观请勿采摘植物；科研温室区域遵守现场指引；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-437",
+      "name": "内蒙古自治区赛马场",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "对外开放区域免费，赛事活动门票以现场公示为准",
+        "freePolicy": null,
+        "openHours": "对外开放区域约8:00-18:00，赛事与活动日安排以公告为准",
+        "suggestedHours": 1,
+        "bestMonths": "全年适宜，赛事日体验最佳",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特东站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "赛事日人流车流集中请按引导停放车辆；观看马术比赛勿靠近赛道；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-438",
+      "name": "老牛坡红色文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:00（16:30停止入园），以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特东站",
+        "driveFromCityMin": 190,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "红色展馆与遗址点分散在山村之间，自驾注意山路弯道；馆区请保持肃穆；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-439",
+      "name": "乌兰夫故居红色文化旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），讲解服务以现场公示为准",
+        "freePolicy": "免费开放",
+        "openHours": "周二至周日约9:00-17:00（16:30停止入馆），周一闭馆（法定节假日另行公告）",
+        "suggestedHours": 1,
+        "bestMonths": "全年适宜，室内展陈不受季节影响",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 55,
+        "accessibility": [
+          "停车场",
+          "无障碍通道"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "故居院落为文物保护建筑请勿触摸陈设；村域道路较窄注意错车；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-呼和浩特-440",
+      "name": "黄河麦野谷生态休闲旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及田园体验项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-18:00（17:30停止入园），以景区公告为准",
+        "suggestedHours": 2.5,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 80,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "田园体验项目季节性强，出行前确认开放情况；黄河滩区注意看护儿童勿近水边；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-441",
+      "name": "莫尼山非遗小旗",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "园区门票及非遗体验项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:30（17:00停止入园），以园区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，室内展陈四季可游",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以非遗展陈与手工艺体验为主，体验项目请现场咨询；山地坡道步行注意脚下；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-呼和浩特-442",
+      "name": "成吉思汗察罕苏力德游牧生态旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及游牧体验项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-18:00（17:30停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": "呼和浩特白塔国际机场",
+        "nearestRail": "呼和浩特站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "祭祀苏力德等民俗场所请尊重礼仪勿喧哗；体验项目另收费以现场为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-664",
+      "name": "亚布力滑雪旅游度假区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "度假区免大门票进入（参考价，以现场公示为准），各雪场雪票、索道、雪具与教练服务另计费",
+        "freePolicy": "度假区免大门票，滑雪等消费项目自理",
+        "openHours": "度假区全天开放；雪季约11月中旬至次年3月底，雪场索道运营约8:00-16:30，以各雪场当日公告为准",
+        "suggestedHours": 6,
+        "bestMonths": "12-2月滑雪季最佳；夏季可避暑山地徒步",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场",
+          "索道/扶梯",
+          "医疗服务点",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "雪季气温可低至-25℃以下，需专业防寒装备与护具并量力选择雪道；旺季雪票住宿紧张建议提前预订；非雪季部分设施停运出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-哈尔滨-665",
+      "name": "二龙山风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:30停止入园），冬季湖面结冰期游船项目停运",
+        "suggestedHours": 3,
+        "bestMonths": "5-10月适宜",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 85,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "环湖路坡弯多谨慎驾驶；冬季严禁擅自上冰面活动并听从景区管理；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-666",
+      "name": "英杰风景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及温泉项目收费未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:00（16:30停止入园），温泉与游乐项目营业时间以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "冬季温泉体验最佳，四季可游",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 70,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "温泉泡汤单次不宜超过20分钟，酒后不宜入浴；冬季往返注意路面结冰；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-667",
+      "name": "森工平山旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:00停止入园），鹿苑开放与滑雪季时间以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "6-10月适宜；冬季有滑雪项目",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 90,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "观赏鹿群请勿投喂自带食物或追赶；冬季滑雪项目另收费；林区防火期严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-668",
+      "name": "哈尔滨北方森林动物园",
+      "profile": {
+        "ticketPeak": 80,
+        "ticketOff": null,
+        "ticketNote": "成人门票参考价80元（参考价，以现场公示为准），观光车与投喂体验另行收费",
+        "freePolicy": null,
+        "openHours": "约8:30-16:30（15:30停止入园），旺季略有延长，冬季部分场馆调整开放，以园区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "5-10月动物活跃期最佳",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "无障碍通道",
+          "观光车/电瓶车",
+          "母婴室",
+          "停车场",
+          "儿童游乐区",
+          "医疗服务点"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区依山面积大建议乘观光车；投喂仅限园区指定饲料；冬季严寒部分户外动物转入室内场馆；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-哈尔滨-669",
+      "name": "金龙山国际旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:00停止入园），秋季红叶季或延时至18:00，以景区公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "9-10月红叶季最佳",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 75,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "红叶季人流集中建议早到避开高峰；登山步道台阶多穿防滑鞋；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-670",
+      "name": "美丽岛温泉水乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉水乐园票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-21:00（20:00停止入园），以乐园当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季泡汤体验最佳，全年开放",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "需自备泳衣泳帽；酒后及心脑血管不适者不宜泡汤；旺季周末人多建议错峰；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-671",
+      "name": "方正高楞林场罗勒密山景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-16:30（16:00停止入园），冬季林区积雪期暂停开放",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月适宜，秋季五花山色最佳",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 150,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "林场道路弯窄自驾谨慎慢行；林区防火期严禁一切烟火；夏季蚊虫多备防护用品；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-672",
+      "name": "百年哈啤文化旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "参观门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "参观场次约9:00-16:30（16:00停止入园），以景区公告为准",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，室内参观不受季节影响",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨西站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "参观涉及生产展示区域需按引导路线行走；品鉴环节未成年人不得参与；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-673",
+      "name": "铮子山地质森林公园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "森林公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-16:30（16:00停止入园），冬季积雪期暂停开放",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 160,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山林步道坡陡雨后湿滑；地质景观请勿敲击取石；防火期严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-674",
+      "name": "永泰世界主题乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "乐园票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:30-17:30（16:30停止入园），节假日适当延长，以园区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年适宜，室内恒温水乐园四季可玩",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨西站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "以室内恒温水乐园为主需自备泳衣；儿童游玩请家长全程陪同并遵守设施身高限制；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-675",
+      "name": "普罗旺斯蒸衣草庄园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "庄园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:30（17:00停止入园），花期活动安排以园区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-8月花田盛放期最佳",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨西站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "花田观赏请勿踩踏采摘；盛夏紫外线强注意防晒；花期外景观效果有限出行前先确认；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-676",
+      "name": "松松小镇",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "亲子乐园票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:30-17:00（16:30停止入园），节假日适当延长，以园区当日公告为准",
+        "suggestedHours": 3,
+        "bestMonths": "全年适宜，室内场馆四季可玩",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨西站",
+        "driveFromCityMin": 25,
+        "accessibility": [
+          "母婴室",
+          "无障碍通道",
+          "停车场",
+          "儿童游乐区"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "儿童主题乐园请家长全程陪同；部分游乐设施有身高年龄限制；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-677",
+      "name": "波塞冬旅游度假区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "海洋馆与水乐园票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-17:30（16:30停止入园），海洋馆场次与水乐园季节安排以度假区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "全年适宜，室内项目四季可玩",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨北站",
+        "driveFromCityMin": 35,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "海洋馆表演场次请提前确认；水乐园需自备泳衣泳帽；旺季排队较长建议错峰；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-678",
+      "name": "黑龙江省科技馆",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "免费开放（参考价，以现场公示为准），特效影院等部分展项另行购票",
+        "freePolicy": "免费开放，凭预约及身份证入馆",
+        "openHours": "周二至周日9:00-16:00（15:00停止入馆），周一闭馆（法定节假日另行公告）",
+        "suggestedHours": 2.5,
+        "bestMonths": "全年适宜，室内展馆不受季节影响",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨北站",
+        "driveFromCityMin": 30,
+        "accessibility": [
+          "无障碍通道",
+          "轮椅租借",
+          "母婴室",
+          "无障碍卫生间",
+          "寄存柜"
+        ],
+        "needReservation": true,
+        "reservationNote": "需通过官方渠道提前预约，节假日名额紧张",
+        "officialSite": null,
+        "tel": null,
+        "notices": "互动展项请有序排队使用；儿童体验区需家长陪同；影院场次请现场确认；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "scenic-哈尔滨-679",
+      "name": "融创乐园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "乐园门票政策未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:30-17:30（16:30停止入园），冬季户外项目调整以园区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-10月户外项目开放期最佳",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨北站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室",
+          "寄存柜",
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "部分大型项目受天气与气温影响临时停开；热门项目排队久建议优先游玩；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-680",
+      "name": "红豆杉景区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:00-17:00（16:30停止入园），以景区公告为准",
+        "suggestedHours": 2,
+        "bestMonths": "6-9月适宜",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 130,
+        "accessibility": [
+          "停车场"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "林区防火期严禁烟火；园内观赏树种请勿攀折；冬季路面积雪注意行车安全；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-681",
+      "name": "哈尔滨市凤凰山森林旅游区",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "景区门票及观光车票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约7:30-16:30（15:30停止入园），冬季大雪封山期暂停开放",
+        "suggestedHours": 5,
+        "bestMonths": "6-9月，秋季五花山色尤佳",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 190,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "山高路远需换乘景区车，末班车时间务必确认；山顶气温低备保暖外套；高山林地严禁烟火；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-682",
+      "name": "呼兰河口湿地",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "湿地公园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:30（16:30停止入园），冬季结冰期闭园",
+        "suggestedHours": 3,
+        "bestMonths": "6-9月湿地观鸟最佳",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨北站",
+        "driveFromCityMin": 45,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "湿地木栈道请勿偏离步道；夏季蚊虫多备驱蚊用品；水上项目以现场开放为准；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-683",
+      "name": "大顶上温泉度假村",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "温泉票价未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约9:00-21:00（20:00停止入园），以度假区当日公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "冬季泡汤体验最佳，全年开放",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨北站",
+        "driveFromCityMin": 50,
+        "accessibility": [
+          "停车场",
+          "寄存柜"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "泡汤单次不宜超过20分钟并注意补水；冬季夜间行车注意结冰路面；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-684",
+      "name": "伏尔加庄园",
+      "profile": {
+        "ticketPeak": null,
+        "ticketOff": null,
+        "ticketNote": "庄园门票未核实，以现场公示为准",
+        "freePolicy": null,
+        "openHours": "约8:30-17:00（16:00停止入园），冬季夜场与冰雪活动时间以景区公告为准",
+        "suggestedHours": 4,
+        "bestMonths": "6-9月适宜；冬季冰雪城堡特色鲜明",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨西站",
+        "driveFromCityMin": 40,
+        "accessibility": [
+          "停车场",
+          "观光车/电瓶车",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "园区面积大可乘观光车游览；俄式建筑内部展馆开放时间不一请现场确认；冬季冰雪路面穿防滑鞋；出行前请核实最新预约政策"
+      },
+      "confidence": "low"
+    },
+    {
+      "id": "scenic-哈尔滨-685",
+      "name": "中央欧陆风情旅游区",
+      "profile": {
+        "ticketPeak": 0,
+        "ticketOff": 0,
+        "ticketNote": "中央大街街区免费开放（参考价，以现场公示为准），沿街部分展馆及教堂入内参观另行购票",
+        "freePolicy": "街区免费开放",
+        "openHours": "街区全天开放，沿街场馆开放时间各异请现场确认",
+        "suggestedHours": 1.5,
+        "bestMonths": "全年适宜，冬季冰雕雪景氛围最佳",
+        "nearestAirport": "哈尔滨太平国际机场",
+        "nearestRail": "哈尔滨站",
+        "driveFromCityMin": 15,
+        "accessibility": [
+          "无障碍通道",
+          "母婴室"
+        ],
+        "needReservation": false,
+        "reservationNote": null,
+        "officialSite": null,
+        "tel": null,
+        "notices": "步行街禁止机动车驶入，冬季冰雪路面极滑务必穿防滑鞋；节假日人流密集注意随身财物；出行前请核实最新预约政策"
+      },
+      "confidence": "high"
+    }
+  ]
+}

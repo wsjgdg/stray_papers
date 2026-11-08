@@ -1,0 +1,28 @@
+{
+  "batch": 7,
+  "count": 300,
+  "low": 0,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-洛阳-1942",
+    "scenic-襄阳-2115",
+    "scenic-十堰-2161",
+    "scenic-许昌-2058",
+    "scenic-洛阳-1934",
+    "scenic-平顶山-1957",
+    "scenic-安阳-1988",
+    "scenic-洛阳-1946",
+    "scenic-三门峡-2053",
+    "scenic-漯河-2067",
+    "scenic-郑州-1912",
+    "scenic-许昌-2061",
+    "scenic-郑州-1895",
+    "scenic-武汉-2111",
+    "scenic-信阳-2072",
+    "scenic-武汉-2102",
+    "scenic-武汉-2099",
+    "scenic-滨州-1881",
+    "scenic-焦作-1985",
+    "scenic-襄阳-2113"
+  ]
+}

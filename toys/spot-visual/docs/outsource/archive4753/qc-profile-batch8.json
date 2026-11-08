@@ -1,0 +1,28 @@
+{
+  "batch": 8,
+  "count": 100,
+  "low": 89,
+  "missingRequired": 82,
+  "sample": [
+    "scenic-衡水-242",
+    "scenic-秦皇岛-151",
+    "scenic-赤峰-525",
+    "scenic-秦皇岛-153",
+    "scenic-石家庄-120",
+    "scenic-石家庄-121",
+    "scenic-辽源-616",
+    "scenic-赤峰-523",
+    "scenic-运城-414",
+    "scenic-石家庄-123",
+    "scenic-邢台-251",
+    "scenic-秦皇岛-143",
+    "scenic-通化-625",
+    "scenic-赤峰-520",
+    "scenic-秦皇岛-155",
+    "scenic-邢台-260",
+    "scenic-石家庄-118",
+    "scenic-秦皇岛-157",
+    "scenic-邢台-258",
+    "scenic-邢台-261"
+  ]
+}
