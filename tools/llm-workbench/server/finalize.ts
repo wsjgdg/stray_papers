@@ -1,0 +1,65 @@
+// B9：从 proxy.ts 拆出的「指标落盘收尾」逻辑。纯函数，依赖 recordCall。
+import { recordCall, MAX_REQ_BODY_BYTES } from './metrics.js';
+import type { Usage } from './forwarding.js';
+
+export interface FinalizeInput {
+  t0: number;
+  bodyStr: string;
+  reqModel: string;
+  providerId: string;
+  requestId: string;
+  keyMask: string | null;
+  ttft: number | null;
+  method: string;
+  path: string;
+  routeChain?: string[]; // B1：本次请求规划的完整回退链，便于回溯 fallback 路径
+  tag?: string | null; // B2：调用标签（x-lb-tag 头），用于按项目/团队归集成本
+}
+
+/**
+ * 记录一次调用的指标到 metrics 存储。所有所需上下文由 FinalizeInput 携带，
+ * 不再依赖 proxyRequest 闭包，便于独立测试与复用。
+ */
+export function finalize(
+  input: FinalizeInput,
+  status: number | null,
+  usage: Usage,
+  responseBytes: number,
+  error: string | null,
+  fromCache = false,
+  keySwitches = 0,
+): void {
+  const { t0, bodyStr, reqModel, providerId, requestId, keyMask, ttft, method } = input;
+  const latency = Date.now() - t0;
+  const inputTokens = usage.input ?? (bodyStr ? Math.ceil(bodyStr.length / 4) : null);
+  const outputTokens = usage.output ?? null;
+  const cacheRead = usage.cache ?? null;
+  const cacheHitRate =
+    cacheRead && inputTokens ? Math.round((cacheRead / inputTokens) * 1000) / 1000 : null;
+  recordCall({
+    ts: Date.now(),
+    provider: providerId,
+    model: reqModel || '(unknown)',
+    method,
+    path: input.path ?? '',
+    status,
+    latencyMs: latency,
+    ttftMs: ttft,
+    inputTokens,
+    outputTokens,
+    cacheReadTokens: cacheRead,
+    cacheHitRate,
+    error,
+    requestBytes: Buffer.byteLength(bodyStr || '0'),
+    responseBytes,
+    requestId,
+    keyMask,
+    fromCache,
+    keySwitches,
+    routeChain: input.routeChain,
+    tag: input.tag,
+    // B4：请求体截断存档（仅内存），供「重放」重发；不落盘、不响应给前端列表
+    reqBody: bodyStr ? bodyStr.slice(0, MAX_REQ_BODY_BYTES) : null,
+    reqBodyTruncated: Boolean(bodyStr && bodyStr.length > MAX_REQ_BODY_BYTES),
+  });
+}

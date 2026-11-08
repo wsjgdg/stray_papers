@@ -1,0 +1,24 @@
+{
+  "name": "Smoke（冒烟：确定性判分）",
+  "description": "最小可用评测集：用 exact/contains 判分验证厂商连通、模型是否听话。把 models 换成你自己配置里的模型名（支持 vendor/model 前缀）。",
+  "models": ["openai/gpt-4o-mini", "deepseek/deepseek-chat"],
+  "temperature": 0,
+  "maxTokens": 64,
+  "cases": [
+    {
+      "input": "只输出这一个词，不要任何标点或解释：pong",
+      "expect": "pong",
+      "judge": "contains"
+    },
+    {
+      "input": "1+1 等于几？只输出阿拉伯数字。",
+      "expect": "2",
+      "judge": "exact"
+    },
+    {
+      "input": "把这句话翻译成英文，只输出译文：今天天气很好。",
+      "expect": "weather",
+      "judge": "contains"
+    }
+  ]
+}

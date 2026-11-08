@@ -1,0 +1,194 @@
+import type { ReactNode } from 'react';
+import clsx from 'clsx';
+import { AlertTriangle } from 'lucide-react';
+
+export function Card({
+  title,
+  subtitle,
+  right,
+  children,
+  className,
+  bodyClass,
+}: {
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  right?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+  bodyClass?: string;
+}) {
+  return (
+    <section className={clsx('card flex flex-col overflow-hidden', className)}>
+      {(title || right) && (
+        <header className="flex items-start justify-between gap-3 border-b border-edge px-4 py-3">
+          <div className="min-w-0">
+            {title && <h2 className="truncate text-sm font-semibold text-ink">{title}</h2>}
+            {subtitle && (
+              <p className="mt-0.5 text-[11px] leading-relaxed text-muted">{subtitle}</p>
+            )}
+          </div>
+          {right && <div className="shrink-0">{right}</div>}
+        </header>
+      )}
+      <div className={clsx('min-h-0 flex-1', bodyClass ?? 'p-4')}>{children}</div>
+    </section>
+  );
+}
+
+export function Stat({
+  label,
+  value,
+  hint,
+  tone = 'default',
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+  tone?: 'default' | 'accent' | 'up' | 'down' | 'warn';
+}) {
+  const toneClass =
+    tone === 'accent'
+      ? 'text-accent'
+      : tone === 'up'
+        ? 'text-up'
+        : tone === 'down'
+          ? 'text-down'
+          : tone === 'warn'
+            ? 'text-warn'
+            : 'text-ink';
+  return (
+    <div className="card px-4 py-3">
+      <div className="text-[11px] uppercase tracking-wider text-muted">{label}</div>
+      <div className={clsx('mt-1 truncate text-xl font-semibold', toneClass)}>{value}</div>
+      {hint && <div className="mt-0.5 truncate text-[11px] text-muted">{hint}</div>}
+    </div>
+  );
+}
+
+export function Chip({
+  children,
+  tone = 'default',
+  title,
+  className,
+}: {
+  children: ReactNode;
+  tone?: 'default' | 'accent' | 'up' | 'down' | 'warn' | 'ok';
+  title?: string;
+  className?: string;
+}) {
+  const tones: Record<string, string> = {
+    default: 'border-edge bg-raised text-muted',
+    accent: 'border-accent/40 bg-accent/10 text-accent',
+    up: 'border-up/40 bg-up/10 text-up',
+    down: 'border-down/40 bg-down/10 text-down',
+    warn: 'border-warn/40 bg-warn/10 text-warn',
+    ok: 'border-accent/40 bg-accent/10 text-accent',
+  };
+  return (
+    <span
+      title={title}
+      className={clsx(
+        'inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[11px]',
+        tones[tone],
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function Spinner({ label }: { label?: string }) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-10 text-xs text-muted">
+      <span className="h-3 w-3 animate-spin rounded-full border-2 border-edge border-t-accent" />
+      {label ?? '加载中…'}
+    </div>
+  );
+}
+
+export function Empty({ text }: { text: string }) {
+  return <div className="py-10 text-center text-xs text-muted">{text}</div>;
+}
+
+/** 统一错误态：可选重试回调（数据拉取失败 / 面板级异常都走这一处，避免各页 ad-hoc 文案） */
+export function ErrorState({
+  error,
+  title = '加载失败',
+  onRetry,
+}: {
+  error: string;
+  title?: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div
+      className="flex flex-col items-center gap-3 py-10 text-xs text-up"
+      role="alert"
+      aria-live="polite"
+    >
+      <AlertTriangle size={18} />
+      <span>
+        {title}：{error}
+      </span>
+      {onRetry && (
+        <button className="btn" onClick={onRetry}>
+          重试
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** 统一骨架占位（行数/宽度可调，用于表格与卡片首屏） */
+export function Skeleton({ rows = 3, className }: { rows?: number; className?: string }) {
+  return (
+    <div className={clsx('space-y-2', className)} aria-hidden="true">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="h-4 animate-pulse rounded bg-hover" />
+      ))}
+    </div>
+  );
+}
+
+/** 归一化进度条：value 在 [min,max] 区间内的相对位置 */
+export function Bar({
+  value,
+  max,
+  color = 'var(--c-accent)',
+  height = 6,
+}: {
+  value: number;
+  max: number;
+  color?: string;
+  height?: number;
+}) {
+  const pct = max > 0 ? Math.max(2, Math.min(100, (value / max) * 100)) : 0;
+  return (
+    <div className="w-full overflow-hidden rounded-full bg-sunken" style={{ height }}>
+      <div style={{ width: `${pct}%`, height, background: color }} />
+    </div>
+  );
+}
+
+export function Sparkline({
+  values,
+  color = 'var(--c-accent)',
+}: {
+  values: number[];
+  color?: string;
+}) {
+  if (values.length < 2) return null;
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const span = max - min || 1;
+  const w = 120;
+  const h = 32;
+  const step = w / (values.length - 1);
+  const pts = values.map((v, i) => `${i * step},${h - ((v - min) / span) * (h - 4) - 2}`);
+  return (
+    <svg width={w} height={h} className="overflow-visible">
+      <polyline points={pts.join(' ')} fill="none" stroke={color} strokeWidth={1.5} />
+    </svg>
+  );
+}

@@ -1,0 +1,125 @@
+{
+  "name": "llm-workbench",
+  "private": true,
+  "version": "0.1.1",
+  "type": "module",
+  "description": "大模型能力评估 + 本地 API 代理工作台（多厂商 Key 轮询、响应缓存、成本与用量观测）",
+  "author": "LLM Workbench contributors",
+  "license": "MIT",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "gen:web-assets": "node scripts/gen-web-assets.mjs",
+    "release:checksums": "node scripts/gen-checksums.mjs",
+    "predev": "npm run gen:web-assets",
+    "prebuild": "npm run gen:web-assets",
+    "pretypecheck": "npm run gen:web-assets",
+    "dev": "concurrently -k -n API,WEB -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "tsx watch server/index.ts",
+    "dev:web": "vite",
+    "build": "tsc -b && vite build",
+    "start": "tsx server/index.ts",
+    "typecheck": "tsc -b --force",
+    "prepare": "husky",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "make:icon": "node scripts/make-icon.mjs",
+    "build:electron-config": "node scripts/build-electron-config.mjs",
+    "build:server:electron": "esbuild server/index.ts --bundle --platform=node --format=cjs --outfile=electron/server.cjs",
+    "verify:electron-build": "node scripts/verify-electron-build.mjs",
+    "verify": "vitest run",
+    "test:integration": "tsx scripts/verify-bankofai.mjs && tsx scripts/verify-proxy-hardening.mjs && tsx scripts/it-apiFormat.mjs && tsx scripts/smoke-translate.mjs",
+    "test:electron": "playwright test -c tests-electron/playwright.config.ts",
+    "electron:dev": "npm run build && npm run build:server:electron && npm run make:icon && electron .",
+    "electron:build": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder && npm run release:checksums",
+    "electron:build:portable": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder --win dir --win zip && npm run release:checksums"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "electron-updater": "^6.3.9",
+    "express": "^5.2.1",
+    "lucide-react": "^1.46.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "undici": "^6.28.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs,css,json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --fix --no-warn-ignored"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^5.0.0",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.25.0",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.6",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.1",
+    "postcss": "^8.4.49",
+    "prettier": "^3.9.6",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.70.0",
+    "vite": "^6.0.7",
+    "vitest": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.llmworkbench.app",
+    "productName": "LLM Workbench",
+    "asar": true,
+    "asarUnpack": [
+      "dist/**"
+    ],
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "wsjgdg",
+        "repo": "llm-workbench"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "electron/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerLanguages": [
+        "zh_CN"
+      ],
+      "createDesktopShortcut": "always",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

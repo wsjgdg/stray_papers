@@ -1,0 +1,113 @@
+// 浮窗位置/尺寸 + 应用设置持久化：存到 Electron userData 下的 JSON。
+const fs = require('node:fs');
+const path = require('node:path');
+
+// ── 浮窗位置/尺寸（原逻辑保留）──
+const BOUNDS_FILE = 'float-settings.json';
+// ── 应用设置（预算/透明度/快捷键/位置等）──
+const APP_FILE = 'app-settings.json';
+// ── 浮窗统计（Top 模型频次 / 今日成本曲线），跨重载/重启保留 ──
+const STATS_FILE = 'float-stats.json';
+
+const DEFAULTS = {
+  budgetUsd: 1, // 当日成本告警阈值（USD），0 = 关闭
+  opacity: 1, // 浮窗不透明度 0.4–1
+  minimalDefault: false, // 浮窗默认极简模式
+  hotkeyToggle: 'CommandOrControl+Shift+F', // 开关浮窗
+  hotkeyCycle: 'CommandOrControl+Shift+M', // 切换焦点指标
+  hotkeyMinimal: 'CommandOrControl+Shift+L', // 切换极简模式
+  position: 'topright', // topright|topleft|bottomleft|bottomright
+  openAtLogin: false, // 开机自启（系统登录项）
+  createDesktopShortcut: true, // 首次启动时生成桌面快捷方式（便携版无安装程序，运行时创建）
+  defaultFocus: 'rate', // 默认焦点指标 rate|cache|cost|model
+  refreshMs: 2000, // 浮窗代理统计轮询间隔（毫秒）
+  clickThrough: false, // 浮窗点击穿透（不挡桌面）
+  fontScale: 1, // 浮窗字号缩放 0.8–1.4
+  highContrast: false, // 浮窗高对比模式
+  closeBehavior: 'tray', // 关闭主窗口：tray=最小化到托盘（默认），quit=退出应用
+};
+
+function readJson(file, fallback) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return fallback;
+  }
+}
+// 原子写：先落同目录临时文件再 rename 替换，避免写入中途（崩溃/并发/磁盘满）
+// 导致 JSON 半截损坏。rename 在同一文件系统内是原子操作。
+function writeJson(file, obj) {
+  try {
+    const dir = path.dirname(file);
+    const tmp = path.join(dir, `.${path.basename(file)}.${process.pid}.tmp`);
+    fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
+    fs.renameSync(tmp, file);
+  } catch {
+    /* 写入失败静默忽略 */
+  }
+}
+
+function ensure(file) {
+  if (!appRef) return null;
+  return path.join(appRef.getPath('userData'), file);
+}
+// ── 构建期配置（由 scripts/build-electron-config.mjs 生成，gitignored）──
+// 允许在「构建」时通过环境变量覆盖默认值（如 LLMWB_AUTOSTART / LLMWB_DESKTOP_SHORTCUT），
+// 使便携版 exe 在打包阶段即可决定桌面快捷方式与开机自启的默认行为，而不仅是运行时设置。
+let BUILD_CONFIG = {};
+try {
+  BUILD_CONFIG = JSON.parse(fs.readFileSync(path.join(__dirname, 'build-config.json'), 'utf8'));
+} catch {
+  BUILD_CONFIG = {};
+}
+const EFFECTIVE_DEFAULTS = { ...DEFAULTS, ...BUILD_CONFIG };
+
+// settings.cjs 被 main.cjs 在 app ready 后调用，此处用闭包保存 app 引用
+let appRef = null;
+function setApp(app) {
+  appRef = app;
+}
+
+// ── 浮窗位置/尺寸 ──
+function getBounds() {
+  if (!appRef) return null;
+  const b = readJson(ensure(BOUNDS_FILE), null);
+  if (b && typeof b.x === 'number' && typeof b.y === 'number') return b;
+  return null;
+}
+function setBounds(bounds) {
+  if (!appRef) return;
+  writeJson(ensure(BOUNDS_FILE), bounds);
+}
+
+// ── 应用设置 ──
+function getAppSettings() {
+  if (!appRef) return { ...EFFECTIVE_DEFAULTS };
+  const stored = readJson(ensure(APP_FILE), {});
+  return { ...EFFECTIVE_DEFAULTS, ...stored };
+}
+function setAppSettings(obj) {
+  if (!appRef) return;
+  writeJson(ensure(APP_FILE), obj);
+}
+
+// ── 浮窗统计（落盘，避免浮窗重载/应用重启后统计清零）──
+function getStats() {
+  if (!appRef) return null;
+  return readJson(ensure(STATS_FILE), null);
+}
+function setStats(obj) {
+  if (!appRef) return;
+  writeJson(ensure(STATS_FILE), obj);
+}
+
+module.exports = {
+  setApp,
+  getBounds,
+  setBounds,
+  getAppSettings,
+  setAppSettings,
+  getStats,
+  setStats,
+  DEFAULTS: EFFECTIVE_DEFAULTS,
+};

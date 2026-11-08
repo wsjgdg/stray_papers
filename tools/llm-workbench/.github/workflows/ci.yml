@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      # coverage 模式运行：vitest.config 内 thresholds.lines=70 在此强制（F3 覆盖率门槛）
+      - run: npm run test:coverage
+      - run: npm run build
+
+  # Windows 安装包：仅在打 v* tag 时触发（手工发版流程）。
+  # 复用 electron:build（tsc + vite 代码分割 + esbuild server + icon + nsis），
+  # 产物上传为 artifact（Setup/blockmap/latest.yml），供后续发版步骤消费。
+  package:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      # 缓存 electron-builder 下载的 NSIS / electron 等工具链，加速重复构建
+      - name: Cache electron-builder toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/AppData/Local/electron-builder/Cache
+          key: eb-cache-${{ runner.os }}
+      - run: npm ci
+      - name: Build Windows installer (NSIS)
+        run: npm run electron:build
+        env:
+          CI: 'true'
+      - name: Upload installer artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: llm-workbench-windows
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+          if-no-files-found: error
+
+  # E2：tag 打包成功后自动创建 GitHub Release（安装包 + SHA256SUMS，notes 由 GitHub 按提交自动生成）
+  release:
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: llm-workbench-windows
+          path: release
+      - name: Generate SHA256SUMS
+        run: |
+          cd release
+          sha256sum *.exe *.blockmap latest.yml > SHA256SUMS.txt
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          files: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+            release/SHA256SUMS.txt

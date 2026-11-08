@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────── D3：主题令牌 ─────────
+   语义色集中在 CSS 变量里，深/浅两套；Tailwind 颜色在 tailwind.config.js 映射到
+   `rgb(var(--c-*-rgb) / <alpha-value>)`，因此既有工具类（bg-panel / text-ink /
+   border-edge …）与 /opacity 修饰类（bg-accent/15）都自动跟随主题。
+   切换方式：<html data-theme="light">（由 src/hooks/useTheme.ts 写入，默认深色）。
+   注意：Tailwind 需要「通道」形式才能派生 alpha，所以每个语义色都有 -rgb 与派生值两条。 */
+:root {
+  color-scheme: dark;
+
+  /* 表面 */
+  --c-base-rgb: 11 18 32;
+  --c-base: rgb(var(--c-base-rgb)); /* 页面底色 */
+  --c-panel-rgb: 17 26 43;
+  --c-panel: rgb(var(--c-panel-rgb)); /* 卡片 / 面板 */
+  --c-raised-rgb: 14 23 40;
+  --c-raised: rgb(var(--c-raised-rgb)); /* chip、次级面板 */
+  --c-sunken-rgb: 13 23 40;
+  --c-sunken: rgb(var(--c-sunken-rgb)); /* 输入框、凹陷区 */
+  --c-btn-rgb: 19 32 56;
+  --c-btn: rgb(var(--c-btn-rgb)); /* 按钮默认底 */
+  --c-hover-rgb: 22 34 58;
+  --c-hover: rgb(var(--c-hover-rgb)); /* 行 / 项悬停 */
+
+  /* 边框与文字 */
+  --c-edge-rgb: 31 45 68;
+  --c-edge: rgb(var(--c-edge-rgb)); /* 边框、分隔线 */
+  --c-line-rgb: 36 51 77;
+  --c-line: rgb(var(--c-line-rgb)); /* 滚动条、弱化边框 */
+  --c-ink-rgb: 230 237 243;
+  --c-ink: rgb(var(--c-ink-rgb)); /* 主文字 */
+  --c-muted-rgb: 154 167 189;
+  --c-muted: rgb(var(--c-muted-rgb)); /* 次要文字 */
+
+  /* 语义 */
+  --c-accent-rgb: 77 163 255;
+  --c-accent: rgb(var(--c-accent-rgb));
+  /* 语义；深色下 up 取 red-400 而非 red-500：Chip 是「红字 + 10% 红底」，
+     底色抬高后 red-500 只剩 4.25（11px 文字需 ≥4.5），提亮一档后约 5.5 */
+  --c-up-rgb: 248 113 113;
+  --c-up: rgb(var(--c-up-rgb)); /* 红：错误（中文语境） */
+  --c-down-rgb: 34 197 94;
+  --c-down: rgb(var(--c-down-rgb)); /* 绿：成功 */
+  --c-warn-rgb: 230 177 94;
+  --c-warn: rgb(var(--c-warn-rgb)); /* 琥珀：告警 */
+
+  /* 图表 */
+  --c-grid-rgb: 31 45 68;
+  --c-grid: rgb(var(--c-grid-rgb)); /* 网格线 */
+  --c-axis-rgb: 154 167 189;
+  --c-axis: rgb(var(--c-axis-rgb)); /* 坐标文字 */
+  --c-s1: #4da3ff;
+  --c-s2: #22d3ee;
+  --c-s3: #f59e0b;
+  --c-s4: #a78bfa;
+  --c-s5: #34d399;
+  --c-s6: #fb7185;
+  --c-s7: #e879f9;
+  --c-s8: #facc15;
+  --c-chart-dim: #3a5b8c; /* 次要柱（榜单前 3 名之外） */
+  --c-rank1: #f2c14e; /* 金 */
+  --c-rank2: #c9d1de; /* 银 */
+  --c-rank3: #d18b4c; /* 铜 */
+  --c-rank-rest: #a8b4c6;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* 表面 */
+  --c-base-rgb: 244 247 251;
+  --c-base: rgb(var(--c-base-rgb));
+  --c-panel-rgb: 255 255 255;
+  --c-panel: rgb(var(--c-panel-rgb));
+  --c-raised-rgb: 247 249 252;
+  --c-raised: rgb(var(--c-raised-rgb));
+  --c-sunken-rgb: 238 242 248;
+  --c-sunken: rgb(var(--c-sunken-rgb));
+  --c-btn-rgb: 238 242 248;
+  --c-btn: rgb(var(--c-btn-rgb));
+  --c-hover-rgb: 232 238 247;
+  --c-hover: rgb(var(--c-hover-rgb));
+
+  /* 边框与文字 */
+  --c-edge-rgb: 215 223 234;
+  --c-edge: rgb(var(--c-edge-rgb));
+  --c-line-rgb: 195 206 221;
+  --c-line: rgb(var(--c-line-rgb));
+  --c-ink-rgb: 22 32 46;
+  --c-ink: rgb(var(--c-ink-rgb));
+  --c-muted-rgb: 91 107 128;
+  --c-muted: rgb(var(--c-muted-rgb));
+
+  /* 语义 */
+  /* 浅色下语义色要压深：Chip/按钮是「同色文字 + 10%~15% 同色底」，
+     底色被抬亮后对比度会比 token-on-panel 低约 0.6~0.9，故取值须留出该余量（实测见 docs/roadmap） */
+  --c-accent-rgb: 21 88 172;
+  --c-accent: rgb(var(--c-accent-rgb));
+  --c-up-rgb: 176 42 34;
+  --c-up: rgb(var(--c-up-rgb));
+  --c-down-rgb: 12 110 62;
+  --c-down: rgb(var(--c-down-rgb));
+  --c-warn-rgb: 146 84 0;
+  --c-warn: rgb(var(--c-warn-rgb));
+
+  /* 图表：浅色下压深同色号，保证在白卡片上仍有对比度 */
+  --c-grid-rgb: 221 229 239;
+  --c-grid: rgb(var(--c-grid-rgb));
+  --c-axis-rgb: 91 107 128;
+  --c-axis: rgb(var(--c-axis-rgb));
+  --c-s1: #1f6fd0;
+  --c-s2: #0e7c93;
+  --c-s3: #b45309;
+  --c-s4: #6d43cc;
+  --c-s5: #0f7a52;
+  --c-s6: #c02a4b;
+  --c-s7: #a325b5;
+  --c-s8: #a06b00;
+  --c-chart-dim: #9db4d4;
+  --c-rank1: #7a5406; /* 金：徽标是「文字 + 同色 12% 底」，需按底被抬亮后的对比度取值（≥4.5） */
+  --c-rank2: #4a5461; /* 银 */
+  --c-rank3: #8a4515; /* 铜 */
+  --c-rank-rest: #5b6675;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--c-base);
+  color: var(--c-ink);
+  font-family:
+    'Inter',
+    'Microsoft YaHei',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--c-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-line);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-edge);
+}
+
+/* 主题切换过渡：避免整页闪跳（尊重 prefers-reduced-motion） */
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-edge bg-panel;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-md border border-edge bg-raised px-2 py-0.5 text-[11px] text-muted;
+  }
+  .btn {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-edge bg-btn px-3 py-1.5 text-xs text-ink transition-colors hover:border-accent hover:bg-hover disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply border-accent/60 bg-accent/15 text-accent hover:bg-accent/25;
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent px-2 text-muted hover:border-edge hover:text-ink;
+  }
+  /* E2：破坏性操作（清理用量等）；与 btn-primary 同构，色调取语义色 up（红） */
+  .btn-danger {
+    @apply border-up/60 bg-up/15 text-up hover:bg-up/25;
+  }
+  .input {
+    @apply w-full rounded-lg border border-edge bg-sunken px-3 py-2 text-sm text-ink outline-none placeholder:text-muted/60 focus:border-accent;
+  }
+  .th {
+    @apply sticky top-0 z-10 bg-panel px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted;
+  }
+  .td {
+    @apply px-3 py-2 text-xs text-ink/90;
+  }
+  /* 代码 / 响应预览块（原先各处硬编码深色底） */
+  .codeblock {
+    @apply rounded-md border border-edge bg-sunken p-2 font-mono text-[10px] leading-relaxed text-ink;
+  }
+}

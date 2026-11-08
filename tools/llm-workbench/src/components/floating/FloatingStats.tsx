@@ -1,0 +1,587 @@
+import { useEffect, useRef, useState } from 'react';
+import { Activity, GripHorizontal, X, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import {
+  type Pos,
+  type Tone,
+  FOCUS_LABEL,
+  FOCUS_NEXT,
+  fmtTok,
+  todayStr,
+  spikeLevel,
+  costSpikeText,
+} from './format';
+import { Sparkline } from './Sparkline';
+import { CostCurve } from './CostCurve';
+import { MenuItem } from './MenuItem';
+import { Row } from './Row';
+import { Mini } from './Mini';
+import { useFloatStats } from './useFloatStats';
+
+// 浮窗：实时显示输入/输出速率、缓存命中、当前模型、当日消耗 token。
+// 固定在视口右下角，可拖拽；默认展开，可折叠为小按钮。
+// C2：数据聚合/轮询/持久化/Electron 桥接副作用已抽到 useFloatStats，本组件只保留渲染与交互。
+
+export default function FloatingStats({ standalone = false }: { standalone?: boolean }) {
+  const docked = standalone;
+  const api = window.electron;
+  const isElectron = !!api?.isElectron;
+  const {
+    data,
+    samples,
+    focus,
+    setFocus,
+    theme,
+    minimal,
+    setMinimal,
+    clickThrough,
+    fontScale,
+    highContrast,
+    proxyAlive,
+    hlModel,
+    costSeries,
+    topModels,
+    modelFreq,
+    costSeriesRef,
+  } = useFloatStats(standalone);
+  const [open, setOpen] = useState(true);
+  const [pos, setPos] = useState<Pos | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ ox: number; oy: number; px: number; py: number } | null>(null);
+
+  // 右键菜单打开时，点击外部关闭
+  useEffect(() => {
+    if (!menu) return;
+    const h = () => setMenu(null);
+    window.addEventListener('click', h);
+    return () => window.removeEventListener('click', h);
+  }, [menu]);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (clickThrough) return; // 点击穿透时禁止拖拽
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    drag.current = { ox: r.left, oy: r.top, px: e.clientX, py: e.clientY };
+    setDragging(true);
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!drag.current) return;
+    const nx = drag.current.ox + (e.clientX - drag.current.px);
+    const ny = drag.current.oy + (e.clientY - drag.current.py);
+    setPos({ left: Math.max(0, nx), top: Math.max(0, ny) });
+  };
+  const onPointerUp = () => {
+    drag.current = null;
+    setDragging(false);
+  };
+
+  const onContextMenu = (e: React.MouseEvent) => {
+    if (!standalone) return;
+    e.preventDefault();
+    const r = ref.current?.getBoundingClientRect();
+    setMenu({ x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+  };
+
+  // 模型深链：点模型行 → 主窗口打开该模型详情
+  const openModel = (m: string) => {
+    if (m && api?.openModel) api.openModel(m);
+  };
+
+  // 日终统计导出 CSV：汇总 + 今日成本序列 + Top 模型频次
+  const exportStatsCsv = () => {
+    const lines = [
+      'section,key,value',
+      `summary,todayCostUsd,${data?.todayCostUsd ?? 0}`,
+      `summary,inputTokens,${data?.todayInputTokens ?? 0}`,
+      `summary,outputTokens,${data?.todayOutputTokens ?? 0}`,
+      `summary,cacheReadTokens,${data?.todayCacheReadTokens ?? 0}`,
+      `summary,cacheHitRate,${data?.cacheHitRateToday ?? ''}`,
+      `summary,costSpikeLevel,${data?.costSpikeLevel ?? ''}`,
+      `summary,costSpikeRatio,${data?.costSpikeRatio ?? ''}`,
+      `summary,hourCostUsd,${data?.hourCostUsd ?? 0}`,
+      `summary,costBaselinePerHrUsd,${data?.costBaselinePerHrUsd ?? 0}`,
+    ];
+    costSeriesRef.current.forEach((v, i) => lines.push(`costSeries,${i},${v}`));
+    [...modelFreq.current.values()]
+      .sort((a, b) => b.count - a.count || b.lastTs - a.lastTs)
+      .forEach((e) => lines.push(`topModel,${e.model},${e.count}`));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `llm-workbench-stats-${todayStr()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  // 浮窗内搜索框：回车深链到主窗口（容忍匹配 recentModels / topModels）
+  const [q, setQ] = useState('');
+  const runFloatSearch = () => {
+    const term = q.trim().toLowerCase();
+    if (!term) return;
+    const pool = [
+      ...(data?.recentModels ?? []).map((r) => r.model),
+      ...topModels.map((t) => t.model),
+    ];
+    const hit = pool.find((m) => m.toLowerCase().includes(term)) || pool[0];
+    if (hit) openModel(hit);
+    setQ('');
+  };
+
+  // ── 主题配色 ──
+  // D3：统一走 CSS 变量令牌（见 src/index.css），不再为浅色手写一套 Tailwind 调色板
+  // （那些 -400/-500 色号在浅色下对比度不足，且与主界面主题不同源）。
+  const cardBase = 'bg-panel/95 text-ink';
+  const sub = 'text-muted';
+  const chipBg = 'bg-sunken';
+  const hoverBg = 'hover:bg-hover';
+  // 高对比模式：强制纯黑/纯白底 + 高对比边框与文字（覆盖主题透明底）
+  const hcClass = highContrast
+    ? theme === 'light'
+      ? '!bg-white !text-black border-black/70'
+      : '!bg-black !text-white border-white/70'
+    : '';
+  const hcSub = highContrast ? (theme === 'light' ? 'text-black/70' : 'text-white/70') : sub;
+  const hcHover = highContrast
+    ? theme === 'light'
+      ? 'hover:bg-black/10'
+      : 'hover:bg-white/10'
+    : hoverBg;
+  const zoomStyle: React.CSSProperties = fontScale !== 1 ? { zoom: fontScale } : {};
+
+  const rate =
+    data?.cacheHitRateToday != null ? `${(data.cacheHitRateToday * 100).toFixed(1)}%` : '—';
+  const model = data?.recentModels?.[0];
+  const series =
+    data?.rateHistory && data.rateHistory.length >= 2
+      ? data.rateHistory.map((s) => ({ in: s.inRate, out: s.outRate }))
+      : samples;
+  const inLevel = spikeLevel(data?.rateHistory, 'inRate');
+  const outLevel = spikeLevel(data?.rateHistory, 'outRate');
+  const alertAny = inLevel === 'alert' || outLevel === 'alert';
+  // E3：成本异动（服务端判级，前端仅取色/措辞）
+  const costLevel: Tone = data?.costSpikeLevel ?? 'normal';
+  const costTone = costLevel === 'alert' ? 'text-up' : costLevel === 'warn' ? 'text-warn' : '';
+  const costTip = data
+    ? costSpikeText({
+        costSpikeLevel: costLevel,
+        costSpikeRatio: data.costSpikeRatio,
+        costSampleHours: data.costSampleHours,
+      })
+    : '成本异动：—';
+
+  const style: React.CSSProperties = docked
+    ? { width: '100%' }
+    : open
+      ? pos
+        ? { left: pos.left, top: pos.top, right: 'auto', bottom: 'auto' }
+        : { right: 16, bottom: 16 }
+      : { right: 16, bottom: 16 };
+
+  // 极简模式（仅浮窗内）：单行展示核心数字，点展开按钮恢复完整卡片
+  if (minimal && standalone) {
+    return (
+      <div
+        ref={ref}
+        className={
+          'relative z-40 flex w-[200px] cursor-grab items-center gap-1.5 rounded-full border border-edge bg-panel/95 px-3 py-1.5 text-[11px] text-ink shadow-2xl backdrop-blur ' +
+          hcClass
+        }
+        style={
+          isElectron
+            ? ({ WebkitAppRegion: 'drag', ...zoomStyle } as React.CSSProperties)
+            : zoomStyle
+        }
+        onPointerDown={onPointerDown}
+        onContextMenu={onContextMenu}
+      >
+        <Activity size={12} className={alertAny ? 'text-up' : 'text-accent'} />
+        <span className="tabular-nums">
+          {data ? `${data.inputRateTokS}/${data.outputRateTokS} t/s` : '—'}
+        </span>
+        <span className={hcSub}>·</span>
+        <span className={'tabular-nums ' + costTone}>
+          ${data ? (data.todayCostUsd || 0).toFixed(4) : '0.0000'}
+        </span>
+        <span className={hcSub}>·</span>
+        <span>{rate}</span>
+        <button
+          className={'ml-auto rounded p-0.5 ' + hcSub + ' ' + hcHover}
+          style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => setMinimal(false)}
+          title="展开完整卡片"
+        >
+          <ChevronUp size={12} />
+        </button>
+      </div>
+    );
+  }
+
+  if (!open && !docked) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/15 px-3 py-2 text-[11px] text-accent shadow-lg backdrop-blur"
+        style={{ right: 16, bottom: 16 }}
+        title="打开实时统计浮窗"
+      >
+        <Activity size={13} />
+        实时
+        {data && (data.inputRateTokS > 0 || data.outputRateTokS > 0) && (
+          <span className="tabular-nums">
+            {data.inputRateTokS}/{data.outputRateTokS} t/s
+          </span>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <div
+      ref={ref}
+      className={
+        (docked
+          ? 'relative w-full select-none rounded-xl border border-edge ' + cardBase
+          : 'fixed z-40 w-[260px] select-none rounded-xl border border-edge ' + cardBase) +
+        ' ' +
+        hcClass +
+        ' shadow-2xl backdrop-blur'
+      }
+      style={
+        docked
+          ? { width: '100%', ...zoomStyle }
+          : { ...style, cursor: dragging ? 'grabbing' : 'default', ...zoomStyle }
+      }
+      onPointerMove={docked ? undefined : onPointerMove}
+      onPointerUp={docked ? undefined : onPointerUp}
+      onPointerLeave={docked ? undefined : onPointerUp}
+      onContextMenu={onContextMenu}
+    >
+      <div
+        className={
+          docked
+            ? 'flex items-center gap-1.5 border-b border-edge px-3 py-2'
+            : 'flex cursor-grab items-center gap-1.5 border-b border-edge px-3 py-2 active:cursor-grabbing'
+        }
+        onPointerDown={docked ? undefined : onPointerDown}
+        style={
+          standalone && isElectron
+            ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties)
+            : undefined
+        }
+      >
+        <GripHorizontal size={13} className={hcSub} />
+        <Activity size={13} className={alertAny ? 'text-up' : 'text-accent'} />
+        <span className="text-[11px] font-medium">实时代理统计</span>
+        <span
+          className="h-1.5 w-1.5 rounded-full"
+          style={{
+            background: proxyAlive
+              ? 'var(--c-down)'
+              : proxyAlive === false
+                ? 'var(--c-up)'
+                : 'var(--c-muted)',
+          }}
+          title={proxyAlive ? '代理已连接' : proxyAlive === false ? '代理断开' : '代理状态未知'}
+        />
+        {clickThrough && (
+          <span
+            className="rounded bg-accent/20 px-1 text-[9px] text-accent"
+            title="点击穿透已开启：浮窗不挡桌面"
+          >
+            穿透
+          </span>
+        )}
+        <button
+          className={'ml-1 rounded p-0.5 ' + sub + ' ' + hoverBg}
+          style={
+            standalone && isElectron
+              ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties)
+              : undefined
+          }
+          onClick={() => setFocus((f) => FOCUS_NEXT[f])}
+          title="切换焦点指标"
+        >
+          <span className="text-[10px] tabular-nums">{FOCUS_LABEL[focus]}</span>
+        </button>
+        {standalone && (
+          <button
+            className={'rounded p-0.5 ' + sub + ' ' + hoverBg}
+            style={
+              standalone && isElectron
+                ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties)
+                : undefined
+            }
+            onClick={() => setMinimal((m) => !m)}
+            title="切换极简模式"
+          >
+            <span className="text-[10px] tabular-nums">{minimal ? '完整' : '极简'}</span>
+          </button>
+        )}
+        <button
+          className={'ml-auto rounded p-0.5 ' + sub + ' ' + hoverBg}
+          style={
+            standalone && isElectron
+              ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties)
+              : undefined
+          }
+          onClick={() => {
+            if (api?.closeFloat) {
+              api.closeFloat();
+              return;
+            }
+            docked ? window.close() : setOpen(false);
+          }}
+          title={docked ? '关闭窗口' : '折叠'}
+        >
+          <X size={13} />
+        </button>
+      </div>
+
+      <div className="space-y-1.5 px-3 py-2.5 text-[11px]">
+        {/* 浮窗内搜索：回车深链到主窗口对应模型（容忍匹配 recentModels / Top 模型） */}
+        <div
+          className={
+            'flex items-center gap-1.5 rounded-md border border-edge px-1.5 ' +
+            (highContrast ? 'border-white/50' : '')
+          }
+        >
+          <Search size={12} className={hcSub} />
+          <input
+            className={
+              'w-full bg-transparent py-1 text-[11px] text-ink outline-none placeholder:text-muted'
+            }
+            placeholder="搜索模型…（回车打开）"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') runFloatSearch();
+            }}
+          />
+        </div>
+        <Row
+          label="输入速率"
+          value={data ? `${data.inputRateTokS} tok/s` : '—'}
+          tone={inLevel}
+          active={focus === 'rate'}
+        />
+        <Row
+          label="输出速率"
+          value={data ? `${data.outputRateTokS} tok/s` : '—'}
+          tone={outLevel}
+          active={focus === 'rate'}
+        />
+        <Row label="请求速率" value={data ? `${data.reqRate}/s` : '—'} active={focus === 'rate'} />
+        <div className="pt-0.5">
+          <Sparkline samples={series} bgClass={chipBg} />
+          <div className={'mt-1 flex items-center justify-center gap-3 text-[9px] ' + sub}>
+            <span className="flex items-center gap-1">
+              <i
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ background: 'var(--c-accent)' }}
+              />
+              输入
+            </span>
+            <span className="flex items-center gap-1">
+              <i
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ background: 'var(--c-down)' }}
+              />
+              输出
+            </span>
+            <span>近 {series.length * 2}s 趋势</span>
+          </div>
+          {alertAny && <div className="mt-1 text-center text-[9px] text-up">⚠ 速率突增</div>}
+        </div>
+        <Row label="缓存命中" value={rate} accent active={focus === 'cache'} />
+        <Row
+          label="当前模型"
+          value={model ? `${model.model}` : '—'}
+          sub={model?.provider}
+          active={
+            focus === 'model' ||
+            !!(hlModel && model && model.model.toLowerCase().includes(hlModel.toLowerCase()))
+          }
+          onClick={model ? () => openModel(model.model) : undefined}
+        />
+        <div className="mt-1 border-t border-edge pt-1.5">
+          <div className="mb-1 flex items-center justify-between">
+            <span className={'text-[10px] uppercase tracking-wider ' + sub}>当日消耗 token</span>
+            <button
+              className={'rounded p-0.5 ' + sub + ' ' + hoverBg}
+              onClick={() => setExpanded((v) => !v)}
+              title="展开/收起详情"
+            >
+              {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-1 text-center">
+            <Mini
+              label="输入"
+              value={data ? fmtTok(data.todayInputTokens) : '0'}
+              accent={focus === 'cost'}
+              bg={chipBg}
+            />
+            <Mini
+              label="输出"
+              value={data ? fmtTok(data.todayOutputTokens) : '0'}
+              accent={focus === 'cost'}
+              bg={chipBg}
+            />
+            <Mini
+              label="缓存"
+              value={data ? fmtTok(data.todayCacheReadTokens) : '0'}
+              accent
+              bg={chipBg}
+            />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between">
+            <span className={'text-[10px] ' + sub}>当日成本</span>
+            <span className={'tabular-nums ' + costTone} title={costTip}>
+              ${data ? data.todayCostUsd.toFixed(4) : '0.0000'}
+              {costLevel === 'alert' ? ' ⚠' : costLevel === 'warn' ? ' ·' : ''}
+            </span>
+          </div>
+          {expanded && (
+            <div className="mt-2 space-y-2 border-t border-edge pt-2">
+              <div className={'text-[10px] ' + sub}>速率状态：{alertAny ? '⚠ 突增' : '正常'}</div>
+              <div className={'text-[10px] ' + (costTone || sub)}>
+                {costTip}
+                {data && data.costSampleHours > 0 ? `（样本 ${data.costSampleHours}h）` : ''}
+              </div>
+
+              {/* 今日累计成本曲线（costSeries 为 todayCostUsd 单调递增采样） */}
+              <div>
+                <div className={'mb-0.5 flex items-center justify-between text-[10px] ' + sub}>
+                  <span>今日累计成本</span>
+                  <span className="tabular-nums">
+                    ${costSeries.length ? costSeries[costSeries.length - 1].toFixed(4) : '0.0000'}
+                  </span>
+                </div>
+                <CostCurve values={costSeries} bgClass={chipBg} />
+              </div>
+
+              {/* 最近模型（本地累计调用频次 Top5，点击深链到主窗口） */}
+              <div>
+                <div className={'mb-0.5 text-[10px] ' + sub}>最近模型（按调用频次 · 点击打开）</div>
+                <ul className="space-y-0.5">
+                  {topModels.length === 0 && <li className={'text-[10px] ' + sub}>暂无记录</li>}
+                  {topModels.map((m) => {
+                    const max = topModels[0]?.count || 1;
+                    const pct = Math.max(6, Math.round((m.count / max) * 100));
+                    const isHl = hlModel && m.model.toLowerCase().includes(hlModel.toLowerCase());
+                    return (
+                      <li
+                        key={m.model}
+                        className={
+                          'flex cursor-pointer items-center gap-1.5 rounded px-1 ' +
+                          (highContrast ? hcHover : 'hover:bg-hover') +
+                          (isHl ? ' ring-1 ring-accent bg-accent/15' : '')
+                        }
+                        onClick={() => openModel(m.model)}
+                        title={'点击在主窗口打开 ' + m.model}
+                      >
+                        <span className="w-24 shrink-0 truncate text-[10px]" title={m.model}>
+                          {m.model}
+                        </span>
+                        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-hover">
+                          <span
+                            className="block h-full rounded-full bg-accent"
+                            style={{ width: pct + '%' }}
+                          />
+                        </span>
+                        <span className="w-4 text-right tabular-nums text-[10px] text-muted">
+                          {m.count}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {menu && (
+        <div
+          className="absolute z-50 w-36 overflow-hidden rounded-md border border-edge bg-panel py-1 text-[11px] text-ink shadow-xl"
+          style={{ left: menu.x, top: menu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MenuItem
+            label={expanded ? '收起详情' : '展开详情'}
+            onClick={() => {
+              setExpanded((v) => !v);
+              setMenu(null);
+            }}
+          />
+          <MenuItem
+            label={minimal ? '切换完整模式' : '切换极简模式'}
+            onClick={() => {
+              setMinimal((m) => !m);
+              setMenu(null);
+            }}
+          />
+          <MenuItem
+            label="切换焦点指标"
+            onClick={() => {
+              setFocus((f) => FOCUS_NEXT[f]);
+              setMenu(null);
+            }}
+          />
+          {isElectron && (
+            <MenuItem
+              label={clickThrough ? '关闭点击穿透' : '开启点击穿透'}
+              onClick={() => {
+                api?.toggleClickThrough?.();
+                setMenu(null);
+              }}
+            />
+          )}
+          <MenuItem
+            label="导出今日统计"
+            onClick={() => {
+              exportStatsCsv();
+              setMenu(null);
+            }}
+          />
+          {isElectron && (
+            <MenuItem
+              label="打开主窗口"
+              onClick={() => {
+                api?.showMain?.();
+                setMenu(null);
+              }}
+            />
+          )}
+          {isElectron && (
+            <MenuItem
+              label="重置浮窗位置"
+              onClick={() => {
+                api?.resetFloat?.();
+                setMenu(null);
+              }}
+            />
+          )}
+          <MenuItem
+            label="关闭浮窗"
+            danger
+            onClick={() => {
+              if (api?.closeFloat) api.closeFloat();
+              else docked ? window.close() : setOpen(false);
+              setMenu(null);
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
