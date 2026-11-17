@@ -56,8 +56,12 @@
  *                          follows bg fades, restores with saves; unknown
  *                          values warn once and are ignored
  *   line.fx              — "glitch" (.vn-glitch on .vn-text while the line
- *                          displays) or "shake" (.vn-shake on #vn-app for
- *                          SHAKE_MS); unknown values warn once and are ignored
+ *                          displays), "whisper" (hushed text treatment),
+ *                          "flash" (700ms white blink), "blackout" (380ms
+ *                          black frame), "bigtext" (fullscreen black + one
+ *                          centered line, clears on advance), "bounce"
+ *                          (focus sprite dip), "shake"/"grade"/"dolly";
+ *                          unknown values warn once and are ignored
  *
  * Optional parallel module (loaded before engine.js):
  *   window.VN_SCENES     — background id -> { init(ctx, w, h),
@@ -119,15 +123,30 @@
   var SKIP_DELAY_MS = 80; // skip mode: per-line step interval (~12 lines/s)
   var CREDITS_DELAY_MS = 2500; // THE END -> credits roll
   var CREDITS_MS = 18000; // credits roll duration (click/space skips)
+  var OP_SLIDE_MS = 3600; // per-slide hold in the image OP (click/space skips)
+  var OP_SLIDES = [
+    "cg_email",
+    "cg_rain_climb",
+    "cg_server",
+    "cg_wake",
+    "cg_dawn",
+  ]; // theme-level imagery only: night, rain, machine, light, dawn
   var BG_FADE_MS = 300; // keep in sync with the .vn-bg opacity transition in style.css
   var BG_FADING_MS = 650; // .vn-fading (fade through black) window on bg change
   var SHAKE_MS = 500; // duration of .vn-shake on #vn-app for fx:"shake" lines
   var FLASH_MS = 700; // duration of the one-shot .vn-flash white blink
+  var BLACKOUT_MS = 380; // one-shot .vn-blackout black frame (fx "blackout")
+  var POSE_LEAD_MS = 150; // typing starts after this so a pose swap lands first
   var TOAST_MS = 1500;
   var BACKLOG_LIMIT = 100; // keep only the last N displayed lines
   var SLOT_COUNT = 3; // vn-save-1 .. vn-save-3
   var SAVE_PREFIX = "vn-save-";
   var QUICK_SAVE_KEY = SAVE_PREFIX + "quick"; // Ctrl+S target, outside the menu slots
+  var SEEN_TEXT_KEY = SAVE_PREFIX + "seen-lines"; // #39: skip-read-text store
+  var SEEN_TEXT_CAP = 4000; // oldest seen keys drop off beyond this
+  var SEEN_FLUSH_EVERY = 25; // marks before the seen set is written back
+  var AUTO_SAVE_KEY = SAVE_PREFIX + "autosave"; // #40: pagehide/throttle autosave
+  var AUTO_SAVE_EVERY = 8; // displayed lines between autosave writes
   var activeChoices = []; // choice objects shown by showChoices, for 1..9 hotkeys
   var THUMB_W = 160; // save-slot thumbnail box (16:9, cover-fit crop)
   var THUMB_H = 90;
@@ -188,8 +207,14 @@
     typing: false,
     typeFull: "",
     typePos: 0,
+    typeMs: null, // per-line typewriter override (ms/char); set from voice sync
     auto: false,
     speedIdx: 1, // index into SPEEDS — default 正常 (30ms/char)
+    skipUnseen: false, // #39: false = skip stops at unread lines (default)
+    textSize: 100, // #43 accessibility: % of the base dialog font size
+    lineSpacing: 100, // #43 accessibility: % of the base line height
+    highContrast: false, // #43 accessibility: solid dialog, plain white text
+    gradeOverride: null, // #bg-variants: scene-level mood filter wins over bg
     menuMode: "save", // 'save' | 'load'
     autoDelayMs: AUTO_DELAY_MS, // mutable auto-mode delay, set from settings
   };
@@ -203,6 +228,8 @@
     fading: null,
     shake: null,
     flash: null,
+    beats: [], // pending line.beats setTimeout handles (array, not one id)
+    op: null, // pending image-OP slide advance
     toast: null,
     chapter: null,
     credits: null,
@@ -249,6 +276,14 @@
     cgImg.alt = "";
     cg.appendChild(cgImg);
 
+    // image OP (benchmark #33): a skippable theme-only CG slideshow between
+    // the title and the first scene; zero video assets, reuses story CGs
+    var op = h("div", "vn-op vn-hidden", app);
+    var opImg = document.createElement("img");
+    opImg.className = "vn-op-img";
+    opImg.alt = "";
+    op.appendChild(opImg);
+
     var dialog = h("div", "vn-dialog", app);
     var name = h("div", "vn-name", dialog);
     var text = h("div", "vn-text", dialog);
@@ -267,6 +302,10 @@
 
     var choices = h("div", "vn-choices vn-hidden", app);
 
+    // fullscreen text (fx "bigtext"): black-out everything, let one line land
+    // alone — the FSN-style black-screen moment; cleared on line advance
+    var bigtext = h("div", "vn-bigtext", app);
+
     var topbar = h("div", "vn-topbar", app);
     var btns = {};
     [
@@ -276,6 +315,7 @@
       ["auto", "自动"],
       ["skip", "快进"],
       ["speed", speedLabel()],
+      ["tree", "剧情树"], // gallery entry that opens on the tree tab
       ["title", "标题"],
       ["settings", "设置"], // opens the settings overlay (volume + auto delay)
       ["audio", audioLabel()], // reflects window.VN_AUDIO.enabled() at render
@@ -347,17 +387,71 @@
     fsBtn.textContent = fullscreenLabel();
     fsBtn.addEventListener("click", toggleFullscreen);
     fsRow.appendChild(fsBtn);
+    // #39: skip scope — "已读" (default, Ren'Py-style skip-seen-only) vs
+    // "全部" (skip unread lines too)
+    var skipScopeRow = h("div", "vn-setting-row", settings);
+    var skipScopeLabel = h("label", null, skipScopeRow);
+    skipScopeLabel.textContent = "快进范围";
+    var skipScopeBtn = h("button", "vn-fs-btn", skipScopeRow);
+    skipScopeBtn.type = "button";
+    skipScopeBtn.textContent = "已读";
+    skipScopeBtn.addEventListener("click", toggleSkipScope);
+    skipScopeRow.appendChild(skipScopeBtn);
+    // #43 accessibility: text size / line spacing / high contrast
+    var textSizeRange = h("input", "vn-range", null);
+    textSizeRange.type = "range";
+    textSizeRange.setAttribute("min", "80");
+    textSizeRange.setAttribute("max", "140");
+    textSizeRange.setAttribute("step", "10");
+    var textSizeVal = h("span", "vn-range-val", null);
+    var textSizeRow = h("div", "vn-setting-row", settings);
+    var textSizeLabel = h("label", null, textSizeRow);
+    textSizeLabel.textContent = "字号";
+    textSizeRow.appendChild(textSizeRange);
+    textSizeRow.appendChild(textSizeVal);
+    var lineSpacingRange = h("input", "vn-range", null);
+    lineSpacingRange.type = "range";
+    lineSpacingRange.setAttribute("min", "140");
+    lineSpacingRange.setAttribute("max", "240");
+    lineSpacingRange.setAttribute("step", "10");
+    var lineSpacingVal = h("span", "vn-range-val", null);
+    var lineSpacingRow = h("div", "vn-setting-row", settings);
+    var lineSpacingLabel = h("label", null, lineSpacingRow);
+    lineSpacingLabel.textContent = "行距";
+    lineSpacingRow.appendChild(lineSpacingRange);
+    lineSpacingRow.appendChild(lineSpacingVal);
+    var hcRow = h("div", "vn-setting-row", settings);
+    var hcLabel = h("label", null, hcRow);
+    hcLabel.textContent = "高对比";
+    var hcBtn = h("button", "vn-fs-btn", hcRow);
+    hcBtn.type = "button";
+    hcBtn.addEventListener("click", toggleHighContrast);
+    hcRow.appendChild(hcBtn);
     // shortcut legend: one quiet block, no interaction — the full keyboard
     // surface lives here so it is discoverable without leaving the game
     var keys = h("div", "vn-keys", settings);
     keys.textContent =
-      "空格 / Enter 推进 · 长按 S 快进 · 1-9 选分支 · ↑ 记录 · A 自动 · Ctrl+S 快存 · Ctrl+L 快读 · F 全屏 · Esc 关闭";
+      "空格 / Enter 推进 · 长按 S 快进（已读） · 1-9 选分支 · ↑ 记录 · A 自动 · Ctrl+S 快存 · Ctrl+L 快读 · F 全屏 · H 隐藏界面 · 滚轮/PageUp 回滚 · Esc 关闭";
     var settingsClose = h("button", "vn-close", settings);
     settingsClose.type = "button";
     settingsClose.textContent = "关闭";
     settingsClose.addEventListener("click", hideSettings);
     volRange.addEventListener("input", onVolumeInput);
     autoRange.addEventListener("input", onAutoDelayInput);
+    textSizeRange.addEventListener("input", onTextSizeInput);
+    lineSpacingRange.addEventListener("input", onLineSpacingInput);
+    applyTextPrefs(); // apply the persisted accessibility prefs once per build
+    // #39/#40 housekeeping: seen-set + autosave flush on tab hide/close
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") {
+        flushSeenText();
+        writeAutoSave();
+      }
+    });
+    window.addEventListener("pagehide", function () {
+      flushSeenText();
+      writeAutoSave();
+    });
 
     var title = h("div", "vn-title", app);
     var titleCanvas = document.createElement("canvas");
@@ -370,6 +464,10 @@
     var endings = h("div", "vn-endings", title);
     var endingsCount = h("div", "vn-endings-count", endings);
     var endingsMarks = h("div", "vn-endings-marks", endings);
+    // lite-build pack loading line: only ever shows when pack-loader.js is
+    // present (split build) — the full single-file build keeps it hidden
+    var packStatus = h("div", "vn-pack-status vn-hidden", title);
+    packStatus.setAttribute("aria-live", "polite");
     var endingMarks = {};
     ENDING_IDS.forEach(function (id) {
       var mark = h("span", "vn-ending-mark", endingsMarks);
@@ -381,6 +479,17 @@
     startBtn.type = "button";
     startBtn.textContent = "开始游戏";
     startBtn.addEventListener("click", beginGame);
+    var logReminderBtn = h("button", "vn-hidden", title);
+    logReminderBtn.id = "vn-log-reminder";
+    logReminderBtn.type = "button";
+    logReminderBtn.textContent = "值班日志还没翻到最后 · 回看线索";
+    logReminderBtn.setAttribute(
+      "aria-label",
+      "值班日志还没翻到最后，打开剧情树回看线索",
+    );
+    logReminderBtn.addEventListener("click", function () {
+      openGallery("tree");
+    });
     // 星语 · 后日谈: 100%-completion bonus episode, a quiet secondary entry
     // under the start button. Visibility is driven by syncBonusButton() from
     // here and every showTitle; hidden by default until 3/3 holds.
@@ -486,6 +595,10 @@
       sprites: sprites,
       cg: cg,
       cgImg: cgImg,
+      op: op,
+      opImg: opImg,
+      packStatus: packStatus,
+      bigtext: bigtext,
       name: name,
       text: text,
       srLive: srLive,
@@ -507,6 +620,12 @@
       autoRange: autoRange,
       autoVal: autoVal,
       fsBtn: fsBtn,
+      skipScopeBtn: skipScopeBtn,
+      textSizeRange: textSizeRange,
+      textSizeVal: textSizeVal,
+      lineSpacingRange: lineSpacingRange,
+      lineSpacingVal: lineSpacingVal,
+      hcBtn: hcBtn,
       gallery: gallery,
       galleryBtn: galleryBtn,
       gtabScenes: gtabScenes,
@@ -521,6 +640,7 @@
       titleCanvas: titleCanvas,
       titleName: titleName,
       titleSub: titleSub,
+      logReminderBtn: logReminderBtn,
       endings: endings,
       endingsCount: endingsCount,
       endingsMarks: endingsMarks,
@@ -537,6 +657,23 @@
 
     topbar.addEventListener("click", onTopbarClick);
     app.addEventListener("click", onAppClick);
+    // #42: wheel-up steps back through shown lines, wheel-down forward
+    app.addEventListener(
+      "wheel",
+      function (e) {
+        if (state.mode !== "line") return;
+        e.preventDefault();
+        rollbackStep(e.deltaY < 0 ? -1 : 1);
+      },
+      { passive: false },
+    );
+    // #41: right click toggles the interface during lines (line mode only —
+    // choices, menus and the title keep the normal context menu)
+    app.addEventListener("contextmenu", function (e) {
+      if (state.mode !== "line") return;
+      e.preventDefault();
+      setUiHidden(!uiHidden);
+    });
     if (!docBound) {
       document.addEventListener("keydown", onKeyDown);
       document.addEventListener("keyup", onKeyUp);
@@ -544,6 +681,7 @@
     }
     bindFsEvents();
     loadSettings(); // once per build: volume -> VN_AUDIO, delay -> state
+    loadSeenText(); // once per build: seen-line keys for skip-read-text (#39)
     renderEndings(); // initial collector readout (empty storage -> 0/3, ？x3)
     syncBonusButton(); // 星语 · 后日谈 joins the title only at 3/3 + finale_star
     syncContinueButton(); // 继续游戏 joins the title only with a parseable save
@@ -653,15 +791,20 @@
     return SPEEDS[state.speedIdx].ms;
   }
 
-  function startTyping(text) {
+  function startTyping(text, leadMs) {
     clearTimeout(timers.type);
     state.typing = true;
     state.typeFull = String(text);
     state.typePos = 0;
+    state.typeMs = null; // voice sync may set a per-line cadence (see below)
     els.text.textContent = "";
     els.text.classList.add("vn-typing"); // blinking caret while chars reveal
     hideNextIndicator();
-    timers.type = setTimeout(typeStep, speedMs());
+    // optional lead: the pose/fx swap lands first, then the words flow
+    timers.type = setTimeout(
+      typeStep,
+      (leadMs || 0) + (state.typeMs || speedMs()),
+    );
   }
 
   function typeStep() {
@@ -675,7 +818,7 @@
       finishTyping();
       return;
     }
-    timers.type = setTimeout(typeStep, speedMs());
+    timers.type = setTimeout(typeStep, state.typeMs || speedMs());
   }
 
   function finishTyping() {
@@ -779,6 +922,7 @@
     if (!skipOn) {
       clearTimeout(timers.skip);
       timers.skip = null;
+      flushSeenText(); // #39: marks made during the skip burst land here
     }
     if (els && els.btns.skip) {
       els.btns.skip.classList.toggle("vn-active", skipOn);
@@ -817,6 +961,22 @@
       setSkip(false, true);
       return;
     }
+    // #39 skip-read-text: stop at the first unread line unless the player
+    // widened the scope to "全部" in settings
+    if (!state.skipUnseen) {
+      var scene = S && S.scenes ? S.scenes[state.scene] : null;
+      var nextIdx = state.line + 1;
+      if (
+        scene &&
+        Array.isArray(scene.lines) &&
+        nextIdx < scene.lines.length &&
+        !isLineSeen(state.scene, nextIdx)
+      ) {
+        setSkip(false, true);
+        flushSeenText();
+        return;
+      }
+    }
     advance();
     scheduleSkip();
   }
@@ -829,6 +989,77 @@
   function cycleSpeed() {
     state.speedIdx = (state.speedIdx + 1) % SPEEDS.length;
     els.btns.speed.textContent = speedLabel();
+  }
+
+  // #39: skip scope toggle in the settings panel
+  function skipScopeLabel() {
+    return state.skipUnseen ? "全部" : "已读";
+  }
+
+  function toggleSkipScope() {
+    state.skipUnseen = !state.skipUnseen;
+    saveSettings();
+    if (els && els.skipScopeBtn) {
+      els.skipScopeBtn.textContent = skipScopeLabel();
+    }
+  }
+
+  // #43 accessibility: text size / line spacing / high contrast. The base
+  // font size and line height are captured once from the stylesheet, then
+  // scaled by the persisted percentages.
+  function applyTextPrefs() {
+    if (!els || !els.text) return;
+    if (!applyTextPrefs.baseSize) {
+      applyTextPrefs.baseSize = parseFloat(
+        window.getComputedStyle(els.text).fontSize,
+      );
+      applyTextPrefs.baseHeight = parseFloat(
+        window.getComputedStyle(els.text).lineHeight,
+      );
+    }
+    els.text.style.fontSize =
+      (applyTextPrefs.baseSize * state.textSize) / 100 + "px";
+    els.text.style.lineHeight =
+      (applyTextPrefs.baseHeight * state.lineSpacing) / 100 + "";
+    if (els.app) els.app.classList.toggle("vn-hc", state.highContrast);
+  }
+
+  function hcLabel() {
+    return state.highContrast ? "开" : "关";
+  }
+
+  function toggleHighContrast() {
+    state.highContrast = !state.highContrast;
+    saveSettings();
+    applyTextPrefs();
+    if (els && els.hcBtn) {
+      els.hcBtn.textContent = hcLabel();
+    }
+  }
+
+  function onTextSizeInput() {
+    if (!els || !els.textSizeRange) return;
+    var pct = parseFloat(els.textSizeRange.value);
+    if (!isFinite(pct)) return;
+    state.textSize = Math.round(pct);
+    if (els.textSizeVal) {
+      els.textSizeVal.textContent = state.textSize + "%";
+    }
+    applyTextPrefs();
+    saveSettings();
+  }
+
+  function onLineSpacingInput() {
+    if (!els || !els.lineSpacingRange) return;
+    var pct = parseFloat(els.lineSpacingRange.value);
+    if (!isFinite(pct)) return;
+    state.lineSpacing = Math.round(pct);
+    if (els.lineSpacingVal) {
+      els.lineSpacingVal.textContent =
+        (state.lineSpacing / 100).toFixed(1) + "x";
+    }
+    applyTextPrefs();
+    saveSettings();
   }
 
   /* ----------------------------------------------------------------- sprites */
@@ -845,7 +1076,8 @@
   // "b_" prefix ("b_happy"). Resolution: pose+feel, pose+normal, plain
   // feel (pose A), plain normal — so a missing pose-B feel degrades to
   // pose A rather than to a letter.
-  function charArtFor(charId, feel, pose) {
+  var gazeWarned = {}; // "<charId>/<gazeKey>" -> true; warn only once per key
+  function charArtFor(charId, feel, pose, gaze) {
     var raster =
       typeof window !== "undefined" && window.CHAR_ART_IMG
         ? window.CHAR_ART_IMG
@@ -866,9 +1098,27 @@
     }
     var poseKey = pose && pose !== "a" ? pose + "_" + feel : feel;
     var poseNormalKey = pose && pose !== "a" ? pose + "_normal" : "normal";
+    // gaze variants are raster-only: key "<pose>_<feel>_gl"/"_gr" ("gl" = looking
+    // toward the viewer's left, "gr" = viewer's right; pose A keys plain, so
+    // e.g. "normal_gl"). Missing gaze art falls back to the center-facing key.
+    var gazeKey = gaze === "l" || gaze === "r" ? poseKey + "_g" + gaze : null;
     if (raster && typeof raster === "object") {
       var r = raster[charId];
       if (r && typeof r === "object") {
+        if (gazeKey) {
+          var gazeHit = pick(r, gazeKey, null);
+          if (gazeHit) return gazeHit;
+          if (!gazeWarned[charId + "/" + gazeKey]) {
+            gazeWarned[charId + "/" + gazeKey] = true;
+            console.warn(
+              "[VN] no gaze art for " +
+                charId +
+                ' "' +
+                gazeKey +
+                '"; falling back to center-facing sprite',
+            );
+          }
+        }
         var hit = pick(r, poseKey, poseNormalKey);
         if (hit) return hit;
         hit = pick(r, feel, "normal");
@@ -882,8 +1132,8 @@
 
   // Paints a sprite's portrait: raster/CHAR_ART art (replaces the initial
   // letter) when available, else the original initial-letter fallback.
-  function applySpriteArt(sp, charId, feel, ch, pose) {
-    var art = charArtFor(charId, feel, pose);
+  function applySpriteArt(sp, charId, feel, ch, pose, gaze) {
+    var art = charArtFor(charId, feel, pose, gaze);
     if (art != null) {
       sp.innerHTML = art; // trusted, authored inline SVG
     } else {
@@ -891,7 +1141,7 @@
     }
   }
 
-  function showSprite(charId, feel, pose) {
+  function showSprite(charId, feel, pose, gaze) {
     var ch = S.characters && S.characters[charId];
     if (!ch) {
       console.warn("[VN] unknown character: " + charId);
@@ -919,6 +1169,8 @@
       id: charId,
       feel: typeof feel === "string" && feel ? feel : "normal",
       pose: effPose,
+      // gaze is a per-line glance, NOT sticky: absent next line -> null
+      gaze: gaze === "l" || gaze === "r" ? gaze : null,
     });
     if (arr.length > 2) arr.length = 2; // keep only the latest two speakers
     renderSprites();
@@ -996,7 +1248,8 @@
     desired.forEach(function (item) {
       var sp = existing[item.id];
       var feel = item.feel || "normal";
-      var poseKey = (item.pose || "a") + "/" + feel;
+      var gaze = item.gaze === "l" || item.gaze === "r" ? item.gaze : null;
+      var poseKey = (item.pose || "a") + "/" + feel + (gaze ? "/" + gaze : "");
       if (!sp) {
         var ch = S.characters && S.characters[item.id];
         if (!ch) return; // already warned when the character was used
@@ -1005,7 +1258,7 @@
         sp.setAttribute("data-char", item.id);
         sp.setAttribute("data-posekey", poseKey);
         sp.style.setProperty("--vn-color", charColor(ch));
-        applySpriteArt(sp, item.id, feel, ch, item.pose);
+        applySpriteArt(sp, item.id, feel, ch, item.pose, gaze);
         layer.appendChild(sp);
         spriteEnter(sp); // slide up + fade in; class self-removes
       } else {
@@ -1022,7 +1275,7 @@
           var ch2 = S.characters && S.characters[item.id];
           if (ch2) {
             sp.setAttribute("data-posekey", poseKey);
-            applySpriteArt(sp, item.id, feel, ch2, item.pose);
+            applySpriteArt(sp, item.id, feel, ch2, item.pose, gaze);
             sp.classList.add("vn-swap");
             clearTimeout(sp._vnSwapTimer);
             sp._vnSwapTimer = setTimeout(function () {
@@ -1086,8 +1339,8 @@
   function syncBgFx(bg, bgId) {
     if (!els || !els.bgFx) return;
     els.bgFx.innerHTML = typeof bg.html === "string" ? bg.html : "";
-    syncProps(bg, bgId);
-    updateCanvasScene(bgId);
+    syncProps(bg, baseBgId(bgId));
+    updateCanvasScene(baseBgId(bgId));
   }
 
   // 3D prop sprites: scene declares props: [{ id, left, bottom, width }]
@@ -1117,7 +1370,13 @@
       img.style.left = typeof p.left === "string" ? p.left : "50%";
       img.style.bottom = typeof p.bottom === "string" ? p.bottom : "8%";
       img.style.width = typeof p.width === "string" ? p.width : "30vw";
-      if (p.flip) img.style.transform = "scaleX(-1)";
+      // #prop-integration: per-prop grade filter + transform so AI-cut props
+      // sit in the night grade instead of floating as bright stickers
+      if (typeof p.filter === "string") img.style.filter = p.filter;
+      var tf = [];
+      if (p.flip) tf.push("scaleX(-1)");
+      if (typeof p.transform === "string") tf.push(p.transform);
+      if (tf.length) img.style.transform = tf.join(" ");
       if (typeof p.opacity === "number") img.style.opacity = String(p.opacity);
       els.propsLayer.appendChild(img);
     });
@@ -1143,7 +1402,11 @@
       var cls = els.app.classList[i];
       if (cls.indexOf("vn-g-") === 0) els.app.classList.remove(cls);
     }
-    var grade = bg && typeof bg.grade === "string" ? bg.grade : "";
+    // #bg-variants: scene-level grade override wins over the bg's own grade —
+    // same location at a different story hour reads as a different picture
+    var grade =
+      state.gradeOverride ||
+      (bg && typeof bg.grade === "string" ? bg.grade : "");
     if (!grade) return;
     if (!BG_GRADES[grade]) {
       if (!gradeWarned) {
@@ -1170,14 +1433,24 @@
     return css;
   }
 
+  // #bg-variants: a bg id may carry a "__vN" variant suffix (different AI
+  // painting of the same location); art lookup uses the full id, everything
+  // else (scenario data, fx dioramas, props, canvas scenes, gallery unlocks,
+  // ambience beds) resolves to the base location id.
+  function baseBgId(bgId) {
+    var cut = typeof bgId === "string" ? bgId.indexOf("__") : -1;
+    return cut > 0 ? bgId.slice(0, cut) : bgId;
+  }
+
   function applyBg(bgId) {
     if (!bgId || bgId === state.bg) return; // bg persists when omitted / unchanged
-    var bg = S.backgrounds && S.backgrounds[bgId];
+    var bg = S.backgrounds && S.backgrounds[baseBgId(bgId)];
     if (!bg || typeof bg.css !== "string") {
       console.warn("[VN] unknown background: " + bgId);
       return;
     }
     state.bg = bgId;
+    audioHook("amb", baseBgId(state.bg)); // ambience beds keyed by location
     clearTimeout(timers.bg);
     els.bg.classList.add("vn-fade");
     // Fade through black while the background swaps (styling in style.css).
@@ -1191,7 +1464,7 @@
       els.bg.style.background = bgPaint(bg, bgId);
       syncBgFx(bg, bgId);
       syncGrade(bg); // grade follows the bg through the same fade window
-      recordSeen(bgId); // gallery unlock: this scene has now been visited
+      recordSeen(baseBgId(bgId)); // gallery unlock keyed by location
       // ambient switch is the caller's job (scene.bgm may override the bg)
       els.bg.classList.remove("vn-fade");
     }, BG_FADE_MS);
@@ -1202,16 +1475,17 @@
     clearTimeout(timers.bg);
     els.bg.classList.remove("vn-fade");
     if (!bgId) return;
-    var bg = S.backgrounds && S.backgrounds[bgId];
+    var bg = S.backgrounds && S.backgrounds[baseBgId(bgId)];
     if (!bg || typeof bg.css !== "string") {
       console.warn("[VN] unknown background in save: " + bgId);
       return;
     }
     state.bg = bgId;
+    audioHook("amb", baseBgId(state.bg)); // a restored save resumes its ambience at once
     els.bg.style.background = bgPaint(bg, bgId);
     syncBgFx(bg, bgId); // re-apply the restored bg's fx html + canvas scene
     syncGrade(bg); // instant path: grade comes back with the bg
-    recordSeen(bgId);
+    recordSeen(baseBgId(bgId));
   }
 
   /* ------------------------------------------------------ canvas scenes */
@@ -1600,6 +1874,66 @@
   // Applies a line's optional fx. Glitch lasts while the line displays
   // (cleared by clearGlitch); shake is a fixed-duration screen effect that
   // removes itself.
+
+  // --- line voice (sampled TTS, window.VN_VOICE) ------------------------------
+  // Keyed "<scene>.<line>". Plays once per displayed line; a new line stops
+  // the previous voice. Respects the audio toggle and master volume. Missing
+  // keys are silent (text-only, exactly like before).
+  var voiceEl = null;
+
+  function playVoiceFor(key) {
+    try {
+      if (voiceEl) {
+        voiceEl.pause();
+        voiceEl = null;
+      }
+      if (typeof window === "undefined" || !window.VN_VOICE) return;
+      var src = window.VN_VOICE[key];
+      if (typeof src !== "string" || !src) return;
+      if (skipOn || skipHeld) return; // #39: skipping never starts voices
+      if (rbRestoring) return; // #42: rolled-back lines display silently
+      if (
+        typeof window.VN_AUDIO !== "undefined" &&
+        window.VN_AUDIO.enabled &&
+        !window.VN_AUDIO.enabled()
+      ) {
+        return;
+      }
+      voiceEl = new Audio(src);
+      if (typeof window.VN_AUDIO !== "undefined" && window.VN_AUDIO.volume) {
+        voiceEl.volume = window.VN_AUDIO.volume();
+      }
+      var p = voiceEl.play();
+      if (p && typeof p.catch === "function") p.catch(function () {});
+      return voiceEl;
+    } catch (e) {}
+    return null;
+  }
+
+  // Voice-synced typewriter: when the line has a sampled voice, stretch the
+  // reveal cadence so the text settles at ~85% of the audio duration instead
+  // of finishing long before the speech ends. Clamped to keep unreadably
+  // slow/fast pacing out; silently ignored without audio metadata.
+  function syncTypingToVoice(el) {
+    if (!el || !state.typing) return;
+    var len = state.typeFull.length;
+    if (!len) return;
+    var apply = function () {
+      if (!state.typing || state.typeMs != null) return;
+      var d = el.duration;
+      if (!isFinite(d) || d <= 0) return;
+      var ms = Math.round((d * 1000 * 0.85) / len);
+      if (ms < 8) ms = 8;
+      if (ms > 140) ms = 140;
+      state.typeMs = ms;
+    };
+    if (el.readyState >= 1 && isFinite(el.duration) && el.duration > 0) {
+      apply();
+    } else {
+      el.addEventListener("loadedmetadata", apply, { once: true });
+    }
+  }
+
   // ---- CG overlay (full-screen event illustrations) --------------------------
 
   // window.VN_CG_IMG: { cgId -> dataURI }, authored by the CG pipeline.
@@ -1615,6 +1949,8 @@
     cg_memory: "bgm_cg_memory",
     cg_archive: "bgm_cg_archive",
     cg_dawn: "bgm_cg_dawn",
+    cg_keeper: "bgm_keeper",
+    cg_substitute: "bgm_fake_substitute",
   };
 
   // line.cg semantics (VN convention: a CG plays over a stretch of dialogue):
@@ -1629,10 +1965,17 @@
       if (state.cg !== id || els.cgImg.getAttribute("src") !== cgImageFor(id)) {
         els.cgImg.setAttribute("src", cgImageFor(id));
         state.cg = id;
+        // A CG→CG swap while visible bypasses the vn-hidden toggle, so the
+        // CSS animations would not restart on their own — force a restart
+        // so the fade and the ken-burns push replay for the new art.
+        els.cgImg.style.animation = "none";
+        void els.cgImg.offsetWidth; // reflow to flush the reset
+        els.cgImg.style.animation = "";
       }
       els.cg.classList.remove("vn-hidden");
       recordCgSeen(id); // story-tree CG unlock
       if (CG_BGM[id]) audioHook("scene", CG_BGM[id]); // CG owns the music
+      audioHook("amb", null); // and the soundscape: ambience stands down
       return;
     }
     if (id !== null) {
@@ -1650,6 +1993,7 @@
         ? S.scenes[state.scene]
         : null;
     audioHook("scene", sc ? sc.bgm || sc.bg : null);
+    audioHook("amb", state.bg); // ambience comes back with the scene's bg
   }
 
   // rebuild the overlay from state (restore path)
@@ -1666,6 +2010,14 @@
   function applyLineFx(line) {
     var fx = line ? line.fx : null;
     if (fx == null || fx === "") return;
+    applySingleFx(fx, line);
+  }
+
+  // One resolved fx value -> its DOM effect. Shared by applyLineFx (the
+  // line's own fx, fired at display onset) and the beats scheduler (timed
+  // entries from line.beats, fired at their `at` offsets). `line` is read
+  // only by the bigtext branch; beats pass the owning line through.
+  function applySingleFx(fx, line) {
     if (fx === "glitch") {
       els.text.classList.add("vn-glitch");
       return;
@@ -1697,6 +2049,7 @@
       // overlay is CSS on #vn-app::after and self-removes after FLASH_MS
       els.app.classList.add("vn-flash");
       clearTimeout(timers.flash);
+      els.app.classList.remove("vn-blackout"); // beats safety: no-op if absent
       timers.flash = setTimeout(function () {
         timers.flash = null;
         if (els) els.app.classList.remove("vn-flash");
@@ -1712,6 +2065,35 @@
       audioHook("swell");
       return;
     }
+    if (fx === "bigtext") {
+      // fullscreen text: the black screen carries one line alone (see
+      // .vn-bigtext). Lasts while the line displays, cleared on advance.
+      els.bigtext.textContent = line ? String(line.text || "") : "";
+      els.app.classList.add("vn-bigtext-mode");
+      return;
+    }
+    if (fx === "blackout") {
+      // one-shot black frame: the classic cut-to-black beat between two
+      // lines (mirror of "flash"); mirrors the flash timer pattern
+      els.app.classList.add("vn-blackout");
+      clearTimeout(timers.flash);
+      els.app.classList.remove("vn-flash"); // beats safety: no-op if absent
+      timers.flash = setTimeout(function () {
+        timers.flash = null;
+        if (els) els.app.classList.remove("vn-blackout");
+      }, BLACKOUT_MS);
+      return;
+    }
+    if (fx === "bounce") {
+      // emphasis beat on the focus sprite: a small dip-and-settle, one-shot
+      var focusSvg = els.app.querySelector(".vn-sprite.vn-focus > svg");
+      if (focusSvg) {
+        focusSvg.classList.remove("vn-bounce");
+        void focusSvg.offsetWidth; // reflow so consecutive bounces replay
+        focusSvg.classList.add("vn-bounce");
+      }
+      return;
+    }
     if (!fxWarned[fx]) {
       fxWarned[fx] = true;
       console.warn("[VN] unknown line fx: " + fx);
@@ -1724,12 +2106,18 @@
     // text-level fx clear: glitch RGB-split and the whisper treatment both
     // ride on .vn-text and stop when the line advances
     if (els) els.text.classList.remove("vn-glitch", "vn-whisper");
+    // bigtext overlay drops with the line that raised it
+    if (els) {
+      els.app.classList.remove("vn-bigtext-mode");
+      els.bigtext.textContent = "";
+    }
   }
 
   // Full fx reset (title screen): also cancels a pending shake, flash,
   // dolly, and any scene-level grade (the title runs its own starfield).
   function clearLineFx() {
     clearGlitch();
+    clearBeats(); // pending beats belong to lines the title screen replaced
     clearTimeout(timers.shake);
     timers.shake = null;
     clearTimeout(timers.flash);
@@ -1743,6 +2131,60 @@
         var cls = els.app.classList[i];
         if (cls.indexOf("vn-g-") === 0) els.app.classList.remove(cls);
       }
+    }
+  }
+
+  /* -------------------------------------------------------- line beats */
+
+  // line.beats = [{ at: <ms from line onset>, fx: "<fx>" }, ...]: fx fired
+  // while the line displays, on top of its own fx. A beat may instead (or
+  // additionally) carry sprite fields { who, feel, pose } — a mid-line pose
+  // or reaction change (the "three beats inside one textbox" grammar). Pose
+  // changes are sticky like normal pose semantics; handles live in the
+  // timers.beats array; clearBeats() is called at every point where the
+  // current line stops being current (next line, choices, ending, title,
+  // save load) so no stale beat lands on a line it does not belong to.
+  function clearBeats() {
+    var list = timers.beats;
+    if (list && list.length) {
+      for (var i = 0; i < list.length; i++) {
+        try {
+          clearTimeout(list[i]);
+        } catch (e) {}
+      }
+    }
+    timers.beats = [];
+  }
+
+  // Factory keeps the loop's fx/line values from being re-read at fire time.
+  function makeBeat(b, line) {
+    return function () {
+      if (typeof b.fx === "string" && b.fx) applySingleFx(b.fx, line);
+      if (b.who && S.characters && S.characters[b.who]) {
+        showSprite(b.who, b.feel, b.pose);
+      }
+    };
+  }
+
+  // Queue a line's beats. Self-clearing: scheduling always discards the
+  // previous line's pending beats first, so displayLine needs no separate
+  // cleanup call before this one.
+  function scheduleBeats(line) {
+    clearBeats();
+    if (!line || !Array.isArray(line.beats)) return;
+    for (var i = 0; i < line.beats.length; i++) {
+      var b = line.beats[i];
+      if (!b) continue;
+      var hasFx = typeof b.fx === "string" && b.fx;
+      var hasSprite =
+        typeof b.who === "string" &&
+        b.who &&
+        S.characters &&
+        S.characters[b.who];
+      if (!hasFx && !hasSprite) continue;
+      var at =
+        typeof b.at === "number" && isFinite(b.at) && b.at > 0 ? b.at : 0;
+      timers.beats.push(setTimeout(makeBeat(b, line), at));
     }
   }
 
@@ -1814,6 +2256,9 @@
       recordNodeSeen(id); // story-tree unlock: this node is now reachable
       collectEndingNow(id); // entering an ending_* scene collects it (once)
       hideCg(); // CGs are scene-scoped unless the new scene re-asserts one
+      // #bg-variants: same location, different story hour -> different light
+      state.gradeOverride =
+        typeof scene.grade === "string" && scene.grade ? scene.grade : null;
       applyBg(scene.bg);
       // ambient key: a scene may override its background's default track
       audioHook("scene", scene.bgm || scene.bg);
@@ -1915,7 +2360,12 @@
       els.name.textContent = nameText;
       els.name.style.color = color;
       els.name.style.borderColor = color;
-      showSprite(speakerId, line.feel, "pose" in line ? line.pose : undefined);
+      showSprite(
+        speakerId,
+        line.feel,
+        "pose" in line ? line.pose : undefined,
+        line.gaze,
+      );
       recordMet(speakerId); // gallery 立绘 unlock: this character has spoken
       pushBacklog(nameText, text);
       if (els.srLive) els.srLive.textContent = nameText + "：" + text; // full line, once
@@ -1928,7 +2378,15 @@
 
     syncCg(line);
     applyLineFx(line);
-    startTyping(text);
+    scheduleBeats(line); // timed fx queued on top of the line's own fx
+    if (line && line.se) audioHook("sfx", line.se); // one-shot sample cue
+    var voice = playVoiceFor(state.scene + "." + state.line);
+    // pose swap reads before the words: small lead on spoken lines
+    startTyping(text, line && line.who ? POSE_LEAD_MS : 0);
+    syncTypingToVoice(voice);
+    markLineSeen(); // #39: a displayed line is a read line
+    autosaveTick(); // #40: throttled pagehide-safe autosave
+    pushRollback(); // #42: snapshot for wheel rollback
   }
 
   function afterLastLine(depth) {
@@ -1976,6 +2434,8 @@
   function showChoices(choices) {
     state.mode = "choices";
     clearGlitch();
+    clearBeats(); // the last line's pending beats die with it
+    flushSeenText(); // marks made before the branch land here
     activeChoices = choices.slice(); // 1..9 hotkeys read this snapshot
     var box = els.choices;
     box.textContent = "";
@@ -2031,6 +2491,8 @@
     state.mode = "end";
     clearAuto();
     clearGlitch();
+    clearBeats();
+    flushSeenText(); // the run's marks land before the ending plays
     els.name.classList.add("vn-hidden");
     els.name.textContent = "";
     startTyping(ENDING_TEXT);
@@ -2112,6 +2574,14 @@
   function advance() {
     if (chapterVisible()) {
       hideChapter(); // first click during a chapter card only dismisses it
+      return;
+    }
+    if (uiHidden) {
+      setUiHidden(false); // first click after hiding only restores the UI
+      return;
+    }
+    if (state.mode === "op") {
+      skipOp(); // any click/space during the OP skips the whole sequence
       return;
     }
     if (state.mode !== "line") return;
@@ -2227,8 +2697,152 @@
       toast("快存已失效");
       return;
     }
+    clearRollback(); // a fresh save load resets the rollback buffer
     restoreFrom(data);
     toast("已读取快存"); // hotkey-only action: give it visible confirmation
+  }
+
+  // --- seen-text store (#39): "skip read text" --------------------------------
+  // Keys are "sceneId:lineIdx" — stable by construction (the append-only
+  // scenario contract keeps early indices from ever shifting). Capped FIFO;
+  // flushed every SEEN_FLUSH_EVERY marks, on skip-off, choices/ending/title
+  // transitions and page hide. Storage failure degrades silently: skip just
+  // behaves as it did before the store existed.
+  var seenText = null; // Set, loaded once per session
+  var seenDirty = 0; // unflushed marks since the last write
+
+  function loadSeenText() {
+    seenText = new Set();
+    var raw = null;
+    try {
+      raw = localStorage.getItem(SEEN_TEXT_KEY);
+    } catch (err) {
+      return;
+    }
+    if (typeof raw !== "string" || !raw) return;
+    var arr = null;
+    try {
+      arr = JSON.parse(raw);
+    } catch (err) {
+      return;
+    }
+    if (!Array.isArray(arr)) return;
+    arr.forEach(function (k) {
+      if (typeof k === "string") seenText.add(k);
+    });
+  }
+
+  function flushSeenText() {
+    if (!seenText || !seenDirty) return;
+    try {
+      var arr = Array.from(seenText);
+      while (arr.length > SEEN_TEXT_CAP) arr.shift(); // drop the oldest marks
+      localStorage.setItem(SEEN_TEXT_KEY, JSON.stringify(arr));
+      seenDirty = 0;
+    } catch (err) {
+      seenDirty = 0; // full/unavailable storage: tracking degrades silently
+    }
+  }
+
+  function markLineSeen() {
+    if (!seenText) return;
+    seenText.add(state.scene + ":" + state.line);
+    seenDirty += 1;
+    if (seenDirty >= SEEN_FLUSH_EVERY) flushSeenText();
+  }
+
+  function isLineSeen(sceneId, idx) {
+    return !!(seenText && seenText.has(sceneId + ":" + idx));
+  }
+
+  // --- autosave (#40): web pages get closed without warning -------------------
+  // Same payload shape as quickSave (no thumbnail, quota-safe), written every
+  // AUTO_SAVE_EVERY displayed lines and on pagehide/visibilitychange. The
+  // title "继续游戏" button prefers the newest of (menu slots, autosave).
+  function writeAutoSave(checkpoint) {
+    if (!state.scene) return;
+    // regular autosave only fires while presenting lines; checkpoints (one
+    // per first-time ending collect) bypass that so 继续游戏 can revisit
+    if (!checkpoint && state.mode !== "line") return;
+    var data = {
+      scene: state.scene,
+      line: state.line,
+      flags: Array.from(state.flags),
+      ts: new Date().toISOString(),
+      title: S.meta && S.meta.title != null ? String(S.meta.title) : "",
+      bg: state.bg,
+      cg: state.cg || null,
+      poses: state.poses || {},
+    };
+    try {
+      localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(data));
+    } catch (err) {
+      /* storage unavailable or full: the autosave is skipped silently */
+    }
+  }
+
+  function readAutoSave() {
+    try {
+      var raw = localStorage.getItem(AUTO_SAVE_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (data && typeof data === "object" && typeof data.scene === "string") {
+        return data;
+      }
+    } catch (err) {}
+    return null;
+  }
+
+  var autosaveCount = 0;
+
+  function autosaveTick() {
+    if (state.mode !== "line") return;
+    autosaveCount += 1;
+    if (autosaveCount % AUTO_SAVE_EVERY === 0) writeAutoSave();
+  }
+
+  // --- rollback (#42): wheel-up / PageUp steps back through shown lines ------
+  // Every displayed line pushes a full state snapshot (scene, line, flags,
+  // sprites, CG, bg); rollback restores it verbatim via restoreFrom — the
+  // same machinery as save loading — with voices muted. Rolling back above a
+  // decision point rewinds the flags recorded in the snapshots, so advancing
+  // re-shows the choices. Buffer clears on title / new game / save load.
+  var rbBuf = [];
+  var rbPtr = -1; // index of the CURRENT line's snapshot
+  var rbRestoring = false; // suppresses voice + history push during restore
+  var RB_CAP = 60;
+
+  function clearRollback() {
+    rbBuf = [];
+    rbPtr = -1;
+  }
+
+  function pushRollback() {
+    if (rbRestoring) return;
+    rbBuf.length = rbPtr + 1; // a forward jump after a rollback truncates
+    rbBuf.push({
+      scene: state.scene,
+      line: state.line,
+      flags: Array.from(state.flags),
+      bg: state.bg,
+      cg: state.cg || null,
+      poses: JSON.parse(JSON.stringify(state.poses || {})),
+    });
+    if (rbBuf.length > RB_CAP) rbBuf.shift();
+    rbPtr = rbBuf.length - 1;
+  }
+
+  function rollbackStep(dir) {
+    if (state.mode !== "line") return;
+    var target = rbPtr + dir;
+    if (target < 0 || target >= rbBuf.length) return;
+    rbPtr = target;
+    rbRestoring = true;
+    try {
+      restoreFrom(rbBuf[rbPtr]);
+    } finally {
+      rbRestoring = false;
+    }
   }
 
   function writeSlot(n) {
@@ -2298,6 +2912,7 @@
       toast("空存档");
       return;
     }
+    clearRollback(); // fresh save load resets the rollback buffer
     restoreFrom(data);
   }
 
@@ -2311,6 +2926,7 @@
     timers.type = null;
     state.typing = false;
     clearAuto();
+    clearBeats(); // stale beats from the pre-load session must not fire
 
     state.flags = new Set(
       Array.isArray(data.flags)
@@ -2321,6 +2937,32 @@
     );
     state.scene = data.scene;
     var scene = S.scenes[data.scene];
+    // entry-branch re-application (#QA fix): restoring into a scene bypasses
+    // its `branch` gate (that gate normally runs on scene entry) — a save at
+    // finale_gate would then fall into ending_bad regardless of chose_wake.
+    // Re-apply matching gates, chained, before restoring the line.
+    var gateGuard = 0;
+    while (scene && Array.isArray(scene.branch) && gateGuard < 3) {
+      var redirected = false;
+      for (var gi = 0; gi < scene.branch.length; gi++) {
+        var gate = scene.branch[gi];
+        if (
+          gate &&
+          typeof gate.when === "string" &&
+          typeof gate.goto === "string" &&
+          state.flags.has(gate.when)
+        ) {
+          data.scene = gate.goto;
+          data.line = 0;
+          state.scene = gate.goto;
+          scene = S.scenes[gate.goto];
+          redirected = true;
+          break;
+        }
+      }
+      if (!redirected) break;
+      gateGuard += 1;
+    }
     var lines = scene && Array.isArray(scene.lines) ? scene.lines : [];
     var line =
       typeof data.line === "number" && isFinite(data.line)
@@ -2329,17 +2971,31 @@
     if (line < 0) line = 0;
     if (lines.length > 0 && line > lines.length - 1) line = lines.length - 1;
     state.line = line;
+    // grade override follows the redirected scene (gate loop may have moved it)
+    state.gradeOverride =
+      scene && typeof scene.grade === "string" && scene.grade
+        ? scene.grade
+        : null;
 
     state.recent = [];
     renderSprites();
     els.title.classList.add("vn-hidden");
-    restoreBg(typeof data.bg === "string" ? data.bg : null);
+    // bg fallback: a save without a bg field (or a crafted minimal payload)
+    // still shows the target scene's own painted background
+    restoreBg(
+      typeof data.bg === "string" && data.bg
+        ? data.bg
+        : scene && typeof scene.bg === "string"
+          ? scene.bg
+          : null,
+    );
     var rScene = S.scenes[data.scene];
     audioHook("scene", rScene ? rScene.bgm || rScene.bg : data.bg);
     // CG state rides with the save; a restored CG re-asserts its own track
     state.cg =
       typeof data.cg === "string" && cgImageFor(data.cg) ? data.cg : null;
     if (state.cg && CG_BGM[state.cg]) audioHook("scene", CG_BGM[state.cg]);
+    if (state.cg) audioHook("amb", null); // restored CG: ambience stays down
     syncCgDisplay();
     state.poses =
       data.poses && typeof data.poses === "object" && !Array.isArray(data.poses)
@@ -2528,7 +3184,28 @@
         : AUTO_DELAY_MS;
     if (delay < SETTINGS_DELAY_MIN) delay = SETTINGS_DELAY_MIN;
     if (delay > SETTINGS_DELAY_MAX) delay = SETTINGS_DELAY_MAX;
-    return { volume: vol, autoDelay: delay };
+    var skipUnseen = data.skipUnseen === true; // #39: default = seen-only
+    var textSize =
+      typeof data.textSize === "number" &&
+      data.textSize >= 80 &&
+      data.textSize <= 140
+        ? Math.round(data.textSize)
+        : 100;
+    var lineSpacing =
+      typeof data.lineSpacing === "number" &&
+      data.lineSpacing >= 140 &&
+      data.lineSpacing <= 240
+        ? Math.round(data.lineSpacing)
+        : 100;
+    var highContrast = data.highContrast === true;
+    return {
+      volume: vol,
+      autoDelay: delay,
+      skipUnseen: skipUnseen,
+      textSize: textSize,
+      lineSpacing: lineSpacing,
+      highContrast: highContrast,
+    };
   }
 
   function writeSettings(data) {
@@ -2546,12 +3223,23 @@
     var loaded = readSettings();
     settingsVol = loaded.volume;
     state.autoDelayMs = loaded.autoDelay;
+    state.skipUnseen = loaded.skipUnseen;
+    state.textSize = loaded.textSize;
+    state.lineSpacing = loaded.lineSpacing;
+    state.highContrast = loaded.highContrast;
     audioHook("setVolume", settingsVol);
     syncSettingsUi();
   }
 
   function saveSettings() {
-    writeSettings({ volume: settingsVol, autoDelay: state.autoDelayMs });
+    writeSettings({
+      volume: settingsVol,
+      autoDelay: state.autoDelayMs,
+      skipUnseen: state.skipUnseen,
+      textSize: state.textSize,
+      lineSpacing: state.lineSpacing,
+      highContrast: state.highContrast,
+    });
   }
 
   // Current volume: prefer the live module value when it answers, else the
@@ -2583,6 +3271,17 @@
     els.volVal.textContent = pct + "%";
     els.autoRange.value = String(state.autoDelayMs);
     els.autoVal.textContent = (state.autoDelayMs / 1000).toFixed(1) + "s";
+    if (els.skipScopeBtn) {
+      els.skipScopeBtn.textContent = skipScopeLabel();
+    }
+    if (els.textSizeRange) {
+      els.textSizeRange.value = String(state.textSize);
+      els.textSizeVal.textContent = state.textSize + "%";
+      els.lineSpacingRange.value = String(state.lineSpacing);
+      els.lineSpacingVal.textContent =
+        (state.lineSpacing / 100).toFixed(1) + "x";
+      els.hcBtn.textContent = hcLabel();
+    }
   }
 
   function onVolumeInput() {
@@ -2764,33 +3463,59 @@
     return !!els && !els.gallery.classList.contains("vn-hidden");
   }
 
-  function openGallery() {
+  function openGallery(tab) {
     if (!els || !S) return;
     captureFocusReturn();
     stopTitleCanvas();
     els.title.classList.add("vn-hidden");
-    buildGalleryPanels();
+    buildGalleryPanels(tab);
     els.gallery.classList.remove("vn-hidden");
     var close =
       typeof els.gallery.querySelector === "function"
         ? els.gallery.querySelector(".vn-close")
         : null;
+    if (tab === "tree" && shouldRemindLog()) {
+      var reminderNode = els.gpanelTree.querySelector(
+        '.vn-tree-node[data-node="obsv_daily"]',
+      );
+      if (reminderNode && typeof reminderNode.scrollIntoView === "function") {
+        reminderNode.scrollIntoView({ block: "center", inline: "center" });
+      }
+    }
     if (close && typeof close.focus === "function") close.focus();
   }
 
   function closeGallery() {
     if (!els) return;
     if (galleryMusicPlaying !== null) {
-      audioHook("scene", null); // silence the preview bed
+      // silence the preview bed, then restore what was playing under it —
+      // the title theme on the title, the live scene's own bed in-game —
+      // so a preview never strands either screen in silence
+      if (state.mode === "title") {
+        audioHook("scene", "title");
+      } else if (state.cg && CG_BGM[state.cg]) {
+        audioHook("scene", CG_BGM[state.cg]);
+      } else {
+        var sc =
+          S && S.scenes && state.scene && S.scenes[state.scene]
+            ? S.scenes[state.scene]
+            : null;
+        audioHook("scene", sc ? sc.bgm || sc.bg : null);
+      }
       galleryMusicPlaying = null;
     }
     els.gallery.classList.add("vn-hidden");
     restoreFocusReturn();
-    els.title.classList.remove("vn-hidden");
-    startTitleCanvas();
+    // the gallery normally opens from the title (which openGallery hides);
+    // only that flow re-shows the title + canvas — an in-game 剧情树 close
+    // must return to the running scene untouched
+    if (state.mode === "title") {
+      els.title.classList.remove("vn-hidden");
+      startTitleCanvas();
+    }
   }
 
-  function buildGalleryPanels() {
+  function buildGalleryPanels(tab) {
     buildTreePanel();
     // scenes panel: one card per background, in declaration order
     els.gpanelScenes.textContent = "";
@@ -2847,7 +3572,12 @@
       row.appendChild(play);
       els.gpanelMusic.appendChild(row);
     });
-    setGalleryTab("scenes");
+    // openGallery(tab) lands the gallery on the requested tab; anything that
+    // is not a real tab id (e.g. the title 鉴赏 button passes its MouseEvent)
+    // reads as scenes
+    setGalleryTab(
+      tab === "music" || tab === "sprites" || tab === "tree" ? tab : "scenes",
+    );
     buildSpritePanel();
   }
 
@@ -2994,6 +3724,7 @@
     var cgMap = sceneCgMap();
     var nodeSeen = readIdSet(NODE_SEEN_KEY);
     var cgSeen = readIdSet(CG_SEEN_KEY);
+    var remindLog = shouldRemindLog(); // hoisted: one store read, not two per node
 
     // BFS depth layout from the start scene
     var depth = {};
@@ -3014,6 +3745,14 @@
         }
       });
     }
+    note.textContent =
+      "共 " +
+      ids.length +
+      " 幕 · 已点亮 " +
+      nodeSeen.filter(function (n) {
+        return S.scenes[n];
+      }).length +
+      " 幕 — 点击已解锁的节点可跳转；黑色节点尚未抵达。☆ 标记含 CG。";
     var maxDepth = 0;
     ids.forEach(function (id) {
       if (depth[id] == null)
@@ -3039,10 +3778,10 @@
       }
     });
 
-    var COL_W = 168;
-    var ROW_H = 92;
-    var NODE_W = 128;
-    var NODE_H = 64;
+    var COL_W = 236;
+    var ROW_H = 150;
+    var NODE_W = 216;
+    var NODE_H = 132;
     var maxRows = 1;
     cols.forEach(function (col) {
       if (col && col.length > maxRows) maxRows = col.length;
@@ -3122,9 +3861,33 @@
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "vn-tree-node" + (seen ? " vn-tree-seen" : "");
+      if (id === "obsv_daily" && remindLog) {
+        btn.classList.add("vn-tree-log-reminder");
+        btn.setAttribute("aria-label", "值班日志的选择点 · 可回看");
+      }
       btn.style.left = pos.x + "px";
       btn.style.top = pos.y + "px";
       btn.setAttribute("data-node", id);
+      // image-backed node card (#bg-variants): each scene shows its own
+      // unique background art behind the label; unseen nodes stay dimmed
+      var scn = S.scenes[id];
+      var sceneBgId = scn && typeof scn.bg === "string" ? scn.bg : "";
+      var sceneBgImg =
+        typeof window !== "undefined" &&
+        window.VN_BG_IMG &&
+        typeof window.VN_BG_IMG[sceneBgId] === "string"
+          ? window.VN_BG_IMG[sceneBgId]
+          : null;
+      if (sceneBgImg) {
+        var bgBase = sceneBgId.split("__")[0];
+        var bgCss =
+          S.backgrounds[bgBase] && typeof S.backgrounds[bgBase].css === "string"
+            ? S.backgrounds[bgBase].css
+            : "#05070f";
+        btn.style.background =
+          'url("' + sceneBgImg + '") center / cover no-repeat, ' + bgCss;
+        btn.classList.add("vn-tree-img");
+      }
       var label = document.createElement("span");
       label.className = "vn-tree-id";
       label.textContent = id;
@@ -3162,6 +3925,14 @@
       if (seen) {
         btn.addEventListener("click", function () {
           closeGallery();
+          // closeGallery() re-shows the title (the gallery normally opens
+          // from there); a jump lands in the game instead, so re-hide the
+          // title and stop its canvas — the z-7 title would otherwise sit
+          // over the entered scene and the jump reads as a no-op
+          els.title.classList.add("vn-hidden");
+          stopTitleCanvas();
+          state.flags = new Set(); // fresh entry semantics, mirrors beginGame
+          clearRollback(); // no history across a jump
           enterScene(id, 0);
           toast("跳转 → " + id);
         });
@@ -3170,6 +3941,17 @@
       }
       inner.appendChild(btn);
     });
+  }
+
+  // 立绘 lightbox: the shell lives inside gpanelSprites and is rebuilt with
+  // the panel on every gallery open; this module var is the live handle the
+  // bust click handlers below talk to.
+  var spriteViewEl = null;
+
+  function openSpriteView(bustHtml) {
+    if (!spriteViewEl) return;
+    spriteViewEl.innerHTML = bustHtml || "";
+    spriteViewEl.classList.add("vn-open");
   }
 
   function buildSpritePanel() {
@@ -3198,6 +3980,14 @@
       }
       stage.appendChild(bust);
       card.appendChild(stage);
+      // 立绘 viewer: clicking an unlocked bust with real art enlarges it to
+      // fill the whole 立绘 panel; a click on the enlarged art closes it
+      if (unlocked && charArtFor(id, "normal")) {
+        stage.classList.add("vn-zoomable");
+        stage.addEventListener("click", function () {
+          openSpriteView(bust.innerHTML);
+        });
+      }
       var name = document.createElement("div");
       name.className = "vn-gname";
       name.textContent = unlocked
@@ -3247,6 +4037,16 @@
       }
       els.gpanelSprites.appendChild(card);
     });
+    // lightbox shell: populated by openSpriteView (bust click), dismissed by
+    // its own click; rebuilt with the panel so state never leaks across opens
+    var view = document.createElement("div");
+    view.className = "vn-sprite-view";
+    view.addEventListener("click", function () {
+      view.classList.remove("vn-open");
+      view.textContent = ""; // drop the copied SVG so it is not kept alive
+    });
+    els.gpanelSprites.appendChild(view);
+    spriteViewEl = view;
   }
 
   // Renders an unlocked scene into the card thumb via its own renderer.
@@ -3394,7 +4194,12 @@
   // and scenes only load during play, never on the title screen.
   function collectEndingNow(id) {
     if (!els) return;
-    if (collectEnding(id)) toast("结局回收 +1"); // first-time collect only
+    if (collectEnding(id)) {
+      toast("结局回收 +1"); // first-time collect only
+      // #44 ending checkpoint: the autosave lands on the ending scene, so
+      // 继续游戏 from the title can revisit this exact ending
+      writeAutoSave(true);
+    }
   }
 
   // Title-screen readout: "结局回收 N/3" plus one pill per ending — "？"
@@ -3412,16 +4217,100 @@
       mark.textContent = collected ? ENDING_LABELS[id] : ENDING_UNSEEN;
       mark.classList.toggle("vn-collected", collected);
     });
+    syncLogReminder();
+  }
+
+  function shouldRemindLog() {
+    var endings = readEndings();
+    var seen = readIdSet(NODE_SEEN_KEY);
+    // obsv_daily must itself be unlocked: the reminder highlights and scrolls
+    // to that tree node, and an inconsistent store would otherwise light up
+    // a disabled (unreachable) card
+    return (
+      endings.indexOf("ending_good") !== -1 &&
+      endings.indexOf("ending_true") === -1 &&
+      seen.indexOf("obsv_daily") !== -1 &&
+      seen.indexOf("log_last") === -1
+    );
+  }
+
+  function syncLogReminder() {
+    if (els && els.logReminderBtn) {
+      els.logReminderBtn.classList.toggle("vn-hidden", !shouldRemindLog());
+    }
   }
 
   /* ----------------------------------------------------------- title screen */
 
+  // lite-build pack loading line (benchmark #26): pack-loader.js broadcasts
+  // "vn-pack" events and mirrors byte progress into window.VN_PACK_STATUS;
+  // the line shows only while something is still loading and only exists in
+  // the split build — the full single-file build has no loader, so the
+  // status object never appears and the line stays hidden forever.
+  function renderPackStatus() {
+    if (!els || !els.packStatus) return;
+    var st = typeof window !== "undefined" ? window.VN_PACK_STATUS : null;
+    if (!st) {
+      els.packStatus.classList.add("vn-hidden");
+      return;
+    }
+    var parts = [];
+    var allDone = true;
+    ["bgm", "voice"].forEach(function (k) {
+      var p = st[k];
+      if (!p) {
+        allDone = false;
+        return;
+      }
+      if (p.state === "ready" || p.state === "cached" || p.state === "failed") {
+        return; // terminal states stop contributing to the readout
+      }
+      allDone = false;
+      var pct = p.total ? Math.round((p.loaded / p.total) * 100) : 0;
+      parts.push((k === "bgm" ? "音乐 " : "语音 ") + pct + "%");
+    });
+    if (allDone) {
+      els.packStatus.classList.add("vn-hidden");
+      return;
+    }
+    els.packStatus.textContent = parts.length
+      ? "资源加载中 — " + parts.join(" · ")
+      : "资源加载中…";
+    els.packStatus.classList.remove("vn-hidden");
+  }
+
   var TITLE_SUB_BONUS = "无论走到哪条时间线，它都亮着。";
+  var TITLE_SUB_TRUE = "这次是我自己记住的。";
+
+  // 标题星空 = 进度可视化 (benchmark #30): the darker the sky, the less has
+  // been recovered; collecting ending_true lets Betelgeuse burn bright again
+  // — "还亮着" made visible on the title screen itself. Pure class toggle.
+  function titleTier() {
+    var got = readEndings();
+    if (got.length === 0) return 0;
+    if (got.indexOf("ending_true") !== -1) return 2;
+    return 1;
+  }
+
+  function applyTitleTier() {
+    if (!els || !els.title) return;
+    var active = "vn-title-tier-" + titleTier();
+    for (var i = 0; i < 3; i++) {
+      var cls = "vn-title-tier-" + i;
+      els.title.classList.toggle(cls, cls === active);
+    }
+  }
 
   function applyTitleSub(bonus) {
     if (!els) return;
     if (bonus) {
       els.titleSub.textContent = TITLE_SUB_BONUS;
+      return;
+    }
+    // #31: the true ending swaps the byline for 眠's own line — visible to
+    // the players who reached it, invisible to everyone else
+    if (readEndings().indexOf("ending_true") !== -1) {
+      els.titleSub.textContent = TITLE_SUB_TRUE;
       return;
     }
     var author =
@@ -3459,7 +4348,11 @@
   // every return to the title. Pure class toggle: no timers, no loops.
   function syncContinueButton() {
     if (!els || !els.continueBtn) return;
-    els.continueBtn.classList.toggle("vn-hidden", latestSaveSlot() < 0);
+    // #40: the autosave counts as a continue candidate too
+    els.continueBtn.classList.toggle(
+      "vn-hidden",
+      latestSaveSlot() < 0 && !readAutoSave(),
+    );
   }
 
   /* -------------------------------------------------- title canvas + chapter */
@@ -3817,7 +4710,10 @@
     state.scene = null;
     state.line = 0;
     state.flags = new Set();
+    clearRollback(); // no history across title returns
+    state.gradeOverride = null; // title falls back to its own grade
     state.bg = null;
+    audioHook("amb", null); // the title screen has no ambience bed
     state.poses = {}; // pose B does not survive a return to the title
     hideCg(); // the title screen never shows a story CG
     state.recent = [];
@@ -3841,15 +4737,22 @@
     hideSettings();
     hideCreditsNow();
     hideGalleryNow();
+    hideOpNow(); // an OP interrupted by returning to the title dies here
     clearTimeout(timers.credits);
     clearTimeout(timers.creditsEnd);
+    clearTimeout(timers.op);
     timers.credits = null;
     timers.creditsEnd = null;
+    timers.op = null;
     hideChapterNow();
     lastChapter = null; // returning to title allows chapter cards again
     setSkip(false, true); // title reset latches skip off
+    setUiHidden(false); // the interface always returns with the title
+    flushSeenText(); // marks made during the session land here
     renderEndings(); // refresh the 结局收集 readout for this visit
+    applyTitleTier(); // sky brightness tracks collection progress (#30)
     applyTitleSub(titleBonusActive()); // 3/3: swap in the thank-you subtitle
+    renderPackStatus(); // lite build: pack loading line (hidden in full build)
     syncBonusButton(); // 星语 · 后日谈 reappears while 3/3 still holds
     syncContinueButton(); // 继续游戏 reappears while a save slot holds data
     els.title.classList.remove("vn-hidden");
@@ -3864,9 +4767,101 @@
       return;
     }
     state.flags = new Set();
+    clearRollback(); // a new game starts with an empty rollback buffer
     els.title.classList.add("vn-hidden");
     stopTitleCanvas();
-    enterScene(startId, 0);
+    setTimeout(function () {
+      startOp(startId);
+    }, 0);
+  }
+
+  // Image OP (benchmark #33): a skippable slideshow of theme-level story CGs
+  // (night / rain / machine / light / dawn — no plot beats) riding the same
+  // ken-burns treatment the in-game CGs get, with the email motif as its
+  // track. Fires on every new game; a click or space skips the whole thing.
+  var opDone = null; // set by startOp; a skip invokes it once
+
+  // #41 hide interface: H key / right click lifts the dialog and topbar for
+  // full-screen CG appreciation; any click (advance gate) or line change
+  // restores. Choices/overlays never trigger it.
+  var uiHidden = false;
+
+  function setUiHidden(hidden) {
+    uiHidden = !!hidden && state.mode === "line";
+    if (els) els.app.classList.toggle("vn-ui-hidden", uiHidden);
+  }
+
+  function startOp(nextSceneId) {
+    if (!els || !els.op) {
+      enterScene(nextSceneId, 0);
+      return;
+    }
+    var slides = OP_SLIDES.filter(function (id) {
+      return cgImageFor(id);
+    });
+    if (!slides.length) {
+      enterScene(nextSceneId, 0);
+      return;
+    }
+    state.mode = "op";
+    state.typing = false;
+    hideChoices();
+    hideMenu();
+    hideBacklog();
+    hideSettings();
+    audioHook("scene", "bgm2_op"); // OP prelude: the email motif, hesitant
+    els.opImg.setAttribute("src", cgImageFor(slides[0]));
+    els.op.classList.remove("vn-hidden");
+    els.op.classList.add("vn-op-on");
+    els.opImg.classList.remove("vn-op-zoom");
+    void els.opImg.offsetWidth;
+    els.opImg.classList.add("vn-op-zoom");
+    var idx = 0;
+    var nextSlide = function () {
+      idx += 1;
+      if (idx >= slides.length) {
+        finishOp(nextSceneId);
+        return;
+      }
+      els.opImg.setAttribute("src", cgImageFor(slides[idx]));
+      els.opImg.classList.remove("vn-op-zoom");
+      void els.opImg.offsetWidth;
+      els.opImg.classList.add("vn-op-zoom");
+      timers.op = setTimeout(nextSlide, OP_SLIDE_MS);
+    };
+    timers.op = setTimeout(nextSlide, OP_SLIDE_MS);
+    opDone = function () {
+      finishOp(nextSceneId);
+    };
+  }
+
+  function skipOp() {
+    if (state.mode !== "op" || !opDone) return;
+    var done = opDone;
+    opDone = null;
+    done();
+  }
+
+  function finishOp(nextSceneId) {
+    clearTimeout(timers.op);
+    timers.op = null;
+    opDone = null;
+    if (els) {
+      els.op.classList.remove("vn-op-on");
+      els.op.classList.add("vn-hidden");
+    }
+    state.mode = "line"; // enterScene re-asserts this; safe default meanwhile
+    enterScene(nextSceneId, 0);
+  }
+
+  function hideOpNow() {
+    clearTimeout(timers.op);
+    timers.op = null;
+    opDone = null;
+    if (els) {
+      els.op.classList.remove("vn-op-on");
+      els.op.classList.add("vn-hidden");
+    }
   }
 
   // 星语 · 后日谈: the 100%-completion bonus episodes (extras_1 -> extras_2,
@@ -3876,13 +4871,15 @@
   // like any ending (THE END -> credits -> title, no new mechanics).
   // Missing scene (old scenario) -> warn and stay on the title, a true no-op.
   function startBonus() {
-    var bonusId = "extras_1";
+    // breakfast payoff scene first, then the existing extras_1 -> extras_2 run
+    var bonusId = "morning_table";
     if (!S || !S.scenes || !S.scenes[bonusId]) {
       console.warn("[VN] bonus scene not found: " + bonusId);
       return;
     }
     audioHook("ui", "start"); // same click blip as the start button
     state.flags = new Set();
+    clearRollback();
     els.title.classList.add("vn-hidden");
     stopTitleCanvas();
     enterScene(bonusId, 0);
@@ -3896,13 +4893,30 @@
   // stay on the title (restoreFrom never ran, so the title is still shown and
   // its canvas loop is restarted below).
   function continueGame() {
+    // #40: continue from the newest of (menu slots, autosave) by timestamp
     var n = latestSaveSlot();
-    if (n < 0) {
+    var auto = readAutoSave();
+    if (n < 0 && !auto) {
       toast("空存档"); // unreachable via the UI (the button hides itself)
       return;
     }
+    var slotTs = "";
+    if (n >= 0) {
+      var raw = readSlotRaw(n);
+      try {
+        var data = JSON.parse(raw);
+        if (data && typeof data.ts === "string") slotTs = data.ts;
+      } catch (err) {
+        /* corrupt slot: autosave wins by default */
+      }
+    }
     stopTitleCanvas(); // same teardown as beginGame/startBonus before leaving
-    readSlot(n); // restoreFrom hides the title — this button goes with it
+    clearRollback(); // fresh save load resets the rollback buffer
+    if (auto && (n < 0 || auto.ts > slotTs)) {
+      restoreFrom(auto); // the autosave is the freshest point in the story
+    } else {
+      readSlot(n); // restoreFrom hides the title — this button goes with it
+    }
     if (!els.title.classList.contains("vn-hidden")) {
       startTitleCanvas(); // corrupt save: the toast kept us on the title
     }
@@ -3920,6 +4934,7 @@
     else if (act === "auto") toggleAuto();
     else if (act === "skip") toggleSkip();
     else if (act === "speed") cycleSpeed();
+    else if (act === "tree") openGallery("tree");
     else if (act === "title") showTitle();
     else if (act === "settings") openSettings();
     else if (act === "audio") toggleAudio();
@@ -3930,6 +4945,10 @@
     if (!S || !els) return;
     if (creditsVisible()) {
       finishCredits(); // any click skips the roll
+      return;
+    }
+    if (state.mode === "op") {
+      skipOp(); // any click during the image OP skips the whole sequence
       return;
     }
     if (overlaysOpen()) return;
@@ -4008,6 +5027,20 @@
         e.target.tagName === "SELECT" ||
         e.target.tagName === "TEXTAREA")
     ) {
+      return;
+    }
+    // #41: H lifts the interface for full-screen CG appreciation
+    if (e.key === "h" || e.key === "H") {
+      setUiHidden(!uiHidden);
+      return;
+    }
+    // #42: PageUp/PageDown rollback and forward through shown lines
+    if (e.key === "PageUp") {
+      rollbackStep(-1);
+      return;
+    }
+    if (e.key === "PageDown") {
+      rollbackStep(1);
       return;
     }
     // Ctrl+S / Cmd+S quick save, Ctrl+L / Cmd+L quick load — a dedicated
@@ -4102,6 +5135,14 @@
       finishCredits(); // space/enter skips the roll too
       return;
     }
+    if (state.mode === "op") {
+      // the OP is not an overlay: overlaysOpen() is true whenever mode !==
+      // "line", so without this branch space/enter could never reach skipOp
+      // (click already skips — onAppClick checks the OP before that guard)
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      skipOp();
+      return;
+    }
     if (overlaysOpen()) return;
     if (typeof e.preventDefault === "function") e.preventDefault();
     advance();
@@ -4139,6 +5180,13 @@
     buildDom();
     fillTitle();
     showTitle();
+    // lite build: pack-loader broadcasts progress events; re-render the
+    // title loading line on each one (full build never dispatches it)
+    try {
+      window.addEventListener("vn-pack", renderPackStatus);
+    } catch (err) {
+      /* no listener support: the line just never updates */
+    }
   }
 
   window.VN = { start: start };

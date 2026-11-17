@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>BGM 适配审计 — 参宿四还亮着</title>
+<style>
+body { background: #0a1122; color: #dbe6f6; font-family: system-ui, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; }
+h1 { font-size: 22px; } h2 { font-size: 16px; color: #9bd4e8; margin-top: 30px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td, th { padding: 6px 10px; border-bottom: 1px solid #1a2a44; text-align: left; }
+audio { width: 260px; }
+.hot { color: #ff8c5a; }
+.dim { color: #6c82a8; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>BGM 适配审计</h1>
+<p>内容翻倍后（42 场景），部分曲目复用率过高、部分新场景的情绪与曲目错位。
+逐条试听下面的曲目，然后告诉 ZCode：哪几处场景的 BGM 换成哪条（或维持现状）。
+<img alt="" hidden></p>
+
+<h2>使用热度（复用热点 = 最可能"不合适"的来源）</h2>
+<table>
+<tr><th>曲目</th><th>试听</th><th>当前使用次数</th><th>使用场景</th></tr>
+<tr><td>bgm_epiphany <span class="hot">×5</span></td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_epiphany.mp3"></audio></td>
+<td class="hot">5</td><td class="dim">reply_email · lin_grief · qi_converse · cut_path · substitute_before</td></tr>
+<tr><td>bgm_afterglow <span class="hot">×5</span></td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_afterglow.mp3"></audio></td>
+<td class="hot">5</td><td class="dim">night_thoughts · obsv_daily · morning_table · extras_1 · extras_2</td></tr>
+<tr><td>bgm_keeper ×4</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_keeper.mp3"></audio></td>
+<td>4</td><td class="dim">keeper_before · qi_watch · qi_dawn · ending_qi（守灯人主题，刻意贯穿）</td></tr>
+<tr><td>bgm_wake ×3</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_wake.mp3"></audio></td>
+<td>3</td><td class="dim">wake_path · wake_talk · wake_check（唤醒主题，刻意贯穿）</td></tr>
+<tr><td>bgm_tension ×3</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_tension.mp3"></audio></td>
+<td>3</td><td class="dim">climb_rain · hall_quiet · unplug_before</td></tr>
+<tr><td>bgm_choice ×2</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_choice.mp3"></audio></td>
+<td>2</td><td class="dim">converge_talk · diverge（抉择章，刻意贯穿）</td></tr>
+<tr><td>bgm_email ×2</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_email.mp3"></audio></td>
+<td>2</td><td class="dim">email_first · ending_true（邮件主题回环，刻意）· 图片 OP 也用它</td></tr>
+<tr><td>bgm_call ×2</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_call.mp3"></audio></td>
+<td>2</td><td class="dim">call_lin · old_fight（电话主题回环，刻意）</td></tr>
+<tr><td>bgm_conspiracy ×2</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_conspiracy.mp3"></audio></td>
+<td>2</td><td class="dim">log_last · clearance_before</td></tr>
+<tr><td>bgm_gate ×2</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_gate.mp3"></audio></td>
+<td>2</td><td class="dim">gate_approach · finale_gate</td></tr>
+<tr><td>bgm_discovery ×1</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_discovery.mp3"></audio></td>
+<td>1</td><td class="dim">obsv_night</td></tr>
+<tr><td>bgm_reveal ×1</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_reveal.mp3"></audio></td>
+<td>1</td><td class="dim">liar_reveal</td></tr>
+<tr><td>bgm_ash ×1</td><td><audio controls src="../../props/ai-voice/audition/bgm/bgm_ash.mp3"></audio></td>
+<td>1</td><td class="dim">ending_bad</td></tr>
+<tr><td>bgm_fake_* ×5</td><td>（各结局专属：turnback/silence/clearance/unplug/substitute）</td>
+<td>5</td><td class="dim">五个假结局各一</td></tr>
+<tr><td>bgm_cg_* ×3</td><td>（CG 显示时自动接管）</td>
+<td>3</td><td class="dim">cg_memory / cg_archive / cg_dawn</td></tr>
+</table>
+
+<h2>初步诊断（凭曲目语义 + 场景情绪，待你的耳朵裁决）</h2>
+<table>
+<tr><th>疑点</th><th>现状</th><th>建议</th></tr>
+<tr><td>night_thoughts（深夜独白·悬疑压抑）用 afterglow（温暖余晖）</td><td>情绪错配嫌疑</td><td>换 bgm_ash（灰烬/低回）或保持 — 听了再定</td></tr>
+<tr><td>qi_converse（与栖的深谈· intimate）用 epiphany，与 lin_grief（悲伤）同曲</td><td>复用过多且情绪不同</td><td>换 bgm_discovery（观测/发现感）或 bgm_conspiracy</td></tr>
+<tr><td>cut_path / substitute_before 用 epiphany（同曲 ×5 的主要来源）</td><td>复用过多</td><td>cut_path 换 bgm_tension；substitute_before 换 bgm_ash（牺牲/灰烬）</td></tr>
+<tr><td>morning_table（真结局次日早餐·温暖）用 afterglow</td><td>合适</td><td>维持</td></tr>
+<tr><td>回复_email 段用 epiphany（回信的诡异感）</td><td>合适</td><td>维持</td></tr>
+</table>
+
+<p class="dim">对齐方式：试听 → 回复 ZCode「场景 X 换曲目 Y / 维持」→ 全部应用后重新构建。
+换 bgm 属性不影响配音键控（bgm 是场景级属性）。</p>
+</body>
+</html>

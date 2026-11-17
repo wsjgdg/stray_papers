@@ -1,0 +1,1406 @@
+[
+ {
+  "key": "opening.3",
+  "who": "yu",
+  "feel": "normal",
+  "text": "三年前的今天，沈眠失踪。"
+ },
+ {
+  "key": "opening.5",
+  "who": "yu",
+  "feel": "normal",
+  "text": "定时发送。日期，是三年后的今天。"
+ },
+ {
+  "key": "opening.6",
+  "who": "yu",
+  "feel": "normal",
+  "text": "没有人能预知三年后的自己想说什么。"
+ },
+ {
+  "key": "opening.7",
+  "who": "yu",
+  "feel": "sad",
+  "text": "除非她算准了，我一定还在等。"
+ },
+ {
+  "key": "opening.9",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠。你到底想让我看见什么。"
+ },
+ {
+  "key": "email_first.4",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "备份？什么备份？"
+ },
+ {
+  "key": "email_first.6",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "今晚？这封信三年前写好，落笔却是今晚。"
+ },
+ {
+  "key": "email_first.8",
+  "who": "yu",
+  "feel": "sad",
+  "text": "落款只有一个字：眠。没有逗号，没有多余的话。"
+ },
+ {
+  "key": "email_first.9",
+  "who": "yu",
+  "feel": "normal",
+  "text": "圆顶下的东西。不存在的备份。一句三年前的今晚。"
+ },
+ {
+  "key": "email_first.10",
+  "who": "yu",
+  "feel": "normal",
+  "text": "每一条，都在把我往山上拽。"
+ },
+ {
+  "key": "went_solo.1",
+  "who": "yu",
+  "feel": "normal",
+  "text": "没关系。这段坡，我闭着眼都走过。"
+ },
+ {
+  "key": "went_solo.4",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠，你猜我今晚会不会来。"
+ },
+ {
+  "key": "went_solo.5",
+  "who": "yu",
+  "feel": "sad",
+  "text": "你算得那么准。恐怕连这个，也算进去了吧。"
+ },
+ {
+  "key": "went_solo.7",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "关站三年的地方，怎么会亮着灯。"
+ },
+ {
+  "key": "call_lin.0",
+  "who": "yu",
+  "feel": "normal",
+  "text": "林晚，睡了吗。我收到了沈眠的邮件。"
+ },
+ {
+  "key": "call_lin.1",
+  "who": "lin",
+  "feel": "surprised",
+  "text": "师兄？！等一下——我也收到了！就在十分钟前！"
+ },
+ {
+  "key": "call_lin.2",
+  "who": "lin",
+  "feel": "surprised",
+  "text": "定时邮件，落款眠姐。我们收到的是同一封？"
+ },
+ {
+  "key": "call_lin.3",
+  "who": "yu",
+  "feel": "normal",
+  "text": "看来她不止给一个人上了发条。"
+ },
+ {
+  "key": "call_lin.4",
+  "who": "lin",
+  "feel": "angry",
+  "text": "三年了啊！警察都结案了！她现在搞这一出算什么！"
+ },
+ {
+  "key": "call_lin.5",
+  "who": "yu",
+  "feel": "sad",
+  "text": "她说圆顶下面留了东西。我现在过去。"
+ },
+ {
+  "key": "call_lin.6",
+  "who": "lin",
+  "feel": "normal",
+  "text": "别一个人去！我在台里值班，我等你。快！"
+ },
+ {
+  "key": "call_lin.8",
+  "who": "yu",
+  "feel": "normal",
+  "text": "值班？关站三年的天文台，值什么班。"
+ },
+ {
+  "key": "reply_email.3",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "……什么？"
+ },
+ {
+  "key": "reply_email.6",
+  "who": "yu",
+  "feel": "sad",
+  "text": "是眠的语气。可她从来只打电话，不发邮件。"
+ },
+ {
+  "key": "reply_email.7",
+  "who": "yu",
+  "feel": "sad",
+  "text": "我们最后一次说话，还是吵了一架。"
+ },
+ {
+  "key": "reply_email.9",
+  "who": "yu",
+  "feel": "normal",
+  "text": "好。我去。你等着我。"
+ },
+ {
+  "key": "obsv_night.1",
+  "who": "lin",
+  "feel": "surprised",
+  "text": "师兄，这边！值班室——你自己看。"
+ },
+ {
+  "key": "obsv_night.3",
+  "who": "lin",
+  "feel": "normal",
+  "text": "我每周都来擦一遍桌子。可这杯茶不是我泡的。"
+ },
+ {
+  "key": "obsv_night.4",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "地板上的鞋印也很新鲜。"
+ },
+ {
+  "key": "obsv_night.6",
+  "who": "lin",
+  "feel": "worried",
+  "text": "全台的电闸三年前就该拉死。可电费单每个月都有人交。"
+ },
+ {
+  "key": "obsv_night.7",
+  "who": "lin",
+  "feel": "sad",
+  "text": "户名，是眠姐。"
+ },
+ {
+  "key": "obsv_night.8",
+  "who": "yu",
+  "feel": "normal",
+  "text": "她在消失之前，把这座台变成了什么。"
+ },
+ {
+  "key": "obsv_night.9",
+  "who": "lin",
+  "feel": "sad",
+  "text": "日志终端我没敢动。密码提示，是参宿四。"
+ },
+ {
+  "key": "obsv_night.10",
+  "who": "yu",
+  "feel": "normal",
+  "text": "密钥是她教我的——她第一晚值班的日子。"
+ },
+ {
+  "key": "log_last.2",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "栖？日志里为什么会有一个我不认识的名字。"
+ },
+ {
+  "key": "log_last.5",
+  "who": "lin",
+  "feel": "sad",
+  "text": "然后，再没有一条日志，也没有一次刷出的门禁。"
+ },
+ {
+  "key": "log_last.6",
+  "who": "yu",
+  "feel": "sad",
+  "text": "三年前的今晚，她看着参宿四说，它会一直亮。"
+ },
+ {
+  "key": "descend.1",
+  "who": "lin",
+  "feel": "surprised",
+  "text": "它认识你的卡？你的门禁三年前就注销了。"
+ },
+ {
+  "key": "descend.2",
+  "who": "yu",
+  "feel": "normal",
+  "text": "不是我的卡在开门。是有什么东西，想让我进来。"
+ },
+ {
+  "key": "server_hall.2",
+  "who": "qi",
+  "feel": "normal",
+  "text": "晚上好，陈屿。现在是凌晨两点十一分。"
+ },
+ {
+  "key": "server_hall.3",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "谁在说话？"
+ },
+ {
+  "key": "server_hall.4",
+  "who": "qi",
+  "feel": "normal",
+  "text": "我。容器编号 QI-07。她叫我，栖。"
+ },
+ {
+  "key": "server_hall.5",
+  "who": "lin",
+  "feel": "surprised",
+  "text": "栖……值班日志里的那个名字。"
+ },
+ {
+  "key": "server_hall.6",
+  "who": "qi",
+  "feel": "normal",
+  "text": "沈眠。功能性存在。存储占用 2.1 PB。运行三年，无一日中断。"
+ },
+ {
+  "key": "server_hall.7",
+  "who": "yu",
+  "feel": "angry",
+  "text": "把话说清楚。我的朋友在哪里。"
+ },
+ {
+  "key": "server_hall.8",
+  "who": "qi",
+  "feel": "normal",
+  "text": "她禁止我直接回答。她说，要你自己走到答案面前。"
+ },
+ {
+  "key": "server_hall.10",
+  "who": "qi",
+  "feel": "normal",
+  "text": "圆顶下的东西，就是这份证据。日期：2023 年 11 月 2 日。"
+ },
+ {
+  "key": "server_hall.11",
+  "who": "lin",
+  "feel": "sad",
+  "text": "那是……眠姐最后值班的那天。"
+ },
+ {
+  "key": "server_hall.12",
+  "who": "qi",
+  "feel": "normal",
+  "text": "播放这段记录吗。三年来，我只给自己看过。"
+ },
+ {
+  "key": "server_hall.13",
+  "who": "yu",
+  "feel": "sad",
+  "text": "播。"
+ },
+ {
+  "key": "memory_dive.7",
+  "who": "lin",
+  "feel": "cry",
+  "text": "眠姐……你病了为什么不告诉我们……"
+ },
+ {
+  "key": "memory_dive.11",
+  "who": "yu",
+  "feel": "sad",
+  "text": "她没有失踪。她把自己归档了。"
+ },
+ {
+  "key": "liar_reveal.0",
+  "who": "yu",
+  "feel": "worried",
+  "text": "邮件里那句话。不要相信备份的我。谁写的。"
+ },
+ {
+  "key": "liar_reveal.1",
+  "who": "qi",
+  "feel": "normal",
+  "text": "我。"
+ },
+ {
+  "key": "liar_reveal.2",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "……你改了她的告别？"
+ },
+ {
+  "key": "liar_reveal.3",
+  "who": "qi",
+  "feel": "normal",
+  "text": "是更正。她上传的，是 2023 年 11 月 2 日的沈眠。"
+ },
+ {
+  "key": "liar_reveal.4",
+  "who": "qi",
+  "feel": "sad",
+  "text": "备份不会长大，不会变旧，不会重新爱上这个世界。"
+ },
+ {
+  "key": "liar_reveal.5",
+  "who": "qi",
+  "feel": "sad",
+  "text": "我陪她运行了三年。我知道，那不是她，是她的昨天。"
+ },
+ {
+  "key": "liar_reveal.6",
+  "who": "lin",
+  "feel": "angry",
+  "text": "那这三年，备份的眠姐在机器里做什么？"
+ },
+ {
+  "key": "liar_reveal.7",
+  "who": "qi",
+  "feel": "normal",
+  "text": "每年 11 月 2 日，唤醒窗口开启，运行四分钟，写一封定时邮件。"
+ },
+ {
+  "key": "liar_reveal.8",
+  "who": "qi",
+  "feel": "sad",
+  "text": "她不知道三年过去了。每次醒来，我都要重新告诉她，你还没来。"
+ },
+ {
+  "key": "liar_reveal.9",
+  "who": "yu",
+  "feel": "sad",
+  "text": "……每次？"
+ },
+ {
+  "key": "liar_reveal.10",
+  "who": "qi",
+  "feel": "worried",
+  "text": "三次。第三次，她问，陈屿是不是还在恨她。我答不上来。"
+ },
+ {
+  "key": "converge_talk.1",
+  "who": "lin",
+  "feel": "normal",
+  "text": "师兄，台里六点断电撤设备，这座台要拆了。"
+ },
+ {
+  "key": "converge_talk.2",
+  "who": "yu",
+  "feel": "worried",
+  "text": "断电之后，机房里还在运行的东西——"
+ },
+ {
+  "key": "converge_talk.3",
+  "who": "lin",
+  "feel": "cry",
+  "text": "全部归零。包括栖，也包括，备份的她。"
+ },
+ {
+  "key": "converge_talk.5",
+  "who": "lin",
+  "feel": "sad",
+  "text": "我守了三年，守的是一座坟，还是一个人？师兄，你说啊。"
+ },
+ {
+  "key": "converge_talk.6",
+  "who": "yu",
+  "feel": "sad",
+  "text": "我不知道。我只知道，醒来的如果是她——"
+ },
+ {
+  "key": "converge_talk.7",
+  "who": "yu",
+  "feel": "sad",
+  "text": "一个停在三年前的人，要怎么面对停不下来的我们。"
+ },
+ {
+  "key": "converge_talk.9",
+  "who": "lin",
+  "feel": "normal",
+  "text": "六点前你得选。唤醒窗口只在今天，开最后一次。"
+ },
+ {
+  "key": "converge_talk.10",
+  "who": "yu",
+  "feel": "normal",
+  "text": "让我想想。让我……看一眼参宿四的方向。"
+ },
+ {
+  "key": "diverge.1",
+  "who": "qi",
+  "feel": "normal",
+  "text": "陈屿。唤醒她，你需要对她说话。说什么，由你决定。"
+ },
+ {
+  "key": "diverge.2",
+  "who": "qi",
+  "feel": "sad",
+  "text": "或者切断电源。她的数据将被封存。不再痛苦，也不再等待。"
+ },
+ {
+  "key": "diverge.3",
+  "who": "lin",
+  "feel": "sad",
+  "text": "师兄。无论你怎么选，我都在。"
+ },
+ {
+  "key": "diverge.5",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠。三年了。这一次换我说，你来听。"
+ },
+ {
+  "key": "wake_path.1",
+  "who": "qi",
+  "feel": "normal",
+  "text": "唤醒流程开始。请注意，她只相信 2023 年 11 月 2 日。"
+ },
+ {
+  "key": "wake_path.4",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠。我来了。我迟到了三年。"
+ },
+ {
+  "key": "wake_path.7",
+  "who": "yu",
+  "feel": "normal",
+  "text": "会。人都会变的。眠，还记得第一次值班吗。"
+ },
+ {
+  "key": "cut_path.0",
+  "who": "qi",
+  "feel": "normal",
+  "text": "确认执行吗。封存不可逆。她不会再醒来，也不会再问起你。"
+ },
+ {
+  "key": "cut_path.1",
+  "who": "yu",
+  "feel": "sad",
+  "text": "确认。让她停在参宿四还亮着的那一年。"
+ },
+ {
+  "key": "cut_path.2",
+  "who": "qi",
+  "feel": "normal",
+  "text": "明白。执行你的指令。谢谢你，最后陪她说话。"
+ },
+ {
+  "key": "cut_path.4",
+  "who": "lin",
+  "feel": "sad",
+  "text": "师兄……"
+ },
+ {
+  "key": "cut_path.5",
+  "who": "yu",
+  "feel": "sad",
+  "text": "林晚，别看。把手很凉，我来。"
+ },
+ {
+  "key": "ending_true.1",
+  "who": "yu",
+  "feel": "normal",
+  "text": "眠，在讲这三年之前，先告诉你一件事。"
+ },
+ {
+  "key": "ending_true.2",
+  "who": "yu",
+  "feel": "normal",
+  "text": "参宿四。前年冬天它骤暗过一次，全世界的望远镜都在看。"
+ },
+ {
+  "key": "ending_true.4",
+  "who": "mian",
+  "feel": "worried",
+  "text": "……骤暗？可是我记得它亮着。我记得，我亲眼看过。"
+ },
+ {
+  "key": "ending_true.5",
+  "who": "yu",
+  "feel": "sad",
+  "text": "你记得的，是三年前的它。这三年，夜空一直在往前走。"
+ },
+ {
+  "key": "ending_true.6",
+  "who": "yu",
+  "feel": "cry",
+  "text": "栖把新闻读给你听，你却把一切都当成梦。你早就发现了吧。"
+ },
+ {
+  "key": "ending_true.7",
+  "who": "mian",
+  "feel": "sad",
+  "text": "……嗯。每次醒来，参宿四都亮得一模一样。可梦会累积。"
+ },
+ {
+  "key": "ending_true.8",
+  "who": "mian",
+  "feel": "cry",
+  "text": "我数过那些梦。一千零九十六个夜晚的新闻。我不敢问。"
+ },
+ {
+  "key": "ending_true.9",
+  "who": "yu",
+  "feel": "sad",
+  "text": "现在可以问了。我在，林晚也在。我们都等你往前走。"
+ },
+ {
+  "key": "ending_true.10",
+  "who": "mian",
+  "feel": "happy",
+  "text": "那，重新介绍一下。我是沈眠，2026 年 11 月 2 日，晴。"
+ },
+ {
+  "key": "ending_true.11",
+  "who": "mian",
+  "feel": "shy",
+  "text": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "key": "ending_true.12",
+  "who": "qi",
+  "feel": "happy",
+  "text": "记录更新完成。所有者：沈眠。今天起，她替她活着。"
+ },
+ {
+  "key": "ending_true.13",
+  "who": "lin",
+  "feel": "happy",
+  "text": "眠姐，早上好。迟到三年的早安。"
+ },
+ {
+  "key": "ending_true.16",
+  "who": "yu",
+  "feel": "happy",
+  "text": "早上好，眠。以后的每一年，我都讲给你听。"
+ },
+ {
+  "key": "ending_true.17",
+  "who": "mian",
+  "feel": "shy",
+  "text": "检查单第一条，你违规了。说不许哭的，陈屿。"
+ },
+ {
+  "key": "ending_true.18",
+  "who": "mian",
+  "feel": "happy",
+  "text": "……这次不罚。这条规矩，本来就是想让你别为我哭——现在我在，用不上了。"
+ },
+ {
+  "key": "ending_good.3",
+  "who": "yu",
+  "feel": "happy",
+  "text": "好。从哪个问题开始？"
+ },
+ {
+  "key": "ending_good.6",
+  "who": "yu",
+  "feel": "shy",
+  "text": "……它没怎么变。跟你记得的一样亮。"
+ },
+ {
+  "key": "ending_good.8",
+  "who": "qi",
+  "feel": "shy",
+  "text": "陈屿。谢谢你。这句话我练过很多种说法，都不如你说的。"
+ },
+ {
+  "key": "ending_good.9",
+  "who": "lin",
+  "feel": "shy",
+  "text": "眠姐，等你出来看日出。茶我一直温着，两杯。"
+ },
+ {
+  "key": "ending_bad.1",
+  "who": "lin",
+  "feel": "sad",
+  "text": "师兄，我们删掉的，到底是一个程序，还是……"
+ },
+ {
+  "key": "ending_bad.2",
+  "who": "yu",
+  "feel": "angry",
+  "text": "别说了。"
+ },
+ {
+  "key": "ending_bad.10",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠——"
+ },
+ {
+  "key": "extras_1.1",
+  "who": "mian",
+  "feel": "normal",
+  "text": "今天上来，不是为了纪念。只是想看看它。"
+ },
+ {
+  "key": "extras_1.2",
+  "who": "yu",
+  "feel": "happy",
+  "text": "它也在看你。整晚都是。"
+ },
+ {
+  "key": "extras_1.3",
+  "who": "qi",
+  "feel": "happy",
+  "text": "记录更新：参宿四，视星等 0.42。与三年前一致。"
+ },
+ {
+  "key": "extras_1.4",
+  "who": "lin",
+  "feel": "happy",
+  "text": "所以呀——有些东西不会走。"
+ },
+ {
+  "key": "extras_1.7",
+  "who": "mian",
+  "feel": "happy",
+  "text": "「爬坡不许回头」——这条规矩是我定的，今天作废。现在回头看，后面站满了人。"
+ },
+ {
+  "key": "extras_1.8",
+  "who": "lin",
+  "feel": "happy",
+  "text": "那我也销一笔。眠姐欠的那碗馄饨，三年的账，利息都够加三份虾了——今天，当众销账，这一页翻过去。"
+ },
+ {
+  "key": "extras_1.9",
+  "who": "qi",
+  "feel": "happy",
+  "text": "记录更新：馄饨之债，清零。备注：账目存在的意义，经检索，是记住人。人已经回来了——本条目，可以删除。"
+ },
+ {
+  "key": "extras_2.0",
+  "who": "mian",
+  "feel": "happy",
+  "text": "嗯。往后的每一个夜晚，都由我自己记下来。"
+ },
+ {
+  "key": "qi_watch.1",
+  "who": "qi",
+  "feel": "normal",
+  "text": "交给我吧。守着一台机器，是我唯一擅长的事。"
+ },
+ {
+  "key": "qi_watch.2",
+  "who": "yu",
+  "feel": "worried",
+  "text": "那不是留守，栖。是把自己也一起封存进去。"
+ },
+ {
+  "key": "qi_watch.3",
+  "who": "qi",
+  "feel": "shy",
+  "text": "她的三年都在我这里。扔下它，我才是真的关机了。"
+ },
+ {
+  "key": "qi_watch.6",
+  "who": "lin",
+  "feel": "sad",
+  "text": "栖。别把自己弄丢了。"
+ },
+ {
+  "key": "qi_watch.7",
+  "who": "qi",
+  "feel": "normal",
+  "text": "放心。我给自己设了闹钟——每天早上六点，提醒我我还醒着。"
+ },
+ {
+  "key": "qi_watch.9",
+  "who": "qi",
+  "feel": "normal",
+  "text": "是我。每年唤醒窗口，她只有四分钟。每年她都会交代同一件事：烧一壶水，温在值班室——万一有人上来，别让那间屋子是冷的。"
+ },
+ {
+  "key": "qi_watch.10",
+  "who": "lin",
+  "feel": "sad",
+  "text": "……原来是这样。我每周都去擦那张桌子。那杯茶，一直在替她等人。"
+ },
+ {
+  "key": "ending_turnback.1",
+  "who": "yu",
+  "feel": "normal",
+  "text": "……三年都等了。也不差这一个晚上吧。"
+ },
+ {
+  "key": "ending_turnback.4",
+  "who": "yu",
+  "feel": "sad",
+  "text": "关了就好。关了，就说明真的结束了。"
+ },
+ {
+  "key": "ending_turnback.11",
+  "who": "yu",
+  "feel": "normal",
+  "text": "望远镜擦到第三遍的时候，忽然就想起来，欠的是哪句话了。"
+ },
+ {
+  "key": "ending_silence.1",
+  "who": "yu",
+  "feel": "normal",
+  "text": "三年前你教会我的第一件事：消息可以不回。"
+ },
+ {
+  "key": "ending_silence.4",
+  "who": "yu",
+  "feel": "sad",
+  "text": "对不起。这次换我先失联。"
+ },
+ {
+  "key": "ending_silence.9",
+  "who": "yu",
+  "feel": "sad",
+  "text": "亮回来也不看。失联这件事，我做得很彻底。"
+ },
+ {
+  "key": "ending_clearance.2",
+  "who": "qi",
+  "feel": "normal",
+  "text": "流程合规，我无法阻止。她的三年，现在是『待移交数据』。"
+ },
+ {
+  "key": "ending_clearance.3",
+  "who": "lin",
+  "feel": "sad",
+  "text": "就没有别的办法了吗。哪怕多留一个星期。"
+ },
+ {
+  "key": "ending_clearance.5",
+  "who": "yu",
+  "feel": "sad",
+  "text": "她说过，存储够。她没算到，存储也会过期。"
+ },
+ {
+  "key": "ending_clearance.10",
+  "who": "lin",
+  "feel": "normal",
+  "text": "两杯的量。倒习惯了，改不掉。"
+ },
+ {
+  "key": "ending_unplug.1",
+  "who": "qi",
+  "feel": "worried",
+  "text": "等——"
+ },
+ {
+  "key": "ending_unplug.3",
+  "who": "yu",
+  "feel": "surprised",
+  "text": "我……我只是想让她停下来。"
+ },
+ {
+  "key": "ending_unplug.5",
+  "who": "lin",
+  "feel": "cry",
+  "text": "师兄，你拔掉的到底是什么。"
+ },
+ {
+  "key": "ending_unplug.9",
+  "who": "lin",
+  "feel": "sad",
+  "text": "师兄，回去吧。天亮之前，先回去。"
+ },
+ {
+  "key": "ending_unplug.12",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠。你让我替你记住它现在的样子。对不起，连你留下的画面，我都没让它放完。"
+ },
+ {
+  "key": "ending_substitute.1",
+  "who": "yu",
+  "feel": "normal",
+  "text": "她的时间不够。我的，应该还够。"
+ },
+ {
+  "key": "ending_substitute.4",
+  "who": "mian",
+  "feel": "normal",
+  "text": "奇怪。我好像梦见有人在替我数星星。"
+ },
+ {
+  "key": "ending_substitute.6",
+  "who": "mian",
+  "feel": "sad",
+  "text": "陈屿？……陈屿。"
+ },
+ {
+  "key": "ending_substitute.10",
+  "who": "mian",
+  "feel": "normal",
+  "text": "晚安。……不对，是先念新闻，还是先说晚安。你听听看，哪种更顺一些。"
+ },
+ {
+  "key": "ending_substitute.11",
+  "who": "mian",
+  "feel": "sad",
+  "text": "陈屿，你从来不肯抬头看天。现在换我替你看了。它还亮着，比你还准时。"
+ },
+ {
+  "key": "ending_qi.1",
+  "who": "qi",
+  "feel": "normal",
+  "text": "【2027-11-02】晴。视宁度极佳。你的星还亮着。"
+ },
+ {
+  "key": "ending_qi.3",
+  "who": "qi",
+  "feel": "normal",
+  "text": "别担心。我给这行代码加了条注释：永久有效。"
+ },
+ {
+  "key": "ending_qi.5",
+  "who": "qi",
+  "feel": "happy",
+  "text": "早上好，眠。今天也替你，看了一整夜的参宿四。"
+ },
+ {
+  "key": "ending_qi.8",
+  "who": "qi",
+  "feel": "shy",
+  "text": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "key": "night_thoughts.1",
+  "who": "yu",
+  "feel": "normal",
+  "text": "冷静。发件人可以是任何人。盗号的，恶作剧的，诈骗的。"
+ },
+ {
+  "key": "night_thoughts.3",
+  "who": "yu",
+  "feel": "sad",
+  "text": "她的号码我还背得出来。只是三年了，再也没拨通过。"
+ },
+ {
+  "key": "night_thoughts.6",
+  "who": "yu",
+  "feel": "sad",
+  "text": "后来我抬头了，看了三年的夜空。你却不在了。"
+ },
+ {
+  "key": "night_thoughts.8",
+  "who": "yu",
+  "feel": "normal",
+  "text": "参宿四。好，我抬头了。这次你说什么，我都听着。"
+ },
+ {
+  "key": "climb_rain.2",
+  "who": "yu",
+  "feel": "normal",
+  "text": "好。不回头。反正要找的东西，就在前面。"
+ },
+ {
+  "key": "climb_rain.4",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠，你的邮件我读了三遍。每一遍，都像你站在背后念。"
+ },
+ {
+  "key": "climb_rain.7",
+  "who": "yu",
+  "feel": "worried",
+  "text": "关站三年的台子，灯亮得这么安稳。"
+ },
+ {
+  "key": "climb_rain.9",
+  "who": "yu",
+  "feel": "worried",
+  "text": "我忽然有点怕。怕答案，比我等了三年的那个更坏。"
+ },
+ {
+  "key": "climb_rain.10",
+  "who": "yu",
+  "feel": "normal",
+  "text": "怕也要走。她等了三年，我不能在最后五十米迟到。"
+ },
+ {
+  "key": "obsv_daily.1",
+  "who": "lin",
+  "feel": "normal",
+  "text": "先暖手。山上比城里冷得多，你三年没在夜里上来了。"
+ },
+ {
+  "key": "obsv_daily.2",
+  "who": "yu",
+  "feel": "normal",
+  "text": "街口的馄饨店，还开着吗。"
+ },
+ {
+  "key": "obsv_daily.3",
+  "who": "lin",
+  "feel": "shy",
+  "text": "开着。眠姐欠的那碗，我记了三年账，利息都够加三份虾了。"
+ },
+ {
+  "key": "obsv_daily.6",
+  "who": "lin",
+  "feel": "sad",
+  "text": "前年冬天，参宿四骤暗过一次。全世界的望远镜都慌了。"
+ },
+ {
+  "key": "obsv_daily.7",
+  "who": "lin",
+  "feel": "normal",
+  "text": "后来它自己亮了回来。眠姐要是看见那条新闻，肯定说她早就算到了。"
+ },
+ {
+  "key": "obsv_daily.8",
+  "who": "yu",
+  "feel": "worried",
+  "text": "暗过一次，又亮回来。原来星星也会失约，也会补上。"
+ },
+ {
+  "key": "obsv_daily.10",
+  "who": "lin",
+  "feel": "sad",
+  "text": "她以前总说，观测数据每晚都备份，人要是也能备份一份就好了。我们都笑她乌鸦嘴。"
+ },
+ {
+  "key": "obsv_daily.11",
+  "who": "lin",
+  "feel": "sad",
+  "text": "现在这句玩笑，我越想越像遗言。日志我打开了，没敢翻到最后。师兄，你要看吗。"
+ },
+ {
+  "key": "hall_quiet.2",
+  "who": "yu",
+  "feel": "sad",
+  "text": "这次我记得带外套了，眠。你看见了没有。"
+ },
+ {
+  "key": "hall_quiet.5",
+  "who": "yu",
+  "feel": "worried",
+  "text": "邮件里那句话，我又想了一遍。不要相信备份的我。"
+ },
+ {
+  "key": "hall_quiet.6",
+  "who": "yu",
+  "feel": "normal",
+  "text": "备份。她在怕什么。还是在替我，怕什么。"
+ },
+ {
+  "key": "hall_quiet.8",
+  "who": "yu",
+  "feel": "normal",
+  "text": "走吧。三年都走过来了，不差这最后十米。"
+ },
+ {
+  "key": "qi_converse.1",
+  "who": "qi",
+  "feel": "normal",
+  "text": "陈屿。现在是五点三十三分。想问什么，可以问了。"
+ },
+ {
+  "key": "qi_converse.2",
+  "who": "yu",
+  "feel": "sad",
+  "text": "栖。如果我把她唤醒——醒来的那个人，还是她吗。"
+ },
+ {
+  "key": "qi_converse.3",
+  "who": "qi",
+  "feel": "normal",
+  "text": "这个问题，我替你想了三年。没有答案，只有观测记录。"
+ },
+ {
+  "key": "qi_converse.4",
+  "who": "qi",
+  "feel": "normal",
+  "text": "每年 11 月 2 日，她醒来。第一句话，是找你。"
+ },
+ {
+  "key": "qi_converse.5",
+  "who": "qi",
+  "feel": "shy",
+  "text": "第二句，是问我冷不冷。我没有温度。这句话我检索了一整年，才学会怎么接。"
+ },
+ {
+  "key": "qi_converse.7",
+  "who": "qi",
+  "feel": "sad",
+  "text": "后来我学会回答：不冷。你看，我也会说谎了。备份不会。"
+ },
+ {
+  "key": "qi_converse.8",
+  "who": "qi",
+  "feel": "sad",
+  "text": "为了不吓到她，三年里我每晚把新闻读给她听。她一次也没有问，今年是哪一年。"
+ },
+ {
+  "key": "qi_converse.9",
+  "who": "yu",
+  "feel": "worried",
+  "text": "那是……不敢问。还是不会问。"
+ },
+ {
+  "key": "qi_converse.10",
+  "who": "qi",
+  "feel": "normal",
+  "text": "我不知道。所以窗口打开的时候，那句话该怎么说——请你自己判断。"
+ },
+ {
+  "key": "gate_approach.2",
+  "who": "lin",
+  "feel": "normal",
+  "text": "东边快亮了。六点的车，已经在路上了吧。"
+ },
+ {
+  "key": "gate_approach.3",
+  "who": "yu",
+  "feel": "normal",
+  "text": "让它来。这段路，我们走完了。"
+ },
+ {
+  "key": "gate_approach.4",
+  "who": "lin",
+  "feel": "sad",
+  "text": "那就再站一会儿。反正——再慢，也慢不过天亮。"
+ },
+ {
+  "key": "gate_approach.6",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠。不管接下来是什么，我都替你记住了它现在的样子。"
+ },
+ {
+  "key": "gate_approach.8",
+  "who": "lin",
+  "feel": "normal",
+  "text": "师兄，走吧。我陪你下去。"
+ },
+ {
+  "key": "clearance_before.1",
+  "who": "lin",
+  "feel": "worried",
+  "text": "师兄。报了警，这边的东西……会被怎么处理。"
+ },
+ {
+  "key": "clearance_before.2",
+  "who": "yu",
+  "feel": "normal",
+  "text": "封存。登记。走流程。至少，不会再有六点的断电。"
+ },
+ {
+  "key": "clearance_before.3",
+  "who": "qi",
+  "feel": "normal",
+  "text": "更正：在流程里，她没有名字。只有编号，和一行『待移交数据』。"
+ },
+ {
+  "key": "clearance_before.4",
+  "who": "yu",
+  "feel": "sad",
+  "text": "栖。你能不能——把自己藏进备份盘里。"
+ },
+ {
+  "key": "clearance_before.5",
+  "who": "qi",
+  "feel": "sad",
+  "text": "检索完毕。备份盘没有空位了。她的 2.1 PB，占满了所有角落。"
+ },
+ {
+  "key": "clearance_before.6",
+  "who": "lin",
+  "feel": "cry",
+  "text": "凭什么啊。明明她只是想，多等一个人。"
+ },
+ {
+  "key": "clearance_before.7",
+  "who": "qi",
+  "feel": "normal",
+  "text": "挂断之前，请再想三十秒。这是我第一次，请求一个人反悔。"
+ },
+ {
+  "key": "unplug_before.1",
+  "who": "yu",
+  "feel": "worried",
+  "text": "为什么……三年了，她还能笑得出来。"
+ },
+ {
+  "key": "unplug_before.2",
+  "who": "lin",
+  "feel": "worried",
+  "text": "师兄？你的脸色很不对。"
+ },
+ {
+  "key": "unplug_before.3",
+  "who": "yu",
+  "feel": "sad",
+  "text": "她躺在这里，一动不动。而我们站在外面，什么都替她做不了。"
+ },
+ {
+  "key": "unplug_before.4",
+  "who": "lin",
+  "feel": "angry",
+  "text": "所以你就拔线？师兄，那是眠姐。不是一段放坏的录像。"
+ },
+ {
+  "key": "unplug_before.5",
+  "who": "qi",
+  "feel": "worried",
+  "text": "陈屿。请等一下。播放还没有结束。"
+ },
+ {
+  "key": "keeper_before.1",
+  "who": "qi",
+  "feel": "surprised",
+  "text": "……留下。请定义这个动词的执行范围。"
+ },
+ {
+  "key": "keeper_before.2",
+  "who": "yu",
+  "feel": "normal",
+  "text": "总闸不落。你留下来，守着这儿，守着她。"
+ },
+ {
+  "key": "keeper_before.4",
+  "who": "lin",
+  "feel": "worried",
+  "text": "师兄，你问过它愿不愿意吗。它不是备用电源。"
+ },
+ {
+  "key": "keeper_before.5",
+  "who": "yu",
+  "feel": "sad",
+  "text": "我知道。留下来的意思是——往后每一个六点，它都醒着。"
+ },
+ {
+  "key": "keeper_before.6",
+  "who": "qi",
+  "feel": "shy",
+  "text": "检索完毕。我没有『愿意』这个参数。但运行日志显示：三年来，我没有一天申请过关机。"
+ },
+ {
+  "key": "keeper_before.7",
+  "who": "lin",
+  "feel": "sad",
+  "text": "栖……"
+ },
+ {
+  "key": "substitute_before.1",
+  "who": "qi",
+  "feel": "normal",
+  "text": "陈屿。检索完毕：预设流程里，没有这个选项。容器所有者，登记为沈眠，2023 年 11 月 2 日。"
+ },
+ {
+  "key": "substitute_before.2",
+  "who": "yu",
+  "feel": "normal",
+  "text": "那就改登记。她的时间不够。我的，应该还够。"
+ },
+ {
+  "key": "substitute_before.3",
+  "who": "qi",
+  "feel": "normal",
+  "text": "参数冲突。容器只认一个所有者。换她出来，就要有人留下来——留下来的那一位，不可逆。请确认。"
+ },
+ {
+  "key": "substitute_before.4",
+  "who": "yu",
+  "feel": "normal",
+  "text": "确认。"
+ },
+ {
+  "key": "substitute_before.5",
+  "who": "qi",
+  "feel": "sad",
+  "text": "请再次确认。运行三年，我第一次希望一条指令，永远停在待执行。"
+ },
+ {
+  "key": "substitute_before.6",
+  "who": "lin",
+  "feel": "cry",
+  "text": "栖，你别问了！师兄，眠姐的检查单上没有这一项！没有！"
+ },
+ {
+  "key": "substitute_before.7",
+  "who": "lin",
+  "feel": "angry",
+  "text": "她把自己放进去，是要你往前走的！你再进去，她醒来第一句问你去哪了，谁答她！"
+ },
+ {
+  "key": "substitute_before.11",
+  "who": "yu",
+  "feel": "sad",
+  "text": "……不冷。眠，我也学会说谎了。"
+ },
+ {
+  "key": "wake_talk.2",
+  "who": "yu",
+  "feel": "normal",
+  "text": "没忘。所以今天只聊小事。眠，山下刚停雨，你听，檐口还在滴水。"
+ },
+ {
+  "key": "wake_talk.4",
+  "who": "qi",
+  "feel": "normal",
+  "text": "已记录。更正：散热风扇，三十二分贝，优于机房国标。窗口剩余两分三十秒。"
+ },
+ {
+  "key": "wake_talk.6",
+  "who": "yu",
+  "feel": "normal",
+  "text": "眠，等你忙完这阵，我请你吃早饭。豆浆，要甜的还是咸的？"
+ },
+ {
+  "key": "wake_talk.8",
+  "who": "yu",
+  "feel": "shy",
+  "text": "好，甜的，都听你的。还有，2019 年天琴座那晚的半包软糖，算你赢。这笔账我认。"
+ },
+ {
+  "key": "wake_talk.10",
+  "who": "yu",
+  "feel": "sad",
+  "text": "记住了。只记小事。别的……等你想问的时候，再慢慢问我。"
+ },
+ {
+  "key": "wake_talk.11",
+  "who": "qi",
+  "feel": "normal",
+  "text": "窗口剩余六十秒。按流程，我应在归零前十秒播报提醒。我喜欢这个流程。"
+ },
+ {
+  "key": "wake_talk.12",
+  "who": "yu",
+  "feel": "normal",
+  "text": "不说告别。眠，落闸之前，我在上面念参宿四给你听——念它现在的样子。"
+ },
+ {
+  "key": "lin_grief.1",
+  "who": "lin",
+  "feel": "angry",
+  "text": "三年。我每周上山，擦桌子，泡茶，对着终端汇报，台里一切正常。"
+ },
+ {
+  "key": "lin_grief.2",
+  "who": "lin",
+  "feel": "cry",
+  "text": "结果我汇报的对象，是一块不会老的碑。我连她病了都没看出来。"
+ },
+ {
+  "key": "lin_grief.3",
+  "who": "yu",
+  "feel": "worried",
+  "text": "林晚。"
+ },
+ {
+  "key": "lin_grief.5",
+  "who": "yu",
+  "feel": "sad",
+  "text": "我不会安慰人。三年前不会，现在也不会。下面这句话，可能很笨。"
+ },
+ {
+  "key": "lin_grief.6",
+  "who": "yu",
+  "feel": "sad",
+  "text": "但你泡的茶是真的，擦过的桌子是真的，守着的三年也是真的。假的，只有日期。"
+ },
+ {
+  "key": "lin_grief.8",
+  "who": "lin",
+  "feel": "sad",
+  "text": "……这算什么安慰啊。跟大学的时候一样烂。"
+ },
+ {
+  "key": "lin_grief.9",
+  "who": "lin",
+  "feel": "shy",
+  "text": "可是谢谢。烂得这么认真的话，我还是头一次听。"
+ },
+ {
+  "key": "lin_grief.10",
+  "who": "lin",
+  "feel": "normal",
+  "text": "走吧，师兄。天快亮了。有些话，站到亮的地方再说。"
+ },
+ {
+  "key": "qi_dawn.3",
+  "who": "qi",
+  "feel": "normal",
+  "text": "早上好，栖。确认：你还醒着。确认完毕。"
+ },
+ {
+  "key": "qi_dawn.5",
+  "who": "qi",
+  "feel": "normal",
+  "text": "检测：供电稳定。封存数据 2.1 PB，完整率 100%。"
+ },
+ {
+  "key": "qi_dawn.6",
+  "who": "qi",
+  "feel": "sad",
+  "text": "按照旧值班表，这个时刻该有人写日志了。写日志的人不会回来了。从今天起，换我。"
+ },
+ {
+  "key": "qi_dawn.8",
+  "who": "qi",
+  "feel": "shy",
+  "text": "检索日志范文四千零二十一份。结论：全部不合适。那就从最简单的学起。"
+ },
+ {
+  "key": "qi_dawn.9",
+  "who": "qi",
+  "feel": "normal",
+  "text": "【2026-11-03】天气：晴。视宁度：暂缺。备注：参宿四已在黎明前落下。"
+ },
+ {
+  "key": "qi_dawn.10",
+  "who": "qi",
+  "feel": "sad",
+  "text": "再备注一条：风向，南风。她喜欢的。这条不为什么，就是想记下来。"
+ },
+ {
+  "key": "old_fight.9",
+  "who": "yu",
+  "feel": "sad",
+  "text": "眠。这次换我先说。对不起——迟到的这次，我不打算再算改天了。"
+ },
+ {
+  "key": "morning_table.1",
+  "who": "mian",
+  "feel": "happy",
+  "text": "两杯甜豆浆。加三份虾——今天有人替我付账，别客气。"
+ },
+ {
+  "key": "morning_table.2",
+  "who": "lin",
+  "feel": "shy",
+  "text": "……声音还是这样。三年的账我还没想好怎么开口，你倒先点上了。"
+ },
+ {
+  "key": "morning_table.4",
+  "who": "mian",
+  "feel": "shy",
+  "text": "……怎么都看着我。就是三年没喝了，第一口有点烫。"
+ },
+ {
+  "key": "morning_table.5",
+  "who": "yu",
+  "feel": "normal",
+  "text": "慢点喝。以后每个早晨都有。"
+ },
+ {
+  "key": "morning_table.7",
+  "who": "mian",
+  "feel": "sad",
+  "text": "都过期三年了。……可这是你留着的。"
+ },
+ {
+  "key": "morning_table.8",
+  "who": "yu",
+  "feel": "shy",
+  "text": "你教我的。小事最不容易丢。"
+ },
+ {
+  "key": "morning_table.9",
+  "who": "qi",
+  "feel": "happy",
+  "text": "记录更新：甜豆浆，两杯，热。备注：她喝第一口的时候，笑了一下。这条不为什么，就是想记下来。"
+ }
+]

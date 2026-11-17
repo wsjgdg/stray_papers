@@ -359,7 +359,13 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: vn-cg-in 0.9s ease-out;
+  /* fade-in + slow ken-burns push: the CG keeps a gentle zoom while shown
+     (object-fit: cover crops the 1.07 overscan, so no edges reveal). The
+     engine restarts both animations when a different CG replaces a visible
+     one; reduced-motion users get the static image. */
+  animation:
+    vn-cg-in 0.9s ease-out,
+    vn-cg-kenburns 28s ease-out forwards;
 }
 
 /* Large waist-up portrait standing free on the stage (no card/clip), anchored
@@ -549,6 +555,7 @@ body {
       rgba(255, 255, 255, 0.045) 0%,
       rgba(255, 255, 255, 0) 42%
     );
+  transition: opacity 0.25s ease;
   border: 1px solid var(--vn-border);
   border-top-color: rgba(255, 255, 255, 0.2); /* 1px top highlight edge */
   border-radius: 14px;
@@ -1386,9 +1393,9 @@ input.vn-range {
 
 .vn-tree-node {
   position: absolute;
-  width: 128px;
-  height: 64px;
-  padding: 7px 9px;
+  width: 216px;
+  height: 132px;
+  padding: 0;
   border-radius: 9px;
   text-align: left;
   background: rgba(8, 12, 24, 0.9);
@@ -1407,6 +1414,44 @@ input.vn-range {
   border-color: rgba(150, 190, 255, 0.4);
   color: var(--vn-text);
   cursor: pointer;
+}
+
+/* image-backed node cards (#bg-variants): the scene's own unique bg art
+   behind a bottom gradient scrim carrying the label. Top-level rules — these
+   must NOT nest inside .vn-tree-seen: bare nesting compiles to descendant
+   selectors (.vn-tree-seen & ...) that can never match sibling nodes. */
+.vn-tree-node.vn-tree-img {
+  border-color: rgba(150, 190, 255, 0.25);
+  color: #ecf2fc;
+}
+
+#vn-app .vn-tree-node.vn-tree-img .vn-tree-id,
+#vn-app .vn-tree-node.vn-tree-img .vn-tree-sub {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding: 3px 10px;
+  color: #ecf2fc;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+}
+
+#vn-app .vn-tree-node.vn-tree-img .vn-tree-id {
+  bottom: 24px;
+  font-weight: 600;
+}
+
+#vn-app .vn-tree-node.vn-tree-img .vn-tree-sub {
+  bottom: 0;
+  font-size: 12px;
+  color: rgba(214, 228, 248, 0.85);
+}
+
+#vn-app .vn-tree-node.vn-tree-img:not(.vn-tree-seen) {
+  filter: brightness(0.22) saturate(0.6);
+}
+
+#vn-app .vn-tree-node.vn-tree-img.vn-tree-seen {
+  filter: brightness(0.94);
 }
 
 .vn-tree-node.vn-tree-seen:hover {
@@ -1683,9 +1728,77 @@ input.vn-range {
   pointer-events: none;
 }
 
+/* image OP (benchmark #33): fullscreen black stage, one theme CG at a time
+   with the shared ken-burns push; fades in/out via .vn-op-on; click/space
+   skips the whole sequence */
+.vn-op {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.vn-op.vn-op-on {
+  opacity: 1;
+}
+
+.vn-op-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#vn-app .vn-op-img.vn-op-zoom {
+  animation: vn-cg-kenburns 4.4s ease-out forwards;
+}
+
 .vn-title > *:not(.vn-title-canvas) {
   position: relative;
   z-index: 1;
+}
+
+/* lite-build pack loading line (benchmark #26): sits under the ending
+   readout; only ever visible while pack-loader.js is still streaming */
+.vn-pack-status {
+  margin-top: 14px;
+  font-size: 12px;
+  color: rgba(190, 210, 240, 0.55);
+  letter-spacing: 0.14em;
+}
+
+/* 标题天色三档 (benchmark #30): tier 0 = nothing collected, Betelgeuse dim
+   and veiled; tier 1 = some progress, normal sky; tier 2 = ending_true
+   seen, the star burns bright again. ::after is a black veil over canvas
+   and painted art (z 0, under the text layer at z 1). */
+.vn-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #000;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+#vn-app .vn-title.vn-title-tier-0::after {
+  opacity: 0.5;
+}
+
+#vn-app .vn-title.vn-title-tier-1::after {
+  opacity: 0.22;
+}
+
+#vn-app .vn-title.vn-title-tier-0 .vn-title-canvas {
+  filter: brightness(0.55) saturate(0.65);
+}
+
+#vn-app .vn-title.vn-title-tier-1 .vn-title-canvas {
+  filter: brightness(0.85);
 }
 
 /* chapter card: translucent scrim + centered rules and text, shown once per
@@ -2054,6 +2167,32 @@ input.vn-range {
   transform: translateY(0) scale(0.98);
 }
 
+#vn-log-reminder {
+  margin-top: 18px;
+  padding: 7px 18px;
+  border: 1px solid rgba(255, 210, 132, 0.38);
+  border-radius: 999px;
+  background: rgba(38, 31, 27, 0.38);
+  color: rgba(255, 226, 184, 0.82);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease;
+}
+
+#vn-log-reminder:hover {
+  border-color: rgba(255, 220, 160, 0.72);
+  background: rgba(54, 42, 32, 0.55);
+  color: #fff0d4;
+}
+
+.vn-tree-node.vn-tree-log-reminder {
+  border-color: rgba(255, 210, 132, 0.76);
+  box-shadow: 0 0 16px rgba(255, 196, 110, 0.3);
+}
+
 /* --------------------------------------------------------------------------
    11. Toast
    -------------------------------------------------------------------------- */
@@ -2169,6 +2308,78 @@ input.vn-range {
   animation: vn-shake 0.5s ease-in-out 1;
 }
 
+/* #41 hide interface: dialog + topbar lift for full-screen CG appreciation
+   (H key / right click); any click restores via the advance gate */
+#vn-app.vn-ui-hidden .vn-dialog,
+#vn-app.vn-ui-hidden .vn-topbar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vn-dialog,
+.vn-topbar {
+  transition: opacity 0.25s ease;
+}
+
+/* fullscreen text (fx "bigtext"): black-out everything, one line alone —
+   the FSN-style black-screen moment. Covers bg/CG/sprites/dialog (z 7),
+   sits under toast/menu layers; text fades in with the overlay. */
+.vn-bigtext {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8vw;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+  color: #e8edf6;
+  font-size: clamp(26px, 3.6vw, 42px);
+  font-weight: 300;
+  line-height: 1.9;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+#vn-app.vn-bigtext-mode .vn-bigtext {
+  opacity: 1;
+}
+
+/* one-shot black frame (fx "blackout"): the classic cut-to-black beat,
+   mirror of vn-flash with the palette inverted */
+#vn-app.vn-blackout::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: #000;
+  animation: vn-blackout 0.38s ease-in-out forwards;
+}
+
+@keyframes vn-blackout {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* emphasis beat (fx "bounce"): small dip-and-settle on the focus sprite */
+#vn-app .vn-sprite > svg.vn-bounce {
+  animation: vn-bounce 0.5s ease-in-out 1;
+}
+
 /* --------------------------------------------------------------------------
    14. Keyframes
    -------------------------------------------------------------------------- */
@@ -2217,12 +2428,14 @@ input.vn-range {
   }
 }
 
+/* --vn-sprite-sx rides inside the keyframes: a static transform on the same
+   element would be permanently overridden by this infinite animation */
 @keyframes vn-sprite-breathe {
   from {
-    transform: scaleY(1);
+    transform: scale(var(--vn-sprite-sx, 1), 1);
   }
   to {
-    transform: scaleY(1.015);
+    transform: scale(var(--vn-sprite-sx, 1), 1.015);
   }
 }
 
@@ -2281,6 +2494,16 @@ input.vn-range {
   }
   to {
     opacity: 1;
+  }
+}
+
+/* slow cinematic push on displayed CGs (D2) */
+@keyframes vn-cg-kenburns {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.07) translate(-0.8%, -0.6%);
   }
 }
 
@@ -2406,6 +2629,21 @@ input.vn-range {
   100% {
     text-shadow: none;
     transform: none;
+  }
+}
+
+@keyframes vn-bounce {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(8px);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+  100% {
+    transform: translateY(0);
   }
 }
 
@@ -2679,6 +2917,7 @@ input.vn-range {
   #vn-app .vn-text.vn-glitch,
   #vn-app .vn-grain,
   #vn-app .vn-sprite > svg,
+  #vn-app .vn-sprite > img,
   #vn-app .vn-sprite.vn-enter,
   #vn-app .vn-sprite.vn-leave,
   #vn-app .vn-sprite.vn-swap > svg,
@@ -2696,7 +2935,10 @@ input.vn-range {
   #vn-app .vn-prop.vn-prop-keys,
   #vn-app .vn-text.vn-typing::after,
   #vn-app .vn-next-ind,
-  #vn-app .vn-ending-mark.vn-collected[data-ending="ending_true"] {
+  #vn-app .vn-ending-mark.vn-collected[data-ending="ending_true"],
+  #vn-app .vn-cg-img,
+  #vn-app .vn-sprite > svg.vn-bounce,
+  #vn-app.vn-blackout::after {
     animation: none !important;
   }
 
@@ -2812,3 +3054,70 @@ input.vn-range {
      backdrop element" trade-off applies; .vn-range is styled natively
      (accent-color only, no track drawing) and rows are plain flex.
    ========================================================================== */
+
+/* #43 high contrast: solid opaque dialog, plain white text, no soft shadows */
+#vn-app.vn-hc .vn-dialog {
+  background: #000;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: #888;
+  box-shadow: none;
+}
+
+#vn-app.vn-hc .vn-text {
+  color: #fff;
+  text-shadow: none;
+}
+
+#vn-app.vn-hc .vn-name {
+  color: #fff;
+  text-shadow: none;
+}
+
+/* 立绘 viewer lightbox: clicking a bust fills the whole 立绘 panel with that
+   art (centered); clicking the enlarged art shrinks back to the grid. Scoped
+   to the panel (not the gallery) so the tabs and 关闭 button stay live. */
+.vn-gsprites {
+  position: relative;
+}
+
+.vn-sprite-view {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(120, 160, 230, 0.12),
+    rgba(4, 8, 18, 0.95) 72%
+  );
+}
+
+.vn-sprite-view.vn-open {
+  display: flex;
+}
+
+.vn-sprite-view .vn-sprite-bust {
+  width: min(62%, 46vh);
+}
+
+.vn-gchar-stage.vn-zoomable {
+  cursor: zoom-in;
+}
+
+/* #sprite-facing: left-slot sprites face the stage center (art renders lean
+   left by default); solo sprites keep their natural facing. The flip travels
+   through --vn-sprite-sx into the breathe keyframes (a plain transform here
+   would lose to the infinite animation); the static fallback below covers
+   reduced-motion, where the animation is disabled. */
+#vn-app .vn-sprite.vn-pos-left:not(.vn-solo) {
+  --vn-sprite-sx: -1;
+}
+
+.vn-sprite > svg,
+.vn-sprite > img {
+  transform: scale(var(--vn-sprite-sx, 1), 1);
+}

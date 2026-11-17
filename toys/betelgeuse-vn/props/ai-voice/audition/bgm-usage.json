@@ -1,0 +1,20 @@
+{
+ "bgm_email": 2,
+ "bgm_call": 2,
+ "bgm_epiphany": 5,
+ "bgm_discovery": 1,
+ "bgm_conspiracy": 2,
+ "bgm_reveal": 1,
+ "bgm_choice": 2,
+ "bgm_wake": 3,
+ "bgm_gate": 2,
+ "bgm_ash": 1,
+ "bgm_afterglow": 5,
+ "bgm_keeper": 4,
+ "bgm_fake_turnback": 1,
+ "bgm_fake_silence": 1,
+ "bgm_fake_clearance": 1,
+ "bgm_fake_unplug": 1,
+ "bgm_fake_substitute": 1,
+ "bgm_tension": 3
+}

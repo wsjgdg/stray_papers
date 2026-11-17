@@ -19,6 +19,8 @@ out = [
 total = 0
 packed = 0
 for f in sorted(HERE.glob("*.mp3")):
+    if f.stem.startswith("amb_"):
+        continue  # ambient beds pack into amb-data.js via make-amb-data.py
     key = KEY_REMAP.get(f.stem, f.stem)
     data = base64.b64encode(f.read_bytes()).decode()
     total += len(data)

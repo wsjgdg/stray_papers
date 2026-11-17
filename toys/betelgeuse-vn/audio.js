@@ -5,8 +5,14 @@
  *
  *   scene(bgId)        crossfade the ambient bed matching a background id
  *                      (null / unknown id -> fade to silence)
+ *   amb(bgId)          independent ambience loop (window.VN_AMB_ASSETS data
+ *                      URIs, HTMLAudio at vol*0.35, ~1s crossfade; runs under
+ *                      the bed; null / unknown id -> silence; not Web Audio)
  *   type()             typewriter tick, self-throttled (~45 ms min gap)
  *   ui(kind)           one-shot UI sound: "start" | "select" | "save" | "load"
+ *   sfx(key)           one-shot sampled cue: sfx_* key in VN_AUDIO_ASSETS,
+ *                      HTMLAudio at vol*0.8, no loop; same key within 200 ms
+ *                      is deduped; sound off -> silent (no resume semantics)
  *   swell()            one-shot cinematic swell (dolly reveal cue): two
  *                      detuned oscillators glide 180 -> 55 Hz over a noise
  *                      presence band, ~0.12 peak, gone by ~2.4 s; self-
@@ -56,6 +62,10 @@
   var STORE_KEY = "vn-audio";
   var SETTINGS_KEY = "vn-settings"; // shared with engine.js settings panel
   var VOL_TAU_S = 0.05; // setTargetAtTime smoothing for slider moves
+  var AMB_LEVEL = 0.35; // ambience layer plays at vol * this (quieter bed)
+  var AMB_FADE_MS = 100; // ambience crossfade tick; 10 steps ~= 1 s
+  var SFX_LEVEL = 0.8; // one-shot sampled sfx play at vol * this
+  var SFX_GAP_MS = 200; // same-key sfx retrigger dedupe window
 
   /* ------------------------------------------------------------------ *
    *  Environment / state
@@ -1472,8 +1482,10 @@
         rampParam(master.gain, MASTER_LEVEL * vol, now(), KILL_RAMP_S);
         if (desiredBg) applyScene();
         if (lastSampleKey) playSampleBed(lastSampleKey); // resume sampled bed
+        if (lastAmbKey) playAmbience(lastAmbKey); // resume ambience loop
       } else {
         stopSampleBed();
+        stopAmbience();
         disableAudio();
       }
       return apiEnabled();
@@ -1515,6 +1527,7 @@
       writeVolume();
       if (on) applyVolumeGain();
       if (sampleBed) sampleBed.audio.volume = vol * 0.9; // sampled bed follows
+      if (ambBed) ambBed.audio.volume = vol * AMB_LEVEL; // ambience follows
       return vol;
     } catch (e) {
       return vol;
@@ -1528,6 +1541,16 @@
   function onGesture() {
     gestureSeen = true;
     tryResume(); // wake a policy-suspended context on real interaction
+    // Autoplay-policy retry: a sampled bed requested before any gesture
+    // (e.g. the title theme at page load) had its play() rejected once and
+    // stayed paused forever, leaving the title screen silent. The first
+    // real gesture unlocks HTMLAudio playback, so kick any paused bed here.
+    try {
+      if (sampleBed && sampleBed.audio && sampleBed.audio.paused) {
+        var p = sampleBed.audio.play();
+        if (p && typeof p.catch === "function") p.catch(function () {});
+      }
+    } catch (e) {}
   }
 
   function watchGestures() {
@@ -1549,11 +1572,25 @@
 
   function sampledAssets() {
     try {
-      return typeof window !== "undefined" &&
-        window.VN_AUDIO_ASSETS &&
-        typeof window.VN_AUDIO_ASSETS === "object"
-        ? window.VN_AUDIO_ASSETS
-        : null;
+      if (typeof window === "undefined") return null;
+      // merge view: the old ai-audio set + the separate bgm2 series stay in
+      // their own globals (never mixed), but the bed lookup sees both
+      var merged = null;
+      var sources = [window.VN_AUDIO_ASSETS, window.VN_BGM2_ASSETS];
+      for (var si = 0; si < sources.length; si++) {
+        var src = sources[si];
+        if (!src || typeof src !== "object") continue;
+        if (!merged) merged = {};
+        for (var k in src) {
+          if (
+            Object.prototype.hasOwnProperty.call(src, k) &&
+            !Object.prototype.hasOwnProperty.call(merged, k)
+          ) {
+            merged[k] = src[k];
+          }
+        }
+      }
+      return merged;
     } catch (e) {
       return null;
     }
@@ -1618,6 +1655,141 @@
     }
   }
 
+  // --- ambience layer (window.VN_AMB_ASSETS) ----------------------------------
+  // A second, independent HTMLAudio loop running underneath the sampled /
+  // synthesized bed, keyed by the raw background id (the engine calls
+  // amb(state.bg)). Quieter than the bed on purpose: both loops may stack
+  // (bed at vol*0.9 + ambience at vol*0.35). Missing key -> silence, the
+  // same fallback semantics as the sampled bed. Never touches Web Audio.
+  var ambBed = null; // { audio, key } while an ambience loop is live
+  var lastAmbKey = null; // last requested key (resume after re-enable)
+
+  function ambTarget() {
+    return vol * AMB_LEVEL;
+  }
+
+  function ambAssets() {
+    try {
+      return typeof window !== "undefined" &&
+        window.VN_AMB_ASSETS &&
+        typeof window.VN_AMB_ASSETS === "object"
+        ? window.VN_AMB_ASSETS
+        : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function stopAmbience() {
+    if (!ambBed) return;
+    var a = ambBed.audio;
+    ambBed = null; // apiSetVolume stops touching it from here on
+    // fade-out ~1s: scene switches cross against the incoming track
+    try {
+      var step = a.volume / 10;
+      var iv = setInterval(function () {
+        a.volume = Math.max(0, a.volume - step);
+        if (a.volume <= 0) {
+          clearInterval(iv);
+          a.pause();
+        }
+      }, AMB_FADE_MS);
+    } catch (e) {
+      try {
+        a.pause();
+      } catch (e2) {}
+    }
+  }
+
+  function playAmbience(key) {
+    if (ambBed) {
+      if (ambBed.key === key) return;
+      stopAmbience();
+    }
+    var assets = ambAssets();
+    if (!assets || typeof assets[key] !== "string") return;
+    var a;
+    try {
+      a = new Audio(assets[key]);
+    } catch (e) {
+      return;
+    }
+    a.loop = true; // tracks shorter than the scene simply repeat
+    a.volume = 0;
+    ambBed = { audio: a, key: key };
+    var p = a.play();
+    if (p && typeof p.catch === "function") p.catch(function () {});
+    // fade-in ~1s; the target is re-read every tick so a mid-fade volume
+    // change lands on the new level instead of a stale captured one
+    try {
+      var iv = setInterval(function () {
+        if (ambBed && ambBed.audio !== a) {
+          clearInterval(iv);
+          return;
+        }
+        var t = ambTarget();
+        a.volume = Math.min(t, a.volume + t / 10);
+        if (a.volume >= t) clearInterval(iv);
+      }, AMB_FADE_MS);
+    } catch (e) {
+      try {
+        a.volume = ambTarget();
+      } catch (e2) {}
+    }
+  }
+
+  // Engine hook: amb(state.bg) on every background change, amb(null) while a
+  // CG owns the soundscape. Unknown key / null -> silence. The intent is
+  // recorded even while the sound is off, so a later setEnabled(true)
+  // resumes the right loop; with the sound off nothing is played at all.
+  function apiAmb(key) {
+    try {
+      if (typeof key !== "string" || !key) key = null;
+      var assets = key ? ambAssets() : null;
+      lastAmbKey =
+        key && assets && typeof assets[key] === "string" ? key : null;
+      if (!lastAmbKey) {
+        stopAmbience();
+        return;
+      }
+      if (!apiEnabled()) return; // off / unsupported: paused, resumes later
+      playAmbience(lastAmbKey);
+    } catch (e) {}
+  }
+
+  // --- one-shot sampled sfx (sfx_* keys in window.VN_AUDIO_ASSETS) -----------
+  // Single HTMLAudio per trigger: no loop, no sfxBus, no node tracking. These
+  // cues are fire-and-forget punctuation (email ping, door, keyboard) — they
+  // start now, run to their natural end and are garbage-collected; a mixable
+  // Web Audio bus would add a gesture-gated context + decode step for zero
+  // benefit. Volume is captured at trigger time (vol * SFX_LEVEL), matching
+  // the voice element's capture style. Dedupe is throttle-then-gate, the same
+  // order as apiType/apiSwell; a one-shot missed while the sound is off is
+  // simply missed (no resume, unlike the looping beds).
+  var sfxLastAt = {}; // key -> Date.now() of last trigger (dedupe window)
+
+  function apiSfx(key) {
+    try {
+      if (typeof key !== "string" || !key) return;
+      var assets = sampledAssets();
+      if (!assets || typeof assets[key] !== "string") return;
+      var t = Date.now();
+      if (t - (sfxLastAt[key] || 0) < SFX_GAP_MS) return; // same-key retrigger
+      sfxLastAt[key] = t;
+      if (!apiEnabled()) return; // off / unsupported: the cue is skipped
+      var a;
+      try {
+        a = new Audio(assets[key]);
+      } catch (e) {
+        return;
+      }
+      a.loop = false; // one-shot by definition; explicit for clarity
+      a.volume = vol * SFX_LEVEL;
+      var p = a.play();
+      if (p && typeof p.catch === "function") p.catch(function () {});
+    } catch (e) {}
+  }
+
   function apiScene(bgId) {
     try {
       var assets = sampledAssets();
@@ -1673,9 +1845,11 @@
   try {
     target.VN_AUDIO = {
       scene: apiScene,
+      amb: apiAmb,
       type: apiType,
       ui: apiUi,
       swell: apiSwell,
+      sfx: apiSfx,
       enabled: apiEnabled,
       setEnabled: apiSetEnabled,
       setVolume: apiSetVolume,

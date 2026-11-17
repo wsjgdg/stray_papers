@@ -1,0 +1,278 @@
+[
+ {
+  "f": "yu-azure-zh-CN-YunxiNeural.mp3",
+  "label": "Yunxi·阳光青年（现用）",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-azure-zh-CN-YunjianNeural.mp3",
+  "label": "Yunjian·低沉热血",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-azure-zh-CN-YunyangNeural.mp3",
+  "label": "Yunyang·沉稳播音",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-azure-zh-CN-YunyeNeural.mp3",
+  "label": "Yunye·温厚男声",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-azure-zh-CN-YunzeNeural.mp3",
+  "label": "Yunze·成熟男声",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-azure-zh-CN-YunfengNeural.mp3",
+  "label": "Yunfeng·沉稳叙事",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-azure-zh-CN-YunhaoNeural.mp3",
+  "label": "Yunhao·大气男声",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-baidu-1.mp3",
+  "label": "度小宇",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-baidu-3.mp3",
+  "label": "度逍遥",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "yu-baidu-106.mp3",
+  "label": "度博文",
+  "who": "yu",
+  "line": "三年前的今天，沈眠失踪。参宿四还亮着，可我已经三年没抬头了。"
+ },
+ {
+  "f": "mian-azure-zh-CN-XiaoxiaoNeural.mp3",
+  "label": "Xiaoxiao·温暖（沈眠现用）",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-azure-zh-CN-XiaoxiaoNeural.mp3",
+  "label": "Xiaoxiao·温暖（沈眠现用）",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-azure-zh-CN-XiaoxiaoNeural.mp3",
+  "label": "Xiaoxiao·温暖（沈眠现用）",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-azure-zh-CN-XiaoyiNeural.mp3",
+  "label": "Xiaoyi·活泼（林晚现用）",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-azure-zh-CN-XiaoyiNeural.mp3",
+  "label": "Xiaoyi·活泼（林晚现用）",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-azure-zh-CN-XiaoyiNeural.mp3",
+  "label": "Xiaoyi·活泼（林晚现用）",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-azure-zh-CN-XiaomoNeural.mp3",
+  "label": "Xiaomo·冷冽低语",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-azure-zh-CN-XiaomoNeural.mp3",
+  "label": "Xiaomo·冷冽低语",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-azure-zh-CN-XiaomoNeural.mp3",
+  "label": "Xiaomo·冷冽低语",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-azure-zh-CN-XiaoxuanNeural.mp3",
+  "label": "Xiaoxuan·明亮清扬",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-azure-zh-CN-XiaoxuanNeural.mp3",
+  "label": "Xiaoxuan·明亮清扬",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-azure-zh-CN-XiaoxuanNeural.mp3",
+  "label": "Xiaoxuan·明亮清扬",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-azure-zh-CN-XiaohanNeural.mp3",
+  "label": "Xiaohan·沉静",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-azure-zh-CN-XiaohanNeural.mp3",
+  "label": "Xiaohan·沉静",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-azure-zh-CN-XiaohanNeural.mp3",
+  "label": "Xiaohan·沉静",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-azure-zh-CN-XiaoruiNeural.mp3",
+  "label": "Xiaorui·平静克制",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-azure-zh-CN-XiaoruiNeural.mp3",
+  "label": "Xiaorui·平静克制",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-azure-zh-CN-XiaoruiNeural.mp3",
+  "label": "Xiaorui·平静克制",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-baidu-0.mp3",
+  "label": "度小美",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-baidu-0.mp3",
+  "label": "度小美",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-baidu-0.mp3",
+  "label": "度小美",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-baidu-4.mp3",
+  "label": "度丫丫",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-baidu-4.mp3",
+  "label": "度丫丫",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-baidu-4.mp3",
+  "label": "度丫丫",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-baidu-5.mp3",
+  "label": "度小娇",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-baidu-5.mp3",
+  "label": "度小娇",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-baidu-5.mp3",
+  "label": "度小娇",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-baidu-5003.mp3",
+  "label": "度小鹿",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-baidu-5003.mp3",
+  "label": "度小鹿",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-baidu-5003.mp3",
+  "label": "度小鹿",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-baidu-4106.mp3",
+  "label": "度清",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-baidu-4106.mp3",
+  "label": "度清",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-baidu-4106.mp3",
+  "label": "度清",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ },
+ {
+  "f": "mian-baidu-4118.mp3",
+  "label": "度小童",
+  "who": "mian",
+  "line": "参宿四暗过一次，又亮回来了。这次是我自己记住的。"
+ },
+ {
+  "f": "lin-baidu-4118.mp3",
+  "label": "度小童",
+  "who": "lin",
+  "line": "眠姐欠的那碗馄饨，我记了三年账。今天，当众销账。"
+ },
+ {
+  "f": "qi-baidu-4118.mp3",
+  "label": "度小童",
+  "who": "qi",
+  "line": "备注：风向，南风。这次是我自己想记的。"
+ }
+]

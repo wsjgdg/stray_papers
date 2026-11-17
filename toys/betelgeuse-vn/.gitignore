@@ -1,0 +1,10 @@
+props/ai-voice/.tmp/
+props/ai-voice/.tmp/
+props/ai-voice/__pycache__/
+props/ai-voice/.tmp2/
+props/ai-voice/_probe/
+props/ai-voice/_wm_*.mp3
+
+# local tooling artifacts (not part of the game)
+/_probe/
+/graphify-out/

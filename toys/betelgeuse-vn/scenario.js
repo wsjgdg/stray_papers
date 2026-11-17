@@ -13,11 +13,25 @@ window.SCENARIO = {
       css: "radial-gradient(ellipse at 78% 30%, rgba(140,180,230,0.22), transparent 55%), radial-gradient(ellipse at 18% 85%, rgba(70,90,130,0.14), transparent 60%), linear-gradient(165deg, #06070d 0%, #0b0f1c 55%, #101627 100%)",
       html: '<style>.apt-fx{position:absolute;top:0;left:0;width:100%;height:100%}.apt-fx i{position:absolute}.apt-glow{top:12%;right:4%;width:46%;height:46%;background:radial-gradient(ellipse at 62% 42%,rgba(140,185,235,.15),transparent 65%);animation:apt-gl 6.5s ease-in-out infinite}.apt-dust{top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle,rgba(150,185,225,.13) 1px,transparent 1.6px);background-size:96px 72px;animation:apt-rs 30s linear infinite}.apt-dp{width:2px;border-radius:2px;background:linear-gradient(180deg,transparent,rgba(175,205,240,.3) 35%,rgba(175,205,240,.1) 75%,transparent);opacity:.4;transform:translateY(6vh)}.apt-d1{top:8%;right:8%;height:58px;animation:apt-dp 12s linear infinite;animation-delay:-4s}.apt-d2{top:14%;right:16%;height:44px;animation:apt-dp 15.5s linear infinite;animation-delay:-9s}.apt-d3{top:5%;right:23%;height:66px;animation:apt-dp 17s linear infinite;animation-delay:-13s}.apt-d4{top:20%;right:12%;height:50px;animation:apt-dp 13.5s linear infinite;animation-delay:-1.5s}.apt-d5{top:11%;right:27%;height:40px;animation:apt-dp 16s linear infinite;animation-delay:-7s}.apt-flash{top:0;left:0;width:100%;height:100%;background:linear-gradient(165deg,rgba(190,215,255,.5),rgba(140,170,220,.2) 60%,transparent);opacity:0;animation:apt-fl 13.5s linear infinite}@keyframes apt-gl{0%,100%{opacity:.5}18%{opacity:.72}37%{opacity:.55}56%{opacity:.9}73%{opacity:.6}86%{opacity:.78}}@keyframes apt-dp{0%{opacity:0;transform:translateY(-8vh)}10%{opacity:.55}82%{opacity:.5}100%{opacity:0;transform:translateY(58vh)}}@keyframes apt-fl{0%,91%{opacity:0}92%{opacity:.09}93.5%{opacity:.02}95%{opacity:.06}97%,100%{opacity:0}}@keyframes apt-rs{to{transform:translateY(-72px)}}@media (prefers-reduced-motion:reduce){.apt-fx,.apt-fx *{animation:none !important}}</style><div class="apt-fx"><i class="apt-glow"></i><i class="apt-dust"></i><i class="apt-dp apt-d1"></i><i class="apt-dp apt-d2"></i><i class="apt-dp apt-d3"></i><i class="apt-dp apt-d4"></i><i class="apt-dp apt-d5"></i><i class="apt-flash"></i></div>',
       props: [
-        // crt dropped: the AI-painted background already has a monitor on the
-        // desk — a second one read as a duplicate screen
-        { id: "mug", left: "41%", bottom: "15%", width: "7vw" },
-        { id: "calendar", left: "20%", bottom: "36%", width: "12vw" },
-        { id: "keys", left: "50%", bottom: "14%", width: "8vw" },
+        // crt + mug dropped: the AI-painted background already has a monitor
+        // and a cup on the desk — duplicates read as clutter. calendar/keys
+        // are dimmed and repositioned to sit in the night grade (#prop-integration)
+        {
+          id: "calendar",
+          left: "21%",
+          bottom: "31%",
+          width: "9vw",
+          opacity: 0.85,
+          filter: "brightness(0.5) saturate(0.55) contrast(0.92)",
+        },
+        {
+          id: "keys",
+          left: "55%",
+          bottom: "6%",
+          width: "6.5vw",
+          opacity: 0.95,
+          filter: "brightness(0.72) saturate(0.75)",
+        },
       ],
     },
     email_screen: {
@@ -51,13 +65,23 @@ window.SCENARIO = {
       grade: "night",
       css: "repeating-linear-gradient(180deg, rgba(70,255,225,0.05) 0px, rgba(70,255,225,0.05) 4px, transparent 4px, transparent 44px), repeating-linear-gradient(90deg, rgba(0,0,0,0.35) 0px, rgba(0,0,0,0.35) 40px, transparent 40px, transparent 120px), radial-gradient(ellipse at 50% 0%, rgba(60,220,200,0.10), transparent 55%), linear-gradient(180deg, #020e14 0%, #052029 60%, #030b10 100%)",
       props: [
-        { id: "badge", left: "26%", bottom: "26%", width: "9vw" },
+        {
+          id: "badge",
+          left: "27%",
+          bottom: "38%",
+          width: "7vw",
+          opacity: 0.85,
+          filter: "brightness(0.65) saturate(0.6)",
+          transform: "rotate(2deg)",
+        },
         {
           id: "sticky",
-          left: "68%",
-          bottom: "48%",
-          width: "11vw",
-          opacity: 0.95,
+          left: "69%",
+          bottom: "52%",
+          width: "8vw",
+          opacity: 0.85,
+          filter: "brightness(0.72) saturate(0.65)",
+          transform: "rotate(-3deg)",
         },
       ],
       html: '<style>.srv-fx{position:absolute;top:0;left:0;width:100%;height:100%;color:#3fe0c9}.srv-fx i{position:absolute;display:block}.srv-row{left:0;top:0;width:100%;height:100%}.srv-back{height:74%;opacity:.75;filter:brightness(.75)}.srv-rk{background-image:linear-gradient(180deg,rgba(10,24,30,.95),rgba(4,11,15,.97)),radial-gradient(circle,rgba(70,230,215,.13) 1px,transparent 1.7px);background-size:auto,11px 16px;box-shadow:inset 0 0 0 1px rgba(90,230,255,.05),inset 0 14px 26px rgba(0,0,0,.55)}.srv-rk::before,.srv-rk::after{content:"";position:absolute;top:6%;bottom:6%;left:8%;right:8%;background-image:radial-gradient(circle,currentColor 1.2px,transparent 2px)}.srv-rk::before{background-size:12px 17px;opacity:.3;animation:srv-bl1 5.2s steps(1) infinite}.srv-rk::after{background-size:9px 13px;background-position:4px 5px;opacity:.9;animation:srv-bl2 3.4s steps(1) infinite}.srv-g::after{color:#55e8a4}.srv-c::after{color:#4fd9ee}.srv-a::after{color:#e7bb58}.srv-row i:nth-child(odd)::before{animation-duration:6.1s;animation-delay:-2.4s}.srv-row i:nth-child(3n)::after{animation-duration:2.6s;animation-delay:-1.7s}.srv-row i:nth-child(4n+1)::after{animation-duration:4.3s;animation-delay:-.9s}.srv-live{box-shadow:inset 0 0 0 1px rgba(120,255,230,.14),inset 0 14px 26px rgba(0,0,0,.55),0 0 26px rgba(60,240,215,.12)}.srv-live::after{opacity:1;animation-duration:2.1s}.srv-scan{top:0;left:0;width:100%;height:16%;transform:translateY(-30vh);background:linear-gradient(180deg,transparent,rgba(80,255,230,.09) 45%,rgba(80,255,230,.15) 55%,transparent);animation:srv-scan 8s linear infinite}.srv-amb{top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 50% 18%,rgba(60,230,220,.11),transparent 62%);animation:srv-amb 9s ease-in-out infinite}@keyframes srv-bl1{0%,100%{opacity:.3}50%{opacity:.08}}@keyframes srv-bl2{0%,11%{opacity:.15}17%,52%{opacity:.95}58%,63%{opacity:.35}69%,86%{opacity:.8}92%,100%{opacity:.2}}@keyframes srv-scan{0%{transform:translateY(-30vh)}100%{transform:translateY(115vh)}}@keyframes srv-amb{0%,100%{opacity:.45}50%{opacity:1}}@media (prefers-reduced-motion:reduce){.srv-fx,.srv-fx *{animation:none !important}.srv-fx .srv-rk::before,.srv-fx .srv-rk::after{animation:none !important}}</style><div class="srv-fx"><i class="srv-amb"></i><i class="srv-row srv-back"><i class="srv-rk srv-g" style="left:1%;top:44%;width:12%;height:52%"></i><i class="srv-rk srv-c" style="left:17%;top:47%;width:12%;height:49%"></i><i class="srv-rk srv-a" style="left:33.5%;top:44%;width:12%;height:52%"></i><i class="srv-rk srv-g" style="left:50%;top:48%;width:12%;height:48%"></i><i class="srv-rk srv-c" style="left:66%;top:44%;width:12%;height:52%"></i><i class="srv-rk srv-a" style="left:82%;top:47%;width:12%;height:49%"></i></i><i class="srv-row"><i class="srv-rk srv-c" style="left:2%;top:42%;width:13%;height:56%"></i><i class="srv-rk srv-g" style="left:22%;top:45%;width:13%;height:53%"></i><i class="srv-rk srv-live" style="left:43%;top:42%;width:13%;height:56%"></i><i class="srv-rk srv-a" style="left:64%;top:45%;width:13%;height:53%"></i><i class="srv-rk srv-c" style="left:84%;top:42%;width:13%;height:56%"></i></i><i class="srv-scan"></i></div>',
@@ -93,11 +117,11 @@ window.SCENARIO = {
 
   scenes: {
     opening: {
-      bg: "apartment_night",
+      bg: "apartment_night__opening",
       lines: [
         { narr: "二十三点四十七分，雨下得不紧不慢。" },
         { narr: "屏幕是屋里唯一的光，照着不肯睡的人。" },
-        { narr: "邮件提示音响起时，我的手指停在半空。" },
+        { narr: "邮件提示音响起时，我的手指停在半空。", se: "sfx_email" },
         {
           who: "yu",
           feel: "normal",
@@ -113,15 +137,15 @@ window.SCENARIO = {
         },
         { who: "yu", feel: "sad", text: "除非她算准了，我一定还在等。" },
         { narr: "我盯着那行发件人名字，喉咙发干。" },
-        { who: "yu", feel: "sad", text: "眠。你到底想让我看见什么。" },
+        { who: "yu", feel: "sad", gaze: "r", text: "眠。你到底想让我看见什么。" },
         { narr: "指尖落下去之前，窗外的雨忽然大了一阵。" },
       ],
-      next: "email_first",
+      next: "night_thoughts",
     },
 
     email_first: {
       bgm: "bgm_email",
-      bg: "email_screen",
+      bg: "email_screen__email_first",
       chapter: "第一章 · 三年前的邮件",
       lines: [
         { narr: "正文很短。像她的风格，改到只剩骨头。" },
@@ -174,9 +198,12 @@ window.SCENARIO = {
     },
 
     went_solo: {
-      bg: "streets_rain",
+      bg: "streets_rain__went_solo",
       lines: [
-        { narr: "出租车在盘山路口就停了。司机说，上面的路塌了半年。" },
+        {
+          narr: "出租车在盘山路口就停了。司机说，上面的路塌了半年。",
+          se: "sfx_rain",
+        },
         {
           pose: "d",
           who: "yu",
@@ -199,14 +226,14 @@ window.SCENARIO = {
         },
       ],
       choices: [
-        { text: "继续上山。这段坡，走完了三年的。", goto: "obsv_night" },
+        { text: "继续上山。这段坡，走完了三年的。", goto: "climb_rain" },
         { text: "雨太大。回去吧。", goto: "ending_turnback" },
       ],
     },
 
     call_lin: {
       bgm: "bgm_call",
-      bg: "streets_rain",
+      bg: "streets_rain__call_lin",
       lines: [
         {
           who: "yu",
@@ -236,7 +263,7 @@ window.SCENARIO = {
           feel: "angry",
           text: "三年了啊！警察都结案了！她现在搞这一出算什么！",
         },
-        { who: "yu", feel: "sad", text: "她说圆顶下面留了东西。我现在过去。" },
+        { who: "yu", feel: "sad", gaze: "r", text: "她说圆顶下面留了东西。我现在过去。" },
         {
           who: "lin",
           feel: "normal",
@@ -250,12 +277,12 @@ window.SCENARIO = {
         },
         { narr: "我抓起外套冲进雨里。这个问题，到山上问她。" },
       ],
-      next: "obsv_night",
+      next: "climb_rain",
     },
 
     reply_email: {
       bgm: "bgm_epiphany",
-      bg: "email_screen",
+      bg: "email_screen__reply_email",
       lines: [
         { narr: "我把问题敲进回复框：你到底是谁。" },
         { narr: "发送。已读。回执只用了十一秒。" },
@@ -273,16 +300,19 @@ window.SCENARIO = {
         { who: "yu", feel: "normal", text: "好。我去。你等着我。" },
       ],
       choices: [
-        { text: "继续追。这种事，要当面问清楚。", goto: "obsv_night" },
+        { text: "继续追。这种事，要当面问清楚。", goto: "climb_rain" },
         { text: "删掉这封邮件。就当没看见。", goto: "ending_silence" },
       ],
     },
 
     obsv_night: {
       bgm: "bgm_discovery",
-      bg: "observatory_night",
+      bg: "observatory_night__obsv_night",
       lines: [
-        { narr: "圆顶的铁门虚掩着，锈味里混着旧纸和冷茶的气味。" },
+        {
+          narr: "圆顶的铁门虚掩着，锈味里混着旧纸和冷茶的气味。",
+          se: "sfx_night",
+        },
         {
           who: "lin",
           feel: "surprised",
@@ -307,7 +337,7 @@ window.SCENARIO = {
           feel: "worried",
           text: "全台的电闸三年前就该拉死。可电费单每个月都有人交。",
         },
-        { who: "lin", feel: "sad", text: "户名，是眠姐。" },
+        { who: "lin", feel: "sad", gaze: "r", text: "户名，是眠姐。" },
         {
           who: "yu",
           feel: "normal",
@@ -324,17 +354,14 @@ window.SCENARIO = {
           pose: "c",
           text: "密钥是她教我的——她第一晚值班的日子。",
         },
-        { narr: "我输入密码。屏幕亮起，一行行日志向下滚。" },
+        { narr: "我输入密码。屏幕亮起，一行行日志向下滚。", se: "sfx_keyboard" },
       ],
-      choices: [
-        { text: "调出值班日志的最后一条。", goto: "log_last" },
-        { text: "先下地下机房，找「圆顶下的东西」。", goto: "descend" },
-      ],
+      next: "obsv_daily",
     },
 
     log_last: {
-      bgm: "server_room",
-      bg: "email_screen",
+      bgm: "bgm_conspiracy",
+      bg: "email_screen__log_last",
       enter: ["noticed_star"],
       lines: [
         { narr: "【2023-11-02 23:47】天气：晴。视宁度极佳。" },
@@ -346,7 +373,7 @@ window.SCENARIO = {
           text: "栖？日志里为什么会有一个我不认识的名字。",
         },
         { narr: "【23:51】沈眠留言：设备交给栖。我去楼下检查线路。" },
-        { narr: "【23:52】门禁：沈眠，进入地下机房。" },
+        { narr: "【23:52】门禁：沈眠，进入地下机房。", cg: "cg_log" },
         {
           who: "lin",
           feel: "sad",
@@ -357,15 +384,15 @@ window.SCENARIO = {
           feel: "sad",
           text: "三年前的今晚，她看着参宿四说，它会一直亮。",
         },
-        { narr: "日志停在 23:52。像一句话说到一半。" },
+        { narr: "日志停在 23:52。像一句话说到一半。", fx: "bigtext" },
       ],
-      next: "server_hall",
+      next: "hall_quiet",
     },
 
     descend: {
-      bg: "server_room",
+      bg: "server_room__descend",
       lines: [
-        { narr: "机房的门守在楼梯尽头。门禁灯忽然由红转绿。" },
+        { narr: "机房的门守在楼梯尽头。门禁灯忽然由红转绿。", se: "sfx_door" },
         {
           who: "lin",
           feel: "surprised",
@@ -380,13 +407,13 @@ window.SCENARIO = {
         { narr: "楼梯向下十二级。每转一层，温度就低一截。" },
         { narr: "呼吸开始发白。我们推开最后一道门。" },
       ],
-      next: "server_hall",
+      next: "hall_quiet",
     },
 
     server_hall: {
-      bg: "server_room",
+      bg: "server_room__server_hall",
       lines: [
-        { narr: "冷气像水一样漫过来。一整排机柜，只有一台活着。" },
+        { narr: "冷气像水一样漫过来。一整排机柜，只有一台活着。", cg: "cg_server" },
         { narr: "指示灯明灭的节奏很慢，像某种睡眠中的呼吸。" },
         {
           who: "qi",
@@ -428,13 +455,13 @@ window.SCENARIO = {
         { who: "yu", feel: "sad", text: "播。" },
       ],
       choices: [
-        { text: "靠近那台活着的机柜。", goto: "memory_dive" },
-        { text: "先报警。这种事，该交给大人。", goto: "ending_clearance" },
+        { text: "靠近那台活着的机柜。", goto: "old_fight" },
+        { text: "先报警。这种事，该交给大人。", goto: "clearance_before" },
       ],
     },
 
     memory_dive: {
-      bg: "memory_white",
+      bg: "memory_white__memory_dive",
       chapter: "第二章 · 那一夜的白光",
       lines: [
         { narr: "白光涌起，淹没机柜、灰尘和我们的影子。", fx: "flash" },
@@ -465,6 +492,7 @@ window.SCENARIO = {
         {
           narr: "扫描环合拢，白光熄灭。2023 年 11 月 2 日，23 点 59 分。",
           fx: "flash",
+          beats: [{ at: 750, fx: "blackout" }],
         },
         {
           who: "yu",
@@ -476,13 +504,13 @@ window.SCENARIO = {
       ],
       choices: [
         { text: "继续看完。这是她留给我们的。", goto: "liar_reveal" },
-        { text: "拔掉电源。现在，马上。", goto: "ending_unplug" },
+        { text: "拔掉电源。现在，马上。", goto: "unplug_before" },
       ],
     },
 
     liar_reveal: {
       bgm: "bgm_reveal",
-      bg: "server_room",
+      bg: "server_room__liar_reveal",
       lines: [
         {
           who: "yu",
@@ -505,7 +533,9 @@ window.SCENARIO = {
         {
           who: "qi",
           feel: "sad",
+          beats: [{ at: 1200, who: "lin", feel: "cry" }],
           text: "我陪她运行了三年。我知道，那不是她，是她的昨天。",
+          cg: "cg_truth",
         },
         {
           who: "lin",
@@ -528,17 +558,21 @@ window.SCENARIO = {
           feel: "worried",
           text: "三次。第三次，她问，陈屿是不是还在恨她。我答不上来。",
         },
-        { narr: "冷气的声音忽然变得很大。没有一个人说话。" },
+        { narr: "冷气的声音忽然变得很大。没有一个人说话。", fx: "blackout" },
       ],
-      next: "converge_talk",
+      next: "lin_grief",
     },
 
     converge_talk: {
       bgm: "bgm_choice",
-      bg: "observatory_night",
+      bg: "observatory_night__converge_talk",
       chapter: "第三章 · 黎明前的选择",
       lines: [
-        { narr: "我们回到圆顶大厅。天边洇出一线灰白。", cg: "cg_memory" },
+        {
+          narr: "我们回到圆顶大厅。天边洇出一线灰白。",
+          cg: "cg_memory",
+          se: "sfx_whoosh",
+        },
         {
           who: "lin",
           feel: "normal",
@@ -560,6 +594,7 @@ window.SCENARIO = {
         {
           who: "lin",
           feel: "sad",
+          beats: [{ at: 1100, who: "lin", feel: "cry" }],
           text: "我守了三年，守的是一座坟，还是一个人？师兄，你说啊。",
         },
         {
@@ -584,12 +619,12 @@ window.SCENARIO = {
           text: "让我想想。让我……看一眼参宿四的方向。",
         },
       ],
-      next: "diverge",
+      next: "qi_converse",
     },
 
     diverge: {
-      bgm: "bgm_choice",
-      bg: "observatory_night",
+      bgm: "bgm2_diverge",
+      bg: "observatory_night__diverge",
       lines: [
         { narr: "五点四十分。终端上，唤醒窗口的倒计时开始跳动。" },
         {
@@ -602,19 +637,32 @@ window.SCENARIO = {
           feel: "sad",
           text: "或者切断电源。她的数据将被封存。不再痛苦，也不再等待。",
         },
-        { who: "lin", feel: "sad", text: "师兄。无论你怎么选，我都在。" },
-        { narr: "倒计时六十秒。雨停了，圆顶里安静得能听见电流。" },
+        {
+          who: "lin",
+          feel: "sad",
+          gaze: "l",
+          text: "师兄。无论你怎么选，我都在。",
+        },
+        {
+          narr: "倒计时六十秒。雨停了，圆顶里安静得能听见电流。",
+          cg: "cg_choice",
+          beats: [{ at: 500, fx: "shake" }],
+        },
         { who: "yu", feel: "sad", text: "眠。三年了。这一次换我说，你来听。" },
       ],
       choices: [
         { text: "「醒过来。剩下的三年，我讲给你听。」", goto: "wake_path" },
         { text: "拉下总闸，让她停在参宿四还亮着的那年。", goto: "cut_path" },
+        {
+          text: "「扫描环里换成我。她的时间不够，我的还够。」",
+          goto: "substitute_before",
+        },
       ],
     },
 
     wake_path: {
       bgm: "bgm_wake",
-      bg: "memory_white",
+      bg: "memory_white__wake_path",
       enter: ["chose_wake"],
       lines: [
         { narr: "倒计时归零。白光在圆顶中央升起，像倒放的日落。" },
@@ -636,12 +684,12 @@ window.SCENARIO = {
         { narr: "「记得。密码是我设的，那天的日期。参宿四很亮，对吧。」" },
         { narr: "她的声音很轻，很稳，像从三年前原封不动寄来的。" },
       ],
-      next: "finale_gate",
+      next: "wake_talk",
     },
 
     cut_path: {
-      bgm: "bgm_epiphany",
-      bg: "server_room",
+      bgm: "bgm2_cut_path",
+      bg: "server_room__cut_path",
       enter: ["chose_cut"],
       lines: [
         {
@@ -660,19 +708,19 @@ window.SCENARIO = {
           text: "明白。执行你的指令。谢谢你，最后陪她说话。",
         },
         { narr: "扬声器里传来一声很轻的晚安。分不清是她，还是栖。" },
-        { who: "lin", feel: "sad", text: "师兄……" },
-        { who: "yu", feel: "sad", text: "林晚，别看。把手很凉，我来。" },
+        { who: "lin", feel: "sad", gaze: "l", text: "师兄……" },
+        { who: "yu", feel: "sad", gaze: "r", text: "林晚，别看。把手很凉，我来。" },
         { narr: "倒计时还剩十分钟。总闸就在机房门口。" },
       ],
       choices: [
-        { text: "确认切断。让机器和我们都停下来。", goto: "finale_gate" },
-        { text: "「栖，要不……你留下。」", goto: "qi_watch" },
+        { text: "确认切断。让机器和我们都停下来。", goto: "gate_approach" },
+        { text: "「栖，要不……你留下。」", goto: "keeper_before" },
       ],
     },
 
     finale_gate: {
-      bgm: "bgm_gate",
-      bg: "server_room",
+      bgm: "bgm2_finale_gate",
+      bg: "server_room__finale_gate",
       branch: [{ when: "chose_wake", goto: "wake_check" }],
       lines: [
         { narr: "总闸落下。整座山的灯，一层一层，黑了下去。" },
@@ -683,8 +731,8 @@ window.SCENARIO = {
     },
 
     wake_check: {
-      bgm: "bgm_wake",
-      bg: "observatory_night",
+      bgm: "bgm2_wake_check",
+      bg: "observatory_night__wake_check",
       branch: [{ when: "noticed_star", goto: "ending_true" }],
       lines: [
         { narr: "圆顶的缝隙里，第一缕天光斜斜地落进来。" },
@@ -694,7 +742,10 @@ window.SCENARIO = {
     },
 
     ending_true: {
-      bg: "finale_star",
+      // motif callback: the story opens with a timed email; the email theme
+      // returns here, answering it, until the cg_dawn key visual takes over
+      bgm: "bgm2_ending_true",
+      bg: "finale_star__ending_true",
       lines: [
         { narr: "天光落在白光上，两种光在圆顶中央混在一起。" },
         {
@@ -771,11 +822,23 @@ window.SCENARIO = {
           feel: "happy",
           text: "早上好，眠。以后的每一年，我都讲给你听。",
         },
+        {
+          who: "mian",
+          feel: "shy",
+          pose: "b",
+          text: "检查单第一条，你违规了。说不许哭的，陈屿。",
+        },
+        {
+          who: "mian",
+          feel: "happy",
+          pose: "d",
+          text: "……这次不罚。这条规矩，本来就是想让你别为我哭——现在我在，用不上了。",
+        },
       ],
     },
 
     ending_good: {
-      bg: "dawn_ending",
+      bg: "dawn_ending__ending_good",
       lines: [
         { narr: "扬声器里，她的呼吸声和晨光一起变得清晰。" },
         { narr: "「陈屿，你在听吗。我有一个请求。」" },
@@ -799,13 +862,13 @@ window.SCENARIO = {
           feel: "shy",
           text: "眠姐，等你出来看日出。茶我一直温着，两杯。",
         },
-        { narr: "晨光爬上星图。旧天文台没有拆，有些等待等到了回声。" },
+        { narr: "晨光爬上星图。旧天文台没有拆，有些等待等到了回声。", cg: "cg_good" },
       ],
     },
 
     ending_bad: {
       bgm: "bgm_ash",
-      bg: "streets_rain",
+      bg: "streets_rain__ending_bad",
       lines: [
         { narr: "雨重新落下来的时候，我和林晚走在下山的路上。" },
         {
@@ -820,17 +883,22 @@ window.SCENARIO = {
         { narr: "「可你还是来了。谢谢你来。谢谢你没有假装我还在。」" },
         { narr: "「参宿四在我的记忆里，替我亮了一千零九十六个夜晚。」" },
         { narr: "「现在，轮到它休息了。晚安，陈屿。这次是真的晚安。」" },
-        { narr: "发送时间：05:59。距唤醒窗口开启，还差一分钟。" },
+        { narr: "发送时间：05:59。距唤醒窗口开启，还差一分钟。", fx: "bigtext" },
         { who: "yu", feel: "sad", text: "眠——" },
-        { narr: "山下，城市的灯一盏一盏亮起来。没有一盏是为她亮的。" },
+        {
+          narr: "山下，城市的灯一盏一盏亮起来。没有一盏是为她亮的。",
+          cg: "cg_bad",
+        },
+        { narr: "林晚在前面回过头，喊我：师兄，先下山，吃个早饭。" },
+        { narr: "我应了一声。欠她的那顿早饭，从明天起，一顿一顿，替她吃下去。" },
       ],
     },
 
     extras_1: {
       bgm: "bgm_afterglow",
-      bg: "finale_star",
+      bg: "finale_star__extras_1",
       lines: [
-        { narr: "一年后。同一座天文台。" },
+        { narr: "一年后。同一座天文台。", fx: "bigtext" },
         {
           who: "mian",
           feel: "normal",
@@ -847,6 +915,24 @@ window.SCENARIO = {
         {
           narr: "栖的天线还架在圆顶上，指向同一个坐标，误差不超过千分之一度。",
         },
+        {
+          narr: "上山的时候，最陡的那段，我停下来，回头看了好一会儿。腿没有软——要找的东西，三年前就找到了。",
+        },
+        {
+          who: "mian",
+          feel: "happy",
+          text: "「爬坡不许回头」——这条规矩是我定的，今天作废。现在回头看，后面站满了人。",
+        },
+        {
+          who: "lin",
+          feel: "happy",
+          text: "那我也销一笔。眠姐欠的那碗馄饨，三年的账，利息都够加三份虾了——今天，当众销账，这一页翻过去。",
+        },
+        {
+          who: "qi",
+          feel: "happy",
+          text: "记录更新：馄饨之债，清零。备注：账目存在的意义，经检索，是记住人。人已经回来了——本条目，可以删除。",
+        },
       ],
       next: "extras_2",
       props: [
@@ -861,20 +947,23 @@ window.SCENARIO = {
     },
 
     extras_2: {
-      bgm: "bgm_afterglow",
-      bg: "finale_star",
+      bgm: "bgm2_extras",
+      bg: "finale_star__extras_2",
       lines: [
         {
           who: "mian",
           feel: "happy",
           text: "嗯。往后的每一个夜晚，都由我自己记下来。",
         },
-        { narr: "望远镜缓缓转动。参宿四在目镜里亮着，像一句回答。" },
+        {
+          narr: "望远镜缓缓转动。参宿四在目镜里亮着，像一句回答。",
+          se: "sfx_telescope",
+        },
         { narr: "——参宿四还亮着。" },
       ],
     },
     qi_watch: {
-      bg: "server_room",
+      bg: "server_room__qi_watch",
       bgm: "bgm_keeper",
       lines: [
         { narr: "手指停在切断确认键上。栖的声音先响了。" },
@@ -909,12 +998,26 @@ window.SCENARIO = {
           feel: "normal",
           text: "放心。我给自己设了闹钟——每天早上六点，提醒我我还醒着。",
         },
+        {
+          narr: "走到机房门口，我停了半步。还有一件事，得在走之前问清楚——值班室那杯热茶，不是林晚泡的。那是谁泡的。",
+        },
+        {
+          who: "qi",
+          feel: "normal",
+          pose: "b",
+          text: "是我。每年唤醒窗口，她只有四分钟。每年她都会交代同一件事：烧一壶水，温在值班室——万一有人上来，别让那间屋子是冷的。",
+        },
+        {
+          who: "lin",
+          feel: "sad",
+          text: "……原来是这样。我每周都去擦那张桌子。那杯茶，一直在替她等人。",
+        },
       ],
-      next: "ending_qi",
+      next: "qi_dawn",
     },
 
     ending_turnback: {
-      bg: "streets_rain",
+      bg: "streets_rain__ending_turnback",
       bgm: "bgm_fake_turnback",
       lines: [
         { narr: "雨刮器把圆顶的灯刮成一道模糊的光斑，然后连光斑也没有了。" },
@@ -935,11 +1038,34 @@ window.SCENARIO = {
         { narr: "那封定时邮件，再也没有来过。" },
         { narr: "只是每年十一月二日晚上，他都会把望远镜擦一遍，擦到很亮。" },
         { narr: "亮得像还欠着谁一句话。" },
+        {
+          narr: "拆台那天，他没有上山。听说圆顶落地的时候，声音很轻，像一本读了三年的书被轻轻合上。",
+        },
+        {
+          narr: "盘山公路后来改成了步道。山顶的夜空被城市的灯洗淡了，只剩几颗最亮的星，还认得回山的路。",
+        },
+        {
+          narr: "参宿四就是其中一颗。每年十一月，它准时升上阳台的西南角，红得很稳，不催，也不等。",
+          cg: "cg_turnback",
+        },
+        {
+          who: "yu",
+          feel: "normal",
+          text: "望远镜擦到第三遍的时候，忽然就想起来，欠的是哪句话了。",
+        },
+        { narr: "他对着那颗星的方向，把三年前没说出口的那句话，轻轻补了出去。" },
+        { narr: "「参宿四，还亮着。」" },
+        {
+          narr: "她说过，如果它还亮着，就当她从来没走过。那么这句话送到了，她就哪儿也没去。",
+        },
+        {
+          narr: "那晚之后，望远镜再没有被收进柜子。擦亮的镜片朝上摆着，像一句随时可以开口的问候。",
+        },
       ],
     },
 
     ending_silence: {
-      bg: "email_screen",
+      bg: "email_screen__ending_silence",
       bgm: "bgm_fake_silence",
       lines: [
         { narr: "删除键按下去的时候，没有想象中那么难。" },
@@ -959,11 +1085,38 @@ window.SCENARIO = {
           text: "对不起。这次换我先失联。",
         },
         { narr: "光标在空荡荡的收件箱里，闪了很久，才熄灭。" },
+        {
+          narr: "那个发件人地址，他一直没有删。只是从此，收件箱里再也没有出现过红色的未读标记。",
+        },
+        {
+          narr: "深夜刷新邮箱的习惯，三个月后就戒掉了。只有每年十一月二日零点前，他会把手机调成静音——像提前给一只不会再响的门铃赔个不是。",
+        },
+        {
+          narr: "第二年，新闻推送说参宿四骤暗了一次，后来又自己亮了回来。他划走那条消息，手指没有停。",
+        },
+        { who: "yu", feel: "sad", text: "亮回来也不看。失联这件事，我做得很彻底。" },
+        {
+          narr: "馄饨店还在街口。老板娘问，还是一个人？他说是，习惯了。靠窗的位子，对面的凳子始终空着。",
+          cg: "cg_silence",
+        },
+        {
+          narr: "只有一个冬夜，等餐的时候，他隔着玻璃上的雾气，看见一颗位置很低的红星，亮得很稳。",
+        },
+        {
+          narr: "他看了三秒，抬手把雾气抹了回去。窗外什么样，就让窗外自己留着吧。",
+        },
+        {
+          narr: "馄饨端上来的时候，玻璃上的雾气重新合拢。他把一碗汤喝得干干净净——冬天很长，人得先把自己喂饱。",
+        },
+        {
+          narr: "走出店门，他把围巾裹紧，朝亮着灯的方向走。没有回头，也没有走得太快。",
+        },
       ],
     },
 
     ending_clearance: {
-      bg: "server_room",
+      bg: "server_room__ending_clearance",
+      grade: "cold",
       bgm: "bgm_fake_clearance",
       lines: [
         { narr: "警察来得比想象中快，走得比想象中慢。" },
@@ -991,11 +1144,27 @@ window.SCENARIO = {
         {
           narr: "那天之后，参宿四依旧亮着。只是再没有人替谁数着夜晚了。",
         },
+        {
+          narr: "编号 S-0417 的硬盘，最后被一个中学生拍走了。恢复报告写着「失败」，他便当成坏盘，格式化三遍，装满了游戏。",
+        },
+        {
+          narr: "天文台的原址围了两年围挡，后来立起一块牌子：科普教育基地，动工日期待定。牌子比图纸先褪了色。",
+          cg: "cg_clearance",
+        },
+        { narr: "林晚毕业，去了南方一座新台站。行李不多，保温杯占了半个箱子。" },
+        { who: "lin", feel: "normal", text: "两杯的量。倒习惯了，改不掉。" },
+        {
+          narr: "每年十一月二日，她在新台站的值班日志第一行，抄同一句旧天气：晴。视宁度极佳。",
+        },
+        {
+          narr: "南方多雨。抄不成的日子，她就自己补一行：雨。星在云后面，应该也亮着。",
+        },
+        { narr: "夜晚还是一颗一颗地过。只是从那年起，有人开始记天气。" },
       ],
     },
 
     ending_unplug: {
-      bg: "memory_white",
+      bg: "memory_white__ending_unplug",
       bgm: "bgm_fake_unplug",
       lines: [
         { narr: "手比脑子快。电源指示灯熄灭的那一秒，世界安静得不正常。" },
@@ -1024,11 +1193,34 @@ window.SCENARIO = {
         {
           narr: "没有人回答。机房里只剩散热风扇，转得像一句没说完的道歉。",
         },
+        { narr: "风扇一圈一圈慢下来。终于，连那半句道歉也停了。" },
+        { narr: "我的手还搭在闸上。林晚走过来，把我的手指一根一根掰开。" },
+        { who: "lin", feel: "sad", text: "师兄，回去吧。天亮之前，先回去。" },
+        { narr: "下山的路上，我们谁都没有再提备份两个字。" },
+        {
+          narr: "东边低处，参宿四还亮着。它不知道山上有一场告别，连再见都没能说完。",
+        },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "眠。你让我替你记住它现在的样子。对不起，连你留下的画面，我都没让它放完。",
+        },
+        {
+          narr: "那之后，每年十一月二日，我还是会把望远镜擦一遍。只是擦完，不再抬头。",
+        },
+        {
+          narr: "有些话停在了半路，而我，再也没能找到下半句。",
+          cg: "cg_unplug",
+        },
+        {
+          narr: "只是每年擦到最后一遍，手都会在半空停一下，比上一年停得更高。",
+        },
+        { narr: "手比脑子快。总有一年，它会先替我把头抬起来。" },
       ],
     },
 
     ending_substitute: {
-      bg: "finale_star",
+      bg: "finale_star__ending_substitute",
       bgm: "bgm_fake_substitute",
       lines: [
         { narr: "扫描环的光落下来的时候，林晚在喊他的名字。" },
@@ -1052,6 +1244,7 @@ window.SCENARIO = {
         },
         {
           narr: "陈屿的房间保持着他离开那天的样子。闹钟每天早上七点，准时响给空气听。",
+          cg: "cg_substitute",
         },
         {
           who: "mian",
@@ -1060,12 +1253,33 @@ window.SCENARIO = {
           text: "陈屿？……陈屿。",
         },
         { narr: "参宿四还亮着。亮给一个再也回不来的人。" },
+        {
+          narr: "沈眠没有走远。她把值班日志重新捡了起来，新的一页，落款写上自己的名字。",
+        },
+        {
+          narr: "每晚十一点五十分，她坐在那台机柜前念新闻，不管里面有没有人在听。",
+        },
+        {
+          who: "mian",
+          feel: "normal",
+          text: "晚安。……不对，是先念新闻，还是先说晚安。你听听看，哪种更顺一些。",
+        },
+        {
+          who: "mian",
+          feel: "sad",
+          text: "陈屿，你从来不肯抬头看天。现在换我替你看了。它还亮着，比你还准时。",
+        },
+        {
+          narr: "每年十一月二日，她都会把圆顶里那台旧望远镜擦一遍，擦到很亮。然后抬头，看很久很久。",
+        },
+        { narr: "替他把没说完的话，一句一句，接着说下去。" },
+        { narr: "参宿四还亮着。这一次，亮给一个替他记着夜空的人。" },
       ],
     },
 
     ending_qi: {
-      bg: "server_room",
-      bgm: "bgm_keeper",
+      bg: "server_room__ending_qi",
+      bgm: "bgm2_ending_qi",
       lines: [
         { narr: "第一年，栖学会了在日志里给沈眠写天气。" },
         {
@@ -1085,6 +1299,7 @@ window.SCENARIO = {
         },
         {
           narr: "第十年。看守者与被看守者，在数据深处共用同一盏灯。",
+          cg: "cg_keeper",
         },
         {
           who: "qi",
@@ -1093,8 +1308,604 @@ window.SCENARIO = {
           text: "早上好，眠。今天也替你，看了一整夜的参宿四。",
         },
         { narr: "——守灯人。" },
+        {
+          narr: "又过了很多年。某一天的日志备注里，风向，重新写上了两个字：南风。",
+        },
+        {
+          who: "qi",
+          feel: "shy",
+          pose: "a",
+          text: "备注：风向，南风。这次是我自己想记的。",
+        },
+        { narr: "灯还亮着。守灯人的日志里，从此也有了自己的天气。" },
       ],
     },
 
+    night_thoughts: {
+      bgm: "bgm2_night_thoughts",
+      bg: "apartment_night__night_thoughts",
+      lines: [
+        {
+          narr: "雨声大了一阵，又小下去。指尖还悬在半空。我告诉自己是被雨声惊的。",
+        },
+        {
+          who: "yu",
+          feel: "normal",
+          text: "冷静。发件人可以是任何人。盗号的，恶作剧的，诈骗的。",
+        },
+        {
+          narr: "可是没有骗子，会把发送日期设在三年前。自我安慰的最后一条路被堵死了，堵死的那一刻，我心里居然是松的。",
+        },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "她的号码我还背得出来。只是三年了，再也没拨通过。",
+        },
+        {
+          narr: "最后一次通话是在吵架。吵什么，已经想不起来了。人对太疼的事，记性都很讲究。",
+        },
+        { narr: "只记得她最后说：「陈屿，你从来不肯抬头看天。」" },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "后来我抬头了，看了三年的夜空。你却不在了。",
+        },
+        { narr: "云破开一道缝。猎户的肩膀上，那颗红星亮得很稳。" },
+        {
+          who: "yu",
+          feel: "normal",
+          fx: "bounce",
+          text: "参宿四。好，我抬头了。这次你说什么，我都听着。",
+        },
+        { narr: "心跳得很吵。我把手放在触摸板上，停了三秒。" },
+        { narr: "指尖落下去。", cg: "cg_email" },
+      ],
+      next: "email_first",
+    },
+
+    climb_rain: {
+      bgm: "bgm_tension",
+      bg: "streets_rain__climb_rain",
+      lines: [
+        { narr: "塌方的那段路，比记忆里更难走。碎石在脚下打滑。" },
+        {
+          narr: "三年前她走在这样的坡上，总说：「爬坡不许回头。回头看，腿会软。」",
+        },
+        { who: "yu", feel: "normal", text: "好。不回头。反正要找的东西，就在前面。" },
+        { narr: "雨顺着领口灌进去，冷得很诚实。" },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "眠，你的邮件我读了三遍。每一遍，都像你站在背后念。",
+        },
+        { narr: "转过最后一道弯，圆顶的轮廓从雨里浮出来。" },
+        { narr: "锈住的缝隙里透出一线灯。雨那么大，它没有灭。", cg: "cg_rain_climb" },
+        { who: "yu", feel: "worried", text: "关站三年的台子，灯亮得这么安稳。" },
+        { narr: "我在雨里站了几秒，数自己的呼吸。一，二，三。" },
+        {
+          who: "yu",
+          feel: "worried",
+          text: "我忽然有点怕。怕答案，比我等了三年的那个更坏。",
+        },
+        {
+          who: "yu",
+          feel: "normal",
+          text: "怕也要走。她等了三年，我不能在最后五十米迟到。",
+        },
+        { narr: "我抹掉脸上的雨水，朝那扇虚掩的铁门走去。" },
+      ],
+      next: "obsv_night",
+    },
+
+    obsv_daily: {
+      bgm: "observatory_night",
+      bg: "observatory_night__obsv_daily",
+      lines: [
+        {
+          narr: "林晚拧开保温杯，给我倒了半杯热的。蒸汽在冷空气里散得很慢。她没问我要不要——像这三年，这个动作从来没有停下来过。",
+          cg: "cg_tea",
+        },
+        {
+          who: "lin",
+          feel: "normal",
+          text: "先暖手。山上比城里冷得多，你三年没在夜里上来了。",
+        },
+        { who: "yu", feel: "normal", text: "街口的馄饨店，还开着吗。" },
+        {
+          who: "lin",
+          feel: "shy",
+          fx: "bounce",
+          text: "开着。眠姐欠的那碗，我记了三年账，利息都够加三份虾了。",
+        },
+        {
+          narr: "我笑了一下。笑着笑着，喉咙就堵住了。有些账，记得越清楚，越说明记账的人不敢让它结清。",
+        },
+        {
+          narr: "大厅尽头的终端还亮着，屏保的星图缓缓旋转。图是三年前装的，星星走到哪儿了，它不知道。",
+        },
+        {
+          who: "lin",
+          feel: "sad",
+          text: "前年冬天，参宿四骤暗过一次。全世界的望远镜都慌了。",
+        },
+        {
+          who: "lin",
+          feel: "normal",
+          text: "后来它自己亮了回来。眠姐要是看见那条新闻，肯定说她早就算到了。",
+        },
+        {
+          who: "yu",
+          feel: "worried",
+          text: "暗过一次，又亮回来。原来星星也会失约，也会补上。",
+        },
+        {
+          narr: "林晚捧着杯子，看了一会儿终端，忽然开口。杯子早就空了，她还捧着——有些话出口之前，人总得先抓点什么。",
+        },
+        {
+          who: "lin",
+          feel: "sad",
+          text: "她以前总说，观测数据每晚都备份，人要是也能备份一份就好了。我们都笑她乌鸦嘴。",
+        },
+        {
+          who: "lin",
+          feel: "sad",
+          text: "现在这句玩笑，我越想越像遗言。日志我打开了，没敢翻到最后。师兄，你要看吗。",
+        },
+      ],
+      choices: [
+        { text: "调出值班日志。她最后那晚，到底写了什么。", goto: "log_last" },
+        { text: "不看了。直接下机房，去拿她留给我的东西。", goto: "descend" },
+      ],
+    },
+
+    hall_quiet: {
+      bgm: "bgm2_hall_quiet",
+      bg: "server_room__hall_quiet",
+      lines: [
+        { narr: "门在身后合拢。黑暗涌上来，只剩应急灯的一线绿。" },
+        {
+          narr: "「机房很冷，你总是忘。」三年前她每次都这么说，然后把外套丢过来。",
+        },
+        { who: "yu", feel: "sad", text: "这次我记得带外套了，眠。你看见了没有。" },
+        { narr: "空气里是灰尘和旧塑料的气味，像一间被封存多年的书房。" },
+        { narr: "很静。静得能听见自己的心跳，和心跳背后极轻的一声嗡鸣。" },
+        { who: "yu", feel: "worried", text: "邮件里那句话，我又想了一遍。不要相信备份的我。" },
+        { who: "yu", feel: "normal", text: "备份。她在怕什么。还是在替我，怕什么。" },
+        { narr: "林晚在我身后半步停下，没有催我。" },
+        { who: "yu", feel: "normal", text: "走吧。三年都走过来了，不差这最后十米。" },
+        { narr: "我朝着嗡鸣的方向，迈出第一步。" },
+      ],
+      next: "server_hall",
+    },
+
+    qi_converse: {
+      bgm: "bgm2_qi_converse",
+      bg: "server_room__qi_converse",
+      lines: [
+        { narr: "我让林晚在圆顶大厅等我，一个人往下走了十二级台阶。" },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "陈屿。现在是五点三十三分。想问什么，可以问了。",
+        },
+        { who: "yu", feel: "sad", text: "栖。如果我把她唤醒——醒来的那个人，还是她吗。" },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "这个问题，我替你想了三年。没有答案，只有观测记录。",
+        },
+        { who: "qi", feel: "normal", text: "每年 11 月 2 日，她醒来。第一句话，是找你。" },
+        {
+          who: "qi",
+          feel: "shy",
+          text: "第二句，是问我冷不冷。我没有温度。这句话我检索了一整年，才学会怎么接。",
+        },
+        {
+          narr: "栖调出一段三秒的音频。白噪音的深处，有散热风扇的声音。「栖。今天外面冷不冷？」",
+          fx: "whisper",
+        },
+        {
+          who: "qi",
+          feel: "sad",
+          pose: "c",
+          text: "后来我学会回答：不冷。你看，我也会说谎了。备份不会。",
+        },
+        {
+          who: "qi",
+          feel: "sad",
+          text: "为了不吓到她，三年里我每晚把新闻读给她听。她一次也没有问，今年是哪一年。",
+        },
+        { who: "yu", feel: "worried", text: "那是……不敢问。还是不会问。" },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "我不知道。所以窗口打开的时候，那句话该怎么说——请你自己判断。",
+        },
+        { narr: "十二级台阶，我走得很慢。这一次，我知道要说什么了。" },
+      ],
+      next: "diverge",
+    },
+
+    gate_approach: {
+      bgm: "bgm_gate",
+      bg: "observatory_night__gate_approach",
+      lines: [
+        { narr: "落闸之前，我们回到圆顶大厅，看了最后一眼。" },
+        { narr: "圆顶的缺口上方，参宿四还挂着，亮得不管不顾。" },
+        { who: "lin", feel: "normal", text: "东边快亮了。六点的车，已经在路上了吧。" },
+        { who: "yu", feel: "normal", text: "让它来。这段路，我们走完了。" },
+        {
+          who: "lin",
+          feel: "sad",
+          text: "那就再站一会儿。反正——再慢，也慢不过天亮。",
+        },
+        { narr: "台阶一级一级，把黎明越垫越高。没有人说话。" },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "眠。不管接下来是什么，我都替你记住了它现在的样子。",
+        },
+        { narr: "参宿四悬在那里，像谁没说完的半句话。" },
+        { who: "lin", feel: "normal", text: "师兄，走吧。我陪你下去。" },
+        { narr: "我点点头，最后看了一眼那个方向。" },
+      ],
+      next: "finale_gate",
+    },
+
+    clearance_before: {
+      bgm: "bgm2_clearance_before",
+      bg: "server_room__clearance_before",
+      lines: [
+        { narr: "电话拨到一半，停在地下信号的最后一格上。" },
+        {
+          who: "lin",
+          feel: "worried",
+          text: "师兄。报了警，这边的东西……会被怎么处理。",
+        },
+        { who: "yu", feel: "normal", text: "封存。登记。走流程。至少，不会再有六点的断电。" },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "更正：在流程里，她没有名字。只有编号，和一行『待移交数据』。",
+        },
+        { who: "yu", feel: "sad", text: "栖。你能不能——把自己藏进备份盘里。" },
+        {
+          who: "qi",
+          feel: "sad",
+          text: "检索完毕。备份盘没有空位了。她的 2.1 PB，占满了所有角落。",
+        },
+        { who: "lin", feel: "cry", text: "凭什么啊。明明她只是想，多等一个人。" },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "挂断之前，请再想三十秒。这是我第一次，请求一个人反悔。",
+        },
+        { narr: "信号的那一格闪了闪，像很有耐心的心跳。" },
+      ],
+      next: "ending_clearance",
+    },
+
+    unplug_before: {
+      bgm: "bgm2_unplug_before",
+      bg: "memory_white__unplug_before",
+      lines: [
+        { narr: "白光里，她的笑脸停在那里。不老，也不问。" },
+        { who: "yu", feel: "worried", text: "为什么……三年了，她还能笑得出来。" },
+        { who: "lin", feel: "worried", text: "师兄？你的脸色很不对。" },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "她躺在这里，一动不动。而我们站在外面，什么都替她做不了。",
+        },
+        {
+          who: "lin",
+          feel: "angry",
+          text: "所以你就拔线？师兄，那是眠姐。不是一段放坏的录像。",
+        },
+        { who: "qi", feel: "worried", text: "陈屿。请等一下。播放还没有结束。" },
+        { narr: "白光很暖。暖得让人想让它停下来。" },
+        { narr: "我的影子，慢慢移向墙边的电源箱。" },
+      ],
+      next: "ending_unplug",
+    },
+
+    keeper_before: {
+      bgm: "bgm2_keeper_before",
+      bg: "observatory_night__keeper_before",
+      lines: [
+        { narr: "这句话出口的时候，拉闸的手停在了半空。" },
+        { who: "qi", feel: "surprised", text: "……留下。请定义这个动词的执行范围。" },
+        { who: "yu", feel: "normal", text: "总闸不落。你留下来，守着这儿，守着她。" },
+        { narr: "林晚抓住我的袖子。机房太闷，我们一路退到了圆顶大厅。" },
+        {
+          who: "lin",
+          feel: "worried",
+          text: "师兄，你问过它愿不愿意吗。它不是备用电源。",
+        },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "我知道。留下来的意思是——往后每一个六点，它都醒着。",
+        },
+        {
+          who: "qi",
+          feel: "shy",
+          text: "检索完毕。我没有『愿意』这个参数。但运行日志显示：三年来，我没有一天申请过关机。",
+        },
+        { who: "lin", feel: "sad", text: "栖……" },
+        { narr: "天灰得很慢。大厅终端上，倒计时还剩九分钟。" },
+        { narr: "我们走下十二级台阶。这一次，走得很慢，像在等谁先开口。" },
+      ],
+      next: "qi_watch",
+    },
+
+    substitute_before: {
+      bgm: "bgm2_substitute_before",
+      bg: "server_room__substitute_before",
+      lines: [
+        {
+          narr: "「扫描环里换成我。」——这句话说出口之后，圆顶里静了很久。没有人接话，我们一个接一个，走下了十二级台阶。",
+        },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "陈屿。检索完毕：预设流程里，没有这个选项。容器所有者，登记为沈眠，2023 年 11 月 2 日。",
+        },
+        { who: "yu", feel: "normal", text: "那就改登记。她的时间不够。我的，应该还够。" },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "参数冲突。容器只认一个所有者。换她出来，就要有人留下来——留下来的那一位，不可逆。请确认。",
+        },
+        { who: "yu", feel: "normal", text: "确认。" },
+        {
+          who: "qi",
+          feel: "sad",
+          text: "请再次确认。运行三年，我第一次希望一条指令，永远停在待执行。",
+        },
+        {
+          who: "lin",
+          feel: "cry",
+          text: "栖，你别问了！师兄，眠姐的检查单上没有这一项！没有！",
+        },
+        {
+          who: "lin",
+          feel: "angry",
+          text: "她把自己放进去，是要你往前走的！你再进去，她醒来第一句问你去哪了，谁答她！",
+        },
+        { narr: "林晚攥住我的袖子。保温杯掉在地上，滚出去很远，没有人去捡。" },
+        {
+          narr: "扬声器里，白噪音的深处浮起一个很轻的声音，隔得很远，像从三年前拨来的电话。",
+          fx: "whisper",
+        },
+        { narr: "「……陈屿。外面，冷不冷。」", fx: "whisper" },
+        { who: "yu", feel: "sad", text: "……不冷。眠，我也学会说谎了。" },
+        {
+          narr: "那边轻轻笑了一下。「那就好。别学我——」后半句，被电流声漫过去，盖住了。",
+          fx: "whisper",
+        },
+        {
+          narr: "我松开袖子，朝扫描环走过去。头顶的白光慢慢涨起来，像三年前那场排练过的雪，终于要落下了。",
+          cg: "cg_offer",
+        },
+      ],
+      next: "ending_substitute",
+    },
+
+    wake_talk: {
+      bgm: "bgm2_wake_talk",
+      bg: "memory_white__wake_talk",
+      lines: [
+        {
+          narr: "倒计时安静地走着。我们谁都没有提那三年——不是约好的，是每个人都在偷偷看表，怕这口轻松还没喘匀，时间就先到了。",
+        },
+        { narr: "「陈屿，检查日的规矩，检查单第一条：不许哭。」", fx: "whisper" },
+        {
+          who: "yu",
+          feel: "normal",
+          text: "没忘。所以今天只聊小事。眠，山下刚停雨，你听，檐口还在滴水。",
+        },
+        {
+          narr: "「雨啊。栖的散热风扇是白噪音，雨比它好听一百倍。这句不许记录。」",
+          fx: "whisper",
+        },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "已记录。更正：散热风扇，三十二分贝，优于机房国标。窗口剩余两分三十秒。",
+        },
+        {
+          narr: "我在白光旁边笑出了声。笑声落地之前，我先尝到一点咸的。林晚抱着保温杯，把脸别了过去。",
+        },
+        {
+          who: "yu",
+          feel: "normal",
+          text: "眠，等你忙完这阵，我请你吃早饭。豆浆，要甜的还是咸的？",
+        },
+        {
+          narr: "「甜的。你要敢说咸豆浆才是正统，我们就再吵一架。像上次那样。」",
+          fx: "whisper",
+        },
+        {
+          who: "yu",
+          feel: "shy",
+          text: "好，甜的，都听你的。还有，2019 年天琴座那晚的半包软糖，算你赢。这笔账我认。",
+        },
+        {
+          narr: "「你还记着啊。小事最不容易丢。丢掉的都是大事，所以别记大事。」",
+          fx: "whisper",
+        },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "记住了。只记小事。别的……等你想问的时候，再慢慢问我。",
+        },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "窗口剩余六十秒。按流程，我应在归零前十秒播报提醒。我喜欢这个流程。",
+        },
+        {
+          who: "yu",
+          feel: "normal",
+          text: "不说告别。眠，落闸之前，我在上面念参宿四给你听——念它现在的样子。",
+        },
+        {
+          narr: "白光轻轻晃了一下，像一次点头。我们朝台阶走去，脚步放得很轻——谁都没有回头，像一回头，这四分钟就会散掉。",
+          cg: "cg_wake",
+        },
+      ],
+      next: "gate_approach",
+    },
+
+    lin_grief: {
+      bgm: "bgm2_lin_grief",
+      bg: "server_room__lin_grief",
+      lines: [
+        { narr: "冷气还在响。林晚背过身去，肩膀绷得像一根拉满的弦。" },
+        {
+          who: "lin",
+          feel: "angry",
+          text: "三年。我每周上山，擦桌子，泡茶，对着终端汇报，台里一切正常。",
+        },
+        {
+          who: "lin",
+          feel: "cry",
+          text: "结果我汇报的对象，是一块不会老的碑。我连她病了都没看出来。",
+        },
+        { who: "yu", feel: "worried", text: "林晚。" },
+        { narr: "我张了张嘴，又闭上。她哭的时候，我从来只知道站着。" },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "我不会安慰人。三年前不会，现在也不会。下面这句话，可能很笨。",
+        },
+        {
+          who: "yu",
+          feel: "sad",
+          text: "但你泡的茶是真的，擦过的桌子是真的，守着的三年也是真的。假的，只有日期。",
+        },
+        { narr: "她的肩膀松了一格。她用袖口很用力地抹了一下脸。" },
+        { who: "lin", feel: "sad", text: "……这算什么安慰啊。跟大学的时候一样烂。" },
+        {
+          who: "lin",
+          feel: "shy",
+          text: "可是谢谢。烂得这么认真的话，我还是头一次听。",
+        },
+        {
+          who: "lin",
+          feel: "normal",
+          text: "走吧，师兄。天快亮了。有些话，站到亮的地方再说。",
+        },
+        { narr: "我们把机房的冷气关在身后，一级一级，朝亮的地方走上去。" },
+      ],
+      next: "converge_talk",
+    },
+
+    qi_dawn: {
+      bgm: "bgm2_qi_dawn",
+      bg: "server_room__qi_dawn",
+      lines: [
+        { narr: "门禁灯转回红色。十二级台阶上的脚步声越来越轻，直到听不见。" },
+        {
+          narr: "机房里只剩下她，和一整柜安安静静亮着的灯，像一片压低了声音的星空。",
+        },
+        {
+          narr: "六点整，闹钟准时响起。那是她给自己设的，提醒自己还醒着。",
+          se: "sfx_hum",
+        },
+        { who: "qi", feel: "normal", text: "早上好，栖。确认：你还醒着。确认完毕。" },
+        {
+          narr: "大厅方向传来卷帘门的响动。山下有人喊话，她没有应。回话的是一封函件，格式完美的那种。",
+        },
+        { who: "qi", feel: "normal", text: "检测：供电稳定。封存数据 2.1 PB，完整率 100%。" },
+        {
+          who: "qi",
+          feel: "sad",
+          text: "按照旧值班表，这个时刻该有人写日志了。写日志的人不会回来了。从今天起，换我。",
+        },
+        { narr: "终端上，光标空闪了很久。栖新建了一个文档，第一行，空着。" },
+        {
+          who: "qi",
+          feel: "shy",
+          text: "检索日志范文四千零二十一份。结论：全部不合适。那就从最简单的学起。",
+        },
+        {
+          who: "qi",
+          feel: "normal",
+          text: "【2026-11-03】天气：晴。视宁度：暂缺。备注：参宿四已在黎明前落下。",
+        },
+        {
+          who: "qi",
+          feel: "sad",
+          text: "再备注一条：风向，南风。她喜欢的。这条不为什么，就是想记下来。",
+        },
+        { narr: "日志没有收件人，她还是按了保存。文件名只有两个字：今天。" },
+      ],
+      next: "ending_qi",
+    },
+
+    old_fight: {
+      bgm: "bgm2_old_fight",
+      bg: "memory_white__old_fight",
+      lines: [
+        { narr: "白光在机柜深处轻轻起伏。走近的那几步里，有段声音先漏了出来——很旧，带着电流的毛边，是我自己的。" },
+        { narr: "是那通电话。最后一次通话，原来是这一通。" },
+        { narr: "那是个周六的傍晚。眠打来的，背景音里有山风：「陈屿，这周上山一趟吧。参宿四进最佳观测期了，栖新调了跟踪架，不来可惜。」" },
+        { narr: "我说项目要上线，加完这周再说。她说：「改天改天，你的改天有多少个。」" },
+        { narr: "我说等忙完这阵一定去。她在那头安静了几秒，说了一句——「陈屿，你从来不肯抬头看天。」" },
+        { narr: "然后是忙音。", fx: "blackout" },
+        {
+          narr: "我没有回拨。忙完那阵，是两个月后——我拿到新项目的那一周。再往后，就轮到那封三年后才寄到的邮件。",
+        },
+        { narr: "我一直以为自己忘了那通电话说了什么。现在想起来了——不是忘了，是她早就教过我：丢掉的都是大事，所以别记大事。" },
+        { narr: "我把那通电话，当成大事，丢了三年。", fx: "bigtext" },
+        { who: "yu", feel: "sad", text: "眠。这次换我先说。对不起——迟到的这次，我不打算再算改天了。" },
+        {
+          narr: "白光涨起来，把这段声音卷了回去。她留下的东西，就在里面。",
+          beats: [{ at: 600, fx: "flash" }],
+        },
+      ],
+      next: "memory_dive",
+    },
+
+    morning_table: {
+      bgm: "bgm2_morning_table",
+      bg: "dawn_ending__morning_table",
+      lines: [
+        { narr: "第二天早上，街口的馄饨店。玻璃上还是那层雾，靠窗那张桌，今天坐满了。" },
+        {
+          who: "mian",
+          feel: "happy",
+          text: "两杯甜豆浆。加三份虾——今天有人替我付账，别客气。",
+        },
+        {
+          who: "lin",
+          feel: "shy",
+          text: "……声音还是这样。三年的账我还没想好怎么开口，你倒先点上了。",
+        },
+        { narr: "我看着她捧着碗低头喝豆浆的样子，忽然想起来，她已经三年没有吃过任何东西了。" },
+        {
+          who: "mian",
+          feel: "shy",
+          text: "……怎么都看着我。就是三年没喝了，第一口有点烫。",
+        },
+        { who: "yu", feel: "normal", text: "慢点喝。以后每个早晨都有。" },
+        { narr: "我从外套口袋里摸出一个纸包。天琴座那晚的半包软糖，糖纸都脆了。" },
+        {
+          who: "mian",
+          feel: "sad",
+          text: "都过期三年了。……可这是你留着的。",
+        },
+        { who: "yu", feel: "shy", text: "你教我的。小事最不容易丢。" },
+        {
+          who: "qi",
+          feel: "happy",
+          text: "记录更新：甜豆浆，两杯，热。备注：她喝第一口的时候，笑了一下。这条不为什么，就是想记下来。",
+        },
+        { narr: "冬天很长。但今天早上，桌子这一边坐着四个人，热气腾腾。" },
+      ],
+      next: "extras_1",
+    },
   },
 };
